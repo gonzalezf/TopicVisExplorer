@@ -1,6 +1,6 @@
 # app.py
 import random, threading, webbrowser
-import gensim, pickle
+import gensim, pickle, random
 from gensim.corpora import Dictionary
 from flask import Flask, render_template, request, json
 
@@ -30,9 +30,34 @@ id2word = Dictionary.load("data/tutorial_id2word")
 #########################Visualizations###################
 @app.route("/")                   
 def crosslingual():
-    lista.append(lda_model.num_topics)
-    my_list_json = json.dumps(lista)
-    return render_template("index.html", data = my_list_json)
+    num_topics = lda_model.num_topics
+    #lista.append(lda_model.num_topics)
+    #my_list_json = json.dumps(lista)
+
+    
+    #create json file
+    jsonCircles = {}
+    jsonCircles['circles'] = []
+
+    #x axis between [0,500]
+    #y axis between[0,500]
+    for i in range(num_topics):
+        jsonCircles['circles'].append({
+            "x_axis": random.randint(50,451),
+            "y_axis": random.randint(50,451),
+            "radius": random.randint(10,30),
+            "color" : "skyblue",
+            'fill_opacity':"0.6",
+            "index":i,
+            "bordercolor":'black',
+            "label":"prueba"
+
+            
+        })    
+    
+
+
+    return render_template("index.html", num_topics = num_topics, jsonCircles=jsonCircles) #data = my_list_json
         
 
 

@@ -1,24 +1,26 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<script src="https://d3js.org/d3.v5.min.js"></script>
-    
+<script src="static/d3.v5.min.js"></script>    
+
 <head>
-    <title>Learn D3 in 5 minutes</title>
+    <title>TopicVisExplorer</title>
+
 </head>
+<script>
+    var num_topics = {{num_topics}}
 
+    var jsonCircles = {{jsonCircles|tojson|safe}}
+    
+</script>
 <body>
-    <svg width='200' height='500'></svg>
-    <button id="btn" type="button">Click Me!</button>
+<p id="demo"></p>
 
-    <script>
-        //var data = [80, 120, 60, 150, 200];
-        var data = {{data}}
-        var barHeight = 20;
-        var bar = d3.select('svg').selectAll('rect').data(data).enter().append('rect').attr('width', function(d) {  return d; }).attr('height', barHeight - 1).attr('transform', function(d, i) { return "translate(0," + i * barHeight + ")";          });
-    </script>
-    <script>
-    d3.select('#btn')        .on('click', function () {            d3.select('body')               .append('h3')               .text('Today is a beautiful day!!');        });
-
-    </script>
+<script>
+</script>
 </body>
+
+<!--Scripts JS-->
+<script type="text/javascript"
+    src="{{ url_for('static', filename='crosslingual.js') }}">
+</script>
 </html>
