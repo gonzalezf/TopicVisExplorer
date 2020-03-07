@@ -50,14 +50,16 @@ def crosslingual():
             'fill_opacity':"0.6",
             "index":i,
             "bordercolor":'black',
-            "label":"prueba"
+            "label":str(i)
 
             
         })    
     
 
+    topKeywords = lda_model.show_topic(0,topn=10)
+    #topKeywords = [[1,2,3],[4,5,6]]
 
-    return render_template("index.html", num_topics = num_topics, jsonCircles=jsonCircles) #data = my_list_json
+    return render_template("index.html", num_topics = num_topics, jsonCircles=jsonCircles, topKeywords = topKeywords) #data = my_list_json
         
 
 

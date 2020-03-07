@@ -58,26 +58,33 @@
                                 .duration('50')
                                 .attr('opacity', "1.0" )})
                         .on("click",function(d){
-                            alert("on click "+d.index);
+                            selectTopic(d.label)
                         });
                         
                         
+    var myText = svgContainer.selectAll(".mytext")
+                    .data(jsonCircles['circles'])
+                    .enter()
+                    .append("text")
+                    //the rest of your code
 
-    const textElems = svgContainer.append('circle')
-                                .selectAll('text')
-                                .data(jsonCircles['circles'])
-                                .enter().append('text')
-                                .text('prueba')
-                                .attr('font-size',8)//font size
-                                .attr('x', 100)//positions text towards the left of the center of the circle
-                                .attr('y',40)                        
+                    myText.style("fill", "black")
+                    .attr("width", "10")
+                    .attr("height", "10")
+                    .attr("x", function(d) { return d.x_axis-5;  })
+                    .attr("y", function(d) { return d.y_axis+5;  })
+                    .text(function(d) { return d.label;  }); //function(d) { return d.name; }
 
 
-    
-
+    function selectTopic(label){
+        document.getElementById("toolbar_label").innerHTML = label;    
+    }
 
 
 
     document.getElementById("demo").innerHTML = 'Number of topics '+num_topics;
+    document.getElementById("toolbar_label").innerHTML = 'toolbaaar';
+    //tool bar
+    d3.select('#editbutton')        
+    .on('click', selectTopic("funciona") );                                                
     
-                                                

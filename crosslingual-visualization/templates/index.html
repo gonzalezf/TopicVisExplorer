@@ -4,19 +4,50 @@
 
 <head>
     <title>TopicVisExplorer</title>
-
+    <link href="static/fontawesome/css/all.css" rel="stylesheet"> <!--load all styles -->
+    <script defer src="static/fontawesome/js/all.js"></script> <!--load all styles -->
+    <link rel="stylesheet" href="static/style.css"> 
+</head>  
 </head>
 <script>
     var num_topics = {{num_topics}}
 
     var jsonCircles = {{jsonCircles|tojson|safe}}
     
+    var topKeywords = {{topKeywords|safe}}
+
+    
 </script>
 <body>
 <p id="demo"></p>
+<div id="toolbar">
+    <p>
+    <div id="toolbar_label">
+    </div>
+    <div id="editbutton">
+        <i class="far fa-edit"></i>
+    </div>
+    <div id="pruebaid">
+        jjiedjdie
+    </div>
+    </p>
 
-<script>
-</script>
+</div>
+
+<table>
+    {% for result in topKeywords %}
+    <tr>
+    {% for elem in result %}
+        <td>{{elem}}</td>
+    {% endfor %}    
+    </tr>        
+    {% endfor %}
+
+</table>
+
+    
+
+
 </body>
 
 <!--Scripts JS-->
