@@ -55,11 +55,21 @@ def crosslingual():
             
         })    
     
+    topKeywordsDict = {}
+    for topic_id in range(num_topics):
+        topKeywordsDict[topic_id] = []
+        for term, probability in lda_model.show_topic(topic_id,topn=10):
+            topKeywordsDict[topic_id].append({
+                "term":term,
+                "probability":probability
+            })
+            
+    
+    
 
-    topKeywords = lda_model.show_topic(0,topn=10)
-    #topKeywords = [[1,2,3],[4,5,6]]
+    
 
-    return render_template("index.html", num_topics = num_topics, jsonCircles=jsonCircles, topKeywords = topKeywords) #data = my_list_json
+    return render_template("index.html", num_topics = num_topics, jsonCircles=jsonCircles, sample = topKeywordsDict) #data = my_list_json
         
 
 

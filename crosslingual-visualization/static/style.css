@@ -7,3 +7,18 @@
     background-color: coral;
     padding: 20px
 }
+
+.bar {
+  fill: #80cbc4;
+}
+
+
+line {
+  stroke: gray;
+}
+
+line#limit {
+  stroke: #2F4A6D;
+  stroke-width: 3;
+  stroke-dasharray: 3 6;
+}

@@ -10,16 +10,18 @@
 </head>  
 </head>
 <script>
-    var num_topics = {{num_topics}}
+    var num_topics = {{num_topics}};
 
-    var jsonCircles = {{jsonCircles|tojson|safe}}
+    var jsonCircles = {{jsonCircles|tojson|safe}};
     
-    var topKeywords = {{topKeywords|safe}}
-
+    var sample = {{sample|safe}};
+    console.log(sample)
     
 </script>
 <body>
 <p id="demo"></p>
+
+
 <div id="toolbar">
     <p>
     <div id="toolbar_label">
@@ -34,19 +36,7 @@
 
 </div>
 
-<table>
-    {% for result in topKeywords %}
-    <tr>
-    {% for elem in result %}
-        <td>{{elem}}</td>
-    {% endfor %}    
-    </tr>        
-    {% endfor %}
-
-</table>
-
     
-
 
 </body>
 

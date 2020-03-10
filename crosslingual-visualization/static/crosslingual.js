@@ -1,15 +1,9 @@
 
-
+//http://hdnrnzk.me/2012/07/04/creating-a-bar-graph-using-d3js/
     var svgContainer = d3.select("body").append("svg")
                                         .attr("width", 500)
                                         .attr("height", 500)
                                         .attr("style","outline:thin solid red;");
-
-    var keywordsContainer = d3.select("body").append("svg")
-                            .attr("width",500)
-                            .attr("height",500)
-                            .attr("style","outline:thin solid blue;");
-                                    
                 svgContainer.append("line")
                             .attr("x1",0)
                             .attr("y1",250)
@@ -85,6 +79,105 @@
     document.getElementById("demo").innerHTML = 'Number of topics '+num_topics;
     document.getElementById("toolbar_label").innerHTML = 'toolbaaar';
     //tool bar
+    
     d3.select('#editbutton')        
     .on('click', selectTopic("funciona") );                                                
+
+
     
+    topic_id = 0
+    console.log(sample[topic_id])
+
+    console.log(sample[topic_id].map((s)=>s.probability))
+    //keywords barchart
+
+    var chartContainer = d3.select("body").append("svg")
+                        .attr("width", 500)
+                        .attr("height", 500)
+                        .attr("style","outline:thin solid red;");                                        
+
+
+
+                      
+                        
+                      const margin = 60;
+                      const width = 500- 2 * margin;
+                      const height = 500 - 2 * margin;    
+                      
+                      const chart = chartContainer.append('g')
+                      .attr('transform', `translate(${margin}, ${margin})`);
+                      
+                      const yScale = d3.scaleLinear()
+                      .range([0,height])
+                      .domain([0, d3.max(sample[topic_id].map((s)=>s.probability))]); //margin
+    
+                      chart.append('g')
+                      .call(d3.axisTop(yScale));
+                      
+                      const xScale = d3.scaleBand()
+                      .range([0, width])
+                      .domain(sample[topic_id].map((s) => s.term))
+                      .padding(0.2)
+                      
+                      chart.append('g')
+                      .attr('transform', `translate(0,0)`)
+                      .call(d3.axisLeft(xScale));
+                      
+                      
+                      const barGroups = chart.selectAll()
+                      .data(sample[topic_id])
+                      .enter()
+                      .append('g')
+                
+                      barGroups
+                      .append('rect')
+                      .attr('class','bar')
+                      .attr('x', (s) => 0)//.attr('x', (s) => xScale(s.term))
+                      .attr('y', (s) => xScale(s.term)) //.attr('y', (s) => yScale(s.probability))
+                      .attr('width', (s) => yScale(s.probability)) //(s) => height - yScale(s.probability)
+                      .attr('height', xScale.bandwidth()) //xScale.bandwidth()
+                      .on('mouseenter', function (actual, i) {
+                        d3.selectAll('.probability')
+                          .attr('opacity', 0)
+                        
+                          d3.select(this)
+                          .transition()
+                          .duration(100)
+                          .attr('opacity', 0.8)
+                          .attr('y', (a) => xScale(a.term))
+                          .attr('height', xScale.bandwidth())
+
+                          const y = yScale(actual.probability)
+          
+                          line = chart.append('line')
+                            .attr('id', 'limit')
+                            .attr('y1', 0) // 0
+                            .attr('x1', y) // y
+                            .attr('y2', height) // width
+                            .attr('x2', y) // y
+                  
+                      })
+                      .on('mouseleave', function () {
+                        d3.selectAll('.probability')
+                          .attr('opacity', 1)
+                
+                        d3.select(this)
+                          .transition()
+                          .duration(100)
+                          .attr('opacity', 1)
+                          .attr('y', (a) => xScale(a.term))
+                          .attr('height', xScale.bandwidth())
+
+                        chart.selectAll('#limit').remove()
+
+                      })
+
+
+                      chart.append('g')
+                      .attr('class', 'grid')
+                      .call(d3.axisTop()
+                          .scale(yScale)
+                          .tickSize(-width, 0, 0)
+                          .tickFormat(''))
+                    
+                    
