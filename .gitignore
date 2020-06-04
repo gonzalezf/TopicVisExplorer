@@ -1,0 +1,4 @@
+#ignore word embeddings
+*.vec
+#ignore data folder
+data
