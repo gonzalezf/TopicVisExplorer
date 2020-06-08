@@ -1,0 +1,72 @@
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="static/bootstrap-4.4.1-dist/js/bootstrap.min.js"></script>
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.css">
+<link rel="stylesheet" href="static/bootstrap-4.4.1-dist/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="{{ ldavis_css_url }}">
+
+
+
+
+<h1>TopicVisExplorer - hello2</h1>
+
+<div id={{ visid }}></div>
+<script type="text/javascript">
+
+var {{ visid_raw }}_data = {{ vis_json }};
+
+var relevantDocumentsDict = {{relevantDocumentsDict|safe}};
+var topic_order = {{topic_order}}
+var jsonData = {{vis_json}}
+console.log("topic ordeeer", jsonData)
+
+
+
+function LDAvis_load_lib(url, callback){
+  var s = document.createElement('script');
+  s.src = url;
+  s.async = true;
+  s.onreadystatechange = s.onload = callback;
+  s.onerror = function(){console.warn("failed to load library " + url);};
+  document.getElementsByTagName("head")[0].appendChild(s);
+}
+
+if(typeof(LDAvis) !== "undefined"){
+   // already loaded: just create the visualization
+   !function(LDAvis){
+       new LDAvis("#" + {{ visid }}, {{ visid_raw }}_data);
+   }(LDAvis);
+}else if(typeof define === "function" && define.amd){
+   // require.js is available: use it to load d3/LDAvis
+   require.config({paths: {d3: "{{ d3_url[:-3] }}"}});
+   require(["d3"], function(d3){
+      window.d3 = d3;
+      LDAvis_load_lib("{{ ldavis_url }}", function(){
+        new LDAvis("#" + {{ visid }}, {{ visid_raw }}_data);
+      });
+    });
+}else{
+    // require.js not available: dynamically load d3 & LDAvis
+    LDAvis_load_lib("{{ d3_url }}", function(){
+         LDAvis_load_lib("{{ ldavis_url }}", function(){
+                 new LDAvis("#" + {{ visid }}, {{ visid_raw }}_data);
+            })
+         });
+}
+</script>
+
+<div class="col" id="relevantDocuments"> <!--    <div class="relevantDocuments">-->
+    <table  class="tableRelevantDocumentsClass">
+        <thead>
+        <tr>
+            <th data-field="topic_perc_contrib" scope="col">% </th>
+            <th data-field="text" scope="col">Text</th>
+        </tr>
+        </thead>
+    </table>    
+</div>
+
+<script src="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.js"></script>
