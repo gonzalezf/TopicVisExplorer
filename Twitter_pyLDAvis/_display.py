@@ -11,7 +11,7 @@ from _server import serve
 from utils import get_id, write_ipynb_local_js, NumPyEncoder
 from _prepare import PreparedData
 from jinja2 import Template
-
+from flask import render_template
 
 
 __all__ = ["prepared_data_to_html", "display",
@@ -145,8 +145,8 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order,  d3_url=None
         visid = 'ldavis_' + get_id(data) + str(int(random.random() * 1E10))
     elif re.search('\s', visid):
         raise ValueError("visid must not contain spaces")
-    print("sent topics sorted df mallet", relevantDocumentsDict)
-    print(type(relevantDocumentsDict))
+    #print("sent topics sorted df mallet", relevantDocumentsDict)
+    #print(type(relevantDocumentsDict))
     return template.render(visid=json.dumps(visid),
                            relevantDocumentsDict = relevantDocumentsDict,
                            topic_order = topic_order,

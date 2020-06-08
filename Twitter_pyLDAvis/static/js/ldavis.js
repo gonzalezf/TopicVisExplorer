@@ -137,7 +137,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         
 
         
-        console.log("mdsData3",mdsData3)
+        
 
         // large data for the widths of bars in bar-charts. 6 columns: Term, logprob, loglift, Freq, Total, Category
         // Contains all possible terms for topics in (1, 2, ..., k) and lambda in the user-supplied grid of lambda values
@@ -158,10 +158,10 @@ var LDAvis = function(to_select, data_or_file_name) {
         init_forms(topicID, lambdaID, visID);
 
         // When the value of lambda changes, update the visualization
-        console.log('lambda_select', lambda_select);
+        
         d3.select(lambda_select)
             .on("mouseup", function() {
-                console.log('lambda_select mouseup');
+                
                 // store the previous lambda value
                 lambda.old = lambda.current;
                 lambda.current = document.getElementById(lambdaID).value;
@@ -263,7 +263,8 @@ var LDAvis = function(to_select, data_or_file_name) {
         }
 
         // Create new svg element (that will contain everything):
-        var svg = d3.select(to_select).append("svg")
+        
+        var svg = d3.select(to_select).append("svg") //prueba d3.select(to_select).append("svg")
                 .attr("width", 2* mdswidth + barwidth + margin.left + termwidth + margin.right) // I creased the width to allow show the most relevant documents  .attr("width", mdswidth + barwidth + margin.left + termwidth + margin.right)
                 .attr("height", mdsheight + 2 * margin.top + margin.bottom + 2 * rMax);
                 
@@ -428,7 +429,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 topic_on(this);
             })
             .on("click", function(d) {
-                console.log("d topicss", d.topics)
+                
                 // prevent click event defined on the div container from firing
                 // http://bl.ocks.org/jasondavies/3186840
                 d3.event.stopPropagation();
@@ -441,7 +442,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 state_save(true);
                 topic_on(this);
                 var real_topic_id = topic_order[d.topics-1]-1//Ojo! los topicos fueron ordenados de mayor a menor frecuencia, por eso que el orden cambia
-                console.log("real topic id", real_topic_id)            
+                
                 updateRelevantDocuments(real_topic_id);
 
                 var filtrado = getProbabilitiesKeywordTopic(d.topics); // real_topic_id
@@ -1385,20 +1386,39 @@ var LDAvis = function(to_select, data_or_file_name) {
             state_save(true);
         }
 
-        // Add a group for the bar chart
-        var relevantDocuments = svg.append("g")
-                .attr("transform", "translate("  +(2*mdswidth + margin.left + termwidth) + "," + 2 * margin.top + ")")
-                .attr("width", mdswidth )
-                .attr("height", mdsheight) //.attr("height", mdsheight + 2 * margin.top + margin.bottom + 2 * rMax) // 
-                .attr("id", "relevantDocumentsPanel"); //por alguna razon no esta considerando el css de esto
 
-        relevantDocuments.append("text") // label x-axis
-            .attr("x", 0)
-            .attr("y", 0)
-            .text("probandooo uwu");
+        //most relevant documents
+        var relevantDocumentsPanel = svg.append("g")
+                .attr("transform", "translate("  +(2*mdswidth + margin.left + termwidth) + "," + 2 * margin.top + ")")
+                .attr("id", "relevantDocumentPanel");
+
+        relevantDocumentsPanel.append("text") // label x-axis
+                .attr("x", 0)
+                .attr("y",0)
+                .attr("id","the-text")
+                .text("probando");
+
+        var ctx = document.getElementById("the-svg"),
+        textElm = ctx.getElementById("the-text"),
+        SVGRect = textElm.getBBox();
+
+        console.log("ctx",ctx)
+        console.log("textElm",textElm)
+        console.log("SVGRECT", SVGRect)
+    
+        var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("x", SVGRect.x);
+        rect.setAttribute("y", SVGRect.y);
+        rect.setAttribute("width", SVGRect.width);
+        rect.setAttribute("height", SVGRect.height);
+        rect.setAttribute("fill", "yellow");
+        ctx.insertBefore(rect,textElm);
+        console.log("rect",rect)
+            
+
 
         function updateRelevantDocuments(topic_id){
-
+            console.log("data tabla", relevantDocumentsDict[topic_id])
             $('.tableRelevantDocumentsClass').bootstrapTable("destroy");
             $('.tableRelevantDocumentsClass').bootstrapTable({
                 data: relevantDocumentsDict[topic_id]
@@ -1411,6 +1431,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             })
             return probabilitiesForEachTopic
         }
+        
 
         
         

@@ -8,6 +8,7 @@ from flask import Flask, render_template, request, json
 from _display import *
 from _prepare import prepare, js_PCoA, PreparedData
 from flask import render_template_string
+from os import path, walk
 
 
 """
@@ -55,6 +56,18 @@ __version__ = 'git_1.0.0'
 
 
 app = Flask(__name__)             
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+
+extra_dirs = ['templates',] #directory to watch for any changes
+extra_files = extra_dirs[:]
+for extra_dir in extra_dirs:
+    for dirname, dirs, files in walk(extra_dir):
+        for filename in files:
+            filename = path.join(dirname, filename)
+            if path.isfile(filename):
+                extra_files.append(filename)
+
+print("Extra files to watch", extra_files)
 
 ######################Import data #########################
 
@@ -131,7 +144,8 @@ def launch():    # on running python app.py
     '''
     #debug
     port = 5000
-    app.run(port=port, debug=True)
+    app.run(port=port, debug=True, extra_files=extra_files)
+    
 
 
 

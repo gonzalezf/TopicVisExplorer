@@ -36,3 +36,12 @@ text {
 #relevantDocumentsPanel {
     background-color: rgb(31, 58, 82);
 }
+
+
+#totalContainer{
+    background-color: coral;
+}
+
+#LDAvisContainer{
+    background-color: rgb(66, 86, 179);
+}
