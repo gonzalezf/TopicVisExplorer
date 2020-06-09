@@ -1398,22 +1398,28 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("id","the-text")
                 .text("probando");
 
-        var ctx = document.getElementById("the-svg"),
-        textElm = ctx.getElementById("the-text"),
-        SVGRect = textElm.getBBox();
-
-        console.log("ctx",ctx)
-        console.log("textElm",textElm)
-        console.log("SVGRECT", SVGRect)
     
-        var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        rect.setAttribute("x", SVGRect.x);
-        rect.setAttribute("y", SVGRect.y);
-        rect.setAttribute("width", SVGRect.width);
-        rect.setAttribute("height", SVGRect.height);
-        rect.setAttribute("fill", "yellow");
-        ctx.insertBefore(rect,textElm);
-        console.log("rect",rect)
+        
+        var ctx_list = document.querySelectorAll(".the-svg");
+            for (var i = 0; i < ctx_list.length; i++) {
+                console.log('fakeImage: ', ctx_list[i]);
+                var textElm = ctx_list[i].getElementById("the-text");
+                var SVGRect = textElm.getBBox();
+                console.log("fake textElm list",textElm);
+                console.log("fake SVGRECT list", SVGRect);
+                
+                var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                rect.setAttribute("x", SVGRect.x);
+                rect.setAttribute("y", SVGRect.y);
+                rect.setAttribute("width", SVGRect.width);
+                rect.setAttribute("height", SVGRect.height);
+                rect.setAttribute("fill", "yellow");
+                ctx_list[i].insertBefore(rect,textElm);
+                console.log("fake rect",rect)
+
+            }
+   
+        
             
 
 
