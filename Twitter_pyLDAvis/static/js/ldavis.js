@@ -150,6 +150,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
             lamData.push(obj);
         }
+        
         var dat3 = lamData.slice(0, R);
 
         // Create the topic input & lambda slider forms. Inspired from:
@@ -445,8 +446,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
                 updateRelevantDocuments(real_topic_id);
 
-                var filtrado = getProbabilitiesKeywordTopic(d.topics); // real_topic_id
-                console.log("filtrado final", filtrado)
+                
             })
             .on("mouseout", function(d) {
                 if (vis_state.topic != d.topics) topic_off(this);
@@ -757,13 +757,16 @@ var LDAvis = function(to_select, data_or_file_name) {
                 dat2[i].relevance = vis_state.lambda * dat2[i].logprob +
                     (1 - vis_state.lambda) * dat2[i].loglift;
             }
+            
 
             // sort by relevance:
             dat2.sort(fancysort("relevance"));
 
+            AddBackgroundColorToText(dat2)
+
             // truncate to the top R tokens:
             var dat3 = dat2.slice(0, R);
-
+            
             var y = d3.scale.ordinal()
                     .domain(dat3.map(function(d) {
                         return d.Term;
@@ -1397,16 +1400,14 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("y",0)
                 .attr("id","the-text")
                 .text("probando");
-
+        
     
         
         var ctx_list = document.querySelectorAll(".the-svg");
             for (var i = 0; i < ctx_list.length; i++) {
-                console.log('fakeImage: ', ctx_list[i]);
+                
                 var textElm = ctx_list[i].getElementById("the-text");
                 var SVGRect = textElm.getBBox();
-                console.log("fake textElm list",textElm);
-                console.log("fake SVGRECT list", SVGRect);
                 
                 var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                 rect.setAttribute("x", SVGRect.x);
@@ -1415,7 +1416,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 rect.setAttribute("height", SVGRect.height);
                 rect.setAttribute("fill", "yellow");
                 ctx_list[i].insertBefore(rect,textElm);
-                console.log("fake rect",rect)
+                
 
             }
    
@@ -1424,24 +1425,55 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
         function updateRelevantDocuments(topic_id){
-            console.log("data tabla", relevantDocumentsDict[topic_id])
             $('.tableRelevantDocumentsClass').bootstrapTable("destroy");
             $('.tableRelevantDocumentsClass').bootstrapTable({
                 data: relevantDocumentsDict[topic_id]
             });
         
         }
-        function getProbabilitiesKeywordTopic(topic_id){
-            var probabilitiesForEachTopic = mdsData3.filter(function(d) {
-                return d.Topic=topic_id;
-            })
-            return probabilitiesForEachTopic
+        function get_RGB_by_relevance(c1_r,c1_g,c1_b, c2_r, c2_g, c2_b, r_min, r_max, r_actual){
+            var final_color_r = c1_r+((r_actual-r_min)/(r_max-r_min))*(c2_r-c1_r)
+            var final_color_g = c1_g+((r_actual-r_min)/(r_max-r_min))*(c2_g-c1_g)
+            var final_color_b = c1_b+((r_actual-r_min)/(r_max-r_min))*(c2_b-c1_b)
+            
+            return [final_color_r,final_color_g,final_color_b]
         }
         
+        function AddBackgroundColorToText(dat2){
+            console.log(dat2[i].Term)
+            //min color (less relevant terms)
+            var color1_r = 245, color1_g = 245, color1_b = 245
+            //max  color (more  relevant terms)
+            var color2_r = 5, color2_g = 58, color2_b = 250
 
+            var relevance_max_value = dat2[0].relevance
+            var relevance_min_value = dat2[dat2.length-1].relevance
+            for (i = 0; i < dat2.length; i++) {
+                var final_rgb = get_RGB_by_relevance(color1_r,color1_g,color1_b,color2_r, color2_g, color2_b, relevance_min_value, relevance_max_value, dat2[i].relevance)
+                var final_r = final_rgb[0], final_g = final_rgb[1],  final_b = final_rgb[2]
+                var instance = new Mark(document.querySelector(".tableRelevantDocumentsClass"));
+                instance.mark(dat2[i].Term,{
+                                    accuracy:"exactly",   
+                                    "each": function(mark){
+                                            mark.setAttribute("style", "background-color: rgb("+final_r+","+final_g+","+final_b+")"); //background-color:red;color:#fff;"
+                                    }});            
+                
+
+
+
+              }
+
+            
+            
+
+            
+            
+            
+        }
         
+            
         
-        
+
 
 
     }

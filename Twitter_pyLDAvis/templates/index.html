@@ -5,14 +5,17 @@
 
 
 <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.css">
-<link rel="stylesheet" type="text/css" href="{{ ldavis_css_url }}">
+
 
 
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
 
-<h1>TopicVisExplorer -FUNCIONA?</h1>
+<!--Add mark.js-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" charset="UTF-8"></script>
+<link rel="stylesheet" type="text/css" href="{{ ldavis_css_url }}">
 
+<h1>Hello Plunker!</h1>
 
 <svg id="the-svg" class="the-svg">
   <text x="50" y="50" id="the-text" font-size="30">testing rotated text box points</text>
@@ -21,6 +24,11 @@
 <svg id="the-svg" class="the-svg">
   <text x="50" y="150" id="the-text" font-size="30">testing rotated text box points</text>
 </svg>
+
+<div class='tableRelevantDocumentsClassTest'>
+  <p>Hi this is a text and i wan't to add a class to some words which are here it #Facebook </p> it #Facebook Facebook
+</div>
+
 
 
 <svg id="relevantDocumentPanelPrueba">
@@ -35,6 +43,7 @@ var {{ visid_raw }}_data = {{ vis_json }};
 var relevantDocumentsDict = {{relevantDocumentsDict|safe}};
 var topic_order = {{topic_order}}
 var jsonData = {{vis_json}}
+
 
 
 
