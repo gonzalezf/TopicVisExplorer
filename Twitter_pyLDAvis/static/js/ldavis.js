@@ -277,7 +277,14 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
 
 
+
+        // create  space for heatmap topic similarity visualization
+
         // Create a group for the mds plot
+        
+            
+        
+        // Create a group for the mds plot Bubbles visualization
         var mdsplot = svg.append("g")
                 .attr("id", leftPanelID)
                 .attr("class", "points")
@@ -461,6 +468,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             .text("Intertopic Distance Map (via multidimensional scaling)")
             .attr("x", mdswidth/2 + margin.left)
             .attr("y", 30)
+            .attr("id","textMdsPlot")
             .style("font-size", "16px")
             .style("text-anchor", "middle");
 
@@ -1512,10 +1520,54 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             }
    
+        function createHeatMap(){
+            var mdsplotHeatMap = svg.append("g")
+                .attr("id", "mdsplotHeatMap")
+                .attr("transform", "translate(" + margin.left + "," + 2 * margin.top + ")");
         
             
+            mdsplotHeatMap
+                .append("rect")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("height", mdsheight)
+                .attr("width", mdswidth)
+                .style("fill", "blue")
+            
+            var myGroups = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
+            var myVars = ["v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10"]
 
+            
+       
+        }
 
+        function hideSVG(id_element) {
+            var style = document.getElementById(id_element).style.display;
+            
+            if(style === "none")
+                document.getElementById(id_element).style.display = "block";
+            else
+                document.getElementById(id_element).style.display = "none";
+            
+            }
+
+        createHeatMap() //borrar esto
+
+        var contador = 0;
+        d3.select("#TopicSimilarityVisualizationButton")
+        .on("click", function() {
+            if( contador === 0){
+                createHeatMap()
+            }
+            else{
+                hideSVG("mdsplotHeatMap")
+            }
+            contador+=1
+            hideSVG(leftPanelID)
+            hideSVG("textMdsPlot")
+        });
+    
+            
         function updateRelevantDocuments(topic_id){
             $('.tableRelevantDocumentsClass').bootstrapTable("destroy");
             $('.tableRelevantDocumentsClass').bootstrapTable({
