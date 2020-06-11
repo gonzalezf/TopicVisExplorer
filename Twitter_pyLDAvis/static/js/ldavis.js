@@ -483,8 +483,157 @@ var LDAvis = function(to_select, data_or_file_name) {
             return d.Category == "Default";
         });
         */
-
+        var barDefault2 = dat3.filter(function(d) {
+            return d.Category == "Default";
+        });
         
+        var y = d3.scaleBand()
+                .domain(barDefault2.map(function(d) {
+                    return d.Term;
+                }))
+                .rangeRound([0, barheight])
+                .padding(0.15);
+                //.rangeRoundBands([0, barheight], 0.15);
+        var x = d3.scaleLinear()
+                .domain([1, d3.max(barDefault2, function(d) {
+                    return d.Total;
+                })])
+                .range([0, barwidth])
+                .nice();
+        var yAxis = d3.axisLeft(y);
+        
+        // Add a group for the bar chart
+        var chart = svg.append("g")
+                .attr("transform", "translate("  +(mdswidth + margin.left + termwidth) + "," + 2 * margin.top + ")")
+                .attr("id", barFreqsID);
+        
+        // bar chart legend/guide:
+        var barguide = {"width": 100, "height": 15};
+        d3.select("#" + barFreqsID).append("rect")
+            .attr("x", 0)
+            .attr("y", mdsheight + 10)
+            .attr("height", barguide.height)
+            .attr("width", barguide.width)
+            .style("fill", color1)
+            .attr("opacity", 0.4);
+        d3.select("#" + barFreqsID).append("text")
+            .attr("x", barguide.width + 5)
+            .attr("y", mdsheight + 10 + barguide.height/2)
+            .style("dominant-baseline", "middle")
+            .text("Overall term frequency");
+        
+        d3.select("#" + barFreqsID).append("rect")
+            .attr("x", 0)
+            .attr("y", mdsheight + 10 + barguide.height + 5)
+            .attr("height", barguide.height)
+            .attr("width", barguide.width/2)
+            .style("fill", color2)
+            .attr("opacity", 0.8);
+        d3.select("#" + barFreqsID).append("text")
+            .attr("x", barguide.width/2 + 5)
+            .attr("y", mdsheight + 10 + (3/2)*barguide.height + 5)
+            .style("dominant-baseline", "middle")
+            .text("Estimated term frequency within the selected topic");
+        
+        // footnotes:
+        d3.select("#" + barFreqsID)
+            .append("a")
+            .attr("xlink:href", "http://vis.stanford.edu/files/2012-Termite-AVI.pdf")
+            .attr("target", "_blank")
+            .append("text")
+            .attr("x", 0)
+            .attr("y", mdsheight + 10 + (6/2)*barguide.height + 5)
+            .style("dominant-baseline", "middle")
+            .text("1. saliency(term w) = frequency(w) * [sum_t p(t | w) * log(p(t | w)/p(t))] for topics t; see Chuang et. al (2012)");
+        d3.select("#" + barFreqsID)
+            .append("a")
+            .attr("xlink:href", "http://nlp.stanford.edu/events/illvi2014/papers/sievert-illvi2014.pdf")
+            .attr("target", "_blank")
+            .append("text")
+            .attr("x", 0)
+            .attr("y", mdsheight + 10 + (8/2)*barguide.height + 5)
+            .style("dominant-baseline", "middle")
+            .text("2. relevance(term w | topic t) = \u03BB * p(w | t) + (1 - \u03BB) * p(w | t)/p(w); see Sievert & Shirley (2014)");
+        
+        // Bind 'default' data to 'default' bar chart
+        var basebars = chart.selectAll(to_select + " .bar-totals")
+                .data(barDefault2)
+                .enter();
+        
+        // Draw the gray background bars defining the overall frequency of each word
+        basebars
+            .append("rect")
+            .attr("class", "bar-totals")
+            .attr("x", 0)
+            .attr("y", function(d) {
+                return y(d.Term);
+            })
+            .attr("height", y.bandwidth())
+            .attr("width", function(d) {
+                return x(d.Total);
+            })
+            .style("fill", color1)
+            .attr("opacity", 0.4);
+        
+        // Add word labels to the side of each bar
+        basebars
+            .append("text")
+            .attr("x", -5)
+            .attr("class", "terms")
+            .attr("y", function(d) {
+                return y(d.Term) + 12;
+            })
+            .attr("cursor", "pointer")
+            .attr("id", function(d) {
+                return (termID + d.Term);
+            })
+            .style("text-anchor", "end") // right align text - use 'middle' for center alignment
+            .text(function(d) {
+                return d.Term;
+            })
+            .on("mouseover", function() {
+                term_hover(this);
+            })
+        // .on("click", function(d) {
+        //     var old_term = termID + vis_state.term;
+        //     if (vis_state.term != "" && old_term != this.id) {
+        //         term_off(document.getElementById(old_term));
+        //     }
+        //     vis_state.term = d.Term;
+        //     state_save(true);
+        //     term_on(this);
+        //     debugger;
+        // })
+            .on("mouseout", function() {
+                vis_state.term = "";
+                term_off(this);
+                state_save(true);
+            });
+        
+        var title = chart.append("text")
+                .attr("x", barwidth/2)
+                .attr("y", -30)
+                .attr("class", "bubble-tool") //  set class so we can remove it when highlight_off is called
+                .style("text-anchor", "middle")
+                .style("font-size", "16px")
+                .text("Top-" + R + " Most Salient Terms");
+        
+        title.append("tspan")
+            .attr("baseline-shift", "super")
+            .attr("font-size", "12px")
+            .text("(1)");
+        
+        // barchart axis adapted from http://bl.ocks.org/mbostock/1166403
+        
+        var xAxis = d3.axisTop().scale(x).tickSize(-barheight).ticks(6);
+        console.log("xaxis", xAxis)
+        console.log("x",x)
+        
+        
+        chart.append("g")
+            .attr("class", "xaxis")
+            .call(xAxis);
+
         // dynamically create the topic and lambda input forms at the top of the page:
         function init_forms(topicID, lambdaID, visID) {
             
@@ -1233,7 +1382,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 size[dat2[i].Topic - 1] = 11;
             }
 
-            var rScaleCond = d3.scale.sqrt()
+            var rScaleCond = d3.scaleSqrt()
                     .domain([0, 1]).range([0, rMax]);
 
             // Change size of bubbles according to the word's distribution over topics
