@@ -190,6 +190,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 document.getElementById(topicID).value = value_new;
                 topic_off(document.getElementById(topicID + value_old));
                 topic_on(document.getElementById(topicID + value_new));
+                
                 vis_state.topic = value_new;
                 state_save(true);
             });
@@ -442,9 +443,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 document.getElementById(topicID).value = vis_state.topic = d.topics;
                 state_save(true);
                 topic_on(this);
-                var real_topic_id = topic_order[d.topics-1]-1//Ojo! los topicos fueron ordenados de mayor a menor frecuencia, por eso que el orden cambia
                 
-                updateRelevantDocuments(real_topic_id);
 
                 
             })
@@ -762,7 +761,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             // sort by relevance:
             dat2.sort(fancysort("relevance"));
 
-            AddBackgroundColorToText(dat2)
+            
 
             // truncate to the top R tokens:
             var dat3 = dat2.slice(0, R);
@@ -1025,6 +1024,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         // function to update bar chart when a topic is selected
         // the circle argument should be the appropriate circle element
         function topic_on(circle) {
+            console.log("circle", circle)
             if (circle == null) return null;
 
             // grab data bound to this element
@@ -1063,9 +1063,16 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             // sort by relevance:
             dat2.sort(fancysort("relevance"));
-
+            
             // truncate to the top R tokens:
             var dat3 = dat2.slice(0, R);
+
+            //Show most relevant documents
+            var real_topic_id = topic_order[d.topics-1]-1//Ojo! los topicos fueron ordenados de mayor a menor frecuencia, por eso que el orden cambia
+            updateRelevantDocuments(real_topic_id);
+            // add background color to top relevant terms
+
+            AddBackgroundColorToText(dat3)
 
             // scale the bars to the top R terms:
             var y = d3.scale.ordinal()
@@ -1391,15 +1398,21 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
         //most relevant documents
+        /*
         var relevantDocumentsPanel = svg.append("g")
                 .attr("transform", "translate("  +(2*mdswidth + margin.left + termwidth) + "," + 2 * margin.top + ")")
                 .attr("id", "relevantDocumentPanel");
-
-        relevantDocumentsPanel.append("text") // label x-axis
+        
+        relevantDocumentsPanel.append("foreignObject") 
                 .attr("x", 0)
                 .attr("y",0)
-                .attr("id","the-text")
-                .text("probando");
+                .attr("width",mdswidth)
+                .attr("height",mdsheight)
+                .append("xhtml:div")
+                    .style("font","14px 'Helvetica Newue'")
+                    .html("<table  class='tableRelevantDocumentsClass'><thead> <tr> <th data-field='topic_perc_contrib' scope='col'>% </th> <th data-field='text' scope='col'>Text</th> </tr> </thead></table>")
+        */
+
         
     
         
@@ -1439,21 +1452,22 @@ var LDAvis = function(to_select, data_or_file_name) {
             return [final_color_r,final_color_g,final_color_b]
         }
         
-        function AddBackgroundColorToText(dat2){
-            console.log(dat2[i].Term)
+        function AddBackgroundColorToText(dat3){
+            console.log("dat3", dat3)
+            
             //min color (less relevant terms)
             var color1_r = 245, color1_g = 245, color1_b = 245
             //max  color (more  relevant terms)
             var color2_r = 5, color2_g = 58, color2_b = 250
 
-            var relevance_max_value = dat2[0].relevance
-            var relevance_min_value = dat2[dat2.length-1].relevance
-            for (i = 0; i < dat2.length; i++) {
-                var final_rgb = get_RGB_by_relevance(color1_r,color1_g,color1_b,color2_r, color2_g, color2_b, relevance_min_value, relevance_max_value, dat2[i].relevance)
+            var relevance_max_value = dat3[0].relevance
+            var relevance_min_value = dat3[dat3.length-1].relevance
+            for (i = 0; i < dat3.length; i++) {
+                var final_rgb = get_RGB_by_relevance(color1_r,color1_g,color1_b,color2_r, color2_g, color2_b, relevance_min_value, relevance_max_value, dat3[i].relevance)
                 var final_r = final_rgb[0], final_g = final_rgb[1],  final_b = final_rgb[2]
                 var instance = new Mark(document.querySelector(".tableRelevantDocumentsClass"));
-                instance.mark(dat2[i].Term,{
-                                    accuracy:"exactly",   
+                instance.mark(dat3[i].Term,{
+                                    accuracy:"complementary",   // partially, complementary, exactly
                                     "each": function(mark){
                                             mark.setAttribute("style", "background-color: rgb("+final_r+","+final_g+","+final_b+")"); //background-color:red;color:#fff;"
                                     }});            

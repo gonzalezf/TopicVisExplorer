@@ -15,26 +15,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" charset="UTF-8"></script>
 <link rel="stylesheet" type="text/css" href="{{ ldavis_css_url }}">
 
-<h1>Hello Plunker!</h1>
-
-<svg id="the-svg" class="the-svg">
-  <text x="50" y="50" id="the-text" font-size="30">testing rotated text box points</text>
-</svg>
-
-<svg id="the-svg" class="the-svg">
-  <text x="50" y="150" id="the-text" font-size="30">testing rotated text box points</text>
-</svg>
-
-<div class='tableRelevantDocumentsClassTest'>
-  <p>Hi this is a text and i wan't to add a class to some words which are here it #Facebook </p> it #Facebook Facebook
-</div>
-
-
-
-<svg id="relevantDocumentPanelPrueba">
-
-<text id="the-text"> probando este texto </text>
-</svg>
 <div id={{ visid }}></div>
 <script type="text/javascript">
 
@@ -52,11 +32,9 @@ var jsonData = {{vis_json}}
 
 <div class="container-fluid">
   <div class="row">
-    <div class="w-90 p-2"id="LDAvisContainer"> <!--Change by LDAvisContainer-->
-    </div>
-    <div class="w-10 p-3">
-      <div class="col" id="relevantDocuments"> <!--    <div class="relevantDocuments">-->
-        <table  class="tableRelevantDocumentsClass">
+    <div class="col-8" id="LDAvisContainer"> <!--Change by LDAvisContainer--></div>
+    <div class="col-4" id="relevantDocumentPanel">
+        <table  class="tableRelevantDocumentsClass table table-hover">
             <thead>
             <tr>
                 <th data-field="topic_perc_contrib" scope="col">% </th>
@@ -64,7 +42,6 @@ var jsonData = {{vis_json}}
             </tr>
             </thead>
         </table>    
-      </div>      
     </div>
   </div>
 </div>
@@ -102,7 +79,7 @@ var jsonData = {{vis_json}}
      
       LDAvis_load_lib("{{ d3_url }}", function(){
            LDAvis_load_lib("{{ ldavis_url }}", function(){
-                   new LDAvis("#" + {{ visid }}, {{ visid_raw }}_data); //VISID shoudl be de div svg "#" + {{ visid }} "#" + {{ visid }} #LDAvisContainer"
+                   new LDAvis("#LDAvisContainer", {{ visid_raw }}_data); //"#" + {{ visid }} 
               })
            });
   }

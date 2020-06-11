@@ -42,6 +42,12 @@ text {
     background-color: coral;
 }
 
+#relevantDocumentPanel{
+    width: 530;
+    height: 530;
+    margin-top: 100px;
+
+}
 #LDAvisContainer{
-    background-color: rgb(66, 86, 179);
+    
 }
