@@ -48,6 +48,11 @@ text {
     margin-top: 100px;
 
 }
+
+mark {
+    padding: 0px;
+    background-color:yellow;
+  }
 #LDAvisContainer{
     
 }

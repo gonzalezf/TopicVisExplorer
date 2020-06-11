@@ -79,6 +79,8 @@ var LDAvis = function(to_select, data_or_file_name) {
     var topicUp = topicID + "-up";
     var topicClear = topicID + "-clear";
 
+    
+
     var leftPanelID = visID + "-leftpanel";
     var barFreqsID = visID + "-bar-freqs";
     var topID = visID + "-top";
@@ -86,6 +88,9 @@ var LDAvis = function(to_select, data_or_file_name) {
     var lambdaZeroID = visID + "-lambdaZero";
     var sliderDivID = visID + "-sliderdiv";
     var lambdaLabelID = visID + "-lamlabel";
+
+
+    // 
 
     //////////////////////////////////////////////////////////////////////////////
 
@@ -459,6 +464,9 @@ var LDAvis = function(to_select, data_or_file_name) {
             .style("font-size", "16px")
             .style("text-anchor", "middle");
 
+
+        
+
         // establish layout and vars for bar chart
         var barDefault2 = dat3.filter(function(d) {
             return d.Category == "Default";
@@ -611,17 +619,28 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         // dynamically create the topic and lambda input forms at the top of the page:
         function init_forms(topicID, lambdaID, visID) {
+            
 
             // create container div for topic and lambda input:
-            var inputDiv = document.createElement("div");
-            inputDiv.setAttribute("id", topID);
-            inputDiv.setAttribute("style", "width: 1210px"); // to match the width of the main svg element
-            document.getElementById(visID).appendChild(inputDiv);
+            var TopPanel = document.createElement("div");
+            TopPanel.setAttribute("id", "TopPanel");
+            TopPanel.setAttribute("style", "width: 1210px; height:50px; background-color:  #e8e8e8"); // to match the width of the main svg element
+            document.getElementById(visID).appendChild(TopPanel);
+
+
+
+            
+            
+            
+
 
             // topic input container:
             var topicDiv = document.createElement("div");
             topicDiv.setAttribute("style", "padding: 5px; background-color: #e8e8e8; display: inline-block; width: " + mdswidth + "px; height: 50px; float: left");
-            inputDiv.appendChild(topicDiv);
+            TopPanel.appendChild(topicDiv);
+
+                        // topic input container:
+            
 
             var topicLabel = document.createElement("label");
             topicLabel.setAttribute("for", topicID);
@@ -657,12 +676,72 @@ var LDAvis = function(to_select, data_or_file_name) {
             clear.innerHTML = "Clear Topic";
             topicDiv.appendChild(clear);
 
-            // lambda inputs
+            
+
+            //TOPIC SIMILARITY METRIC PANEL
+            var inputDiv = document.createElement("div");
+            inputDiv.setAttribute("id", topID);
+            inputDiv.setAttribute("style", "width: 1210px"); 
+            document.getElementById(visID).appendChild(inputDiv);
+
+            var TopicSimilarityMetricPanel = document.createElement("div");
+            TopicSimilarityMetricPanel.setAttribute("style", "padding: 5px; margin-top:5px; background-color: #e8e8e8; display: inline-block; width: " + mdswidth + "px; height: 50px; float: left");
+            inputDiv.appendChild(TopicSimilarityMetricPanel);
+
+            //Change visualization button 
+            var TopicSimilarityVisualizationButton = document.createElement("button");
+            TopicSimilarityVisualizationButton.setAttribute("id", "TopicSimilarityVisualizationButton");
+            TopicSimilarityVisualizationButton.setAttribute("style", "margin-left: 5px");
+            TopicSimilarityVisualizationButton.innerHTML = "Change visualization";
+            TopicSimilarityMetricPanel.appendChild(TopicSimilarityVisualizationButton);
+
+            var sliderDivTopicSimilarity = document.createElement("div");
+            sliderDivTopicSimilarity.setAttribute("id", sliderDivID+"TopicSimilarity");
+            sliderDivTopicSimilarity.setAttribute("style", "padding: 5px; height: 40px; width: 250px; float: right; margin-top: -5px; margin-right: 10px");
+            TopicSimilarityMetricPanel.appendChild(sliderDivTopicSimilarity);
+
+            var lambdaInputTopicSimilarity = document.createElement("input");
+            lambdaInputTopicSimilarity.setAttribute("style", "width: 250px; margin-left: 0px; margin-right: 0px");
+            lambdaInputTopicSimilarity.type = "range";
+            lambdaInputTopicSimilarity.min = 0;
+            lambdaInputTopicSimilarity.max = 1;
+            lambdaInputTopicSimilarity.step = data['lambda.step'];
+            lambdaInputTopicSimilarity.value = vis_state.lambda; //
+            lambdaInputTopicSimilarity.id = lambdaID+"TopicSimilarity";
+            lambdaInputTopicSimilarity.setAttribute("list", "ticks"); // to enable automatic ticks (with no labels, see below)
+            sliderDivTopicSimilarity.appendChild(lambdaInputTopicSimilarity);
+
+            // Create the svg to contain the slider scale:
+            var scaleContainerTopicSimilarity = d3.select("#" + sliderDivID+"TopicSimilarity").append("svg")
+                    .attr("width", 250)
+                    .attr("height", 25);
+
+            var sliderScaleTopicSimilarity = d3.scale.linear()
+                    .domain([0, 1])
+                    .range([7.5, 242.5])  // trimmed by 7.5px on each side to match the input type=range slider:
+                    .nice();
+
+            // adapted from http://bl.ocks.org/mbostock/1166403
+            var sliderAxisTopicSimilarity = d3.svg.axis()
+                    .scale(sliderScaleTopicSimilarity)
+                    .orient("bottom")
+                    .tickSize(10)
+                    .tickSubdivide(true)
+                    .ticks(6);
+
+            // group to contain the elements of the slider axis:
+            var sliderAxisGroup = scaleContainerTopicSimilarity.append("g")
+                    .attr("class", "slideraxis")
+                    .attr("margin-top", "-10px")
+                    .call(sliderAxisTopicSimilarity);
+
+
+            // lambda inputs (terms)
             //var lambdaDivLeft = 8 + mdswidth + margin.left + termwidth;
             var lambdaDivWidth = barwidth;
             var lambdaDiv = document.createElement("div");
             lambdaDiv.setAttribute("id", lambdaInputID);
-            lambdaDiv.setAttribute("style", "padding: 5px; background-color: #e8e8e8; display: inline-block; height: 50px; width: " + lambdaDivWidth + "px; float: right; margin-right: 30px");
+            lambdaDiv.setAttribute("style", "padding: 5px; background-color: #e8e8e8; margin-top:5px; display: inline-block; height: 50px; width: " + lambdaDivWidth + "px; float: right; margin-right: 30px");
             inputDiv.appendChild(lambdaDiv);
 
             var lambdaZero = document.createElement("div");
@@ -1024,7 +1103,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         // function to update bar chart when a topic is selected
         // the circle argument should be the appropriate circle element
         function topic_on(circle) {
-            console.log("circle", circle)
+            
             if (circle == null) return null;
 
             // grab data bound to this element
@@ -1453,7 +1532,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         }
         
         function AddBackgroundColorToText(dat3){
-            console.log("dat3", dat3)
+            
             
             //min color (less relevant terms)
             var color1_r = 245, color1_g = 245, color1_b = 245
