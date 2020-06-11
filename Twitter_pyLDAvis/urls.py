@@ -17,7 +17,7 @@ D3_URL = "https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"
 DEV = True #Modo de desarrollo, cambiar a produccion
 #LOCAL_JS_DIR = os.path.join(__path__[0], "js")
 LOCAL_JS_DIR = 'static/js/'
-D3_LOCAL = os.path.join(LOCAL_JS_DIR, "d3.v3.min.js")
+D3_LOCAL = os.path.join(LOCAL_JS_DIR, "d3.v5.min.js")
 
 if DEV:
     WWW_JS_DIR = "https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/grynqsphwqoi/b/twitter_pyldavis/o/"

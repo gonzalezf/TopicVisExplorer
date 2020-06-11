@@ -206,7 +206,7 @@ def prepared_html_in_flask(data, relevantDocumentsDict, topic_order, **kwargs):
     #kwargs['ldavis_css_url'] = '/LDAvis.css'
 
     kwargs['ldavis_url'] = '/static/js/LDAvis.js'
-    kwargs['d3_url'] = 'static/js/d3.v3.min.js'
+    kwargs['d3_url'] = 'static/js/d3.v5.min.js'
     kwargs['ldavis_css_url'] = 'static/js/LDAvis.css'
 
     html = prepared_data_to_html(data,relevantDocumentsDict,topic_order,  **kwargs)
