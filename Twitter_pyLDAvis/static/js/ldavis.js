@@ -277,16 +277,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
 
 
-
-        // create  space for heatmap topic similarity visualization
-
-        // Create a group for the mds plot
-        
-            
         
         // Create a group for the mds plot Bubbles visualization
-        
-
         var mdsplot = svg.append("g")
                 .attr("id", leftPanelID)
                 .attr("class", "points")
@@ -478,11 +470,6 @@ var LDAvis = function(to_select, data_or_file_name) {
         
 
         // establish layout and vars for bar chart
-        /* AQUI VA LOS TERMINOS MAS RELEVANTES
-        var barDefault2 = dat3.filter(function(d) {
-            return d.Category == "Default";
-        });
-        */
         var barDefault2 = dat3.filter(function(d) {
             return d.Category == "Default";
         });
@@ -644,21 +631,13 @@ var LDAvis = function(to_select, data_or_file_name) {
             TopPanel.setAttribute("style", "width: 1210px; height:50px; background-color:  #e8e8e8"); // to match the width of the main svg element
             document.getElementById(visID).appendChild(TopPanel);
 
-
-
-            
-            
-            
-
-
             // topic input container:
             var topicDiv = document.createElement("div");
             topicDiv.setAttribute("style", "padding: 5px; background-color: #e8e8e8; display: inline-block; width: " + mdswidth + "px; height: 50px; float: left");
             TopPanel.appendChild(topicDiv);
 
-                        // topic input container:
+            // topic input container:
             
-
             var topicLabel = document.createElement("label");
             topicLabel.setAttribute("for", topicID);
             topicLabel.setAttribute("style", "font-family: sans-serif; font-size: 14px");
@@ -739,14 +718,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .nice();
 
             // adapted from http://bl.ocks.org/mbostock/1166403
-            /*
-            var sliderAxisTopicSimilarity = d3.svg.axis()
-                    .scale(sliderScaleTopicSimilarity)
-                    .orient("bottom")
-                    .tickSize(10)
-                    .tickSubdivide(true)
-                    .ticks(6);
-            */
             var sliderAxisTopicSimilarity = d3.axisBottom(sliderScaleTopicSimilarity).tickSize(10).ticks(6);
                     
 
@@ -816,15 +787,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .range([7.5, 242.5])  // trimmed by 7.5px on each side to match the input type=range slider:
                     .nice();
 
-            // adapted from http://bl.ocks.org/mbostock/1166403
-            /*
-            var sliderAxis = d3.svg.axis()
-                    .scale(sliderScale)
-                    .orient("bottom")
-                    .tickSize(10)
-                    .tickSubdivide(true)
-                    .ticks(6);
-            */
+
 
             var sliderAxis = d3.axisBottom(sliderScale).tickSize(10).ticks(6);
                     
@@ -906,13 +869,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     });
 
             // adapted from http://bl.ocks.org/mbostock/1166403
-            /*
-            var xAxis = d3.svg.axis().scale(x)
-                    .orient("top")
-                    .tickSize(-barheight)
-                    .tickSubdivide(true)
-                    .ticks(6);
-            */
+
             var xAxis = d3.axisTop(x).tickSize(-barheight).ticks(6);
             
             // New axis definition:
@@ -1248,13 +1205,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("opacity", 0.8);
 
             // adapted from http://bl.ocks.org/mbostock/1166403
-            /*
-            var xAxis = d3.svg.axis().scale(x)
-                    .orient("top")
-                    .tickSize(-barheight)
-                    .tickSubdivide(true)
-                    .ticks(6);
-            */
 
             var xAxis = d3.axisTop(x).tickSize(-barheight).ticks(6);
 
@@ -1327,13 +1277,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 });
 
             // adapted from http://bl.ocks.org/mbostock/1166403
-            /*
-            var xAxis = d3.svg.axis().scale(x)
-                    .orient("top")
-                    .tickSize(-barheight)
-                    .tickSubdivide(true)
-                    .ticks(6);
-            */
+
            var xAxis = d3.axisTop(x).tickSize(-barheight).ticks(6);
 
             // redraw x-axis
