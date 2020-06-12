@@ -24,8 +24,11 @@ var relevantDocumentsDict = {{relevantDocumentsDict|safe}};
 var topic_order = {{topic_order}}
 var jsonData = {{vis_json}}
 
+var categories_row = {{categories_row}}
 
-
+var matrix_heatmap = {{matrix_heatmap}}
+console.log("categories", categories_row)
+console.log("matrix_heatmap", matrix_heatmap)
 
 
 </script>
@@ -47,6 +50,8 @@ var jsonData = {{vis_json}}
     </div>
   </div>
 </div>
+<div id="chart"></div>
+
 
 <script>
   function LDAvis_load_lib(url, callback){

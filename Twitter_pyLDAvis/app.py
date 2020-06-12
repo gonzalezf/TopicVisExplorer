@@ -3,12 +3,15 @@
 import random, threading, webbrowser
 import gensim, pickle, random
 import gensim_helpers 
+import numpy as np
 from gensim.corpora import Dictionary
 from flask import Flask, render_template, request, json
 from _display import *
 from _prepare import prepare, js_PCoA, PreparedData
 from flask import render_template_string
 from os import path, walk
+from gensim.models.keyedvectors import KeyedVectors
+
 
 
 """
@@ -67,9 +70,13 @@ for extra_dir in extra_dirs:
             if path.isfile(filename):
                 extra_files.append(filename)
 
-print("Extra files to watch", extra_files)
+
 
 ######################Import data #########################
+
+
+
+
 
 ##Load Gensim Model
 LdaModel = gensim.models.ldamodel.LdaModel
@@ -116,13 +123,115 @@ with open('data/cambridge_analytica/sample/collection_1_sample_prepared_data', '
 
 
 PreparedData_dict= PreparedDataObtained.to_dict()
-print(PreparedData_dict.keys())
+
 topic_order = PreparedData_dict['topic.order']
     
+###Use word embedding proposed metric
 
-#show(PreparedDataObtained)
-#html = prepared_data_to_html(PreparedDataObtained)
-html = prepared_html_in_flask(PreparedDataObtained, relevantDocumentsDict, topic_order)
+
+def get_new_order_topic(prepared_data):
+    new_order_prensa_pacifico = []
+    for i in range(len(prepared_data.topic_order)):
+        #FIND index topic i+1
+        current_index = prepared_data.topic_order.index(i+1)+1
+        new_order_prensa_pacifico.append(current_index)
+    return new_order_prensa_pacifico
+    
+    
+
+
+def distance_topic_i_j(terms_list_i,terms_list_j):
+    total_distances_topic_i = 0.0
+    not_found_terms = set()
+    for term_i in terms_list_i:
+        if term_i in wordembedding:
+            dist_for_term_i = []
+            for term_j in terms_list_j:
+                if term_j in wordembedding:                    
+                    dist_for_term_i.append(wordembedding.wv.distance(term_i,term_j))                    
+                else:
+                    not_found_terms.add(term_j)
+            total_distances_topic_i+=min(dist_for_term_i)
+        else:
+            #print("Not found, i:",term_i)
+            not_found_terms.add(term_i)
+    #print("total distance",total_distances_topic_i )
+    if len(not_found_terms)>0:
+        print("Not found", not_found_terms)
+    return total_distances_topic_i
+categories = ['twitter']
+
+def generar_matrix_baseline_metric(list_prepared_data, relevance_score = 0.6, topn=30):
+    relevance_score = 0.6
+    topn=20
+    matrix = []
+    categories_row = []
+    i=0
+    for topic_model_i in list_prepared_data:
+        new_order_topics_i = get_new_order_topic(topic_model_i)
+        for topic_id_i in new_order_topics_i:
+            row=[]
+            categories_row.append(categories[i])
+            terms_list_i = topic_model_i.sorted_terms(topic=topic_id_i,_lambda=relevance_score)['Term'][:topn]
+            for topic_model_j in list_prepared_data:
+                new_order_topics_j = get_new_order_topic(topic_model_j)
+                for topic_id_j in new_order_topics_j:
+                    terms_list_j = topic_model_j.sorted_terms(topic=topic_id_j,_lambda=relevance_score)['Term'][:topn]
+                    row.append(distance_topic_i_j(terms_list_i,terms_list_j))
+            matrix.append(row)
+        i+=1
+    matrix = np.asarray(matrix)
+    
+    return (matrix, categories_row)
+
+
+
+
+
+
+
+
+
+''' #descomentar esto cuando se ejecuta por primera vez
+##Load word embedding
+ruta_word_embedding = 'data/wiki.multi.en.vec'
+##wordembedding = gensim.models.Word2Vec.load(ruta_word_embedding)
+wordembedding = KeyedVectors.load_word2vec_format(ruta_word_embedding, binary=False)
+
+
+heatmap = generar_matrix_baseline_metric([PreparedDataObtained])
+print(heatmap)
+
+
+with open('data/cambridge_analytica/sample/matrix', 'wb') as f:
+    pickle.dump(heatmap[0], f)
+
+with open('data/cambridge_analytica/sample/categories_row', 'wb') as f:
+    pickle.dump(heatmap[1], f)
+'''
+with open('data/cambridge_analytica/sample/matrix', 'rb') as f:
+    matrix = pickle.load(f)
+
+with open('data/cambridge_analytica/sample/categories_row', 'rb') as f:
+    categories_row = pickle.load(f)
+
+print("tipo de matrix", type(matrix))
+print("tipo de matrix", type(matrix.tolist()))
+print("tipo de matrix", matrix.tolist())
+#matrix  = [dict(zip(keys, values)) for values in matrix[0:]]
+#matrix = json.dumps(matrix)
+
+
+
+matrix = matrix.tolist()
+html = prepared_html_in_flask(PreparedDataObtained, relevantDocumentsDict, topic_order, matrix, categories_row )
+
+
+
+
+
+
+
 
 
 @app.route("/")                   
