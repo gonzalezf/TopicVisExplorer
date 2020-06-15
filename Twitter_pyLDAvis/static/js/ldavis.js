@@ -480,9 +480,9 @@ var LDAvis = function(to_select, data_or_file_name) {
         }
         
         var margin_heatmap = { top: 50, right: 0, bottom: 100, left: 30 },
-                  width = 760 - margin.left - margin.right,
-                  height = 430 - margin.top - margin.bottom,
-                  gridSize = Math.floor(width / 24),
+                  width = mdswidth - margin.left - margin.right,//760 - margin.left - margin.right,
+                  height =  mdsheight - margin.top - margin.bottom, //430 - margin.top - margin.bottom,
+                  gridSize =  Math.floor(mdsheight/ 12), //Math.floor(width / 24),
                   legendElementWidth = gridSize,
                   buckets = 9,
                   colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"]; // alternatively colorbrewer.YlGnBu[9]
@@ -517,15 +517,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         
         */
-       //to_select
-        /*
-        var svg = d3.select(to_select).append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-            .append("g")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-            //.attr("transform", "translate(0,0)");//.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-        */
+
        function createHeatMap(){
         var svg_heatmap = svg.append("svg")
             .attr("id","svg_heatmap")
@@ -574,34 +566,24 @@ var LDAvis = function(to_select, data_or_file_name) {
             .style("fill", function(d) { return colorScale(d.value); });
 
         heatMap.append("title").text(function(d) { return Math.round(d.value*100)/100; });
-        /*
-        var heatMap_text = svg.selectAll(".hour_text")
-            .data(matrix_heatmap_vis)
-            .enter().append("text")
-                .attr("x", function(d) { return (d.row) * gridSize+5; }) // row
-                .attr("y", function(d) { return (d.column) * gridSize+20; }) // columna
-                .style("font-size", "14px")
-                .text(function(d) { return Math.round(d.value*10)/10; });
-
-
-        */
+      
         var legend = svg_heatmap.selectAll(".legend")
             .data([0].concat(colorScale.quantiles()), function(d) { return d; })
             .enter().append("g")
             .attr("class", "legend");
         
         legend.append("rect")
-        .attr("x", function(d, i) { return legendElementWidth * i; })
-        .attr("y", mdsheight-200) // height
-        .attr("width", legendElementWidth)
-        .attr("height", gridSize / 2)
-        .style("fill", function(d, i) { return colors[i]; });
+            .attr("x", function(d, i) { return legendElementWidth * i; })
+            .attr("y", height) // height //quizas ocupar mdsheight?
+            .attr("width", legendElementWidth)
+            .attr("height", gridSize / 2)
+            .style("fill", function(d, i) { return colors[i]; });
 
         legend.append("text")
-        .attr("class", "mono")
-        .text(function(d) { return "= " + Math.round(d); })
-        .attr("x", function(d, i) { return legendElementWidth * i; })
-        .attr("y", height+40 + gridSize);
+            .attr("class", "mono")
+            .text(function(d) { return "= " + Math.round(d); })
+            .attr("x", function(d, i) { return legendElementWidth * i; })
+            .attr("y", height + gridSize);
         
         var heatMap = svg_heatmap.selectAll(".hour")
             .data(matrix_heatmap_vis)
@@ -620,61 +602,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             .style("fill", function(d) { return colorScale(d.value); });
 
         heatMap.append("title").text(function(d) { return Math.round(d.value*100)/100; });
-        /*
-        var heatMap_text = svg.selectAll(".hour_text")
-            .data(matrix_heatmap_vis)
-            .enter().append("text")
-                .attr("x", function(d) { return (d.row) * gridSize+5; }) // row
-                .attr("y", function(d) { return (d.column) * gridSize+20; }) // columna
-                .style("font-size", "14px")
-                .text(function(d) { return Math.round(d.value*10)/10; });
-
-
-        /*
-        var legend = svg_heatmap.selectAll(".legend")
-            .data([0].concat(colorScale.quantiles()), function(d) { return d; })
-            .enter().append("g")
-            .attr("class", "legend");
         
-        legend.append("rect")
-        .attr("x", function(d, i) { return legendElementWidth * i; })
-        .attr("y", height)
-        .attr("width", legendElementWidth)
-        .attr("height", gridSize / 2)
-        .style("fill", function(d, i) { return colors[i]; });
-
-        legend.append("text")
-        .attr("x",0)
-        .attr("y",0)
-        .text("seijsisjeieji")
-
-        legend.append("text")
-        .attr("class", "mono")
-        .text(function(d) { return "= " + Math.round(d); })
-        .attr("x", function(d, i) { return legendElementWidth * i; })
-        .style("font-size", "16px")
-        .attr("y", height + gridSize);
-
-
-           var legend = svg.selectAll(".legend")
-           .data([0].concat(colorScale.quantiles()), function(d) { return d; })
-           .enter().append("g")
-           .attr("class", "legend");
-       
-       legend.append("rect")
-       .attr("x", function(d, i) { return legendElementWidth * i; })
-       .attr("y", height+40)
-       .attr("width", legendElementWidth)
-       .attr("height", gridSize / 2)
-       .style("fill", function(d, i) { return colors[i]; });
-
-       legend.append("text")
-       .attr("class", "mono")
-       .text(function(d) { return "= " + Math.round(d); })
-       .attr("x", function(d, i) { return legendElementWidth * i; })
-       .attr("y", height+40 + gridSize);
-                               
-       */
     
        }
         
