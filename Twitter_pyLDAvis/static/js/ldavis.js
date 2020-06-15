@@ -480,7 +480,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         }
         
         var margin_heatmap = { top: 50, right: 0, bottom: 100, left: 30 },
-                  width = 960 - margin.left - margin.right,
+                  width = 760 - margin.left - margin.right,
                   height = 430 - margin.top - margin.bottom,
                   gridSize = Math.floor(width / 24),
                   legendElementWidth = gridSize,
@@ -570,8 +570,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .style("fill", colors[0]);
         
 
-        //heatMap.transition().duration(1000)
-          //  .style("fill", function(d) { return colorScale(d.value); });
+        heatMap.transition().duration(0)
+            .style("fill", function(d) { return colorScale(d.value); });
 
         heatMap.append("title").text(function(d) { return Math.round(d.value*100)/100; });
         /*
@@ -592,7 +592,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         
         legend.append("rect")
         .attr("x", function(d, i) { return legendElementWidth * i; })
-        .attr("y", height+40)
+        .attr("y", mdsheight-200) // height
         .attr("width", legendElementWidth)
         .attr("height", gridSize / 2)
         .style("fill", function(d, i) { return colors[i]; });
