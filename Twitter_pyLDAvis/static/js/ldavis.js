@@ -19,7 +19,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             element: undefined
         },
         vis_state = {
-            lambda: 1,
+            lambda: 0.6,
             topic: 0,
             term: ""
         };
@@ -31,8 +31,8 @@ var LDAvis = function(to_select, data_or_file_name) {
         mdsData3, // topic proportions for all terms in the viz
         lamData, // all terms that are among the top-R most relevant for all topics, lambda values
         lambda = {
-            old: 1,
-            current: 1
+            old: 0.6,
+            current: 0.6
         },
         color1 = "#1f77b4", // baseline color for default topic circles and overall term frequencies
         color2 = "#d62728"; // 'highlight' color for selected topics and term-topic frequencies
@@ -273,200 +273,340 @@ var LDAvis = function(to_select, data_or_file_name) {
         
         var svg = d3.select(to_select).append("svg") //prueba d3.select(to_select).append("svg")
                 .attr("width", 2* mdswidth + barwidth + margin.left + termwidth + margin.right) // I creased the width to allow show the most relevant documents  .attr("width", mdswidth + barwidth + margin.left + termwidth + margin.right)
-                .attr("height", mdsheight + 2 * margin.top + margin.bottom + 2 * rMax);
+                .attr("height", 3* mdsheight + 2 * margin.top + margin.bottom + 2 * rMax);
                 
+        /*
+        svg.append("rect")
+            .attr("width", "100%")
+            .attr("height", "100%")
+            .attr("fill", "pink");
 
 
-        
-        // Create a group for the mds plot Bubbles visualization
-        var mdsplot = svg.append("g")
+        svg.append("rect")
+            .attr("width",  mdswidth + margin.left + margin.right)
+            .attr("height", mdsheight + 2 * margin.top + margin.bottom + 2 * rMax)
+            .attr("transform", "translate(0,"+((mdsheight +margin.bottom  + 2 * rMax)*0)+")")
+            .attr("fill", "blue");
+
+                        
+        svg.append("rect")
+            .attr("width",  mdswidth + margin.left + margin.right)
+            .attr("height", mdsheight + 2 * margin.top + margin.bottom + 2 * rMax)
+            .attr("transform", "translate(0,"+((mdsheight +margin.bottom  + 2 * rMax)*1)+")")
+            .attr("fill", "yellow");
+        */
+
+       function compare_two_models(mdsData_1, mdsData_2){
+            var units = "Widgets";
+
+            // set the dimensions and margins of the graph
+            var margin = {top: 10, right: 10, bottom: 10, left: 10},
+                width = mdswidth - margin.left - margin.right,
+                height = mdsheight - margin.top - margin.bottom;
+                        // format variables
+            
+            var formatNumber = d3.format(",.0f"),    // zero decimal places
+                format = function(d) { return formatNumber(d) + " " + units; },
+                color = d3.scaleOrdinal(d3.schemeAccent);
+            
+
+            // append the svg object to the body of the page
+            var svg_sankey = svg.append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            /*
+            svg_sankey
+                .append("rect")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("height", "100%")
+                .attr("width", "100%")
+                .style("fill", "blue")
+            */
+                        // Set the sankey diagram properties
+            var sankey = d3.sankey()
+            .nodeWidth(36)
+            .nodePadding(40)
+            .size([mdswidth, mdsheight]);
+
+            console.log("sankey",sankey)
+            var path = sankey.link();
+
+            d3.json("/static/js/sankey.json")
+                .then(function(graph) {
+                    sankey
+                        .nodes(graph.nodes)
+                        .links(graph.links)
+                        .layout(32);
+                
+                // add in the links
+                    var link = svg_sankey.append("g").selectAll(".link")
+                        .data(graph.links)
+                    .enter().append("path")
+                        .attr("class", "link")
+                        .attr("d", path)
+                        .style("stroke-width", function(d) { return Math.max(1, d.dy); })
+                        .sort(function(a, b) { return b.dy - a.dy; });
+                
+                // add the link titles
+                    link.append("title")
+                        .text(function(d) {
+                            return d.source.name + " → " + 
+                                d.target.name + "\n" + format(d.value); });
+                
+                // add in the nodes
+                    var node = svg_sankey.append("g").selectAll(".node")
+                        .data(graph.nodes)
+                    .enter().append("g")
+                        .attr("class", "node")
+                        .attr("transform", function(d) { 
+                            return "translate(" + d.x + "," + d.y + ")"; })
+                        .call(d3.drag()
+                        .subject(function(d) {
+                            return d;
+                        })
+                        .on("start", function() {
+                            this.parentNode.appendChild(this);
+                        })
+                        .on("drag", dragmove));
+                
+                // add the rectangles for the nodes
+                    node.append("rect")
+                        .attr("height", function(d) { console.log(d.dy); return d.dy; })
+                        .attr("width", sankey.nodeWidth())
+                        .style("fill", function(d) { 
+                            return d.color = color(d.name.replace(/ .*/, "")); })
+                        .style("stroke", function(d) { 
+                            return d3.rgb(d.color).darker(2); })
+                    .append("title")
+                        .text(function(d) { 
+                            return d.name + "\n" + format(d.value); });
+                
+                // add in the title for the nodes
+                    node.append("text")
+                        .attr("x", -6)
+                        .attr("y", function(d) { return d.dy / 2; })
+                        .attr("dy", ".35em")
+                        .attr("text-anchor", "end")
+                        .attr("transform", null)
+                        .text(function(d) { return d.name; })
+                    .filter(function(d) { return d.x < width / 2; })
+                        .attr("x", 6 + sankey.nodeWidth())
+                        .attr("text-anchor", "start");
+                
+                // the function for moving the nodes
+                    function dragmove(d) {
+                    d3.select(this)
+                        .attr("transform", 
+                            "translate(" 
+                                + d.x + "," 
+                                + (d.y = Math.max(
+                                    0, Math.min(height - d.dy, d3.event.y))
+                                ) + ")");
+                    sankey.relayout();
+                    link.attr("d", path);
+                    }
+                })
+                .catch(function(error) {
+                    // Do some error handling.
+                    console.log(error)
+            });
+        }   
+        // Clicking on the mdsplot should clear the selection
+        function createMdsPlot(number, mdsData){
+            // Create a group for the mds plot Bubbles visualization
+            var mdsplot = svg.append("g")
                 .attr("id", leftPanelID)
                 .attr("class", "points")
-                .attr("transform", "translate(" + margin.left + "," + 2 * margin.top + ")");
+                .attr("transform", "translate(0,"+(2*margin.top +(mdsheight +margin.bottom  + 2 * rMax)*(number-1))+")");//.attr("transform", "translate(" + margin.left + "," + 2 * margin.top + ")");
+
+
+            mdsplot
+                .append("rect")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("height", mdsheight)
+                .attr("width", mdswidth)
+                .style("fill", color1)
+                .attr("opacity", 0)
+                .on("click", function() {
+                    state_reset();
+                    state_save(true);
+                });
+
+            mdsplot.append("line") // draw x-axis
+                .attr("x1", 0)
+                .attr("x2", mdswidth)
+                .attr("y1", mdsheight / 2)
+                .attr("y2", mdsheight / 2)
+                .attr("stroke", "gray")
+                .attr("opacity", 0.3);
+            mdsplot.append("text") // label x-axis
+                .attr("x", 0)
+                .attr("y", mdsheight/2 - 5)
+                .text(data['plot.opts'].xlab)
+                .attr("fill", "gray");
+
+            mdsplot.append("line") // draw y-axis
+                .attr("x1", mdswidth / 2)
+                .attr("x2", mdswidth / 2)
+                .attr("y1", 0)
+                .attr("y2", mdsheight)
+                .attr("stroke", "gray")
+                .attr("opacity", 0.3);
+            mdsplot.append("text") // label y-axis
+                .attr("x", mdswidth/2 + 5)
+                .attr("y", 7)
+                .text(data['plot.opts'].ylab)
+                .attr("fill", "gray");
+
+            // new definitions based on fixing the sum of the areas of the default topic circles:
+            var newSmall = Math.sqrt(0.02*mdsarea*circle_prop/Math.PI);
+            var newMedium = Math.sqrt(0.05*mdsarea*circle_prop/Math.PI);
+            var newLarge = Math.sqrt(0.10*mdsarea*circle_prop/Math.PI);
+            var cx = 10 + newLarge,
+                cx2 = cx + 1.5 * newLarge;
+
+            // circle guide inspired from
+            // http://www.nytimes.com/interactive/2012/02/13/us/politics/2013-budget-proposal-graphic.html?_r=0
+            var circleGuide = function(rSize, size) {
+                d3.select("#" + leftPanelID).append("circle")
+                    .attr('class', "circleGuide" + size)
+                    .attr('r', rSize)
+                    .attr('cx', cx)
+                    .attr('cy', mdsheight + rSize)
+                    .style('fill', 'none')
+                    .style('stroke-dasharray', '2 2')
+                    .style('stroke', '#999');
+                d3.select("#" + leftPanelID).append("line")
+                    .attr('class', "lineGuide" + size)
+                    .attr("x1", cx)
+                    .attr("x2", cx2)
+                    .attr("y1", mdsheight + 2 * rSize)
+                    .attr("y2", mdsheight + 2 * rSize)
+                    .style("stroke", "gray")
+                    .style("opacity", 0.3);
+            };
+
+            circleGuide(newSmall, "Small");
+            circleGuide(newMedium, "Medium");
+            circleGuide(newLarge, "Large");
+
+            var defaultLabelSmall = "2%";
+            var defaultLabelMedium = "5%";
+            var defaultLabelLarge = "10%";
+
+            d3.select("#" + leftPanelID).append("text")
+                .attr("x", 10)
+                .attr("y", mdsheight - 10)
+                .attr('class', "circleGuideTitle")
+                .style("text-anchor", "left")
+                .style("fontWeight", "bold")
+                .text("Marginal topic distribution");
+            d3.select("#" + leftPanelID).append("text")
+                .attr("x", cx2 + 10)
+                .attr("y", mdsheight + 2 * newSmall)
+                .attr('class', "circleGuideLabelSmall")
+                .style("text-anchor", "start")
+                .text(defaultLabelSmall);
+            d3.select("#" + leftPanelID).append("text")
+                .attr("x", cx2 + 10)
+                .attr("y", mdsheight + 2 * newMedium)
+                .attr('class', "circleGuideLabelMedium")
+                .style("text-anchor", "start")
+                .text(defaultLabelMedium);
+            d3.select("#" + leftPanelID).append("text")
+                .attr("x", cx2 + 10)
+                .attr("y", mdsheight + 2 * newLarge)
+                .attr('class', "circleGuideLabelLarge")
+                .style("text-anchor", "start")
+                .text(defaultLabelLarge);
+
+            // bind mdsData to the points in the left panel:
+            var points = mdsplot.selectAll("points")
+                    .data(mdsData)
+                    .enter();
+
+            // text to indicate topic
+            points.append("text")
+                .attr("class", "txt")
+                .attr("x", function(d) {
+                    return (xScale(+d.x));
+                })
+                .attr("y", function(d) {
+                    return (yScale(+d.y) + 4);
+                })
+                .attr("stroke", "black")
+                .attr("opacity", 1)
+                .style("text-anchor", "middle")
+                .style("font-size", "11px")
+                .style("fontWeight", 100)
+                .text(function(d) {
+                    return d.topics;
+                });
+
+            // draw circles
+            points.append("circle")
+                .attr("class", "dot")
+                .style("opacity", 0.2)
+                .style("fill", color1)
+                .attr("r", function(d) {
+                    //return (rScaleMargin(+d.Freq));
+                    return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+                })
+                .attr("cx", function(d) {
+                    return (xScale(+d.x));
+                })
+                .attr("cy", function(d) {
+                    return (yScale(+d.y));
+                })
+                .attr("stroke", "black")
+                .attr("id", function(d) {
+                    return (topicID + d.topics);
+                })
+                .on("mouseover", function(d) {
+                    var old_topic = topicID + vis_state.topic;
+                    if (vis_state.topic > 0 && old_topic != this.id) {
+                        topic_off(document.getElementById(old_topic));
+                    }
+                    topic_on(this);
+                })
+                .on("click", function(d) {
+                    
+                    // prevent click event defined on the div container from firing
+                    // http://bl.ocks.org/jasondavies/3186840
+                    d3.event.stopPropagation();
+                    var old_topic = topicID + vis_state.topic;
+                    if (vis_state.topic > 0 && old_topic != this.id) {
+                        topic_off(document.getElementById(old_topic));
+                    }
+                    // make sure topic input box value and fragment reflects clicked selection
+                    document.getElementById(topicID).value = vis_state.topic = d.topics;
+                    state_save(true);
+                    topic_on(this);
+                    
+
+                    
+                })
+                .on("mouseout", function(d) {
+                    if (vis_state.topic != d.topics) topic_off(this);
+                    if (vis_state.topic > 0) topic_on(document.getElementById(topicID + vis_state.topic));
+                });
+
+            svg.append("text")
+                .text("Intertopic Distance Map (via multidimensional scaling)")
+                .attr("x", mdswidth/2 + margin.left)
+                .attr("y", 30)
+                .attr("id","textMdsPlot")
+                .style("font-size", "16px")
+                .style("text-anchor", "middle");
+
+
+        }
         
-
-        // Clicking on the mdsplot should clear the selection
-        mdsplot
-            .append("rect")
-            .attr("x", 0)
-            .attr("y", 0)
-            .attr("height", mdsheight)
-            .attr("width", mdswidth)
-            .style("fill", color1)
-            .attr("opacity", 0)
-            .on("click", function() {
-                state_reset();
-                state_save(true);
-            });
-
-        mdsplot.append("line") // draw x-axis
-            .attr("x1", 0)
-            .attr("x2", mdswidth)
-            .attr("y1", mdsheight / 2)
-            .attr("y2", mdsheight / 2)
-            .attr("stroke", "gray")
-            .attr("opacity", 0.3);
-        mdsplot.append("text") // label x-axis
-            .attr("x", 0)
-            .attr("y", mdsheight/2 - 5)
-            .text(data['plot.opts'].xlab)
-            .attr("fill", "gray");
-
-        mdsplot.append("line") // draw y-axis
-            .attr("x1", mdswidth / 2)
-            .attr("x2", mdswidth / 2)
-            .attr("y1", 0)
-            .attr("y2", mdsheight)
-            .attr("stroke", "gray")
-            .attr("opacity", 0.3);
-        mdsplot.append("text") // label y-axis
-            .attr("x", mdswidth/2 + 5)
-            .attr("y", 7)
-            .text(data['plot.opts'].ylab)
-            .attr("fill", "gray");
-
-        // new definitions based on fixing the sum of the areas of the default topic circles:
-        var newSmall = Math.sqrt(0.02*mdsarea*circle_prop/Math.PI);
-        var newMedium = Math.sqrt(0.05*mdsarea*circle_prop/Math.PI);
-        var newLarge = Math.sqrt(0.10*mdsarea*circle_prop/Math.PI);
-        var cx = 10 + newLarge,
-            cx2 = cx + 1.5 * newLarge;
-
-        // circle guide inspired from
-        // http://www.nytimes.com/interactive/2012/02/13/us/politics/2013-budget-proposal-graphic.html?_r=0
-        var circleGuide = function(rSize, size) {
-            d3.select("#" + leftPanelID).append("circle")
-                .attr('class', "circleGuide" + size)
-                .attr('r', rSize)
-                .attr('cx', cx)
-                .attr('cy', mdsheight + rSize)
-                .style('fill', 'none')
-                .style('stroke-dasharray', '2 2')
-                .style('stroke', '#999');
-            d3.select("#" + leftPanelID).append("line")
-                .attr('class', "lineGuide" + size)
-                .attr("x1", cx)
-                .attr("x2", cx2)
-                .attr("y1", mdsheight + 2 * rSize)
-                .attr("y2", mdsheight + 2 * rSize)
-                .style("stroke", "gray")
-                .style("opacity", 0.3);
-        };
-
-        circleGuide(newSmall, "Small");
-        circleGuide(newMedium, "Medium");
-        circleGuide(newLarge, "Large");
-
-        var defaultLabelSmall = "2%";
-        var defaultLabelMedium = "5%";
-        var defaultLabelLarge = "10%";
-
-        d3.select("#" + leftPanelID).append("text")
-            .attr("x", 10)
-            .attr("y", mdsheight - 10)
-            .attr('class', "circleGuideTitle")
-            .style("text-anchor", "left")
-            .style("fontWeight", "bold")
-            .text("Marginal topic distribution");
-        d3.select("#" + leftPanelID).append("text")
-            .attr("x", cx2 + 10)
-            .attr("y", mdsheight + 2 * newSmall)
-            .attr('class', "circleGuideLabelSmall")
-            .style("text-anchor", "start")
-            .text(defaultLabelSmall);
-        d3.select("#" + leftPanelID).append("text")
-            .attr("x", cx2 + 10)
-            .attr("y", mdsheight + 2 * newMedium)
-            .attr('class', "circleGuideLabelMedium")
-            .style("text-anchor", "start")
-            .text(defaultLabelMedium);
-        d3.select("#" + leftPanelID).append("text")
-            .attr("x", cx2 + 10)
-            .attr("y", mdsheight + 2 * newLarge)
-            .attr('class', "circleGuideLabelLarge")
-            .style("text-anchor", "start")
-            .text(defaultLabelLarge);
-
-        // bind mdsData to the points in the left panel:
-        var points = mdsplot.selectAll("points")
-                .data(mdsData)
-                .enter();
-
-        // text to indicate topic
-        points.append("text")
-            .attr("class", "txt")
-            .attr("x", function(d) {
-                return (xScale(+d.x));
-            })
-            .attr("y", function(d) {
-                return (yScale(+d.y) + 4);
-            })
-            .attr("stroke", "black")
-            .attr("opacity", 1)
-            .style("text-anchor", "middle")
-            .style("font-size", "11px")
-            .style("fontWeight", 100)
-            .text(function(d) {
-                return d.topics;
-            });
-
-        // draw circles
-        points.append("circle")
-            .attr("class", "dot")
-            .style("opacity", 0.2)
-            .style("fill", color1)
-            .attr("r", function(d) {
-                //return (rScaleMargin(+d.Freq));
-                return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
-            })
-            .attr("cx", function(d) {
-                return (xScale(+d.x));
-            })
-            .attr("cy", function(d) {
-                return (yScale(+d.y));
-            })
-            .attr("stroke", "black")
-            .attr("id", function(d) {
-                return (topicID + d.topics);
-            })
-            .on("mouseover", function(d) {
-                var old_topic = topicID + vis_state.topic;
-                if (vis_state.topic > 0 && old_topic != this.id) {
-                    topic_off(document.getElementById(old_topic));
-                }
-                topic_on(this);
-            })
-            .on("click", function(d) {
-                
-                // prevent click event defined on the div container from firing
-                // http://bl.ocks.org/jasondavies/3186840
-                d3.event.stopPropagation();
-                var old_topic = topicID + vis_state.topic;
-                if (vis_state.topic > 0 && old_topic != this.id) {
-                    topic_off(document.getElementById(old_topic));
-                }
-                // make sure topic input box value and fragment reflects clicked selection
-                document.getElementById(topicID).value = vis_state.topic = d.topics;
-                state_save(true);
-                topic_on(this);
-                
-
-                
-            })
-            .on("mouseout", function(d) {
-                if (vis_state.topic != d.topics) topic_off(this);
-                if (vis_state.topic > 0) topic_on(document.getElementById(topicID + vis_state.topic));
-            });
-
-        svg.append("text")
-            .text("Intertopic Distance Map (via multidimensional scaling)")
-            .attr("x", mdswidth/2 + margin.left)
-            .attr("y", 30)
-            .attr("id","textMdsPlot")
-            .style("font-size", "16px")
-            .style("text-anchor", "middle");
-
-
         //CREATE HEATMAP
 
         var matrix_heatmap_vis = []
@@ -517,7 +657,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         
         */
-
+       
        function createHeatMap(){
         var svg_heatmap = svg.append("svg")
             .attr("id","svg_heatmap")
@@ -605,8 +745,40 @@ var LDAvis = function(to_select, data_or_file_name) {
         
     
        }
-        
 
+       // arreglar esto
+       if( type_vis === 1){
+            createMdsPlot(1, mdsData)
+            var contador = 0;
+            d3.select("#TopicSimilarityVisualizationButton")
+            .on("click", function() {
+                if(contador == 0){
+                  createHeatMap() 
+                  contador+=1 
+                  hideSVG(leftPanelID)
+                  hideSVG("textMdsPlot")
+                }
+                else{
+                    hideSVG(leftPanelID)
+                    hideSVG("textMdsPlot")
+                    hideSVG("svg_heatmap")
+                }
+                
+            });
+       }
+       if(type_vis === 2){
+           compare_two_models(mdsData, mdsData)
+       }
+       
+       /*
+       var array = [mdsData, mdsData] 
+       for (var i = 0; i < array.length; i++) {
+           createMdsPlot(i+1, array[i])
+       }
+       */
+       
+       
+       
 
         // establish layout and vars for bar chart
         var barDefault2 = dat3.filter(function(d) {
@@ -1646,25 +1818,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             }
 
-        var contador = 0;
-        d3.select("#TopicSimilarityVisualizationButton")
-        .on("click", function() {
-            if(contador == 0){
-              createHeatMap() 
-              contador+=1 
-              hideSVG(leftPanelID)
-              hideSVG("textMdsPlot")
-            }
-            else{
-                hideSVG(leftPanelID)
-                hideSVG("textMdsPlot")
-                hideSVG("svg_heatmap")
-            }
-            
-            
-            
-        
-        });
+
 
             
         function updateRelevantDocuments(topic_id){
@@ -1705,20 +1859,9 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
 
-              }
-
-            
-            
-
-            
-            
+              }   
             
         }
-        
-            
-        
-
-
 
     }
     
@@ -1731,6 +1874,7 @@ var LDAvis = function(to_select, data_or_file_name) {
     else{
         
         visualize(data_or_file_name);
+        
     }
         
 
@@ -1742,3 +1886,4 @@ var LDAvis = function(to_select, data_or_file_name) {
     //debugger;
 
 };
+

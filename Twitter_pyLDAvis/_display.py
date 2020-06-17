@@ -142,21 +142,28 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order, matrix, cate
         ldavis_url = ldavis_url.replace('https://', 'http://')
 
     if visid is None:
-        visid = 'ldavis_' + get_id(data) + str(int(random.random() * 1E10))
+        visid = 'ldavis_' + get_id(data[0]) + str(int(random.random() * 1E10))
     elif re.search('\s', visid):
         raise ValueError("visid must not contain spaces")
     #print("sent topics sorted df mallet", relevantDocumentsDict)
     #print(type(relevantDocumentsDict))
+
+    data_json_format = []
+    for elem in data:
+        elem = elem.to_json()
+        data_json_format.append(elem)
     return template.render(visid=json.dumps(visid),
-                           relevantDocumentsDict = relevantDocumentsDict,
+                           relevantDocumentsDict = relevantDocumentsDict, #esto debiese ser un arreglo
                            topic_order = topic_order,
                            matrix_heatmap = matrix,
                            categories_row = categories_row,
                            visid_raw=visid,
                            d3_url=d3_url,
                            ldavis_url=ldavis_url,
-                           vis_json=data.to_json(),
-                           ldavis_css_url=ldavis_css_url)
+                           vis_json=data_json_format[0], #data[0].to_json()
+                           ldavis_css_url=ldavis_css_url,
+                           type_vis = 2 #2: two topic modeling outputs, 1:one topic modeling output
+                           )
 
 
 def display(data, local=False, **kwargs):

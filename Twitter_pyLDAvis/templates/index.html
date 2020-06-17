@@ -15,18 +15,28 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" charset="UTF-8"></script>
 <link rel="stylesheet" type="text/css" href="{{ ldavis_css_url }}">
 
+<!--Add sankey.js-->
+
+<script src="static/js/d3.v5.min.js"></script>
+<script src="static/js/sankey.js"></script>
+
 <div id={{ visid }}></div>
 <script type="text/javascript">
 
 var {{ visid_raw }}_data = {{ vis_json }};
 
 var relevantDocumentsDict = {{relevantDocumentsDict|safe}};
+
 var topic_order = {{topic_order}}
 var jsonData = {{vis_json}}
 
 var categories_row = {{categories_row}}
 
 var matrix_heatmap = {{matrix_heatmap}}
+
+var type_vis = {{type_vis}}
+
+
 //console.log("categories", categories_row)
 //console.log("matrix_heatmap", matrix_heatmap)
 

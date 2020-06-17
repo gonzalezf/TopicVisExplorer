@@ -224,7 +224,7 @@ print("tipo de matrix", matrix.tolist())
 
 
 matrix = matrix.tolist()
-html = prepared_html_in_flask(PreparedDataObtained, relevantDocumentsDict, topic_order, matrix, categories_row )
+html = prepared_html_in_flask([PreparedDataObtained], relevantDocumentsDict, topic_order, matrix, categories_row )
 
 
 
