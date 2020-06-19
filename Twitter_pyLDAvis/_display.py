@@ -168,14 +168,15 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order, matrix, cate
     matrix_dict = {"nodes":[], "links":[]}
     matrix_s = matrix_sankey[0.80]
     print("esto es", type(matrix_s))
-    for i in range(matrix_s.shape[0]-10):#matrix_s.shape[0]
+    for i in range(matrix_s.shape[0]):#matrix_s.shape[0]
         matrix_dict["nodes"].append({"node":i, "name":"model1-"+str(i)})
-        for j in range(matrix_s.shape[1]-10): #matrix_s.shape[1]
+        for j in range(matrix_s.shape[1]): #matrix_s.shape[1]
             print("esto esssss", matrix_s.shape[0]+j)
-            if matrix_s[i][j] >0.8:
-                matrix_dict["links"].append({"source":i,"target":(matrix_s.shape[0]-10+j), "value":matrix_s[i][j]}) #matrix[i][j]
+            if matrix_s[i][j] >0.9:
+                matrix_dict["links"].append({"source":i,"target":(matrix_s.shape[0]+j), "value":matrix_s[i][j]}) #matrix[i][j]
+            
 
-    for j in range(matrix_s.shape[1]-10): #matrix_s.shape[1]
+    for j in range(matrix_s.shape[1]): #matrix_s.shape[1]
         matrix_dict["nodes"].append({"node":matrix_s.shape[0]+j, "name":"model2-"+str(j)})
     print("matrix dict!!!!", matrix_dict)
 

@@ -302,7 +302,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             // set the dimensions and margins of the graph
             var margin = {top: 10, right: 10, bottom: 10, left: 10},
                 width = mdswidth - margin.left - margin.right,
-                height = mdsheight - margin.top - margin.bottom;
+                height = 2*mdsheight - margin.top - margin.bottom;
                         // format variables
             
             var formatNumber = d3.format(",.2f"),    // two decimal places
@@ -330,7 +330,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             var sankey = d3.sankey()
             .nodeWidth(36)
             .nodePadding(40)
-            .size([mdswidth, mdsheight]);
+            .size([mdswidth-margin.right, 2*mdsheight-margin.top]);
 
             
             var path = sankey.link();
