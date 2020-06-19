@@ -82,8 +82,10 @@ TEMPLATE_DICT = {"simple": SIMPLE_HTML,
                  "general": GENERAL_HTML}
 
 
-def prepared_data_to_html(data, relevantDocumentsDict, topic_order, matrix, categories_row,  d3_url=None, ldavis_url=None, ldavis_css_url=None,
+def prepared_data_to_html(data, relevantDocumentsDict, topic_order, matrix, categories_row, type_vis,matrix_sankey=None,  d3_url=None, ldavis_url=None, ldavis_css_url=None,
                           template_type="general", visid=None, use_http=False):
+
+    
     """Output HTML with embedded visualization
 
     Parameters
@@ -147,11 +149,39 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order, matrix, cate
         raise ValueError("visid must not contain spaces")
     #print("sent topics sorted df mallet", relevantDocumentsDict)
     #print(type(relevantDocumentsDict))
-
+    
     data_json_format = []
     for elem in data:
         elem = elem.to_json()
         data_json_format.append(elem)
+
+
+
+
+    #transformar matrix en un diccionario
+    dict_1= {"nodes": [{"node": 0, "name": "node0"}, 
+    {"node": 1, "name": "node1"},
+     {"node": 2, "name": "node2"}, {"node": 3, "name": "node3"}, {"node": 4, "name": "node4"}], 
+     "links": [{"source": 0, "target": 2, "value": 20}, {"source": 0, "target": 3, "value": 1}, {"source": 1, "target": 2, "value": 2}, {"source": 1, "target": 4, "value": 15}]
+    }
+    print("dict1", dict_1)
+    matrix_dict = {"nodes":[], "links":[]}
+    matrix_s = matrix_sankey[0.80]
+    print("esto es", type(matrix_s))
+    for i in range(matrix_s.shape[0]-10):#matrix_s.shape[0]
+        matrix_dict["nodes"].append({"node":i, "name":"model1-"+str(i)})
+        for j in range(matrix_s.shape[1]-10): #matrix_s.shape[1]
+            print("esto esssss", matrix_s.shape[0]+j)
+            if matrix_s[i][j] >0.8:
+                matrix_dict["links"].append({"source":i,"target":(matrix_s.shape[0]-10+j), "value":matrix_s[i][j]}) #matrix[i][j]
+
+    for j in range(matrix_s.shape[1]-10): #matrix_s.shape[1]
+        matrix_dict["nodes"].append({"node":matrix_s.shape[0]+j, "name":"model2-"+str(j)})
+    print("matrix dict!!!!", matrix_dict)
+
+
+    matrix_json = json.dumps(matrix_dict)
+    print("json file creado", matrix_json)
     return template.render(visid=json.dumps(visid),
                            relevantDocumentsDict = relevantDocumentsDict, #esto debiese ser un arreglo
                            topic_order = topic_order,
@@ -162,7 +192,8 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order, matrix, cate
                            ldavis_url=ldavis_url,
                            vis_json=data_json_format[0], #data[0].to_json()
                            ldavis_css_url=ldavis_css_url,
-                           type_vis = 2 #2: two topic modeling outputs, 1:one topic modeling output
+                           matrix_sankey=matrix_json, #matrix_sankey[0.0].tolist(), 
+                           type_vis = type_vis #2: two topic modeling outputs, 1:one topic modeling output
                            )
 
 
@@ -209,16 +240,16 @@ def display(data, local=False, **kwargs):
 
     return HTML(prepared_data_to_html(data, **kwargs))
 
-def prepared_html_in_flask(data, relevantDocumentsDict, topic_order, matrix, categories_row, **kwargs):
+def prepared_html_in_flask(data, relevantDocumentsDict, topic_order, matrix, categories_row,type_vis,matrix_sankey=None, **kwargs):
     #kwargs['ldavis_url'] = '/LDAvis.js'
     #kwargs['d3_url'] = '/d3.js'
     #kwargs['ldavis_css_url'] = '/LDAvis.css'
-
+    
     kwargs['ldavis_url'] = '/static/js/LDAvis.js'
     kwargs['d3_url'] = 'static/js/d3.v5.min.js'
     kwargs['ldavis_css_url'] = 'static/js/LDAvis.css'
 
-    html = prepared_data_to_html(data,relevantDocumentsDict,topic_order,matrix, categories_row,  **kwargs)
+    html = prepared_data_to_html(data,relevantDocumentsDict,topic_order,matrix, categories_row, type_vis, matrix_sankey,**kwargs)
     return html
     
 

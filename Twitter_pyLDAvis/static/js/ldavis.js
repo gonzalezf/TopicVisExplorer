@@ -295,9 +295,9 @@ var LDAvis = function(to_select, data_or_file_name) {
             .attr("transform", "translate(0,"+((mdsheight +margin.bottom  + 2 * rMax)*1)+")")
             .attr("fill", "yellow");
         */
-
+        //https://bl.ocks.org/d3noob/013054e8d7807dff76247b81b0e29030
        function compare_two_models(mdsData_1, mdsData_2){
-            var units = "Widgets";
+            var units = "similarity";
 
             // set the dimensions and margins of the graph
             var margin = {top: 10, right: 10, bottom: 10, left: 10},
@@ -305,7 +305,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 height = mdsheight - margin.top - margin.bottom;
                         // format variables
             
-            var formatNumber = d3.format(",.0f"),    // zero decimal places
+            var formatNumber = d3.format(",.2f"),    // two decimal places
                 format = function(d) { return formatNumber(d) + " " + units; },
                 color = d3.scaleOrdinal(d3.schemeAccent);
             
@@ -332,88 +332,87 @@ var LDAvis = function(to_select, data_or_file_name) {
             .nodePadding(40)
             .size([mdswidth, mdsheight]);
 
-            console.log("sankey",sankey)
+            
             var path = sankey.link();
 
-            d3.json("/static/js/sankey.json")
-                .then(function(graph) {
-                    sankey
-                        .nodes(graph.nodes)
-                        .links(graph.links)
-                        .layout(32);
-                
-                // add in the links
-                    var link = svg_sankey.append("g").selectAll(".link")
-                        .data(graph.links)
-                    .enter().append("path")
-                        .attr("class", "link")
-                        .attr("d", path)
-                        .style("stroke-width", function(d) { return Math.max(1, d.dy); })
-                        .sort(function(a, b) { return b.dy - a.dy; });
-                
-                // add the link titles
-                    link.append("title")
-                        .text(function(d) {
-                            return d.source.name + " → " + 
-                                d.target.name + "\n" + format(d.value); });
-                
-                // add in the nodes
-                    var node = svg_sankey.append("g").selectAll(".node")
-                        .data(graph.nodes)
-                    .enter().append("g")
-                        .attr("class", "node")
-                        .attr("transform", function(d) { 
-                            return "translate(" + d.x + "," + d.y + ")"; })
-                        .call(d3.drag()
-                        .subject(function(d) {
-                            return d;
-                        })
-                        .on("start", function() {
-                            this.parentNode.appendChild(this);
-                        })
-                        .on("drag", dragmove));
-                
-                // add the rectangles for the nodes
-                    node.append("rect")
-                        .attr("height", function(d) { console.log(d.dy); return d.dy; })
-                        .attr("width", sankey.nodeWidth())
-                        .style("fill", function(d) { 
-                            return d.color = color(d.name.replace(/ .*/, "")); })
-                        .style("stroke", function(d) { 
-                            return d3.rgb(d.color).darker(2); })
-                    .append("title")
-                        .text(function(d) { 
-                            return d.name + "\n" + format(d.value); });
-                
-                // add in the title for the nodes
-                    node.append("text")
-                        .attr("x", -6)
-                        .attr("y", function(d) { return d.dy / 2; })
-                        .attr("dy", ".35em")
-                        .attr("text-anchor", "end")
-                        .attr("transform", null)
-                        .text(function(d) { return d.name; })
-                    .filter(function(d) { return d.x < width / 2; })
-                        .attr("x", 6 + sankey.nodeWidth())
-                        .attr("text-anchor", "start");
-                
-                // the function for moving the nodes
-                    function dragmove(d) {
-                    d3.select(this)
-                        .attr("transform", 
-                            "translate(" 
-                                + d.x + "," 
-                                + (d.y = Math.max(
-                                    0, Math.min(height - d.dy, d3.event.y))
-                                ) + ")");
-                    sankey.relayout();
-                    link.attr("d", path);
-                    }
+            
+            var graph = matrix_sankey    
+            console.log("este es el sankey graph!!", graph)
+            sankey
+                .nodes(graph.nodes)
+                .links(graph.links)
+                .layout(32); //32
+        
+        // add in the links
+            var link = svg_sankey.append("g").selectAll(".link")
+                .data(graph.links)
+            .enter().append("path")
+                .attr("class", "link")
+                .attr("d", path)
+                .style("stroke-width", function(d) { return Math.max(1, d.dy); })
+                .sort(function(a, b) { return b.dy - a.dy; });
+        
+        // add the link titles
+            link.append("title")
+                .text(function(d) {
+                    return d.source.name + " → " + 
+                        d.target.name + "\n" + format(d.value); });
+        
+        // add in the nodes
+            var node = svg_sankey.append("g").selectAll(".node")
+                .data(graph.nodes)
+            .enter().append("g")
+                .attr("class", "node")
+                .attr("transform", function(d) { 
+                    return "translate(" + d.x + "," + d.y + ")"; })
+                .call(d3.drag()
+                .subject(function(d) {
+                    return d;
                 })
-                .catch(function(error) {
-                    // Do some error handling.
-                    console.log(error)
-            });
+                .on("start", function() {
+                    this.parentNode.appendChild(this);
+                })
+                .on("drag", dragmove));
+        
+        // add the rectangles for the nodes
+            node.append("rect")
+                .attr("height", function(d) { return d.dy; })
+                .attr("width", sankey.nodeWidth())
+                .style("fill", function(d) { 
+                    return d.color = color(d.name.replace(/ .*/, "")); })
+                .style("stroke", function(d) { 
+                    return d3.rgb(d.color).darker(2); })
+            .append("title")
+                .text(function(d) { 
+                    return d.name + "\n" + format(d.value); });
+        
+        // add in the title for the nodes
+            node.append("text")
+                .attr("x", -6)
+                .attr("y", function(d) { return d.dy / 2; })
+                .attr("dy", ".35em")
+                .attr("text-anchor", "end")
+                .attr("transform", null)
+                .text(function(d) { return d.name; })
+            .filter(function(d) { return d.x < width / 2; })
+                .attr("x", 6 + sankey.nodeWidth())
+                .attr("text-anchor", "start");
+        
+        // the function for moving the nodes
+            function dragmove(d) {
+            d3.select(this)
+                .attr("transform", 
+                    "translate(" 
+                        + d.x + "," 
+                        + (d.y = Math.max(
+                            0, Math.min(height - d.dy, d3.event.y))
+                        ) + ")");
+            sankey.relayout();
+            link.attr("d", path);
+            }
+            
+               
+            
         }   
         // Clicking on the mdsplot should clear the selection
         function createMdsPlot(number, mdsData){
