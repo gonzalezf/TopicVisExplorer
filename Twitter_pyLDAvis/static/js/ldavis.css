@@ -102,3 +102,7 @@ rect.bordered {
   .link:hover {
     stroke-opacity: .5;
   }
+
+  #svg_sankey{
+    background-color: blue;
+  }

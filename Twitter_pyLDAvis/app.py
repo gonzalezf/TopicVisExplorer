@@ -315,10 +315,14 @@ if type_vis ==2: #load two topic modeling output
 
         with open('../data/cambridge_analytica/matrix_collection_1_2', 'rb') as f:
             matrix_sankey = pickle.load(f)
+            
         print("we found a matrix distance")
     except:
         print("We can't load matrix")
     matrix = matrix.tolist()
+    print("--------------------------------------------")
+    print(matrix)
+    print("--------------------------------------------")
 
 
     html = prepared_html_in_flask([PreparedDataObtained_collection_1], relevantDocumentsDict_collection_1, topic_order_collection_1, matrix, categories_row , type_vis, matrix_sankey)
