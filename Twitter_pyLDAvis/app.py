@@ -260,7 +260,7 @@ if type_vis ==1: #load just one model
     html = prepared_html_in_flask([PreparedDataObtained], relevantDocumentsDict, topic_order, matrix, categories_row , type_vis)
 
 
-if type_vis ==2: #load two topic modeling output
+if type_vis == 2: #load two topic modeling output
     
     with open('../data/cambridge_analytica/collection_I/collection_1_sent_topics_sorteddf_mallet_ldamodel', 'rb') as f:
         most_relevant_documents_collection_1 = pickle.load(f)
@@ -324,8 +324,8 @@ if type_vis ==2: #load two topic modeling output
     print(matrix)
     print("--------------------------------------------")
 
-
-    html = prepared_html_in_flask([PreparedDataObtained_collection_1], relevantDocumentsDict_collection_1, topic_order_collection_1, matrix, categories_row , type_vis, matrix_sankey)
+                                                                                
+    html = prepared_html_in_flask([PreparedDataObtained_collection_1], relevantDocumentsDict_collection_1, topic_order_collection_1, matrix, categories_row , type_vis, matrix_sankey, [PreparedDataObtained_collection_2], relevantDocumentsDict_collection_2, topic_order_collection_2)
 
 
 

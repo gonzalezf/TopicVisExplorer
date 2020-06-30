@@ -26,18 +26,33 @@
 var {{ visid_raw }}_data = {{ vis_json }};
 
 var relevantDocumentsDict = {{relevantDocumentsDict|safe}};
-
-var topic_order = {{topic_order}}
-var jsonData = {{vis_json}}
-
-var categories_row = {{categories_row}}
-
-var matrix_heatmap = {{matrix_heatmap}}
-
 var type_vis = {{type_vis}}
 
-var matrix_sankey = {{matrix_sankey}};
+console.log("type vis", type_vis)
 
+var topic_order = {{topic_order}}
+
+var jsonData = {{vis_json}}
+
+console.log("este es el jsonData recibido", jsonData)
+
+
+
+if(type_vis == 1){
+  var matrix_heatmap = {{matrix_heatmap}}
+  var categories_row = {{categories_row}}
+}
+
+
+
+
+if(type_vis==2){ //comparacion de dos topic modeling output
+  var matrix_sankey = {{matrix_sankey}};
+  var relevantDocumentsDict_2 = {{relevantDocumentsDict_2|safe}}
+  var topic_order_2 = {{topic_order_2}}
+  console.log("topic order 2", topic_order_2)
+  console.log("matrix sankey", matrix_sankey)
+}
 
 
 

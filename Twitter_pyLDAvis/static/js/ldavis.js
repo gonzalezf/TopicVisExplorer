@@ -307,25 +307,47 @@ var LDAvis = function(to_select, data_or_file_name) {
 
        
        function visualize_sankey(graph, threshold){
-            //d3.select("#svg_sankey").selectAll("*").remove();
-            d3.selectAll('#svg_sankey').remove();
 
-            console.log("esta es la matrix", graph)
-            console.log("el threshold recibido es ", threshold)
-            console.log("Filtrar la matrix!!!")
+            d3.selectAll('#svg_sankey').remove();
+            var min_target_node_value = Infinity;
+            var nodes_filtered_set = new Set();
+            var links_filtered =  graph.links.filter(function(el){
+                if(el.value >=threshold){
+                    if(el.source.node ==  undefined){
+                        nodes_filtered_set.add(el.source);
+                        }
+                    else{
+                        nodes_filtered_set.add(el.source.node);
+                        }
+                    if(el.target.node ==  undefined){
+                        nodes_filtered_set.add(el.target);
+                        if(el.target<=min_target_node_value){
+                            min_target_node_value=el.target
+                            }
+                        }
+                    else{
+                        nodes_filtered_set.add(el.target.node);
+                        if(el.target.node<=min_target_node_value){
+                            min_target_node_value=el.target.node
+                            }
+                        }
+                    return el.value
+                    }
+                }
+            );
+            var nodes_filtered = graph.nodes.filter(function(d){
+                if(nodes_filtered_set.has(d.node)){
+                    return d;
+                }
+            });
+
             var links_filtered =  graph.links.filter(function(el){
                 return el.value >threshold;
                 }
             );
-            
-            console.log("nuevo graph links", links_filtered)
-
             var units = "similarity";
-
-
-            
             // set the dimensions and margins of the graph
-            var margin = {top: 10, right: 10, bottom: 10, left: 10},
+            var margin = {top: 30, right: 10, bottom: 10, left: 10},
                 width = mdswidth - margin.left - margin.right,
                 height = 2*mdsheight - margin.top - margin.bottom;
                         // format variables
@@ -335,12 +357,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 color = d3.scaleOrdinal(d3.schemeAccent);
             
 
-            
-            // append the svg object to the body of the page
-            
-            //d3.select(svg_sankey).selectAll("*").remove();
-            //d3.selectAll("svg> *").remove();
-            
+ 
             var svg_sankey = svg.append("svg")
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
@@ -349,35 +366,19 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .append("g")
                     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-            //svg_sankey.selectAll(".link").remove()        
-            //svg_sankey.selectAll(".node").remove()        
-            //svg_sankey.selectAll("*").remove();
-
-            //svg_sankey.selectAll("*").remove();
             
-
-            /*
-            svg_sankey.append("rect")
-                .attr("width", "100%")
-                .attr("height", "100%")
-                .attr("fill", "white");
-            */
             var sankey = d3.sankey()
             .nodeWidth(36)
             .nodePadding(40)
             .size([mdswidth-margin.right, 2*mdsheight-margin.top]);
 
-            
             var path = sankey.link();
-
-            
-            console.log("este es el sankey graph!!", graph)
             sankey
-                .nodes(graph.nodes)
+                .nodes(nodes_filtered)//.nodes(graph.nodes)
                 .links(links_filtered)//.links(graph.links)
                 .layout(32); //32
         
-        // add in the links
+            // add in the links
 
 
             var link = svg_sankey.append("g").selectAll(".link")
@@ -403,11 +404,15 @@ var LDAvis = function(to_select, data_or_file_name) {
         // add in the nodes
             
             var node = svg_sankey.append("g").selectAll(".node")
-                .data(graph.nodes)
+                .data(nodes_filtered)//.data(graph.nodes)
             .enter().append("g")
                 .attr("class", "node")
                 .attr("transform", function(d) { 
                     return "translate(" + d.x + "," + d.y + ")"; })
+                .on("click", function(d){
+                    console.log("haciendo click", topic_on_sankey(d, min_target_node_value ));
+                });
+                /*
                 .call(d3.drag()
                 .subject(function(d) {
                     return d;
@@ -416,18 +421,35 @@ var LDAvis = function(to_select, data_or_file_name) {
                     this.parentNode.appendChild(this);
                 })
                 .on("drag", dragmove));
+                */
         
         // add the rectangles for the nodes
             node.append("rect")
                 .attr("height", function(d) { return d.dy; })
                 .attr("width", sankey.nodeWidth())
                 .style("fill", function(d) { 
-                    return d.color = color(d.name.replace(/ .*/, "")); })
+                    if(d.node < min_target_node_value){
+                        //return "blue";
+                        //return "#1f77b4"; 
+                        return "rgb(95,160,254)";
+                    }
+                    else{
+                        //return "red";
+                        return "rgb(252,153,146)";
+                    }
+                     //return d.color = color(d.name.replace(/ .*/, "")); })
+                })
                 .style("stroke", function(d) { 
                     return d3.rgb(d.color).darker(2); })
             .append("title")
                 .text(function(d) { 
-                    return d.name + "\n" + format(d.value); });
+                    return d.name + "\n" + format(d.value); })
+                    
+                    
+            .on("click", function(){
+                console.log("estoy haciendo click")
+                alert("probando aqui", d.value);
+            });
         
         // add in the title for the nodes
             node.append("text")
@@ -442,6 +464,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("text-anchor", "start");
         
         // the function for moving the nodes
+        
             function dragmove(d) {
             d3.select(this)
                 .attr("transform", 
@@ -649,6 +672,8 @@ var LDAvis = function(to_select, data_or_file_name) {
         }
         
         //CREATE HEATMAP
+        //Heatmap quedara deshabilitado
+        /*
 
         var matrix_heatmap_vis = []
         var row, column;
@@ -689,6 +714,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         var colorScale = d3.scaleQuantile()
             .domain([min_of_matrix, (colors.length-1), max_of_matrix]) //.domain([0, buckets - 1, d3.max(data, function (d) { return d.value; })])
             .range(colors);//.range(["white", "green"]); //                          .range(colors);
+        */
         /*
         
         var colorScale = d3.scaleLinear()
@@ -788,9 +814,12 @@ var LDAvis = function(to_select, data_or_file_name) {
        }
 
        // arreglar esto
+       
        if( type_vis === 1){
+
             createMdsPlot(1, mdsData)
             var contador = 0;
+            /* deshabilitar heatmap
             d3.select("#TopicSimilarityVisualizationButton")
             .on("click", function() {
                 if(contador == 0){
@@ -806,7 +835,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 }
                 
             });
+            */
        }
+
        if(type_vis === 2){
         
            visualize_sankey(matrix_sankey, vis_state.lambda_topic_similarity)
@@ -1038,12 +1069,14 @@ var LDAvis = function(to_select, data_or_file_name) {
             inputDiv.appendChild(TopicSimilarityMetricPanel);
 
             //Change visualization button 
+
+            /* deshabilitar heatmap
             var TopicSimilarityVisualizationButton = document.createElement("button");
             TopicSimilarityVisualizationButton.setAttribute("id", "TopicSimilarityVisualizationButton");
             TopicSimilarityVisualizationButton.setAttribute("style", "margin-left: 5px");
             TopicSimilarityVisualizationButton.innerHTML = "Change visualization";
             TopicSimilarityMetricPanel.appendChild(TopicSimilarityVisualizationButton);
-
+            */
             var sliderDivTopicSimilarity = document.createElement("div");
             sliderDivTopicSimilarity.setAttribute("id", sliderDivID+"TopicSimilarity");
             sliderDivTopicSimilarity.setAttribute("style", "padding: 5px; height: 40px; width: 250px; float: right; margin-top: -5px; margin-right: 10px");
@@ -1487,6 +1520,18 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         // function to update bar chart when a topic is selected
         // the circle argument should be the appropriate circle element
+        function topic_on_sankey(box, min_target_node_value ){
+            if(box.node>=min_target_node_value){
+                //pertenece al modelo de corpus 2
+                var real_topic_id = topic_order_2[box.node-min_target_node_value]-1
+                console.log("pertenece al modelo 2, topic real", real_topic_id)
+            }
+            else{
+                console.log("pertenece al modelo 1")
+            }
+            //var real_topic_id = topic_order[d.topics-1]-1//Ojo! los topicos fueron ordenados de mayor a menor frecuencia, por eso que el orden cambia
+            //updateRelevantDocuments(real_topic_id);
+        }
         function topic_on(circle) {
             
             if (circle == null) return null;
