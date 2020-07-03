@@ -20,7 +20,8 @@ var LDAvis = function(to_select, data_or_file_name) {
         },
         vis_state = {
             lambda: 0.6,
-            lambda_topic_similarity:0.7,
+            lambda_lambda_topic_similarity:0.8, //que tanta info tiene vector top keywords y que tanta info tiene vector top relevant documents
+            lambda_topic_similarity:0.9, //este filtra las lineas (el ancho que de similitud)
             topic: 0,
             term: ""
         };
@@ -36,7 +37,12 @@ var LDAvis = function(to_select, data_or_file_name) {
             current: 0.6
         },
         
-        lambda_topic_similarity = {
+        lambda_lambda_topic_similarity = {  //pondera la importancia de vector documento y vector top relevant keywords
+            old: 0.8,
+            current: 0.8
+        },
+
+        lambda_topic_similarity = { //mide la similitud de los paths en el sankey diagram
             old: 0.9,
             current: 0.9
 
@@ -176,6 +182,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             .on("mouseup", function() {
                 
                 // store the previous lambda value
+                
                 lambda.old = lambda.current;
                 
                 lambda.current = document.getElementById(lambdaID).value;
@@ -185,6 +192,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 d3.select(lambda_select + "-value").text(vis_state.lambda);
                 // transition the order of the bars
                 var increased = lambda.old < vis_state.lambda;
+                
                 if (vis_state.topic > 0) reorder_bars(increased);
                 // store the current lambda value
                 state_save(true);
@@ -305,19 +313,26 @@ var LDAvis = function(to_select, data_or_file_name) {
         */
         //https://bl.ocks.org/d3noob/013054e8d7807dff76247b81b0e29030}
 
-       
-       function visualize_sankey(graph, threshold){
+        
 
+       function visualize_sankey(graph, threshold){
+            
+            console.log("este es el graph", graph)
             d3.selectAll('#svg_sankey').remove();
+        
             var min_target_node_value = Infinity;
             var nodes_filtered_set = new Set();
+
+            
             var links_filtered =  graph.links.filter(function(el){
+
                 if(el.value >=threshold){
                     if(el.source.node ==  undefined){
                         nodes_filtered_set.add(el.source);
                         }
                     else{
                         nodes_filtered_set.add(el.source.node);
+                        
                         }
                     if(el.target.node ==  undefined){
                         nodes_filtered_set.add(el.target);
@@ -335,6 +350,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     }
                 }
             );
+            
             var nodes_filtered = graph.nodes.filter(function(d){
                 if(nodes_filtered_set.has(d.node)){
                     return d;
@@ -410,7 +426,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("transform", function(d) { 
                     return "translate(" + d.x + "," + d.y + ")"; })
                 .on("click", function(d){
-                    console.log("haciendo click", topic_on_sankey(d, min_target_node_value ));
+                    topic_on_sankey(d, min_target_node_value );
+                    
                 });
                 /*
                 .call(d3.drag()
@@ -447,7 +464,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     
                     
             .on("click", function(){
-                console.log("estoy haciendo click")
+                
                 alert("probando aqui", d.value);
             });
         
@@ -593,7 +610,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             var points = mdsplot.selectAll("points")
                     .data(mdsData)
                     .enter();
-
+            
             // text to indicate topic
             points.append("text")
                 .attr("class", "txt")
@@ -840,7 +857,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
        if(type_vis === 2){
         
-           visualize_sankey(matrix_sankey, vis_state.lambda_topic_similarity)
+           //visualize_sankey(matrix_sankey, vis_state.lambda_topic_similarity)
+           visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
            
        }
        
@@ -855,9 +873,12 @@ var LDAvis = function(to_select, data_or_file_name) {
        
 
         // establish layout and vars for bar chart
+        
         var barDefault2 = dat3.filter(function(d) {
             return d.Category == "Default";
         });
+
+        
         
         var y = d3.scaleBand()
                 .domain(barDefault2.map(function(d) {
@@ -1077,15 +1098,49 @@ var LDAvis = function(to_select, data_or_file_name) {
             TopicSimilarityVisualizationButton.innerHTML = "Change visualization";
             TopicSimilarityMetricPanel.appendChild(TopicSimilarityVisualizationButton);
             */
+            var sliderDivLambdaTopicSimilarity = document.createElement("div");
+            sliderDivLambdaTopicSimilarity.setAttribute("id", sliderDivID+"LambdaTopicSimilarity");
+            sliderDivLambdaTopicSimilarity.setAttribute("style", "padding: 5px; height: 40px; width: 250px; float: left; margin-top: -5px; margin-right: 10px");
+            TopicSimilarityMetricPanel.appendChild(sliderDivLambdaTopicSimilarity);
+
             var sliderDivTopicSimilarity = document.createElement("div");
             sliderDivTopicSimilarity.setAttribute("id", sliderDivID+"TopicSimilarity");
             sliderDivTopicSimilarity.setAttribute("style", "padding: 5px; height: 40px; width: 250px; float: right; margin-top: -5px; margin-right: 10px");
             TopicSimilarityMetricPanel.appendChild(sliderDivTopicSimilarity);
 
+
+            var lambdaInputLambdaTopicSimilarity = document.createElement("input");
+            lambdaInputLambdaTopicSimilarity.setAttribute("style", "width: 250px; margin-left: 0px; margin-right: 0px");
+            lambdaInputLambdaTopicSimilarity.type = "range";
+            lambdaInputLambdaTopicSimilarity.min = 0.0
+            lambdaInputLambdaTopicSimilarity.max = 1;
+            lambdaInputLambdaTopicSimilarity.step = data['lambda.step'];
+            lambdaInputLambdaTopicSimilarity.value = vis_state.lambda_lambda_topic_similarity; //
+            lambdaInputLambdaTopicSimilarity.id = lambdaID+"LambdaTopicSimilarity";
+            lambdaInputLambdaTopicSimilarity.setAttribute("list", "ticks"); // to enable automatic ticks (with no labels, see below)
+            sliderDivLambdaTopicSimilarity.appendChild(lambdaInputLambdaTopicSimilarity);
+
+            var lambdaLabelLambdaTopicSimilarity = document.createElement("label");
+            lambdaLabelLambdaTopicSimilarity.setAttribute("id", lambdaLabelID+"LambdaTopicSimilarity");
+            lambdaLabelLambdaTopicSimilarity.setAttribute("for", lambdaID+"LambdaTopicSimilarity");
+            lambdaLabelLambdaTopicSimilarity.setAttribute("style", "height: 20px; width: 60px; font-family: sans-serif; font-size: 14px; margin-left: 80px");
+            lambdaLabelLambdaTopicSimilarity.innerHTML = "&#955 = <span id='" + lambdaID+"LambdaTopicSimilarity" + "-value'>" + vis_state.lambda_lambda_topic_similarity + "</span>";
+            sliderDivLambdaTopicSimilarity.appendChild(lambdaLabelLambdaTopicSimilarity);
+
+
+
+            //hacer que el slider  parta con el menor similarity score de la matrix
+            var min_similarity_score = Infinity
+            matrix_sankey[lambda_lambda_topic_similarity.current].links.filter(function(el){
+                if(el.value < min_similarity_score){
+                    min_similarity_score = el.value
+                }
+            });
+            
             var lambdaInputTopicSimilarity = document.createElement("input");
             lambdaInputTopicSimilarity.setAttribute("style", "width: 250px; margin-left: 0px; margin-right: 0px");
             lambdaInputTopicSimilarity.type = "range";
-            lambdaInputTopicSimilarity.min = 0;
+            lambdaInputTopicSimilarity.min = Math.round((min_similarity_score-0.01)*100)/100;
             lambdaInputTopicSimilarity.max = 1;
             lambdaInputTopicSimilarity.step = data['lambda.step'];
             lambdaInputTopicSimilarity.value = vis_state.lambda_topic_similarity; //
@@ -1097,10 +1152,27 @@ var LDAvis = function(to_select, data_or_file_name) {
             lambdaLabelTopicSimilarity.setAttribute("id", lambdaLabelID+"TopicSimilarity");
             lambdaLabelTopicSimilarity.setAttribute("for", lambdaID+"TopicSimilarity");
             lambdaLabelTopicSimilarity.setAttribute("style", "height: 20px; width: 60px; font-family: sans-serif; font-size: 14px; margin-left: 80px");
-            lambdaLabelTopicSimilarity.innerHTML = "&#955 = <span id='" + lambdaID+"TopicSimilarity" + "-value'>" + vis_state.lambda_topic_similarity + "</span>";
+            lambdaLabelTopicSimilarity.innerHTML = "sim= <span id='" + lambdaID+"TopicSimilarity" + "-value'>" + vis_state.lambda_topic_similarity + "</span>";
             sliderDivTopicSimilarity.appendChild(lambdaLabelTopicSimilarity);
 
+            d3.select("#"+lambdaID+"LambdaTopicSimilarity")
+            .on("mouseup", function() {
+                lambda_lambda_topic_similarity.old = lambda_lambda_topic_similarity.current;
+                lambda_lambda_topic_similarity.current = document.getElementById(lambdaID+"LambdaTopicSimilarity").value;
+                //console.log("nuevo valor,", lambda_lambda_topic_similarity.current)
+                vis_state.lambda_lambda_topic_similarity =lambda_lambda_topic_similarity.current
+            
+                document.getElementById(lambdaID+"LambdaTopicSimilarity" + "-value").innerHTML = " <span id='" + lambdaID+"LambdaTopicSimilarity" + "-value'>" + vis_state.lambda_lambda_topic_similarity + "</span>";
+                document.getElementById(lambdaID+"LambdaTopicSimilarity").value = vis_state.lambda_lambda_topic_similarity;
 
+                //matrix_sankey_2["0.0"]
+                //console.log(matrix_sankey_2)
+                console.log("LAMBDA LAMBDA ", lambda_lambda_topic_similarity.current)
+                console.log("similarity", vis_state.lambda_topic_similarity)
+                
+                visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
+                
+            });
 
             d3.select("#"+lambdaID+"TopicSimilarity")
             .on("mouseup", function() {
@@ -1120,8 +1192,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 document.getElementById(lambdaID+"TopicSimilarity" + "-value").innerHTML = " <span id='" + lambdaID+"TopicSimilarity" + "-value'>" + vis_state.lambda_topic_similarity + "</span>";
 
                 document.getElementById(lambdaID+"TopicSimilarity").value = vis_state.lambda_topic_similarity;
-                console.log("nuevo valor", vis_state.lambda_topic_similarity)
-                visualize_sankey(matrix_sankey, vis_state.lambda_topic_similarity)
+                
+                //visualize_sankey(matrix_sankey, vis_state.lambda_topic_similarity)
+                visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
                 /*
                 ------------------>lambda.current = document.getElementById(lambdaID).value;
                 vis_state.lambda = +this.value;
@@ -1244,11 +1317,13 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         // function to re-order the bars (gray and red), and terms:
         function reorder_bars(increase) {
+            
             // grab the bar-chart data for this topic only:
             var dat2 = lamData.filter(function(d) {
                 //return d.Category == "Topic" + Math.min(K, Math.max(0, vis_state.topic)) // fails for negative topic numbers...
                 return d.Category == "Topic" + vis_state.topic;
             });
+            
             // define relevance:
             for (var i = 0; i < dat2.length; i++) {
                 dat2[i].relevance = vis_state.lambda * dat2[i].logprob +
@@ -1521,21 +1596,168 @@ var LDAvis = function(to_select, data_or_file_name) {
         // function to update bar chart when a topic is selected
         // the circle argument should be the appropriate circle element
         function topic_on_sankey(box, min_target_node_value ){
+
             if(box.node>=min_target_node_value){
                 //pertenece al modelo de corpus 2
-                var real_topic_id = topic_order_2[box.node-min_target_node_value]-1
-                console.log("pertenece al modelo 2, topic real", real_topic_id)
+                var topic_id_in_model = box.node-min_target_node_value
+                var real_topic_id = topic_order_2[topic_id_in_model]-1
+        
+                updateRelevantDocuments(real_topic_id, relevantDocumentsDict_2);
+                
+                var Freq = jsonData.mdsDat.Freq[box.node-min_target_node_value]    
+
+                lamData = [];
+                for (var i = 0; i < jsonData_2['tinfo'].Term.length; i++) {
+                    var obj = {};
+                    for (var key in jsonData_2['tinfo']) {
+                        obj[key] = jsonData_2['tinfo'][key][i];
+                    }
+                    lamData.push(obj);
+                }
+                
             }
             else{
-                console.log("pertenece al modelo 1")
+                var topic_id_in_model = box.node
+                var real_topic_id = topic_order[topic_id_in_model]-1
+                
+                updateRelevantDocuments(real_topic_id, relevantDocumentsDict);
+                
+                var Freq = jsonData.mdsDat.Freq[box.node]     
+
+                lamData = [];
+                for (var i = 0; i < jsonData['tinfo'].Term.length; i++) {
+                    var obj = {};
+                    for (var key in jsonData['tinfo']) {
+                        obj[key] = jsonData['tinfo'][key][i];
+                    }
+                    lamData.push(obj);
+                }
+                
             }
-            //var real_topic_id = topic_order[d.topics-1]-1//Ojo! los topicos fueron ordenados de mayor a menor frecuencia, por eso que el orden cambia
-            //updateRelevantDocuments(real_topic_id);
+
+            vis_state.topic = box.node
+
+            Freq = Math.round(Freq * 10) / 10  
+
+
+            var text = d3.select(to_select + " .bubble-tool");
+            text.remove();
+
+            d3.select("#" + barFreqsID)
+                .append("text")
+                .attr("x", barwidth/2)
+                .attr("y", -30)
+                .attr("class", "bubble-tool") //  set class so we can remove it when highlight_off is called
+                .style("text-anchor", "middle")
+                .style("font-size", "16px")
+                .text("Top-" + R + " Most Relevant Terms for Topic " + box.node+ " (" + Freq + "% of tokens)");
+                //Freq jsonData
+            
+            
+            // grab the bar-chart data for this topic only:
+            
+            var dat2 = lamData.filter(function(d) {
+                if(box.node==-1){ //haccer que esto ocurra
+                    return d.Category == "Default" //creo que estos son los terminos mas relevantes de todo el corpus
+                }
+                else{
+                    return d.Category == "Topic" + (box.node%min_target_node_value+1); // OJO! AQUI HAY UN +1, quizas hay que sacarlo y mejorar el codigo, esto esta medio mula
+                }
+                
+            });
+            
+
+            // define relevance:
+            for (var i = 0; i < dat2.length; i++) {
+                dat2[i].relevance = lambda.current * dat2[i].logprob +
+                    (1 - lambda.current) * dat2[i].loglift;
+            }
+
+            dat2.sort(fancysort("relevance"));
+            // truncate to the top R tokens:
+            var dat3 = dat2.slice(0, R);
+
+            AddBackgroundColorToText(dat3)
+
+            // scale the bars to the top R terms:
+            var y = d3.scaleBand()
+                    .domain(dat3.map(function(d) {
+                        return d.Term;
+                    }))
+                    .rangeRound([0, barheight])
+                    .padding(0.15);
+                    //.rangeRoundBands([0, barheight], 0.15);
+            var x = d3.scaleLinear()
+                    .domain([1, d3.max(dat3, function(d) {
+                        return d.Total;
+                    })])
+                    .range([0, barwidth])
+                    .nice();
+
+            // remove the red bars if there are any:
+            d3.selectAll(to_select + " .overlay").remove();
+
+            // Change Total Frequency bars
+            d3.selectAll(to_select + " .bar-totals")
+                .data(dat3)
+                .attr("x", 0)
+                .attr("y", function(d) {
+                    return y(d.Term);
+                })
+                .attr("height", y.bandwidth())
+                .attr("width", function(d) {
+                    return x(d.Total);
+                })
+                .style("fill", color1)
+                .attr("opacity", 0.4);
+
+            // Change word labels
+            d3.selectAll(to_select + " .terms")
+                .data(dat3)
+                .attr("x", -5)
+                .attr("y", function(d) {
+                    return y(d.Term) + 12;
+                })
+                .attr("id", function(d) {
+                    return (termID + d.Term);
+                })
+                .style("text-anchor", "end") // right align text - use 'middle' for center alignment
+                .text(function(d) {
+                    return d.Term;
+                });
+
+            // Create red bars (drawn over the gray ones) to signify the frequency under the selected topic
+            d3.select("#" + barFreqsID).selectAll(to_select + " .overlay")
+                .data(dat3)
+                .enter()
+                .append("rect")
+                .attr("class", "overlay")
+                .attr("x", 0)
+                .attr("y", function(d) {
+                    return y(d.Term);
+                })
+                .attr("height", y.bandwidth())
+                .attr("width", function(d) {
+                    return x(d.Freq);
+                })
+                .style("fill", color2)
+                .attr("opacity", 0.8);
+
+            // adapted from http://bl.ocks.org/mbostock/1166403
+
+            var xAxis = d3.axisTop(x).tickSize(-barheight).ticks(6);
+
+            // redraw x-axis
+            d3.selectAll(to_select + " .xaxis")
+            //.attr("class", "xaxis")
+                .call(xAxis);
+
+
         }
         function topic_on(circle) {
             
             if (circle == null) return null;
-
+            
             // grab data bound to this element
             var d = circle.__data__;
             var Freq = Math.round(d.Freq * 10) / 10,
@@ -1576,9 +1798,10 @@ var LDAvis = function(to_select, data_or_file_name) {
             // truncate to the top R tokens:
             var dat3 = dat2.slice(0, R);
 
+            
             //Show most relevant documents
             var real_topic_id = topic_order[d.topics-1]-1//Ojo! los topicos fueron ordenados de mayor a menor frecuencia, por eso que el orden cambia
-            updateRelevantDocuments(real_topic_id);
+            updateRelevantDocuments(real_topic_id, relevantDocumentsDict);
             // add background color to top relevant terms
 
             AddBackgroundColorToText(dat3)
@@ -1954,7 +2177,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
             
-        function updateRelevantDocuments(topic_id){
+        function updateRelevantDocuments(topic_id, relevantDocumentsDict){
             $('.tableRelevantDocumentsClass').bootstrapTable("destroy");
             $('.tableRelevantDocumentsClass').bootstrapTable({
                 data: relevantDocumentsDict[topic_id]

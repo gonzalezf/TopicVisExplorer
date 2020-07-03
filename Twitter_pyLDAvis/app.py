@@ -180,12 +180,12 @@ def proposed_topic_similarity(wordembedding, lda_model, n_terms): #n_terms : num
 
 
 ######################Import data #########################
-type_vis = 2 #2: two topic modeling output, 1: one topic modeling output
+type_vis = 2#2: two topic modeling output, 1: one topic modeling output
 
 if type_vis ==1: #load just one model
     ##Load relevant documents
     #relevant documents were already calculated
-    with open('../data/cambridge_analytica/sample/collection_1_sample_sent_topics_sorteddf_mallet_ldamodel', 'rb') as f:
+    with open('../data/cambridge_analytica/collection_I/collection_1_sent_topics_sorteddf_mallet_ldamodel', 'rb') as f:
         sent_topics_sorteddf_mallet = pickle.load(f)
     sent_topics_sorteddf_mallet = sent_topics_sorteddf_mallet[['Topic_Num','Topic_Perc_Contrib','text']]
 
@@ -201,27 +201,27 @@ if type_vis ==1: #load just one model
     #load prepared data
     try: #if file exits
         
-        with open('../data/cambridge_analytica/sample/collection_1_sample_prepared_data', 'rb') as f:
+        with open('../data/cambridge_analytica/collection_I/collection_1_prepared_data', 'rb') as f:
             PreparedDataObtained = pickle.load(f)
         print("We found prepared data file")
     except:
         print("We need to create prepared data")
         ##Load Gensim Model
         LdaModel = gensim.models.ldamodel.LdaModel
-        lda_model = LdaModel.load("../data/cambridge_analytica/sample/collection_1_sample_gensim.model")
+        lda_model = LdaModel.load("../data/cambridge_analytica/collection_I/collection_1_gensim.model")
 
         ##Load corpus
-        with open('../data/cambridge_analytica/sample/collection_1_sample_corpus.pkl', 'rb') as f:
+        with open('../data/cambridge_analytica/collection_I/collection_1_corpus.pkl', 'rb') as f:
             corpus = pickle.load(f)
 
         ##Load id2word
-        id2word = Dictionary.load("../data/cambridge_analytica/sample/collection_1_sample_id2word")
+        id2word = Dictionary.load("../data/cambridge_analytica/collection_I/collection_1_id2word")
 
         data_dict = gensim_helpers.prepare(lda_model, corpus,id2word, mds='pcoa')   #retorna un dict de preparedData
 
         PreparedDataObtained = prepare(**data_dict)
 
-        with open('../data/cambridge_analytica/sample/collection_1_sample_prepared_data', 'wb') as f:
+        with open('../data/cambridge_analytica/collection_I/collection_1_prepared_data', 'wb') as f:
             pickle.dump(PreparedDataObtained, f)
 
     PreparedData_dict= PreparedDataObtained.to_dict()
@@ -257,6 +257,7 @@ if type_vis ==1: #load just one model
 
 
 
+
     html = prepared_html_in_flask([PreparedDataObtained], relevantDocumentsDict, topic_order, matrix, categories_row , type_vis)
 
 
@@ -276,7 +277,7 @@ if type_vis == 2: #load two topic modeling output
             'text':row['text']
         })
 
-    with open('../data/cambridge_analytica/collection_II/collection_2_sent_topics_sorteddf_mallet_ldamodel', 'rb') as f:
+    with open('../data/cambridge_analytica/collection_I/collection_1_sent_topics_sorteddf_mallet_ldamodel', 'rb') as f:
         most_relevant_documents_collection_2 = pickle.load(f)
     most_relevant_documents_collection_2 = most_relevant_documents_collection_2[['Topic_Num','Topic_Perc_Contrib','text']]
 
@@ -292,7 +293,7 @@ if type_vis == 2: #load two topic modeling output
     try: 
         with open('../data/cambridge_analytica/collection_I/collection_1_prepared_data', 'rb') as f:
             PreparedDataObtained_collection_1 = pickle.load(f)
-        with open('../data/cambridge_analytica/collection_II/collection_2_prepared_data', 'rb') as f:
+        with open('../data/cambridge_analytica/collection_I/collection_1_prepared_data', 'rb') as f:
             PreparedDataObtained_collection_2 = pickle.load(f)
         print("We found prepared data file")
     except:
@@ -313,17 +314,14 @@ if type_vis == 2: #load two topic modeling output
         with open('../data/cambridge_analytica/sample/categories_row', 'rb') as f:
             categories_row = pickle.load(f)
 
-        with open('../data/cambridge_analytica/matrix_collection_1_2', 'rb') as f:
+        with open('../data/cambridge_analytica/matrix_collection_1_1', 'rb') as f:
             matrix_sankey = pickle.load(f)
-            
+                
         print("we found a matrix distance")
     except:
         print("We can't load matrix")
     matrix = matrix.tolist()
-    print("--------------------------------------------")
-    print(matrix)
-    print("--------------------------------------------")
-
+    
                                                                                 
     html = prepared_html_in_flask([PreparedDataObtained_collection_1], relevantDocumentsDict_collection_1, topic_order_collection_1, matrix, categories_row , type_vis, matrix_sankey, [PreparedDataObtained_collection_2], relevantDocumentsDict_collection_2, topic_order_collection_2)
 

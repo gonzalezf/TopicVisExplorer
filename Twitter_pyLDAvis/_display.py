@@ -85,7 +85,6 @@ TEMPLATE_DICT = {"simple": SIMPLE_HTML,
 def prepared_data_to_html(data, relevantDocumentsDict, topic_order, matrix, categories_row, type_vis,matrix_sankey=None,  data_2=None, relevantDocumentsDict_2 = None, topic_order_2 = None, d3_url=None, ldavis_url=None, ldavis_css_url=None,
                           template_type="general", visid=None, use_http=False):
 
-    print("LLEGUE AQUI", data)
     """Output HTML with embedded visualization
 
     Parameters
@@ -154,6 +153,9 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order, matrix, cate
     for elem in data:
         elem = elem.to_json()
         data_json_format.append(elem)
+    
+    
+
 
 
 
@@ -170,13 +172,38 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order, matrix, cate
 
         for j in range(matrix_s.shape[1]): #matrix_s.shape[1]
             matrix_dict["nodes"].append({"node":matrix_s.shape[0]+j, "name":"model2-"+str(j)})
-        print("matrix dict!!!!", matrix_dict)
+        
+        ##para cada valor posible de lambda
+        dict_matrix_dict = dict()
+        for lambda_ in range(0, 100):
+            lambda_ = lambda_/100
+            matrix_dict = {"nodes":[], "links":[]}
+            matrix_s = matrix_sankey[lambda_]
+            print("calculado para lambda_ = ", lambda_)
+            for i in range(matrix_s.shape[0]):#matrix_s.shape[0]
+                matrix_dict["nodes"].append({"node":i, "name":"model1-"+str(i)})
+                for j in range(matrix_s.shape[1]): #matrix_s.shape[1]
+                        matrix_dict["links"].append({"source":i,"target":(matrix_s.shape[0]+j), "value":matrix_s[i][j]}) #matrix[i][j]
+                    
+
+            for j in range(matrix_s.shape[1]): #matrix_s.shape[1]
+                matrix_dict["nodes"].append({"node":matrix_s.shape[0]+j, "name":"model2-"+str(j)})
+            dict_matrix_dict[lambda_]=matrix_dict
+        dict_matrix_json = json.dumps(dict_matrix_dict)
 
 
         matrix_json = json.dumps(matrix_dict)
-        print("json file creado", matrix_json)
+        
+
+
+        data_json_format_2 = []
+        for elem in data_2:
+            elem = elem.to_json()
+            data_json_format_2.append(elem)
     else:
         matrix_json=None
+        data_json_format_2=[None]
+
     return template.render(visid=json.dumps(visid),
                            relevantDocumentsDict = relevantDocumentsDict, #esto debiese ser un arreglo
                            relevantDocumentsDict_2 = relevantDocumentsDict_2, #esto debiese ser un arreglo
@@ -188,13 +215,16 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order, matrix, cate
                            d3_url=d3_url,
                            ldavis_url=ldavis_url,
                            vis_json=data_json_format[0], #data[0].to_json()
+                           vis_json_2=data_json_format_2[0], #data[0].to_json()
                            ldavis_css_url=ldavis_css_url,
-                           matrix_sankey=matrix_json, #matrix_sankey[0.0].tolist(), 
+                           matrix_sankey=dict_matrix_json,#matrix_json, #matrix_sankey[0.0].tolist(), 
+                           #matrix_sankey_2 = dict_matrix_json,
                            type_vis = type_vis #2: two topic modeling outputs, 1:one topic modeling output
                            )
 
 
 def display(data, local=False, **kwargs):
+
     """Display visualization in IPython notebook via the HTML display hook
 
     Parameters
