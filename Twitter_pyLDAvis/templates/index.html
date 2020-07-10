@@ -23,15 +23,13 @@
 <div id={{ visid }}></div>
 <script type="text/javascript">
 
-var {{ visid_raw }}_data = {{ vis_json }};
 
+
+var {{ visid_raw }}_data = {{ vis_json }};
 var relevantDocumentsDict = {{relevantDocumentsDict|safe}};
 var type_vis = {{type_vis}}
-
-
-
 var topic_order = {{topic_order}}
-
+console.log("ESTE ES EL TOPIC_ORDER", topic_order)
 var jsonData = {{vis_json}}
 
 
@@ -39,26 +37,24 @@ var jsonData = {{vis_json}}
 
 
 
-
 if(type_vis == 1){
-  var matrix_heatmap = {{matrix_heatmap}}
-  var categories_row = {{categories_row}}
+  var new_circle_positions = {{new_circle_positions}} 
+
+  console.log("new_circle_position", new_circle_positions)
 }
+if(type_vis == 2){
+  
 
-
-
-
-if(type_vis==2){ //comparacion de dos topic modeling output
-  var matrix_sankey = {{matrix_sankey}};
-  //var matrix_sankey_2 = {{matrix_sankey_2}};
+  var matrix_sankey = {{matrix_sankey}}
   var relevantDocumentsDict_2 = {{relevantDocumentsDict_2|safe}}
-  var jsonData_2 = {{vis_json_2}}
+  var jsonData_2 = {{vis_json_2|safe}}
   var topic_order_2 = {{topic_order_2}}
-  
-  
-  //console.log("matrix sankey", matrix_sankey)
 }
 
+
+
+//var matrix_sankey_2 = {{matrix_sankey_2}};
+//console.log("matrix sankey", matrix_sankey)
 
 
 //console.log("categories", categories_row)
@@ -71,13 +67,13 @@ if(type_vis==2){ //comparacion de dos topic modeling output
 
 
   <div class="row">
-    <div class="col-9" id="LDAvisContainer"> <!--Change by LDAvisContainer--></div>
-    <div class="col-3" id="relevantDocumentPanel">
+    <div class="col-8" id="LDAvisContainer"> <!--Change by LDAvisContainer--></div>
+    <div class="col-4 float-right" id="relevantDocumentPanel" >
         <table  class="tableRelevantDocumentsClass table table-hover">
             <thead>
             <tr>
-                <th data-field="topic_perc_contrib" scope="col">% </th>
-                <th data-field="text" scope="col">Text</th>
+                <th class="text-center" data-field="topic_perc_contrib" scope="col">Contribution</th>
+                <th class="text-center" data-field="text" scope="col">Tweet</th>
             </tr>
             </thead>
         </table>    

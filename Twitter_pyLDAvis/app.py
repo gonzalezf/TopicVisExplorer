@@ -7,7 +7,7 @@ import numpy as np
 from gensim.corpora import Dictionary
 from flask import Flask, render_template, request, json
 from _display import *
-from _prepare import prepare, js_PCoA, PreparedData
+from _prepare import prepare, js_PCoA, PreparedData, _pcoa
 from flask import render_template_string
 from os import path, walk
 from gensim.models.keyedvectors import KeyedVectors
@@ -180,7 +180,7 @@ def proposed_topic_similarity(wordembedding, lda_model, n_terms): #n_terms : num
 
 
 ######################Import data #########################
-type_vis = 2#2: two topic modeling output, 1: one topic modeling output
+type_vis = 1#2: two topic modeling output, 1: one topic modeling output
 
 if type_vis ==1: #load just one model
     ##Load relevant documents
@@ -195,7 +195,7 @@ if type_vis ==1: #load just one model
         if topic_id not in relevantDocumentsDict:
             relevantDocumentsDict[topic_id]=[]
         relevantDocumentsDict[topic_id].append({
-            'topic_perc_contrib':row['Topic_Perc_Contrib'],
+            'topic_perc_contrib':str(round(row['Topic_Perc_Contrib']*100,1))+"%",
             'text':row['text']
         })
     #load prepared data
@@ -227,8 +227,23 @@ if type_vis ==1: #load just one model
     PreparedData_dict= PreparedDataObtained.to_dict()
     topic_order = PreparedData_dict['topic.order']
 
+    #Matriz de distancia - Topic similarity metric proposed
+
+    with open('../data/cambridge_analytica/matrix_collection_1_1', 'rb') as f:
+        matrix = pickle.load(f)
+    
+    new_circle_positions = dict()
+    for lambda_ in range(0, 100):
+        lambda_ = lambda_/100
+        matrix_cosine_distance = 1-matrix[lambda_]
+        np.fill_diagonal(matrix_cosine_distance,0)
+        new_circle_positions[lambda_]=_pcoa(matrix_cosine_distance, n_components=2).tolist()
+    print(new_circle_positions)
+    new_circle_positions= json.dumps(new_circle_positions)
+    
 
     ###############Matriz de distancia - Baseline, word embedding #####################
+    '''
     try:
         #revisar si estan esos archivos
         with open('../data/cambridge_analytica/sample/matrix', 'rb') as f:
@@ -255,10 +270,11 @@ if type_vis ==1: #load just one model
         categories_row = heatmap[1]
     matrix = matrix.tolist()
 
+    ''';
 
 
+    html = prepared_html_in_flask(data = [PreparedDataObtained], relevantDocumentsDict = relevantDocumentsDict, topic_order = topic_order,  type_vis = type_vis,  new_circle_positions = new_circle_positions)
 
-    html = prepared_html_in_flask([PreparedDataObtained], relevantDocumentsDict, topic_order, matrix, categories_row , type_vis)
 
 
 if type_vis == 2: #load two topic modeling output
@@ -273,7 +289,7 @@ if type_vis == 2: #load two topic modeling output
         if topic_id not in relevantDocumentsDict_collection_1:
             relevantDocumentsDict_collection_1[topic_id]=[]
         relevantDocumentsDict_collection_1[topic_id].append({
-            'topic_perc_contrib':row['Topic_Perc_Contrib'],
+            'topic_perc_contrib':str(round(row['Topic_Perc_Contrib']*100,1))+"%",
             'text':row['text']
         })
 
@@ -287,7 +303,7 @@ if type_vis == 2: #load two topic modeling output
         if topic_id not in relevantDocumentsDict_collection_2:
             relevantDocumentsDict_collection_2[topic_id]=[]
         relevantDocumentsDict_collection_2[topic_id].append({
-            'topic_perc_contrib':row['Topic_Perc_Contrib'],
+            'topic_perc_contrib':str(round(row['Topic_Perc_Contrib']*100,1))+"%",
             'text':row['text']
         })
     try: 
@@ -322,8 +338,10 @@ if type_vis == 2: #load two topic modeling output
         print("We can't load matrix")
     matrix = matrix.tolist()
     
+    
+
                                                                                 
-    html = prepared_html_in_flask([PreparedDataObtained_collection_1], relevantDocumentsDict_collection_1, topic_order_collection_1, matrix, categories_row , type_vis, matrix_sankey, [PreparedDataObtained_collection_2], relevantDocumentsDict_collection_2, topic_order_collection_2)
+    html = prepared_html_in_flask(data = [PreparedDataObtained_collection_1], relevantDocumentsDict = relevantDocumentsDict_collection_1,topic_order =  topic_order_collection_1, type_vis = type_vis, matrix_sankey = matrix_sankey, data_2 = [PreparedDataObtained_collection_2], relevantDocumentsDict_2 = relevantDocumentsDict_collection_2, topic_order_2 = topic_order_collection_2)
 
 
 

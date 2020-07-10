@@ -32,12 +32,15 @@ text {
 /* This is for nbviewer's benefit since the above wasn't enough... */
 .output_area { width:1450px !important; }
 
-
+/*
 #relevantDocumentsPanel {
     background-color: rgb(31, 58, 82);
 }
+*/
 
-
+.tableRelevantDocumentsClass{
+  background-color:white;
+}
 #totalContainer{
     background-color: coral;
 }
@@ -53,9 +56,7 @@ mark {
     padding: 0px;
     background-color:yellow;
   }
-#LDAvisContainer{
-    
-}
+
 
 #mdsplotHeatMap{
     background-color: yellowgreen;

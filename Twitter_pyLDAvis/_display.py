@@ -82,7 +82,7 @@ TEMPLATE_DICT = {"simple": SIMPLE_HTML,
                  "general": GENERAL_HTML}
 
 
-def prepared_data_to_html(data, relevantDocumentsDict, topic_order, matrix, categories_row, type_vis,matrix_sankey=None,  data_2=None, relevantDocumentsDict_2 = None, topic_order_2 = None, d3_url=None, ldavis_url=None, ldavis_css_url=None,
+def prepared_data_to_html(data, relevantDocumentsDict, topic_order,   type_vis, new_circle_positions=None,matrix_sankey=None,  data_2=None, relevantDocumentsDict_2 = None, topic_order_2 = None, d3_url=None, ldavis_url=None, ldavis_css_url=None,
                           template_type="general", visid=None, use_http=False):
 
     """Output HTML with embedded visualization
@@ -192,7 +192,7 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order, matrix, cate
         dict_matrix_json = json.dumps(dict_matrix_dict)
 
 
-        matrix_json = json.dumps(matrix_dict)
+        #matrix_json = json.dumps(matrix_dict)
         
 
 
@@ -200,17 +200,20 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order, matrix, cate
         for elem in data_2:
             elem = elem.to_json()
             data_json_format_2.append(elem)
+
+    
     else:
-        matrix_json=None
+        
+        dict_matrix_dict = dict()
+        dict_matrix_json = json.dumps(dict_matrix_dict)
         data_json_format_2=[None]
 
     return template.render(visid=json.dumps(visid),
+                           new_circle_positions = new_circle_positions, 
                            relevantDocumentsDict = relevantDocumentsDict, #esto debiese ser un arreglo
                            relevantDocumentsDict_2 = relevantDocumentsDict_2, #esto debiese ser un arreglo
                            topic_order = topic_order,
-                           topic_order_2 = topic_order_2,
-                           matrix_heatmap = matrix,
-                           categories_row = categories_row,
+                           topic_order_2 = topic_order_2,#matrix_heatmap = matrix,#categories_row = categories_row,
                            visid_raw=visid,
                            d3_url=d3_url,
                            ldavis_url=ldavis_url,
@@ -267,7 +270,7 @@ def display(data, local=False, **kwargs):
 
     return HTML(prepared_data_to_html(data, **kwargs))
 
-def prepared_html_in_flask(data, relevantDocumentsDict, topic_order, matrix, categories_row,type_vis,matrix_sankey=None, data_2 = None, relevantDocumentsDic_2 = None, topic_order_2 = None, **kwargs):
+def prepared_html_in_flask(data, relevantDocumentsDict, topic_order,type_vis,new_circle_positions = None, matrix_sankey=None, data_2 = None, relevantDocumentsDict_2 = None, topic_order_2 = None, **kwargs):
     #kwargs['ldavis_url'] = '/LDAvis.js'
     #kwargs['d3_url'] = '/d3.js'
     #kwargs['ldavis_css_url'] = '/LDAvis.css'
@@ -276,7 +279,8 @@ def prepared_html_in_flask(data, relevantDocumentsDict, topic_order, matrix, cat
     kwargs['d3_url'] = 'static/js/d3.v5.min.js'
     kwargs['ldavis_css_url'] = 'static/js/LDAvis.css'
 
-    html = prepared_data_to_html(data,relevantDocumentsDict,topic_order,matrix, categories_row, type_vis, matrix_sankey, data_2, relevantDocumentsDic_2, topic_order_2,   **kwargs)
+    html = prepared_data_to_html(data = data, relevantDocumentsDict = relevantDocumentsDict,topic_order = topic_order,type_vis = type_vis,new_circle_positions= new_circle_positions,  matrix_sankey = matrix_sankey, data_2 =  data_2, relevantDocumentsDict_2 = relevantDocumentsDict_2, topic_order_2 = topic_order_2,   **kwargs)
+    
     return html
     
 

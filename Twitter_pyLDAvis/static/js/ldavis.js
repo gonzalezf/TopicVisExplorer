@@ -91,6 +91,9 @@ var LDAvis = function(to_select, data_or_file_name) {
     var topicDown = topicID + "-down";
     var topicUp = topicID + "-up";
     var topicClear = topicID + "-clear";
+    var topicEdit = topicID+"-edit";
+    var topicSplit = topicID+"-split";
+    var topicMerge = topicID+"-merge";
 
     
 
@@ -199,6 +202,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 document.getElementById(lambdaID).value = vis_state.lambda;
             });
 
+
+
         d3.select("#" + topicUp)
             .on("click", function() {
                 // remove term selection if it exists (from a saved URL)
@@ -206,9 +211,12 @@ var LDAvis = function(to_select, data_or_file_name) {
                 if (termElem !== undefined) term_off(termElem);
                 vis_state.term = "";
                 var value_old = document.getElementById(topicID).value;
+                
                 var value_new = Math.min(K, +value_old + 1).toFixed(0);
                 // increment the value in the input box
                 document.getElementById(topicID).value = value_new;
+                document.getElementById(topicID+"Edit").value = value_new;
+
                 topic_off(document.getElementById(topicID + value_old));
                 topic_on(document.getElementById(topicID + value_new));
                 
@@ -226,6 +234,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 var value_new = Math.max(0, +value_old - 1).toFixed(0);
                 // increment the value in the input box
                 document.getElementById(topicID).value = value_new;
+                document.getElementById(topicID+"Edit").value = value_new;
                 topic_off(document.getElementById(topicID + value_old));
                 topic_on(document.getElementById(topicID + value_new));
                 vis_state.topic = value_new;
@@ -246,6 +255,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     vis_state.topic = value_new;
                     state_save(true);
                     document.getElementById(topicID).value = vis_state.topic;
+                    document.getElementById(topicID+"Edit").value = vis_state.topic;
                 }
             });
 
@@ -317,7 +327,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
        function visualize_sankey(graph, threshold){
             
-            console.log("este es el graph", graph)
+            
             d3.selectAll('#svg_sankey').remove();
         
             var min_target_node_value = Infinity;
@@ -497,8 +507,11 @@ var LDAvis = function(to_select, data_or_file_name) {
         }   
 
         // Clicking on the mdsplot should clear the selection
-        function createMdsPlot(number, mdsData){
+        function createMdsPlot(number, mdsData, lambda_lambda_topic_similarity){
+            console.log("recibidoi!", lambda_lambda_topic_similarity)
             // Create a group for the mds plot Bubbles visualization
+            d3.selectAll('#'+leftPanelID).remove();
+
             var mdsplot = svg.append("g")
                 .attr("id", leftPanelID)
                 .attr("class", "points")
@@ -607,6 +620,10 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .text(defaultLabelLarge);
 
             // bind mdsData to the points in the left panel:
+            //console.log("Esta es mdsDATA circle", mdsData)
+            //console.log("Filtrando nuevas posiciones", new_circle_positions[lambda_lambda_topic_similarity])
+            var new_positions = new_circle_positions[lambda_lambda_topic_similarity]
+
             var points = mdsplot.selectAll("points")
                     .data(mdsData)
                     .enter();
@@ -615,10 +632,14 @@ var LDAvis = function(to_select, data_or_file_name) {
             points.append("text")
                 .attr("class", "txt")
                 .attr("x", function(d) {
-                    return (xScale(+d.x));
+                    //console.log("ESTE ES EL D", d)
+                    //return (xScale(+d.x));
+                    return (xScale(+new_positions[topic_order[d.topics-1]-1][0]));
+
                 })
                 .attr("y", function(d) {
-                    return (yScale(+d.y) + 4);
+                    //return (yScale(+d.y) + 4);
+                    return (yScale(+new_positions[topic_order[d.topics-1]-1][1]));
                 })
                 .attr("stroke", "black")
                 .attr("opacity", 1)
@@ -630,6 +651,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 });
 
             // draw circles
+            
+            //console.log("nueva pos", topic_order)
+            //var real_topic_id = topic_order_2[topic_id_in_model]-1
             points.append("circle")
                 .attr("class", "dot")
                 .style("opacity", 0.2)
@@ -639,13 +663,18 @@ var LDAvis = function(to_select, data_or_file_name) {
                     return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
                 })
                 .attr("cx", function(d) {
-                    return (xScale(+d.x));
+                    //console.log("D.X", +d.x, new_positions[topic_order[d.topics-1]-1][0])
+                    //return (xScale(+d.x));
+                    return (xScale(+new_positions[topic_order[d.topics-1]-1][0])); //new position topic similarity metric proposed
                 })
                 .attr("cy", function(d) {
-                    return (yScale(+d.y));
+                    //return (yScale(+d.y));
+                    return (yScale(+new_positions[topic_order[d.topics-1]-1][1]));
                 })
                 .attr("stroke", "black")
                 .attr("id", function(d) {
+                    console.log("D TOPICS", d.topics, topic_order[d.topics-1]-1)
+
                     return (topicID + d.topics);
                 })
                 .on("mouseover", function(d) {
@@ -666,6 +695,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     }
                     // make sure topic input box value and fragment reflects clicked selection
                     document.getElementById(topicID).value = vis_state.topic = d.topics;
+                    document.getElementById(topicID+"Edit").value = vis_state.topic = d.topics;
                     state_save(true);
                     topic_on(this);
                     
@@ -834,7 +864,11 @@ var LDAvis = function(to_select, data_or_file_name) {
        
        if( type_vis === 1){
 
-            createMdsPlot(1, mdsData)
+            createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
+            
+
+
+
             var contador = 0;
             /* deshabilitar heatmap
             d3.select("#TopicSimilarityVisualizationButton")
@@ -1038,15 +1072,24 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             // topic input container:
             var topicDiv = document.createElement("div");
-            topicDiv.setAttribute("style", "padding: 5px; background-color: #e8e8e8; display: inline-block; width: " + mdswidth + "px; height: 50px; float: left");
+            topicDiv.setAttribute("style", "padding: 5px; background-color: #e8e8e8; display: inline-block; width: " + 2*mdswidth + "px; height: 50px; float: left");
             TopPanel.appendChild(topicDiv);
 
             // topic input container:
+
             
+
+            var topicInputEdit = document.createElement("input");
+            topicInputEdit.setAttribute("style", "width: 50px");
+            topicInputEdit.type = "text";
+            topicInputEdit.id = topicID+"Edit";
+            topicDiv.appendChild(topicInputEdit);
+            
+
             var topicLabel = document.createElement("label");
             topicLabel.setAttribute("for", topicID);
-            topicLabel.setAttribute("style", "font-family: sans-serif; font-size: 14px");
-            topicLabel.innerHTML = "Selected Topic: <span id='" + topicID + "-value'></span>";
+            topicLabel.setAttribute("style", "font-family: sans-serif; font-size: 14px, margin-left: 5px");
+            topicLabel.innerHTML = "Buscar Topic: <span id='" + topicID + "-value'></span>";
             topicDiv.appendChild(topicLabel);
 
             var topicInput = document.createElement("input");
@@ -1058,7 +1101,29 @@ var LDAvis = function(to_select, data_or_file_name) {
             topicInput.value = "0"; // a value of 0 indicates no topic is selected
             topicInput.id = topicID;
             topicDiv.appendChild(topicInput);
+            
+            //var edit = document.createElement("button");
+            //edit.setAttribute("id", topicEdit);
+            //edit.setAttribute("style", "margin-left: 5px");
+            //edit.innerHTML = "Edit";
+            //topicDiv.appendChild(edit);
 
+
+            var split = document.createElement("button");
+            split.setAttribute("id", topicSplit);
+            split.setAttribute("style", "margin-left: 5px");
+            split.innerHTML = "Split ";
+            topicDiv.appendChild(split);
+
+            var merge = document.createElement("button");
+            merge.setAttribute("id", topicMerge);
+            merge.setAttribute("style", "margin-left: 5px");
+            merge.innerHTML = "Merge";
+            topicDiv.appendChild(merge);
+
+
+            
+            /*
             var previous = document.createElement("button");
             previous.setAttribute("id", topicDown);
             previous.setAttribute("style", "margin-left: 5px");
@@ -1070,12 +1135,14 @@ var LDAvis = function(to_select, data_or_file_name) {
             next.setAttribute("style", "margin-left: 5px");
             next.innerHTML = "Next Topic";
             topicDiv.appendChild(next);
-
+            */
             var clear = document.createElement("button");
             clear.setAttribute("id", topicClear);
             clear.setAttribute("style", "margin-left: 5px");
             clear.innerHTML = "Clear Topic";
             topicDiv.appendChild(clear);
+
+            
 
             
 
@@ -1130,12 +1197,15 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
             //hacer que el slider  parta con el menor similarity score de la matrix
-            var min_similarity_score = Infinity
-            matrix_sankey[lambda_lambda_topic_similarity.current].links.filter(function(el){
-                if(el.value < min_similarity_score){
-                    min_similarity_score = el.value
-                }
-            });
+            if(type_vis == 2){
+                var min_similarity_score = Infinity
+                matrix_sankey[lambda_lambda_topic_similarity.current].links.filter(function(el){
+                    if(el.value < min_similarity_score){
+                        min_similarity_score = el.value
+                    }
+                });
+            }
+            
             
             var lambdaInputTopicSimilarity = document.createElement("input");
             lambdaInputTopicSimilarity.setAttribute("style", "width: 250px; margin-left: 0px; margin-right: 0px");
@@ -1169,9 +1239,15 @@ var LDAvis = function(to_select, data_or_file_name) {
                 //console.log(matrix_sankey_2)
                 console.log("LAMBDA LAMBDA ", lambda_lambda_topic_similarity.current)
                 console.log("similarity", vis_state.lambda_topic_similarity)
-                
-                visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
-                
+                if(type_vis == 2){
+                    visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
+                }
+                if(type_vis == 1){
+                    //
+                    
+                    //console.log("filtrado!", new_circle_positions[lambda_lambda_topic_similarity.current])
+                    createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
+                }
             });
 
             d3.select("#"+lambdaID+"TopicSimilarity")
@@ -1677,7 +1753,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             // truncate to the top R tokens:
             var dat3 = dat2.slice(0, R);
 
-            AddBackgroundColorToText(dat3)
+            //AddBackgroundColorToText(dat3)
 
             // scale the bars to the top R terms:
             var y = d3.scaleBand()
@@ -1780,7 +1856,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .style("text-anchor", "middle")
                 .style("font-size", "16px")
                 .text("Top-" + R + " Most Relevant Terms for Topic " + topics + " (" + Freq + "% of tokens)");
-
+            
+            
+            console.log("topico seleccionado", topics)
             // grab the bar-chart data for this topic only:
             var dat2 = lamData.filter(function(d) {
                 return d.Category == "Topic" + topics;
@@ -1804,7 +1882,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             updateRelevantDocuments(real_topic_id, relevantDocumentsDict);
             // add background color to top relevant terms
 
-            AddBackgroundColorToText(dat3)
+            //AddBackgroundColorToText(dat3)
 
             // scale the bars to the top R terms:
             var y = d3.scaleBand()
@@ -2123,6 +2201,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
             vis_state.term = "";
             document.getElementById(topicID).value = vis_state.topic = 0;
+            document.getElementById(topicID+"Edit").value = vis_state.topic = 0;
             state_save(true);
         }
 
