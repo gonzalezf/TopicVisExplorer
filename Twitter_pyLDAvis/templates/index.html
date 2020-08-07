@@ -13,14 +13,17 @@
 
 <!--Add mark.js-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" charset="UTF-8"></script>
-<link rel="stylesheet" type="text/css" href="{{ ldavis_css_url }}">
+
 
 <!--Add sankey.js-->
 
 <script src="static/js/d3.v5.min.js"></script>
 <script src="static/js/sankey.js"></script>
 
+
 <div id={{ visid }}></div>
+
+<link rel="stylesheet" type="text/css" href="{{ ldavis_css_url }}">
 <script type="text/javascript">
 
 
@@ -60,7 +63,7 @@ if(type_vis == 2){
 //console.log("categories", categories_row)
 //console.log("matrix_heatmap", matrix_heatmap)
 
-
+console.log("QUE TYPE VIS ES ESTE", type_vis)
 </script>
 
 <div class="container-fluid">
@@ -69,7 +72,7 @@ if(type_vis == 2){
   <div class="row">
     <div class="col-8" id="LDAvisContainer"> <!--Change by LDAvisContainer--></div>
     <div class="col-4 float-right" id="relevantDocumentPanel" >
-        <table  class="tableRelevantDocumentsClass table table-hover">
+        <table  class="tableRelevantDocumentsClass_Model1 table table-hover ">
             <thead>
             <tr>
                 <th class="text-center" data-field="topic_perc_contrib" scope="col">Contribution</th>
@@ -77,6 +80,21 @@ if(type_vis == 2){
             </tr>
             </thead>
         </table>    
+        <!--Table for model 2 - scenario 2-->
+        <script>
+
+          if(type_vis == 2){
+            console.log("QUE TYPE VIS ES ESTE!!!!!!!!!", type_vis)
+            var html = '<table  class="tableRelevantDocumentsClass_Model2 table table-hover "> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">Contribution</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table>';
+
+            document.write(html)
+
+              
+          }
+        </script>
+        
+
+
     </div>
   </div>
 </div>
