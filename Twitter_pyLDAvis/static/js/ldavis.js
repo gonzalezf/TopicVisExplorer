@@ -99,7 +99,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
     var leftPanelID = visID + "-leftpanel";
     var barFreqsID = visID + "-bar-freqs";
-    var barFreqsID_2 = visID + "-bar-freqs";
+    var barFreqsID_2 = visID + "-bar-freqs_2";
     var topID = visID + "-top";
     var lambdaInputID = visID + "-lambdaInput";
     var lambdaZeroID = visID + "-lambdaZero";
@@ -866,7 +866,8 @@ var LDAvis = function(to_select, data_or_file_name) {
        if( type_vis === 1){
 
             createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
-            createBarPlot(dat3)
+            //createBarPlot(dat3)
+            createBarPlot(dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis",2 * margin.top ) //esto crea el bar plot por primera vez. 
 
 
 
@@ -894,7 +895,9 @@ var LDAvis = function(to_select, data_or_file_name) {
         
            //visualize_sankey(matrix_sankey, vis_state.lambda_topic_similarity)
            visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
-           createBarPlot(dat3)
+           //createBarPlot(dat3)
+           createBarPlot(dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis",2 * margin.top ) //esto crea el bar plot por primera vez. 
+           createBarPlot(dat3, barFreqsID_2,"bar-totals_2", "terms_2", "bubble-tool_2", "xaxis_2", (8* margin.top + mdsheight)) //hay que modificar la altura aqui en funcion del alto de las barras
        }
        
        /*
@@ -909,11 +912,12 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         // establish layout and vars for bar chart
         
-        function createBarPlot(dat3){
+        //function createBarPlot(dat3){
+        function createBarPlot(dat3, barFreqsID_actual, bar_totals_actual, terms_actual,  bubble_tool, xaxis_class, height_bar){
             var barDefault2 = dat3.filter(function(d) {
                 return d.Category == "Default";
             });
-    
+            
             
             
             var y = d3.scaleBand()
@@ -933,39 +937,39 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             // Add a group for the bar chart
             var chart = svg.append("g")
-                    .attr("transform", "translate("  +(mdswidth + margin.left + termwidth) + "," + 2 * margin.top + ")")
-                    .attr("id", barFreqsID);
+                    .attr("transform", "translate("  +(mdswidth + margin.left + termwidth) + "," +height_bar+ ")")
+                    .attr("id", barFreqsID_actual);
             
             // bar chart legend/guide:
             var barguide = {"width": 100, "height": 15};
-            d3.select("#" + barFreqsID).append("rect")
+            d3.select("#" + barFreqsID_actual).append("rect")
                 .attr("x", 0)
                 .attr("y", mdsheight + 10)
                 .attr("height", barguide.height)
                 .attr("width", barguide.width)
                 .style("fill", color1)
                 .attr("opacity", 0.4);
-            d3.select("#" + barFreqsID).append("text")
+            d3.select("#" + barFreqsID_actual).append("text")
                 .attr("x", barguide.width + 5)
                 .attr("y", mdsheight + 10 + barguide.height/2)
                 .style("dominant-baseline", "middle")
                 .text("Overall term frequency");
             
-            d3.select("#" + barFreqsID).append("rect")
+            d3.select("#" + barFreqsID_actual).append("rect")
                 .attr("x", 0)
                 .attr("y", mdsheight + 10 + barguide.height + 5)
                 .attr("height", barguide.height)
                 .attr("width", barguide.width/2)
                 .style("fill", color2)
                 .attr("opacity", 0.8);
-            d3.select("#" + barFreqsID).append("text")
+            d3.select("#" + barFreqsID_actual).append("text")
                 .attr("x", barguide.width/2 + 5)
                 .attr("y", mdsheight + 10 + (3/2)*barguide.height + 5)
                 .style("dominant-baseline", "middle")
                 .text("Estimated term frequency within the selected topic");
             
             // footnotes:
-            d3.select("#" + barFreqsID)
+            d3.select("#" + barFreqsID_actual)
                 .append("a")
                 .attr("xlink:href", "http://vis.stanford.edu/files/2012-Termite-AVI.pdf")
                 .attr("target", "_blank")
@@ -974,7 +978,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("y", mdsheight + 10 + (6/2)*barguide.height + 5)
                 .style("dominant-baseline", "middle")
                 .text("1. saliency(term w) = frequency(w) * [sum_t p(t | w) * log(p(t | w)/p(t))] for topics t; see Chuang et. al (2012)");
-            d3.select("#" + barFreqsID)
+            d3.select("#" + barFreqsID_actual)
                 .append("a")
                 .attr("xlink:href", "http://nlp.stanford.edu/events/illvi2014/papers/sievert-illvi2014.pdf")
                 .attr("target", "_blank")
@@ -985,14 +989,14 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .text("2. relevance(term w | topic t) = \u03BB * p(w | t) + (1 - \u03BB) * p(w | t)/p(w); see Sievert & Shirley (2014)");
             
             // Bind 'default' data to 'default' bar chart
-            var basebars = chart.selectAll(to_select + " .bar-totals")
+            var basebars = chart.selectAll(to_select + " ."+bar_totals_actual)
                     .data(barDefault2)
                     .enter();
             
             // Draw the gray background bars defining the overall frequency of each word
             basebars
                 .append("rect")
-                .attr("class", "bar-totals")
+                .attr("class", bar_totals_actual)
                 .attr("x", 0)
                 .attr("y", function(d) {
                     return y(d.Term);
@@ -1008,7 +1012,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             basebars
                 .append("text")
                 .attr("x", -5)
-                .attr("class", "terms")
+                .attr("class", terms_actual)
                 .attr("y", function(d) {
                     return y(d.Term) + 12;
                 })
@@ -1042,7 +1046,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             var title = chart.append("text")
                     .attr("x", barwidth/2)
                     .attr("y", -30)
-                    .attr("class", "bubble-tool") //  set class so we can remove it when highlight_off is called
+                    .attr("class", bubble_tool) //  set class so we can remove it when highlight_off is called
                     .style("text-anchor", "middle")
                     .style("font-size", "16px")
                     .text("Top-" + R + " Most Salient Terms");
@@ -1059,7 +1063,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             
             chart.append("g")
-                .attr("class", "xaxis")
+                .attr("class", xaxis_class)
                 .call(xAxis);
     
         }
@@ -1695,6 +1699,14 @@ var LDAvis = function(to_select, data_or_file_name) {
                     }
                     lamData.push(obj);
                 }
+
+                var barFreqsID_actual = barFreqsID_2
+                var bar_totals_actual = "bar-totals_2"
+                var terms_actual = "terms_2"
+                var bubble_tool = 'bubble-tool_2'
+                var overlay = 'overlay_2'
+                var xaxis_class = "xaxis_2"
+
                 
             }
             else{
@@ -1713,6 +1725,13 @@ var LDAvis = function(to_select, data_or_file_name) {
                     }
                     lamData.push(obj);
                 }
+
+                var barFreqsID_actual = barFreqsID
+                var bar_totals_actual = "bar-totals"
+                var terms_actual = "terms"
+                var bubble_tool = 'bubble-tool'
+                var overlay = 'overlay'
+                var xaxis_class = "xaxis"
                 
             }
 
@@ -1721,17 +1740,17 @@ var LDAvis = function(to_select, data_or_file_name) {
             Freq = Math.round(Freq * 10) / 10  
 
 
-            var text = d3.select(to_select + " .bubble-tool");
+            var text = d3.select(to_select + " ."+bubble_tool);
             text.remove();
 
-            d3.select("#" + barFreqsID)
+            d3.select("#" + barFreqsID_actual)
                 .append("text")
                 .attr("x", barwidth/2)
                 .attr("y", -30)
-                .attr("class", "bubble-tool") //  set class so we can remove it when highlight_off is called
+                .attr("class", bubble_tool) //  set class so we can remove it when highlight_off is called
                 .style("text-anchor", "middle")
                 .style("font-size", "16px")
-                .text("Top-" + R + " Most Relevant Terms for Topic " + box.node+ " (" + Freq + "% of tokens)");
+                .text("Top-" + R + " Most Relevant Terms for Topic " + topic_id_in_model+ " (" + Freq + "% of tokens)");
                 //Freq jsonData
             
             
@@ -1776,10 +1795,10 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .nice();
 
             // remove the red bars if there are any:
-            d3.selectAll(to_select + " .overlay").remove();
+            d3.selectAll(to_select + " ."+overlay).remove();
 
             // Change Total Frequency bars
-            d3.selectAll(to_select + " .bar-totals")
+            d3.selectAll(to_select + " ."+bar_totals_actual)
                 .data(dat3)
                 .attr("x", 0)
                 .attr("y", function(d) {
@@ -1793,7 +1812,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("opacity", 0.4);
 
             // Change word labels
-            d3.selectAll(to_select + " .terms")
+            d3.selectAll(to_select + " ."+terms_actual)
                 .data(dat3)
                 .attr("x", -5)
                 .attr("y", function(d) {
@@ -1808,11 +1827,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                 });
 
             // Create red bars (drawn over the gray ones) to signify the frequency under the selected topic
-            d3.select("#" + barFreqsID).selectAll(to_select + " .overlay")
+            d3.select("#" + barFreqsID_actual).selectAll(to_select + " ."+overlay)
                 .data(dat3)
                 .enter()
                 .append("rect")
-                .attr("class", "overlay")
+                .attr("class", overlay)
                 .attr("x", 0)
                 .attr("y", function(d) {
                     return y(d.Term);
@@ -1829,7 +1848,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             var xAxis = d3.axisTop(x).tickSize(-barheight).ticks(6);
 
             // redraw x-axis
-            d3.selectAll(to_select + " .xaxis")
+            d3.selectAll(to_select + " ."+xaxis_class)
             //.attr("class", "xaxis")
                 .call(xAxis);
 
