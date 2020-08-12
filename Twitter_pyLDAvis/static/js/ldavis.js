@@ -106,7 +106,10 @@ var LDAvis = function(to_select, data_or_file_name) {
     var sliderDivID = visID + "-sliderdiv";
     var lambdaLabelID = visID + "-lamlabel";
 
+    var min_target_node_value = Infinity;
 
+    var topic_id_model_1 = -1
+    var topic_id_model_2 = -1
     // 
 
     //////////////////////////////////////////////////////////////////////////////
@@ -331,7 +334,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             d3.selectAll('#svg_sankey').remove();
         
-            var min_target_node_value = Infinity;
+            //var min_target_node_value = Infinity;
+            
             var nodes_filtered_set = new Set();
 
             
@@ -1401,14 +1405,19 @@ var LDAvis = function(to_select, data_or_file_name) {
         }
 
         // function to re-order the bars (gray and red), and terms:
-        function reorder_bars(increase) {
-            
-            // grab the bar-chart data for this topic only:
+
+        function reorder_bars_helper(increase, topic_id_in_model, barFreqsID_actual, bar_totals_actual, terms_actual, overlay, xaxis_class){
+            console.log("topic id model 1", topic_id_model_1)
+            console.log("topic id model 2", topic_id_model_2)
             var dat2 = lamData.filter(function(d) {
                 //return d.Category == "Topic" + Math.min(K, Math.max(0, vis_state.topic)) // fails for negative topic numbers...
-                return d.Category == "Topic" + vis_state.topic;
+                
+                //return d.Category == "Topic" + vis_state.topic;
+                return d.Category == "Topic" + topic_id_in_model;
             });
             
+            console.log("vis_state.topic", topic_id_in_model)
+            console.log("este es dat2", dat2)
             // define relevance:
             for (var i = 0; i < dat2.length; i++) {
                 dat2[i].relevance = vis_state.lambda * dat2[i].logprob +
@@ -1439,22 +1448,22 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .nice();
 
             // Change Total Frequency bars
-            var graybars = d3.select("#" + barFreqsID)
-                    .selectAll(to_select + " .bar-totals")
+            var graybars = d3.select("#" + barFreqsID_actual)
+                    .selectAll(to_select + " ."+bar_totals_actual) //.bar-totals
                     .data(dat3, function(d) {
                         return d.Term;
                     });
 
             // Change word labels
-            var labels = d3.select("#" + barFreqsID)
-                    .selectAll(to_select + " .terms")
+            var labels = d3.select("#" + barFreqsID_actual)
+                    .selectAll(to_select + " ."+terms_actual)
                     .data(dat3, function(d) {
                         return d.Term;
                     });
 
             // Create red bars (drawn over the gray ones) to signify the frequency under the selected topic
-            var redbars = d3.select("#" + barFreqsID)
-                    .selectAll(to_select + " .overlay")
+            var redbars = d3.select("#" + barFreqsID_actual)
+                    .selectAll(to_select + " ."+overlay)
                     .data(dat3, function(d) {
                         return d.Term;
                     });
@@ -1464,11 +1473,11 @@ var LDAvis = function(to_select, data_or_file_name) {
             var xAxis = d3.axisTop(x).tickSize(-barheight).ticks(6);
             
             // New axis definition:
-            var newaxis = d3.selectAll(to_select + " .xaxis");
+            var newaxis = d3.selectAll(to_select + " ."+xaxis_class);
 
             // define the new elements to enter:
             var graybarsEnter = graybars.enter().append("rect")
-                    .attr("class", "bar-totals")
+                    .attr("class", bar_totals_actual)
                     .attr("x", 0)
                     .attr("y", function(d) {
                         return y(d.Term) + barheight + margin.bottom + 2 * rMax;
@@ -1480,7 +1489,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             var labelsEnter = labels.enter()
                     .append("text")
                     .attr("x", -5)
-                    .attr("class", "terms")
+                    .attr("class", terms_actual)
                     .attr("y", function(d) {
                         return y(d.Term) + 12 + barheight + margin.bottom + 2 * rMax;
                     })
@@ -1511,7 +1520,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     });
 
             var redbarsEnter = redbars.enter().append("rect")
-                    .attr("class", "overlay")
+                    .attr("class", overlay)
                     .attr("x", 0)
                     .attr("y", function(d) {
                         return y(d.Term) + barheight + margin.bottom + 2 * rMax;
@@ -1676,6 +1685,27 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
         }
 
+        function reorder_bars(increase) {
+            console.log("estoy en la funcion reorder_bars")
+            // grab the bar-chart data for this topic only:
+            if(type_vis==2){
+                if(topic_id_model_1>-1){ //reordenar cuadro de arriba
+                
+                    reorder_bars_helper(increase, topic_id_model_1, barFreqsID,'bar-totals','terms','overlay', 'xaxis')
+                }
+                if(topic_id_model_2>-1){ //reordenar cuadro de abajo
+                    reorder_bars_helper(increase, topic_id_model_2, barFreqsID_2,'bar-totals_2','terms_2','overlay_2', 'xaxis_2')
+                }
+            }
+            else{
+                var topic_id_in_model = vis_state.topic
+                reorder_bars_helper(increase, topic_id_in_model, barFreqsID,'bar-totals','terms','overlay', 'xaxis')
+                
+            }
+            
+
+        }
+
         //////////////////////////////////////////////////////////////////////////////
 
         // function to update bar chart when a topic is selected
@@ -1686,7 +1716,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 //pertenece al modelo de corpus 2
                 var topic_id_in_model = box.node-min_target_node_value
                 var real_topic_id = topic_order_2[topic_id_in_model]-1
-        
+                
                 updateRelevantDocuments(real_topic_id, relevantDocumentsDict_2,2);
                 
                 var Freq = jsonData.mdsDat.Freq[box.node-min_target_node_value]    
@@ -1707,7 +1737,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 var overlay = 'overlay_2'
                 var xaxis_class = "xaxis_2"
 
-                
+                topic_id_model_2 = topic_id_in_model //esta info es util para la funcion reorder_bars
             }
             else{
                 var topic_id_in_model = box.node
@@ -1732,10 +1762,13 @@ var LDAvis = function(to_select, data_or_file_name) {
                 var bubble_tool = 'bubble-tool'
                 var overlay = 'overlay'
                 var xaxis_class = "xaxis"
+
+                topic_id_model_1 = topic_id_in_model //esta info es util para la funcion reorder_bars
                 
             }
 
             vis_state.topic = box.node
+            console.log("funcion vis_state.topic ", vis_state.topic)
 
             Freq = Math.round(Freq * 10) / 10  
 
