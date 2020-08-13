@@ -108,11 +108,11 @@ var LDAvis = function(to_select, data_or_file_name) {
 
     var min_target_node_value = Infinity;
 
-    var topic_id_model_1 = -1
-    var topic_id_model_2 = -1
-
     var number_terms_sankey = 30
 
+    //esto se ocupa en la comparación de un corpus
+    var topic_id_model_1 = -1
+    var topic_id_model_2 = -1
 
     /////////////////////////
     ////topic mergin
@@ -120,6 +120,9 @@ var LDAvis = function(to_select, data_or_file_name) {
     var merging_topic_2 = -1
 
     var hacer_merge = false
+
+    var last_clicked_model_1 = -1
+    var last_clicked_model_2 = -1
 
     // 
 
@@ -452,9 +455,31 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("transform", function(d) { 
                     return "translate(" + d.x + "," + d.y + ")"; })
                 .on("click", function(d){
+                    
+                    
                     topic_on_sankey(d, min_target_node_value );
                     
+
+                })
+                .on("mouseover", function(d) {
+                    console.log("mouseover")
+                    /*
+                    var old_topic = topicID + vis_state.topic;
+                    if (vis_state.topic > 0 && old_topic != this.id) {
+                        topic_off(document.getElementById(old_topic));
+                    }
+                    topic_on(this);
+                    */
+                   topic_on_sankey(d, min_target_node_value );
+                })
+                .on("mouseout", function(d) {
+                    /*
+                    if (vis_state.topic != d.topics) topic_off(this);
+                    if (vis_state.topic > 0) topic_on(document.getElementById(topicID + vis_state.topic));
+                    */
+                   console.log("mouse out")
                 });
+
                 /*
                 .call(d3.drag()
                 .subject(function(d) {
@@ -468,6 +493,9 @@ var LDAvis = function(to_select, data_or_file_name) {
         
         // add the rectangles for the nodes
             node.append("rect")
+                .attr("id", function(d){
+                    return "node_"+d.node //que esta sea la id unica del nodo
+                })
                 .attr("height", function(d) { return d.dy; })
                 .attr("width", sankey.nodeWidth())
                 .style("fill", function(d) { 
@@ -486,7 +514,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     return d3.rgb(d.color).darker(2); })
             .append("title")
                 .text(function(d) { 
-                    return d.name + "\n" + format(d.value); })
+                    return d.name + "--\n" + format(d.value); })
                     
                     
             .on("click", function(){
@@ -689,16 +717,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 })
                 .attr("stroke", "black")
                 .attr("id", function(d) {
-                    console.log("D TOPICS", d.topics, topic_order[d.topics-1]-1)
+                    //console.log("D TOPICS", d.topics, topic_order[d.topics-1]-1)
 
                     return (topicID + d.topics);
-                })
-                .on("mouseover", function(d) {
-                    var old_topic = topicID + vis_state.topic;
-                    if (vis_state.topic > 0 && old_topic != this.id) {
-                        topic_off(document.getElementById(old_topic));
-                    }
-                    topic_on(this);
                 })
                 .on("click", function(d) {
                     
@@ -730,6 +751,13 @@ var LDAvis = function(to_select, data_or_file_name) {
                     console.log("vis_state.topic", vis_state.topic)
                     state_save(true);
                     topic_on(this);                
+                })
+                .on("mouseover", function(d) {
+                    var old_topic = topicID + vis_state.topic;
+                    if (vis_state.topic > 0 && old_topic != this.id) {
+                        topic_off(document.getElementById(old_topic));
+                    }
+                    topic_on(this);
                 })
                 .on("mouseout", function(d) {
                     if (vis_state.topic != d.topics) topic_off(this);
@@ -1203,6 +1231,17 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
             });
             
+            //colocar #apply_merging. 
+            d3.select("#"+topicSplit) //el usuario desea continuar con el mergin
+            .on("click", function() {
+                merging_topic_1 = 5
+                merging_topic_2 =12
+                console.log("mezclar", merging_topic_1,topic_order[merging_topic_1-1]-1,"con", merging_topic_2, topic_order[merging_topic_2-1]-1)
+                //Hay que calcular un nuevo mdsData
+                console.log("este es el mdsData", mdsData)
+                createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
+                
+            });
 
             /*
             var previous = document.createElement("button");
@@ -1760,7 +1799,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         }
 
         function reorder_bars(increase) {
-            console.log("estoy en la funcion reorder_bars")
+            
             // grab the bar-chart data for this topic only:
             if(type_vis==2){
                 if(topic_id_model_1>-1){ //reordenar cuadro de arriba
@@ -1785,15 +1824,16 @@ var LDAvis = function(to_select, data_or_file_name) {
         // function to update bar chart when a topic is selected
         // the circle argument should be the appropriate circle element
         function topic_on_sankey(box, min_target_node_value ){
-
+            
             if(box.node>=min_target_node_value){
                 //pertenece al modelo de corpus 2
                 var topic_id_in_model = box.node-min_target_node_value
                 var real_topic_id = topic_order_2[topic_id_in_model]-1
                 
+                
                 updateRelevantDocuments(real_topic_id, relevantDocumentsDict_2,2);
                 
-                var Freq = jsonData.mdsDat.Freq[box.node-min_target_node_value]    
+                var Freq = jsonData_2.mdsDat.Freq[box.node-min_target_node_value]    
 
                 lamData = [];
                 for (var i = 0; i < jsonData_2['tinfo'].Term.length; i++) {
@@ -1812,6 +1852,14 @@ var LDAvis = function(to_select, data_or_file_name) {
                 var xaxis_class = "xaxis_2"
 
                 topic_id_model_2 = topic_id_in_model //esta info es util para la funcion reorder_bars
+
+                //colorear el item seleccionado
+                if(last_clicked_model_2!=-1){
+                    d3.select("#"+last_clicked_model_2).style("fill","rgb(252,153,146)")
+                }
+                
+                last_clicked_model_2 = "node_"+box.node
+                d3.select("#"+last_clicked_model_2).style("fill","rgb(237, 62, 50)")
             }
             else{
                 var topic_id_in_model = box.node
@@ -1819,7 +1867,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
                 updateRelevantDocuments(real_topic_id, relevantDocumentsDict, 1);
                 
-                var Freq = jsonData.mdsDat.Freq[box.node]     
+                var Freq = jsonData.mdsDat.Freq[box.node]   
 
                 lamData = [];
                 for (var i = 0; i < jsonData['tinfo'].Term.length; i++) {
@@ -1838,7 +1886,14 @@ var LDAvis = function(to_select, data_or_file_name) {
                 var xaxis_class = "xaxis"
 
                 topic_id_model_1 = topic_id_in_model //esta info es util para la funcion reorder_bars
-                
+
+                //colorear el item seleccionado
+                if(last_clicked_model_1!=-1){
+                    d3.select("#"+last_clicked_model_1).style("fill","rgb(95,160,254)")
+                }
+
+                last_clicked_model_1 = "node_"+box.node
+                d3.select("#"+last_clicked_model_1).style("fill","rgb(14, 91, 201)")
             }
 
             vis_state.topic = box.node
@@ -2297,7 +2352,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             // select the topic and transition the order of the bars (if approporiate)
             if (!isNaN(vis_state.topic)) {
-                document.getElementById(topicID).value = vis_state.topic;
+                //document.getElementById(topicID).value = vis_state.topic;
                 if (vis_state.topic > 0) {
                     topic_on(document.getElementById(topicID + vis_state.topic));
                 }
