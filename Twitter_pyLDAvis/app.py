@@ -11,7 +11,9 @@ from _prepare import prepare, js_PCoA, PreparedData, _pcoa
 from flask import render_template_string
 from os import path, walk
 from gensim.models.keyedvectors import KeyedVectors
-
+import sklearn
+#from sklearn.metrics.pairwise import cosine_similarity
+#from calculate_topic_similarity import getTopicSimilarityMetric
 
 
 """
@@ -173,7 +175,7 @@ def proposed_topic_similarity(wordembedding, lda_model, n_terms): #n_terms : num
 
 
 ######################Import data #########################
-type_vis = 2#2: two topic modeling output, 1: one topic modeling output
+type_vis = 1#2: two topic modeling output, 1: one topic modeling output
 
 if type_vis ==1: #load just one model
     ##Load relevant documents
@@ -222,6 +224,7 @@ if type_vis ==1: #load just one model
 
     #Matriz de distancia - Topic similarity metric proposed
 
+    #hay que calcular la matriz de distancia! no solo precalcularla
     with open('../data/cambridge_analytica/matrix_collection_1_1', 'rb') as f:
         matrix = pickle.load(f)
     
@@ -231,10 +234,10 @@ if type_vis ==1: #load just one model
         matrix_cosine_distance = 1-matrix[lambda_]
         np.fill_diagonal(matrix_cosine_distance,0)
         new_circle_positions[lambda_]=_pcoa(matrix_cosine_distance, n_components=2).tolist()
-    print(new_circle_positions)
+    #print(new_circle_positions)
     new_circle_positions= json.dumps(new_circle_positions)
     
-
+   
     ###############Matriz de distancia - Baseline, word embedding #####################
     '''
     try:
@@ -263,8 +266,7 @@ if type_vis ==1: #load just one model
         categories_row = heatmap[1]
     matrix = matrix.tolist()
 
-    ''';
-
+    '''
 
     html = prepared_html_in_flask(data = [PreparedDataObtained], relevantDocumentsDict = relevantDocumentsDict, topic_order = topic_order,  type_vis = type_vis,  new_circle_positions = new_circle_positions)
 

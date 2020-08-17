@@ -124,6 +124,13 @@ var LDAvis = function(to_select, data_or_file_name) {
     var last_clicked_model_1 = -1
     var last_clicked_model_2 = -1
 
+
+    var renameTopicId = -1
+    var name_topics_circles = {}
+
+    ///probando
+    
+
     // 
 
     //////////////////////////////////////////////////////////////////////////////
@@ -146,6 +153,7 @@ var LDAvis = function(to_select, data_or_file_name) {
     function visualize(data) {
 
         // set the number of topics to global variable K:
+        
         K = data['mdsDat'].x.length;
 
         // R is the number of top relevant (or salient) words whose bars we display
@@ -160,6 +168,37 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
             mdsData.push(obj);
         }
+
+        var points2 = d3.select("#name_topics")
+                    .data(mdsData)
+                    .enter();
+
+        points2.append("circle")
+                .attr("class", "dot")
+                .style("opacity", 0.2)
+                .style("fill", color1)
+                .attr("r", function(d) {
+                    //return (rScaleMargin(+d.Freq));
+                    return 0;
+                })
+                .attr("cx", function(d) {
+                    //console.log("D.X", +d.x, new_positions[topic_order[d.topics-1]-1][0])
+                    //return (xScale(+d.x));
+                    return 0;
+                })
+                .attr("cy", function(d) {
+                    //return (yScale(+d.y));
+                    return 0;
+                })
+                .attr("stroke", "black")
+                .attr("id", function(d) {
+
+                    name_topics_circles[topicID + d.topics] = d.topics
+                    
+                    return (topicID + d.topics);
+                })
+        
+        
 
         // a huge matrix with 3 columns: Term, Topic, Freq, where Freq is all non-zero probabilities of topics given terms
         // for the terms that appear in the barcharts for this data
@@ -462,7 +501,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                 })
                 .on("mouseover", function(d) {
-                    console.log("mouseover")
                     /*
                     var old_topic = topicID + vis_state.topic;
                     if (vis_state.topic > 0 && old_topic != this.id) {
@@ -477,7 +515,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     if (vis_state.topic != d.topics) topic_off(this);
                     if (vis_state.topic > 0) topic_on(document.getElementById(topicID + vis_state.topic));
                     */
-                   console.log("mouse out")
+                   
                 });
 
                 /*
@@ -552,7 +590,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         // Clicking on the mdsplot should clear the selection
         function createMdsPlot(number, mdsData, lambda_lambda_topic_similarity){
-            console.log("recibidoi!", lambda_lambda_topic_similarity)
+            //console.log("mdsData", number, mdsData, lambda_lambda_topic_similarity)
+            console.log("ESTE ES EL ARREGLO DE NOMBRES QUE RECIBE CREATE MDSPLOT", name_topics_circles)
             // Create a group for the mds plot Bubbles visualization
             d3.selectAll('#'+leftPanelID).remove();
 
@@ -672,32 +711,12 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .data(mdsData)
                     .enter();
             
-            // text to indicate topic
-            points.append("text")
-                .attr("class", "txt")
-                .attr("x", function(d) {
-                    //console.log("ESTE ES EL D", d)
-                    //return (xScale(+d.x));
-                    return (xScale(+new_positions[topic_order[d.topics-1]-1][0]));
-
-                })
-                .attr("y", function(d) {
-                    //return (yScale(+d.y) + 4);
-                    return (yScale(+new_positions[topic_order[d.topics-1]-1][1]));
-                })
-                .attr("stroke", "black")
-                .attr("opacity", 1)
-                .style("text-anchor", "middle")
-                .style("font-size", "11px")
-                .style("fontWeight", 100)
-                .text(function(d) {
-                    return d.topics+"-";
-                });
 
             // draw circles
             
             //console.log("nueva pos", topic_order)
             //var real_topic_id = topic_order_2[topic_id_in_model]-1
+            
             points.append("circle")
                 .attr("class", "dot")
                 .style("opacity", 0.2)
@@ -717,8 +736,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 })
                 .attr("stroke", "black")
                 .attr("id", function(d) {
-                    //console.log("D TOPICS", d.topics, topic_order[d.topics-1]-1)
 
+                    //name_topics_circles[topicID + d.topics] = d.topics+'-'
+                    
                     return (topicID + d.topics);
                 })
                 .on("click", function(d) {
@@ -735,6 +755,15 @@ var LDAvis = function(to_select, data_or_file_name) {
                     vis_state.topic = d.topics;
                     //document.getElementById(topicID).value = vis_state.topic = d.topics;
                     //document.getElementById(topicID+"Edit").value = vis_state.topic = d.topics;
+
+                    //rename topicos
+                    //renameTopicId = topicID+d.topics
+                    //console.log("la id ahora es ", renameTopicId)
+                    //                    $('#renameTopicId').html();
+                    //document.getElementById("renameTopicId").value = d.topics+"-"
+                    document.getElementById("renameTopicId").value = name_topics_circles[topicID + d.topics]
+                    $('#idTopic').html(topicID + d.topics);
+                    //hacer merge de topicos
                     if(hacer_merge==false){
                         merging_topic_1= vis_state.topic
                     }                    
@@ -764,6 +793,30 @@ var LDAvis = function(to_select, data_or_file_name) {
                     if (vis_state.topic > 0) topic_on(document.getElementById(topicID + vis_state.topic));
                 });
 
+            // text to indicate topic
+            points.append("text")
+            .attr("class", "txt")
+            .attr("x", function(d) {
+                //console.log("ESTE ES EL D", d)
+                //return (xScale(+d.x));
+                return (xScale(+new_positions[topic_order[d.topics-1]-1][0]));
+
+            })
+            .attr("y", function(d) {
+                //return (yScale(+d.y) + 4);
+                return (yScale(+new_positions[topic_order[d.topics-1]-1][1]));
+            })
+            .attr("stroke", "black")
+            .attr("opacity", 1)
+            .style("text-anchor", "middle")
+            .style("font-size", "11px")
+            .style("fontWeight", 100)
+            .text(function(d) {
+                return name_topics_circles[topicID + d.topics];
+                //return d.topics+"-";
+            });
+
+                        
             svg.append("text")
                 .text("Intertopic Distance Map (via multidimensional scaling)")
                 .attr("x", mdswidth/2 + margin.left)
@@ -1175,13 +1228,13 @@ var LDAvis = function(to_select, data_or_file_name) {
             var edit = document.createElement("button");
             edit.setAttribute("id", topicEdit);
             edit.setAttribute("style", "margin-left: 5px");
-            edit.innerHTML = "Edit";
+            edit.innerHTML = "Rename Topic";
             topicDiv.appendChild(edit);
 
             
             d3.select("#"+topicEdit)
                 .on("click", function() {
-                    $('#exampleModal').modal(); //$("#myModal").show();
+                    $('#renameTopic').modal(); //$("#myModal").show();
                 });
 
             
@@ -1189,13 +1242,13 @@ var LDAvis = function(to_select, data_or_file_name) {
             var split = document.createElement("button");
             split.setAttribute("id", topicSplit);
             split.setAttribute("style", "margin-left: 5px");
-            split.innerHTML = "Split ";
+            split.innerHTML = "Split Topic ";
             topicDiv.appendChild(split);
 
             var merge = document.createElement("button");
             merge.setAttribute("id", topicMerge);
             merge.setAttribute("style", "margin-left: 5px");
-            merge.innerHTML = "Merge";
+            merge.innerHTML = "Merge Topics";
             topicDiv.appendChild(merge);
 
             d3.select("#"+topicMerge)
@@ -1231,6 +1284,16 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
             });
             
+            d3.select("#rename_topic_button")
+            .on("click", function(){
+                //cambiar el nombre del topico segun lo especifique el usuario
+                name_topics_circles[document.getElementById("idTopic").innerText] = document.getElementById("renameTopicId").value
+                //visualizar el nuevo nombre
+                createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
+            })
+            
+
+
             //colocar #apply_merging. 
             d3.select("#"+topicSplit) //el usuario desea continuar con el mergin
             .on("click", function() {
@@ -1238,8 +1301,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 merging_topic_2 =12
                 console.log("mezclar", merging_topic_1,topic_order[merging_topic_1-1]-1,"con", merging_topic_2, topic_order[merging_topic_2-1]-1)
                 //Hay que calcular un nuevo mdsData
-                console.log("este es el mdsData", mdsData)
-                createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
+                //Hay que imprimir nuevas coordenadas. 
+                //createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
                 
             });
 
@@ -1355,6 +1418,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             .on("mouseup", function() {
                 lambda_lambda_topic_similarity.old = lambda_lambda_topic_similarity.current;
                 lambda_lambda_topic_similarity.current = document.getElementById(lambdaID+"LambdaTopicSimilarity").value;
+                
                 //console.log("nuevo valor,", lambda_lambda_topic_similarity.current)
                 vis_state.lambda_lambda_topic_similarity =lambda_lambda_topic_similarity.current
             
@@ -1520,8 +1584,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         // function to re-order the bars (gray and red), and terms:
 
         function reorder_bars_helper(increase, topic_id_in_model, barFreqsID_actual, bar_totals_actual, terms_actual, overlay, xaxis_class){
-            console.log("topic id model 1", topic_id_model_1)
-            console.log("topic id model 2", topic_id_model_2)
+            
             var dat2 = lamData.filter(function(d) {
                 //return d.Category == "Topic" + Math.min(K, Math.max(0, vis_state.topic)) // fails for negative topic numbers...
                 
@@ -1529,8 +1592,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 return d.Category == "Topic" + topic_id_in_model;
             });
             
-            console.log("vis_state.topic", topic_id_in_model)
-            console.log("este es dat2", dat2)
+            
             // define relevance:
             for (var i = 0; i < dat2.length; i++) {
                 dat2[i].relevance = vis_state.lambda * dat2[i].logprob +
