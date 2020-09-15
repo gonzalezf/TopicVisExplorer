@@ -70,7 +70,7 @@ def getDocumentVector(text, wordembedding):
     words_found = 0.0
     for word in text_cleaner(text):
         if word in wordembedding:
-            document_vector+=wordembedding.wv[word] #aqui hay que ponderar
+            document_vector+=wordembedding[word] 
             words_found+=1
     return document_vector/words_found
 
@@ -89,7 +89,7 @@ def get_topkeywords_relevantdocuments_vectors(wordembedding, lda_model,most_rele
         for item in topKeywordsDict[topic_id]:
             if item['term'] in wordembedding: #no todas las palabras aparecerán en el ranking, que hacer con el resto
                 #print(item['term'], item['probability'])
-                topkeywords_vector += wordembedding.wv[item['term']]/ranking
+                topkeywords_vector += wordembedding[item['term']]/ranking
             else:
                 print(item['term']," position:",ranking)
             ranking+=1
@@ -136,9 +136,7 @@ def get_matrix(wordembedding, lda_model_1,most_relevant_documents_1,lda_model_2,
 ##############Calculate topic similarity
 
 def getTopicSimilarityMetric(topn, wordembedding, lda_model_collecion_1, most_relevant_documents_collection_1, lda_model_collecion_2, most_relevant_documents_collection_2):
-    #topn = 30
-    #lambda_ = 0.8
-    i = 0.0
+    i = 1.0 #este valor dejarlo en 0.0
     matrices_dict = dict()
     while i <=1.01:
         lambda_ = round(i,2)

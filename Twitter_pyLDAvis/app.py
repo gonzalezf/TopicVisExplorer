@@ -12,6 +12,8 @@ from flask import render_template_string
 from os import path, walk
 from gensim.models.keyedvectors import KeyedVectors
 import sklearn
+from flask import Flask, jsonify, request, render_template
+
 #from sklearn.metrics.pairwise import cosine_similarity
 #from calculate_topic_similarity import getTopicSimilarityMetric
 
@@ -175,7 +177,7 @@ def proposed_topic_similarity(wordembedding, lda_model, n_terms): #n_terms : num
 
 
 ######################Import data #########################
-type_vis = 1#2: two topic modeling output, 1: one topic modeling output
+type_vis = 2#2: two topic modeling output, 1: one topic modeling output
 
 if type_vis ==1: #load just one model
     ##Load relevant documents
@@ -196,9 +198,14 @@ if type_vis ==1: #load just one model
     #load prepared data
     try: #if file exits
         
-        with open('../data/cambridge_analytica/collection_I/collection_1_prepared_data', 'rb') as f:
+        with open('../data/cambridge_analytica/collection_I/collection_1_prepared_data', 'rb') as f: #voy a echar a perder este archivo, para que siempre se tenga que calcular ../data/cambridge_analytica/collection_I/collection_1_prepared_data
             PreparedDataObtained = pickle.load(f)
         print("We found prepared data file")
+
+        with open('../data/cambridge_analytica/collection_I/collection_1_data_dict', 'rb') as f: #voy a echar a perder este archivo, para que siempre se tenga que calcular ../data/cambridge_analytica/collection_I/collection_1_prepared_data
+            data_dict = pickle.load(f)
+        print("We found prepared data dict")
+
     except:
         print("We need to create prepared data")
         ##Load Gensim Model
@@ -214,6 +221,10 @@ if type_vis ==1: #load just one model
 
         data_dict = gensim_helpers.prepare(lda_model, corpus,id2word, mds='pcoa')   #retorna un dict de preparedData
 
+        with open('../data/cambridge_analytica/collection_I/collection_1_data_dict', 'wb') as f:
+            pickle.dump(data_dict, f)
+        print("data dict ha sido guardado")
+
         PreparedDataObtained = prepare(**data_dict)
 
         with open('../data/cambridge_analytica/collection_I/collection_1_prepared_data', 'wb') as f:
@@ -221,7 +232,7 @@ if type_vis ==1: #load just one model
 
     PreparedData_dict= PreparedDataObtained.to_dict()
     topic_order = PreparedData_dict['topic.order']
-
+    print("ESTE ES EL LEN DE TOPIC ORDER", len(topic_order))
     #Matriz de distancia - Topic similarity metric proposed
 
     #hay que calcular la matriz de distancia! no solo precalcularla
@@ -347,7 +358,98 @@ def crosslingual():
     #return render_template("index.html") 
     return render_template_string(html)
 
+
+@app.route('/merge_topics', methods=['POST'])
+def merge_topics():  #Se debe añadir el parametro data_dict de alguna forma, para que no tengamos que cargarlo a cada rato
+    if request.method == 'POST':
+        '''
+        topic_index_1 = request.get_json(force=True)['merging_topic_1'] 
+        topic_index_2 = request.get_json(force=True)['merging_topic_2']
+
         
+
+        with open('../data/cambridge_analytica/collection_I/collection_1_data_dict', 'rb') as f: #voy a echar a perder este archivo, para que siempre se tenga que calcular ../data/cambridge_analytica/collection_I/collection_1_prepared_data
+            data_dict = pickle.load(f)
+        print("MERGE OPERATION - WE FOUND  A DATA DICT!!!!!!!!!!!")
+        print("COMENZO A HACER EL MERGE de los topicos", topic_index_1, "y ", topic_index_2)
+        
+        #create a ne topic_term_dists
+        #the first column of the merge is going to be equal to =first_column_merge+second_column_merge (point wise)
+        data_dict['topic_term_dists'][topic_index_1] = np.add(data_dict['topic_term_dists'][topic_index_1],data_dict['topic_term_dists'][topic_index_2])
+        data_dict['topic_term_dists'] =  np.delete(data_dict['topic_term_dists'], topic_index_2, 0) #borramos la segunda columna con la que hicimos el merge
+        #we must delete all the references to the topic_index_2 (it doesn't exist anymore)
+        
+        #create a new doc_topic_dists:
+        data_dict['doc_topic_dists'][:,topic_index_1] = data_dict['doc_topic_dists'][:,topic_index_1]+data_dict['doc_topic_dists'][:,topic_index_2]
+        data_dict['doc_topic_dists'] = np.delete(data_dict['doc_topic_dists'], topic_index_2, 1)
+
+        '''
+        #things that keep the the same
+        #VAMOS A OMITIR ESTO, para que de esta forma podamos ver el cambio!!
+
+        '''
+        with open('../data/cambridge_analytica/collection_I/collection_1_data_dict', 'wb') as f:
+            pickle.dump(data_dict, f)
+        print("NUEVO data dict ha sido guardado")
+        '''
+        #print("TERMINO DE HACER EL MERGE!!!")
+        
+        #Generate a new mdsData
+
+
+        with open('../data/cambridge_analytica/collection_I/collection_1_prepared_data_merging', 'rb') as f: #voy a echar a perder este archivo, para que siempre se tenga que calcular ../data/cambridge_analytica/collection_I/collection_1_prepared_data
+            PreparedDataObtained = pickle.load(f)
+
+        print("ENCONTRAMOS UN PREPARED DATA DEL MERGING")
+
+
+        '''
+        PreparedDataObtained = prepare(**data_dict)
+        with open('../data/cambridge_analytica/collection_I/collection_1_prepared_data_merging', 'wb') as f:
+            pickle.dump(PreparedDataObtained, f)
+
+        print("GUARDAMOS EL PREPARED DATA AFTER MERGIN")
+        '''
+
+        PreparedData_dict= PreparedDataObtained.to_dict()
+        topic_order = PreparedData_dict['topic.order'] #ojo, aqui hay que mantener un historial de los nombres
+        print("EL LEN DE TOPIC ORDER ES ", len(topic_order))
+        print("topic order es", topic_order)
+        #Matriz de distancia - Topic similarity metric proposed
+        
+        #Generate new relevantDocumentsDict
+        #######load the inicial relevantDocuments Dict, sobre este aplicar el merge
+
+        with open('../data/cambridge_analytica/collection_I/collection_1_sent_topics_sorteddf_mallet_ldamodel', 'rb') as f:
+            sent_topics_sorteddf_mallet = pickle.load(f)
+        sent_topics_sorteddf_mallet = sent_topics_sorteddf_mallet[['Topic_Num','Topic_Perc_Contrib','text']]
+
+        relevantDocumentsDict = {}
+        for index,row in sent_topics_sorteddf_mallet.iterrows():
+            topic_id = int(row['Topic_Num'])
+            if topic_id not in relevantDocumentsDict:
+                relevantDocumentsDict[topic_id]=[]
+            relevantDocumentsDict[topic_id].append({
+                'topic_perc_contrib':str(round(row['Topic_Perc_Contrib']*100,1))+"%",
+                'text':row['text']
+            })
+
+        #hay que calcular la matriz de distancia! no solo precalcularla
+        with open('../data/cambridge_analytica/matrix_collection_1_1', 'rb') as f: #hay que calcular una nueva matriz de distancia
+            matrix = pickle.load(f)
+        
+        new_circle_positions = dict()
+        for lambda_ in range(0, 100):
+            lambda_ = lambda_/100
+            matrix_cosine_distance = 1-matrix[lambda_]
+            np.fill_diagonal(matrix_cosine_distance,0)
+            new_circle_positions[lambda_]=_pcoa(matrix_cosine_distance, n_components=2).tolist()
+        #print(new_circle_positions)
+        new_circle_positions= json.dumps(new_circle_positions)
+
+        html = prepared_html_in_flask(data = [PreparedDataObtained], relevantDocumentsDict = relevantDocumentsDict, topic_order = topic_order,  type_vis = type_vis,  new_circle_positions = new_circle_positions)
+        return render_template_string(html)
+        #return PreparedData_dict
     
 def launch():    # on running python app.py
 

@@ -298,7 +298,7 @@ def _token_table(topic_info, term_topic_freq, vocab, term_frequency):
     token_table['Freq'] = token_table.Freq / term_frequency[token_table.index]
     return token_table.sort_values(by=['Term', 'Topic'])
 
-
+#Editar esto para hacer el merge
 def prepare(topic_term_dists, doc_topic_dists, doc_lengths, vocab, term_frequency,
             R=30, lambda_step=0.01, mds=js_PCoA, n_jobs=-1,
             plot_opts={'xlab': 'PC1', 'ylab': 'PC2'}, sort_topics=True):
@@ -370,6 +370,8 @@ def prepare(topic_term_dists, doc_topic_dists, doc_lengths, vocab, term_frequenc
     :func:`display` : embed figure within the IPython notebook
     :func:`enable_notebook` : automatically embed visualizations in IPython notebook
    """
+    
+
     # parse mds
     if isinstance(mds, basestring):
         mds = mds.lower()

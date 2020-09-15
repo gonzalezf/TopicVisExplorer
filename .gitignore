@@ -2,3 +2,5 @@
 *.vec
 #ignore data folder
 data
+jupyters/english_europe_tweets_20190411.csv_matrix_document_topic_distribution.csv
+jupyters/english_northamerica_tweets_20190411.csv_matrix_document_topic_distribution.csv

@@ -154,11 +154,6 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order,   type_vis, 
         elem = elem.to_json()
         data_json_format.append(elem)
     
-    
-
-
-
-
 
     #transformar matrix en un diccionario
     if type_vis == 2:
@@ -274,7 +269,7 @@ def prepared_html_in_flask(data, relevantDocumentsDict, topic_order,type_vis,new
     #kwargs['ldavis_url'] = '/LDAvis.js'
     #kwargs['d3_url'] = '/d3.js'
     #kwargs['ldavis_css_url'] = '/LDAvis.css'
-    
+    print("ESTE ES EL DATA QUE RECIBO", data)    
     kwargs['ldavis_url'] = '/static/js/LDAvis.js'
     kwargs['d3_url'] = 'static/js/d3.v5.min.js'
     kwargs['ldavis_css_url'] = 'static/js/LDAvis.css'

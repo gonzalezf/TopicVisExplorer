@@ -92,6 +92,7 @@ var LDAvis = function(to_select, data_or_file_name) {
     var topicUp = topicID + "-up";
     var topicClear = topicID + "-clear";
     var topicEdit = topicID+"-edit";
+    var topicEdit2 = topicID+"-edit_2";
     var topicSplit = topicID+"-split";
     var topicMerge = topicID+"-merge";
 
@@ -119,14 +120,19 @@ var LDAvis = function(to_select, data_or_file_name) {
     var merging_topic_1 = -1
     var merging_topic_2 = -1
 
+    var splitting_topic = -1
+
     var hacer_merge = false
 
     var last_clicked_model_1 = -1
     var last_clicked_model_2 = -1
 
 
+    //rename topic variables
     var renameTopicId = -1
     var name_topics_circles = {}
+    var name_topics_sankey = {}
+
 
     ///probando
     
@@ -153,6 +159,7 @@ var LDAvis = function(to_select, data_or_file_name) {
     function visualize(data) {
 
         // set the number of topics to global variable K:
+        //console.log("ESTA ES LA DATA QUE RECIBE", data)
         
         K = data['mdsDat'].x.length;
 
@@ -380,7 +387,16 @@ var LDAvis = function(to_select, data_or_file_name) {
         */
         //https://bl.ocks.org/d3noob/013054e8d7807dff76247b81b0e29030}
 
-        
+        function get_name_node_sankey(graph){
+            var nodes_filtered_set = new Set();
+            graph.nodes.filter(function(d){
+                if(!(nodes_filtered_set.has(d.node))){
+                    name_topics_sankey[topicID + d.node] = d.name
+                    return d;
+                }
+            });
+
+        }   
 
        function visualize_sankey(graph, threshold){
             
@@ -432,7 +448,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             var units = "similarity";
             // set the dimensions and margins of the graph
             var margin = {top: 30, right: 10, bottom: 10, left: 10},
-                width = mdswidth - margin.left - margin.right,
+                width = 3*mdswidth, //width = mdswidth - margin.left - margin.right,
                 height = 2*mdsheight - margin.top - margin.bottom;
                         // format variables
             
@@ -448,7 +464,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("id", "svg_sankey")
                 
                 .append("g")
-                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                    .attr("transform", "translate(" + (termwidth+mdswidth+2*margin.left) + "," + (2*margin.top) + ")");
 
             
             var sankey = d3.sankey()
@@ -495,7 +511,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     return "translate(" + d.x + "," + d.y + ")"; })
                 .on("click", function(d){
                     
-                    
                     topic_on_sankey(d, min_target_node_value );
                     
 
@@ -508,7 +523,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     }
                     topic_on(this);
                     */
-                   topic_on_sankey(d, min_target_node_value );
+                   //topic_on_sankey(d, min_target_node_value ); ESTO LO DESACTIVE
                 })
                 .on("mouseout", function(d) {
                     /*
@@ -541,24 +556,29 @@ var LDAvis = function(to_select, data_or_file_name) {
                         //return "blue";
                         //return "#1f77b4"; 
                         return "rgb(95,160,254)";
+                        
                     }
                     else{
                         //return "red";
                         return "rgb(252,153,146)";
+                        
                     }
-                     //return d.color = color(d.name.replace(/ .*/, "")); })
+                     
                 })
                 .style("stroke", function(d) { 
                     return d3.rgb(d.color).darker(2); })
-            .append("title")
-                .text(function(d) { 
-                    return d.name + "--\n" + format(d.value); })
+
+                .append("title")
+                    .text(function(d) { 
+                        
+                        //name_topics_sankey[topicID + d.node] = d.name ESTO LO DEJE DE HACER, DE LO CONTRARIO NINGUNA HABRA UN UPDATE DE NOMBRE
+                        
+                        return d.name + "--\n" + format(d.value); })
                     
+                .on("click", function(){
                     
-            .on("click", function(){
-                
-                alert("probando aqui", d.value);
-            });
+                    alert("probando aqui", d.value);
+                });
         
         // add in the title for the nodes
             node.append("text")
@@ -567,12 +587,13 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("dy", ".35em")
                 .attr("text-anchor", "end")
                 .attr("transform", null)
-                .text(function(d) { return d.name; })
+                .text(function(d){return name_topics_sankey[topicID + d.node] ;}) //.text(function(d) { return d.name; })
             .filter(function(d) { return d.x < width / 2; })
                 .attr("x", 6 + sankey.nodeWidth())
                 .attr("text-anchor", "start");
         
         // the function for moving the nodes
+        
         
             function dragmove(d) {
             d3.select(this)
@@ -586,19 +607,28 @@ var LDAvis = function(to_select, data_or_file_name) {
             link.attr("d", path);
             }        
             
+            if(last_clicked_model_2!=-1){
+                d3.select("#"+last_clicked_model_2).style("fill","rgb(237, 62, 50)")
+            }
+            if(last_clicked_model_1!=-1){
+                console.log("entreeeeeeeeeeeeeeeeeeeee!!")
+                d3.select("#"+last_clicked_model_1).style("fill","rgb(14, 91, 201)")
+            }
+                //cual es el d al que le estoy haciendo click??
         }   
 
         // Clicking on the mdsplot should clear the selection
         function createMdsPlot(number, mdsData, lambda_lambda_topic_similarity){
             //console.log("mdsData", number, mdsData, lambda_lambda_topic_similarity)
-            console.log("ESTE ES EL ARREGLO DE NOMBRES QUE RECIBE CREATE MDSPLOT", name_topics_circles)
+            //console.log("ESTE ES EL ARREGLO DE NOMBRES QUE RECIBE CREATE MDSPLOT", name_topics_circles)
+            //console.log("mdsData", mdsData)
             // Create a group for the mds plot Bubbles visualization
             d3.selectAll('#'+leftPanelID).remove();
 
             var mdsplot = svg.append("g")
-                .attr("id", leftPanelID)
+                .attr("id", leftPanelID) //now is central panel no leftpanel
                 .attr("class", "points")
-                .attr("transform", "translate(0,"+(2*margin.top +(mdsheight +margin.bottom  + 2 * rMax)*(number-1))+")");//.attr("transform", "translate(" + margin.left + "," + 2 * margin.top + ")");
+                .attr("transform", "translate("+(mdswidth+margin.left+termwidth)+","+(2*margin.top +(mdsheight +margin.bottom  + 2 * rMax)*(number-1))+")");//.attr("transform", "translate(" + margin.left + "," + 2 * margin.top + ")");
 
 
             mdsplot
@@ -761,6 +791,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                     //console.log("la id ahora es ", renameTopicId)
                     //                    $('#renameTopicId').html();
                     //document.getElementById("renameTopicId").value = d.topics+"-"
+
+                    splitting_topic= vis_state.topic
+                    console.log("topico a splitear es ", splitting_topic)
                     document.getElementById("renameTopicId").value = name_topics_circles[topicID + d.topics]
                     $('#idTopic').html(topicID + d.topics);
                     //hacer merge de topicos
@@ -777,7 +810,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         $('#MergeModal_2').modal(); 
                     }
 
-                    console.log("vis_state.topic", vis_state.topic)
+                    //console.log("vis_state.topic", vis_state.topic)
                     state_save(true);
                     topic_on(this);                
                 })
@@ -977,7 +1010,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
             
             createBarPlot(dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis",2 * margin.top, R ) //esto crea el bar plot por primera vez. 
-
+            //dejar la tabla en una buena posicion
+            d3.selectAll('.tableRelevantDocumentsClass_Model1').attr("transform", "translate("  +0 + "," +0+ ")")
 
 
             //var contador = 0;
@@ -1003,6 +1037,7 @@ var LDAvis = function(to_select, data_or_file_name) {
        if(type_vis === 2){
         
            //visualize_sankey(matrix_sankey, vis_state.lambda_topic_similarity)
+           get_name_node_sankey(matrix_sankey[lambda_lambda_topic_similarity.current])
            visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
            //createBarPlot(dat3)
            createBarPlot(dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis",2 * margin.top , number_terms_sankey) //esto crea el bar plot por primera vez. 
@@ -1046,7 +1081,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             // Add a group for the bar chart
             var chart = svg.append("g")
-                    .attr("transform", "translate("  +(mdswidth + margin.left + termwidth) + "," +height_bar+ ")")
+                    .attr("transform", "translate("  +(termwidth) + "," +height_bar+ ")") //.attr("transform", "translate("  +(mdswidth + margin.left + termwidth) + "," +height_bar+ ")")
                     .attr("id", barFreqsID_actual);
             
             // bar chart legend/guide:
@@ -1134,7 +1169,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     return d.Term;
                 })
                 .on("mouseover", function() {
-                    term_hover(this);
+                    //term_hover(this); LO DESACTIVE
                 })
             // .on("click", function(d) {
             //     var old_term = termID + vis_state.term;
@@ -1153,7 +1188,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 });
             
             var title = chart.append("text")
-                    .attr("x", barwidth/2)
+                    .attr("x", mdswidth+margin.left+termwidth+(barwidth/2))
                     .attr("y", -30)
                     .attr("class", bubble_tool) //  set class so we can remove it when highlight_off is called
                     .style("text-anchor", "middle")
@@ -1185,13 +1220,13 @@ var LDAvis = function(to_select, data_or_file_name) {
             // create container div for topic and lambda input:
             var TopPanel = document.createElement("div");
             TopPanel.setAttribute("id", "TopPanel");
-            TopPanel.setAttribute("style", "width: 1210px; height:50px; background-color:  #e8e8e8"); // to match the width of the main svg element
+            TopPanel.setAttribute("style", "width: "+3*mdswidth+"; height:50px; margin-left: 30px; background-color:  blue"); // to match the width of the main svg element
             document.getElementById(visID).appendChild(TopPanel);
 
             //esta funcionalidad la voy a eliminar
             // topic input container:
             var topicDiv = document.createElement("div");
-            topicDiv.setAttribute("style", "padding: 5px; background-color: #e8e8e8; display: inline-block; width: " + 2*mdswidth + "px; height: 50px; float: left");
+            topicDiv.setAttribute("style", "padding: 10px; background-color: #e8e8e8; display: inline-block; width: " + 3*mdswidth + "px; height: 50px; float: left");
             TopPanel.appendChild(topicDiv);
 
             // topic input container:
@@ -1237,7 +1272,20 @@ var LDAvis = function(to_select, data_or_file_name) {
                     $('#renameTopic').modal(); //$("#myModal").show();
                 });
 
+
+            if(type_vis==2){
+
+                var edit2 = document.createElement("button");
+                edit2.setAttribute("id", topicEdit2);
+                edit2.setAttribute("style", "margin-left: 5px");
+                edit2.innerHTML = "Rename Topic 2";
+                topicDiv.appendChild(edit2);
+            }
             
+            d3.select("#"+topicEdit2)
+                .on("click", function() {
+                    $('#renameTopic2').modal(); //$("#myModal").show();
+                });
 
             var split = document.createElement("button");
             split.setAttribute("id", topicSplit);
@@ -1284,27 +1332,94 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
             });
             
-            d3.select("#rename_topic_button")
-            .on("click", function(){
-                //cambiar el nombre del topico segun lo especifique el usuario
-                name_topics_circles[document.getElementById("idTopic").innerText] = document.getElementById("renameTopicId").value
-                //visualizar el nuevo nombre
-                createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
-            })
+            if(type_vis == 1){
+                d3.select("#rename_topic_button")
+                .on("click", function(){
+                    //cambiar el nombre del topico segun lo especifique el usuario
+                    name_topics_circles[document.getElementById("idTopic").innerText] = document.getElementById("renameTopicId").value
+                    //visualizar el nuevo nombre
+                    createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
+                })
+            }
+            else{
+                d3.select("#rename_topic_button")
+                .on("click", function(){
+                    //cambiar el nombre del topico segun lo especifique el usuario
+                    
+                    name_topics_sankey[document.getElementById("idTopic").innerText] = document.getElementById("renameTopicId").value
+                    console.log("ESTE ES EL NUEVO ARREGLO", name_topics_sankey)
+                    //visualizar el nuevo nombre
+                    visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
+                    
+
+                  
+                })
+            }
+            d3.select("#rename_topic_button2")
+                .on("click", function(){
+                    //cambiar el nombre del topico segun lo especifique el usuario
+                    name_topics_sankey[document.getElementById("idTopic2").innerText] = document.getElementById("renameTopicId2").value
+                    //console.log("ESTE ES EL NUEVO ARREGLO", name_topics_sankey)
+                    visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
+
+                    //visualizar el nuevo nombre
+                    
+                })
+
+
             
 
 
-            //colocar #apply_merging. 
-            d3.select("#"+topicSplit) //el usuario desea continuar con el mergin
+            //colocar #apply_merging.  "aqui esta el antiguo codigo para el merge"
+
+            d3.select("#"+topicSplit)
+            .on("click",function(){
+                if(splitting_topic!=-1){
+                    var real_topic_id = topic_order[splitting_topic-1]-1//Ojo! los topicos fueron ordenados de mayor a menor frecuencia, por eso que el orden cambia
+                    updateRelevantDocumentsSplitting(real_topic_id, relevantDocumentsDict);
+                    console.log("se hara un split al topico", splitting_topic)
+                    $('.splitting_topic_1').html(splitting_topic);
+                    $('#SplitModal_1').modal(); //$("#myModal").show();
+                }
+            });
+            
+            
+            /*
+            d3.select("#"+topicSplit) //el usuario desea continuar con el mergin #"#"+topicSplit
             .on("click", function() {
-                merging_topic_1 = 5
-                merging_topic_2 =12
+                merging_topic_1 = 1
+                merging_topic_2 =2
                 console.log("mezclar", merging_topic_1,topic_order[merging_topic_1-1]-1,"con", merging_topic_2, topic_order[merging_topic_2-1]-1)
-                //Hay que calcular un nuevo mdsData
-                //Hay que imprimir nuevas coordenadas. 
+
+                fetch('/merge_topics', {
+
+                    // Specify the method
+                    method: 'POST',
+
+                    // A JSON payload
+                    body: JSON.stringify({
+                        "merging_topic_1": topic_order[merging_topic_1-1]-1, //no estoy seguro que numero de topico pasarle
+                        "merging_topic_2": topic_order[merging_topic_2-1]-1
+                    })
+                }).then(function (response) { // At this point, Flask has printed our JSON
+                    response.json().then(function(data){
+                      //return response.text();
+                        console.log("DATA DEVUELTA", data)
+                    })
+                }).then(function (text) {
+
+                    console.log('POST response: ');
+
+                    // Should be 'OK' if everything was successful
+                    console.log(response)//console.log(text);
+                });
+                
                 //createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
                 
             });
+            */
+
+
 
             /*
             var previous = document.createElement("button");
@@ -1338,6 +1453,99 @@ var LDAvis = function(to_select, data_or_file_name) {
             inputDiv.setAttribute("style", "width: 1210px"); 
             document.getElementById(visID).appendChild(inputDiv);
 
+
+
+
+            // lambda inputs (terms)
+            //var lambdaDivLeft = 8 + mdswidth + margin.left + termwidth;
+            var lambdaDivWidth = barwidth;
+            var lambdaDiv = document.createElement("div");
+            lambdaDiv.setAttribute("id", lambdaInputID);
+            lambdaDiv.setAttribute("style", "padding: 5px; background-color: #e8e8e8; margin-top:5px; display: inline-block; height: 50px; width: " + lambdaDivWidth + "px; float: left; margin-left: 30px");
+            inputDiv.appendChild(lambdaDiv);
+
+            var lambdaZero = document.createElement("div");
+            lambdaZero.setAttribute("style", "padding: 5px; height: 20px; width: 220px; font-family: sans-serif; float: left");
+            lambdaZero.setAttribute("id", lambdaZeroID);
+            lambdaDiv.appendChild(lambdaZero);
+            var xx = d3.select("#" + lambdaZeroID)
+                    .append("text")
+                    .attr("x", 0)
+                    .attr("y", 0)
+                    .style("font-size", "14px")
+                    .text("Slide to adjust relevance metric:");
+            var yy = d3.select("#" + lambdaZeroID)
+                    .append("text")
+                    .attr("x", 125)
+                    .attr("y", -5)
+                    .style("font-size", "10px")
+                    .style("position", "absolute")
+                    .text("(2)");
+
+            var sliderDiv = document.createElement("div");
+            sliderDiv.setAttribute("id", sliderDivID);
+            sliderDiv.setAttribute("style", "padding: 5px; height: 40px; width: 250px; float: right; margin-top: -5px; margin-right: 10px");
+            lambdaDiv.appendChild(sliderDiv);
+
+            var lambdaInput = document.createElement("input");
+            lambdaInput.setAttribute("style", "width: 250px; margin-left: 0px; margin-right: 0px");
+            lambdaInput.type = "range";
+            lambdaInput.min = 0;
+            lambdaInput.max = 1;
+            lambdaInput.step = data['lambda.step'];
+            lambdaInput.value = vis_state.lambda;
+            lambdaInput.id = lambdaID;
+            lambdaInput.setAttribute("list", "ticks"); // to enable automatic ticks (with no labels, see below)
+            sliderDiv.appendChild(lambdaInput);
+
+            var lambdaLabel = document.createElement("label");
+            lambdaLabel.setAttribute("id", lambdaLabelID);
+            lambdaLabel.setAttribute("for", lambdaID);
+            lambdaLabel.setAttribute("style", "height: 20px; width: 60px; font-family: sans-serif; font-size: 14px; margin-left: 80px");
+            lambdaLabel.innerHTML = "&#955 = <span id='" + lambdaID + "-value'>" + vis_state.lambda + "</span>";
+            lambdaDiv.appendChild(lambdaLabel);
+
+            // Create the svg to contain the slider scale:
+            var scaleContainer = d3.select("#" + sliderDivID).append("svg")
+                    .attr("width", 250)
+                    .attr("height", 25);
+
+            var sliderScale = d3.scaleLinear()
+                    .domain([0, 1])
+                    .range([7.5, 242.5])  // trimmed by 7.5px on each side to match the input type=range slider:
+                    .nice();
+
+
+
+            var sliderAxis = d3.axisBottom(sliderScale).tickSize(10).ticks(6);
+                    
+            // group to contain the elements of the slider axis:
+            var sliderAxisGroup = scaleContainer.append("g")
+                    .attr("class", "slideraxis")
+                    .attr("margin-top", "-10px")
+                    .call(sliderAxis);
+
+            // Another strategy for tick marks on the slider; simpler, but not labels
+            // var sliderTicks = document.createElement("datalist");
+            // sliderTicks.setAttribute("id", "ticks");
+            // for (var tick = 0; tick <= 10; tick++) {
+            //     var tickOption = document.createElement("option");
+            //     //tickOption.value = tick/10;
+            //     tickOption.innerHTML = tick/10;
+            //     sliderTicks.appendChild(tickOption);
+            // }
+            // append the forms to the containers
+            //lambdaDiv.appendChild(sliderTicks);
+
+
+
+
+
+
+
+
+
+            
             var TopicSimilarityMetricPanel = document.createElement("div");
             TopicSimilarityMetricPanel.setAttribute("style", "padding: 5px; margin-top:5px; background-color: #e8e8e8; display: inline-block; width: " + mdswidth + "px; height: 50px; float: left");
             inputDiv.appendChild(TopicSimilarityMetricPanel);
@@ -1353,7 +1561,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             */
             var sliderDivLambdaTopicSimilarity = document.createElement("div");
             sliderDivLambdaTopicSimilarity.setAttribute("id", sliderDivID+"LambdaTopicSimilarity");
-            sliderDivLambdaTopicSimilarity.setAttribute("style", "padding: 5px; height: 40px; width: 250px; float: left; margin-top: -5px; margin-right: 10px");
+            sliderDivLambdaTopicSimilarity.setAttribute("style", "padding: 5px; height: 40px; width: 250px; float: left; margin-top: -55px; margin-right: 10px");
             TopicSimilarityMetricPanel.appendChild(sliderDivLambdaTopicSimilarity);
 
             if(type_vis==2){
@@ -1364,7 +1572,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
 
             var lambdaInputLambdaTopicSimilarity = document.createElement("input");
-            lambdaInputLambdaTopicSimilarity.setAttribute("style", "width: 250px; margin-left: 0px; margin-right: 0px");
+            lambdaInputLambdaTopicSimilarity.setAttribute("style", "width: 250px; margin-left: 100px; margin-right: 0px");
             lambdaInputLambdaTopicSimilarity.type = "range";
             lambdaInputLambdaTopicSimilarity.min = 0.0
             lambdaInputLambdaTopicSimilarity.max = 1;
@@ -1377,7 +1585,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             var lambdaLabelLambdaTopicSimilarity = document.createElement("label");
             lambdaLabelLambdaTopicSimilarity.setAttribute("id", lambdaLabelID+"LambdaTopicSimilarity");
             lambdaLabelLambdaTopicSimilarity.setAttribute("for", lambdaID+"LambdaTopicSimilarity");
-            lambdaLabelLambdaTopicSimilarity.setAttribute("style", "height: 20px; width: 60px; font-family: sans-serif; font-size: 14px; margin-left: 80px");
+            lambdaLabelLambdaTopicSimilarity.setAttribute("style", "height: 20px; width: 60px; font-family: sans-serif; font-size: 14px; margin-left: 100px");
             lambdaLabelLambdaTopicSimilarity.innerHTML = "&#955 = <span id='" + lambdaID+"LambdaTopicSimilarity" + "-value'>" + vis_state.lambda_lambda_topic_similarity + "</span>";
             sliderDivLambdaTopicSimilarity.appendChild(lambdaLabelLambdaTopicSimilarity);
 
@@ -1395,7 +1603,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             
             var lambdaInputTopicSimilarity = document.createElement("input");
-            lambdaInputTopicSimilarity.setAttribute("style", "width: 250px; margin-left: 0px; margin-right: 0px");
+            lambdaInputTopicSimilarity.setAttribute("style", "width: 250px; margin-left: 100px; margin-right: 0px");
             lambdaInputTopicSimilarity.type = "range";
             lambdaInputTopicSimilarity.min = Math.round((min_similarity_score-0.01)*100)/100;
             lambdaInputTopicSimilarity.max = 1;
@@ -1498,87 +1706,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .call(sliderAxisTopicSimilarity);
 
 
-            // lambda inputs (terms)
-            //var lambdaDivLeft = 8 + mdswidth + margin.left + termwidth;
-            var lambdaDivWidth = barwidth;
-            var lambdaDiv = document.createElement("div");
-            lambdaDiv.setAttribute("id", lambdaInputID);
-            lambdaDiv.setAttribute("style", "padding: 5px; background-color: #e8e8e8; margin-top:5px; display: inline-block; height: 50px; width: " + lambdaDivWidth + "px; float: right; margin-right: 30px");
-            inputDiv.appendChild(lambdaDiv);
-
-            var lambdaZero = document.createElement("div");
-            lambdaZero.setAttribute("style", "padding: 5px; height: 20px; width: 220px; font-family: sans-serif; float: left");
-            lambdaZero.setAttribute("id", lambdaZeroID);
-            lambdaDiv.appendChild(lambdaZero);
-            var xx = d3.select("#" + lambdaZeroID)
-                    .append("text")
-                    .attr("x", 0)
-                    .attr("y", 0)
-                    .style("font-size", "14px")
-                    .text("Slide to adjust relevance metric:");
-            var yy = d3.select("#" + lambdaZeroID)
-                    .append("text")
-                    .attr("x", 125)
-                    .attr("y", -5)
-                    .style("font-size", "10px")
-                    .style("position", "absolute")
-                    .text("(2)");
-
-            var sliderDiv = document.createElement("div");
-            sliderDiv.setAttribute("id", sliderDivID);
-            sliderDiv.setAttribute("style", "padding: 5px; height: 40px; width: 250px; float: right; margin-top: -5px; margin-right: 10px");
-            lambdaDiv.appendChild(sliderDiv);
-
-            var lambdaInput = document.createElement("input");
-            lambdaInput.setAttribute("style", "width: 250px; margin-left: 0px; margin-right: 0px");
-            lambdaInput.type = "range";
-            lambdaInput.min = 0;
-            lambdaInput.max = 1;
-            lambdaInput.step = data['lambda.step'];
-            lambdaInput.value = vis_state.lambda;
-            lambdaInput.id = lambdaID;
-            lambdaInput.setAttribute("list", "ticks"); // to enable automatic ticks (with no labels, see below)
-            sliderDiv.appendChild(lambdaInput);
-
-            var lambdaLabel = document.createElement("label");
-            lambdaLabel.setAttribute("id", lambdaLabelID);
-            lambdaLabel.setAttribute("for", lambdaID);
-            lambdaLabel.setAttribute("style", "height: 20px; width: 60px; font-family: sans-serif; font-size: 14px; margin-left: 80px");
-            lambdaLabel.innerHTML = "&#955 = <span id='" + lambdaID + "-value'>" + vis_state.lambda + "</span>";
-            lambdaDiv.appendChild(lambdaLabel);
-
-            // Create the svg to contain the slider scale:
-            var scaleContainer = d3.select("#" + sliderDivID).append("svg")
-                    .attr("width", 250)
-                    .attr("height", 25);
-
-            var sliderScale = d3.scaleLinear()
-                    .domain([0, 1])
-                    .range([7.5, 242.5])  // trimmed by 7.5px on each side to match the input type=range slider:
-                    .nice();
-
-
-
-            var sliderAxis = d3.axisBottom(sliderScale).tickSize(10).ticks(6);
-                    
-            // group to contain the elements of the slider axis:
-            var sliderAxisGroup = scaleContainer.append("g")
-                    .attr("class", "slideraxis")
-                    .attr("margin-top", "-10px")
-                    .call(sliderAxis);
-
-            // Another strategy for tick marks on the slider; simpler, but not labels
-            // var sliderTicks = document.createElement("datalist");
-            // sliderTicks.setAttribute("id", "ticks");
-            // for (var tick = 0; tick <= 10; tick++) {
-            //     var tickOption = document.createElement("option");
-            //     //tickOption.value = tick/10;
-            //     tickOption.innerHTML = tick/10;
-            //     sliderTicks.appendChild(tickOption);
-            // }
-            // append the forms to the containers
-            //lambdaDiv.appendChild(sliderTicks);
-
         }
 
         // function to re-order the bars (gray and red), and terms:
@@ -1677,7 +1804,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         return d.Term;
                     })
                     .on("mouseover", function() {
-                        term_hover(this);
+                        //term_hover(this); esto lo desactive
                     })
             // .on("click", function(d) {
             //     var old_term = termID + vis_state.term;
@@ -1914,16 +2041,19 @@ var LDAvis = function(to_select, data_or_file_name) {
                 var xaxis_class = "xaxis_2"
 
                 topic_id_model_2 = topic_id_in_model //esta info es util para la funcion reorder_bars
-
+                
                 //colorear el item seleccionado
                 if(last_clicked_model_2!=-1){
                     d3.select("#"+last_clicked_model_2).style("fill","rgb(252,153,146)")
                 }
+
                 
                 last_clicked_model_2 = "node_"+box.node
                 d3.select("#"+last_clicked_model_2).style("fill","rgb(237, 62, 50)")
+                document.getElementById("renameTopicId2").value = name_topics_sankey[topicID + box.node] 
+                $('#idTopic2').html(topicID + box.node);
             }
-            else{
+            else{ // el topico seleccionado eprtenece al modelo del corpus 1
                 var topic_id_in_model = box.node
                 var real_topic_id = topic_order[topic_id_in_model]-1
                 
@@ -1956,6 +2086,14 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                 last_clicked_model_1 = "node_"+box.node
                 d3.select("#"+last_clicked_model_1).style("fill","rgb(14, 91, 201)")
+                //cual es el d al que le estoy haciendo click??
+
+
+                
+                
+                document.getElementById("renameTopicId").value = name_topics_sankey[topicID + box.node] 
+                $('#idTopic').html(topicID + box.node);
+                
             }
 
             vis_state.topic = box.node
@@ -1969,7 +2107,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             d3.select("#" + barFreqsID_actual)
                 .append("text")
-                .attr("x", barwidth/2)
+                .attr("x", mdswidth+margin.left+termwidth+(barwidth/2))
                 .attr("y", -30)
                 .attr("class", bubble_tool) //  set class so we can remove it when highlight_off is called
                 .style("text-anchor", "middle")
@@ -2098,7 +2236,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             // append text with info relevant to topic of interest
             d3.select("#" + barFreqsID)
                 .append("text")
-                .attr("x", barwidth/2)
+                .attr("x", mdswidth+margin.left+termwidth+(barwidth/2))
                 .attr("y", -30)
                 .attr("class", "bubble-tool") //  set class so we can remove it when highlight_off is called
                 .style("text-anchor", "middle")
@@ -2501,8 +2639,95 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
 
 
+            //https://stackoverflow.com/questions/44336431/how-to-add-a-column-with-buttons-to-a-bootstrap-table-populated-by-data-from-mys/44343632
 
-            
+            $('.tableRelevantDocumentsClass_Split').on('click-row.bs.table', function (e, row, $element) {
+                var row_num = $element.index() + 1;
+                console.log("ESTOY HACIENDO CLICK EN LA TABLA")
+                console.log("esto es el row_num", row_num)
+              });
+
+        function getIdSelectionsFromTable() {
+            var $table = $('.tableRelevantDocumentsClass_Split')
+            console.log("Estoy en la funcion getIdSelectiosnFromTable")
+            return $.map($table.bootstrapTable('getSelections'), function (row) {
+                return row.id
+            })
+        }
+
+        var checkedRows = [];
+
+        $('.tableRelevantDocumentsClass_Split').on('check.bs.table', function (e, row) {
+            console.log("ESTA ES LA ROW", row)
+        checkedRows.push({topic_perc_contrib: row.topic_perc_contrib, text: row.text,uncategorized: row.uncategorized, subtopic1: row.subtopic1, subtopic2: row.subtopic2 }); // id: row.id ¿como obtener la id de la row? uwu //checkedRows.push({id: row.id, name: row.name, forks: row.forks});
+        console.log(checkedRows);
+        });
+
+        $('.tableRelevantDocumentsClass_Split').on('uncheck.bs.table', function (e, row) {
+        $.each(checkedRows, function(index, value) {
+            if (value.id === row.id) {
+            checkedRows.splice(index,1);
+            }
+        });
+        console.log(checkedRows);
+        });
+
+        $("#add_cart").click(function() {
+        $("#output").empty();
+        $.each(checkedRows, function(index, value) {
+            console.log("ESTE ES EL OBJECT", value)
+            $('#output').append($('<li></li>').text(value.text+"---"+value.topic_perc_contrib+"---"+value.uncategorized+"---"+value.subtopic1+"---"+value.subtopic2));
+        });
+        });
+
+        function updateRelevantDocumentsSplitting(topic_id, relevantDocumentsDict){
+            $('.tableRelevantDocumentsClass_Split').bootstrapTable("destroy");
+                $('.tableRelevantDocumentsClass_Split').bootstrapTable({
+                    toggle:true,
+                    pagination: true,
+                    search: true,
+                    sorting: true,
+                    //showRefresh: true, Hacer que esto funcione! ver :  https://examples.bootstrap-table.com/#view-source
+                    //showExport:true,
+                    //showColumns: true,
+                    columns:[
+                        {
+                            field: 'topic_perc_contrib',
+                            title: 'Contribution',
+                            sortable:'true'
+                        },{
+                            field: 'text',
+                            title: 'Text',
+                            sortable:'true'
+                        },{
+                            field: 'uncategorized',
+                            title:'Uncategorized',
+                            checkbox: true,
+                        },
+                        {
+                            field: 'subtopic1',
+                            title:'Sub topic 1',
+                            radio: true,
+                        },
+                        {
+                            field: 'subtopic2',
+                            title:'Sub topic 2',
+                            radio: true,
+                        }
+                    ],
+                    data: relevantDocumentsDict[topic_id]
+                });
+                //add dinamically row to a boostrapTable
+                //$('.tableRelevantDocumentsClass_Split tbody tr').append('<td><input type="radio" id="uncategorized" ></td>');
+                //$('.tableRelevantDocumentsClass_Split tbody tr').append('<td><input type="radio" id="subtopic1"></td>');
+                //$('.tableRelevantDocumentsClass_Split tbody tr').append('<td><input type="radio" id="subtopic2"></td>');
+                //$('.tableRelevantDocumentsClass_Split tbody tr').append('<td><input type="radio" id="uncategorized" name="group1"></td>');
+                //$('.tableRelevantDocumentsClass_Split tbody tr').append('<td><input type="radio" id="subtopic1" name="group2"></td>');
+
+                
+
+
+        }
         function updateRelevantDocuments(topic_id, relevantDocumentsDict, model){
             if(model == 1){
                 $('.tableRelevantDocumentsClass_Model1').bootstrapTable("destroy");

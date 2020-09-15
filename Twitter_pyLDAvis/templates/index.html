@@ -2,7 +2,7 @@
 
 
 
-<!-- Modal -->
+<!-- Modal rename topic (Model 1)-->
 <div class="modal fade" id="renameTopic" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -15,7 +15,7 @@
       <div class="modal-body">
         <!--Edit topic id (<span id="renameTopicId"></span>) -->
         Name: <input type="text" id="renameTopicId">
-        <span  hidden="hidden" id="idTopic"></span>
+        <span hidden="hidden" id="idTopic"></span>
         
       </div>
       <div class="modal-footer">
@@ -27,7 +27,84 @@
 </div>
 
 
-<!-- Modal -->
+<!-- Modal  Rename topic model 2 (sankey)-->
+<div class="modal fade" id="renameTopic2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Rename Topic Model 2</h5>
+        <!--<button type="button" class="close" data-dismiss="modal" aria-label="Close">-->
+          <!--<span aria-hidden="true">&times;</span>-->
+        </button>
+      </div>
+      <div class="modal-body">
+        <!--Edit topic id (<span id="renameTopicId"></span>) -->
+        Name: <input type="text" id="renameTopicId2">
+        <span  hidden="hidden" id="idTopic2"></span>
+        
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="rename_topic_button2" data-dismiss="modal" >Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Split modals-->
+<script>
+  function myFunction(){
+    console.log("estoy en la funcion!!!!!!")
+  }
+</script>
+<div class="modal fade" id="SplitModal_1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog"  role="document" >
+    <div class="modal-content" id="modal_dialog_SplitModal_1">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Topic Splitting</h5>
+      </div>
+      <div class="modal-body">
+        You are going to split the current selected topic (<span class="splitting_topic_1"></span>).  
+        <button id="add_cart">Add to card</button>
+        <ul id="output"></ul>        
+
+      <form action="/action_page.php">
+        <label for="quantity">Number of subtopics:</label>
+        <input type="number" id="splitting_number_subtopics"  min="2" max="5", value="2"  onchange="myFunction()"> <!--myFunction should adapt the number of columns from the platform-->
+      </form>
+      <table  class="tableRelevantDocumentsClass_Split table table-hover" >
+        <thead>
+        <tr>
+          <!--
+            <th class="text-center" data-field="topic_perc_contrib" scope="col">Contribution</th>
+            <th class="text-center" data-field="text" scope="col">Tweet</th>
+            <th class="text-center">Uncategorized</th>
+            -->
+            <!--Create number of columns regarding the number of sub topics-->
+            <script>
+            for (const x of Array(parseInt(document.getElementById('splitting_number_subtopics').value)).keys()) {
+              document.write('<th class="text-center" data-field="other" scope="col">Sub-topic</th>');
+
+              
+            }              
+            </script>
+        </tr>
+        </thead>
+
+    </table>    
+  
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="cancel_merging" data-dismiss="modal">Cancel</button>
+        <button type="button" id="continue_merging" data-dismiss="modal" class="btn btn-primary">Continue</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- Merge modals-->
 
 <div class="modal fade" id="MergeModal_2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
@@ -83,7 +160,8 @@
 </div>
 
 
-<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 
 
@@ -108,6 +186,8 @@
 
 <script src="https://cdn.jsdelivr.net/gh/sebt3/d3-bootstrap@0.5.2/dist/d3-bootstrap-withextra.min.js"></script>
 
+
+<!-- Add AJAX-->
 <div id={{ visid }}></div>
 
 <link rel="stylesheet" type="text/css" href="{{ ldavis_css_url }}">
@@ -119,13 +199,12 @@ var {{ visid_raw }}_data = {{ vis_json }};
 var relevantDocumentsDict = {{relevantDocumentsDict|safe}};
 var type_vis = {{type_vis}}
 var topic_order = {{topic_order}}
-console.log("ESTE ES EL TOPIC_ORDER", topic_order)
 var jsonData = {{vis_json}}
 
 
 
 
-
+//console.log("AFTER MERGE, ESTE ES EL JSON DATA QUE LLEGA", jsonData)
 
 if(type_vis == 1){
   var new_circle_positions = {{new_circle_positions}} 
