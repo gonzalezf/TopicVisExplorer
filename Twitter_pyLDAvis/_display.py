@@ -170,7 +170,7 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order,   type_vis, 
         
         ##para cada valor posible de lambda
         dict_matrix_dict = dict()
-        for lambda_ in range(0, 100):
+        for lambda_ in range(0, 101):
             lambda_ = lambda_/100
             matrix_dict = {"nodes":[], "links":[]}
             matrix_s = matrix_sankey[lambda_]

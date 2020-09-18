@@ -21,7 +21,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         vis_state = {
             lambda: 0.6,
             lambda_lambda_topic_similarity:0.8, //que tanta info tiene vector top keywords y que tanta info tiene vector top relevant documents
-            lambda_topic_similarity:0.9, //este filtra las lineas (el ancho que de similitud)
+            lambda_topic_similarity:0.0, //este filtra las lineas (el ancho que de similitud). If this value is very low, it is going to show all the paths. 
             topic: 0,
             term: ""
         };
@@ -109,7 +109,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
     var min_target_node_value = Infinity;
 
-    var number_terms_sankey = 30
+    var number_terms_sankey = 20
 
     //esto se ocupa en la comparación de un corpus
     var topic_id_model_1 = -1
@@ -133,6 +133,7 @@ var LDAvis = function(to_select, data_or_file_name) {
     var name_topics_circles = {}
     var name_topics_sankey = {}
 
+    var isSettingInitial = true
 
     ///probando
     
@@ -164,7 +165,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         K = data['mdsDat'].x.length;
 
         // R is the number of top relevant (or salient) words whose bars we display
-        R = Math.min(data['R'], 30);
+        R = Math.min(data['R'], 20);
 
         // a (K x 5) matrix with columns x, y, topics, Freq, cluster (where x and y are locations for left panel)
         mdsData = [];
@@ -392,6 +393,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             graph.nodes.filter(function(d){
                 if(!(nodes_filtered_set.has(d.node))){
                     name_topics_sankey[topicID + d.node] = d.name
+                    nodes_filtered_set.add(d.node);
                     return d;
                 }
             });
@@ -399,8 +401,8 @@ var LDAvis = function(to_select, data_or_file_name) {
         }   
 
        function visualize_sankey(graph, threshold){
-            
-            
+            console.log("graph, visualize sankey", graph)
+            console.log("este es el threshold", threshold)
             d3.selectAll('#svg_sankey').remove();
         
             //var min_target_node_value = Infinity;
@@ -445,6 +447,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 return el.value >threshold;
                 }
             );
+            console.log("nodos filtrados, visualize sankey", nodes_filtered)
+            console.log("link filtrados, visualize sankey", links_filtered)
             var units = "similarity";
             // set the dimensions and margins of the graph
             var margin = {top: 30, right: 10, bottom: 10, left: 10},
@@ -614,7 +618,13 @@ var LDAvis = function(to_select, data_or_file_name) {
                 console.log("entreeeeeeeeeeeeeeeeeeeee!!")
                 d3.select("#"+last_clicked_model_1).style("fill","rgb(14, 91, 201)")
             }
-                //cual es el d al que le estoy haciendo click??
+                
+            //It's the first time that this function is called, we are going to visualize the first topic of each model.
+            if(isSettingInitial){
+                topic_on_sankey(nodes_filtered[0], min_target_node_value) //topic on on first topic of first model
+                topic_on_sankey(nodes_filtered[min_target_node_value], min_target_node_value) //topic on first topic of second model
+                isSettingInitial = false
+            }
         }   
 
         // Clicking on the mdsplot should clear the selection
@@ -1012,7 +1022,9 @@ var LDAvis = function(to_select, data_or_file_name) {
             createBarPlot(dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis",2 * margin.top, R ) //esto crea el bar plot por primera vez. 
             //dejar la tabla en una buena posicion
             d3.selectAll('.tableRelevantDocumentsClass_Model1').attr("transform", "translate("  +0 + "," +0+ ")")
-
+            topic_on(document.getElementById(topicID + 1))
+            //console.log("cual es el defecto de ", document.getElementById(topicID + 1))
+            //document.getElementById(topicID + vis_state.topic)
 
             //var contador = 0;
             /* deshabilitar heatmap
@@ -1575,7 +1587,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             lambdaInputLambdaTopicSimilarity.setAttribute("style", "width: 250px; margin-left: 100px; margin-right: 0px");
             lambdaInputLambdaTopicSimilarity.type = "range";
             lambdaInputLambdaTopicSimilarity.min = 0.0
-            lambdaInputLambdaTopicSimilarity.max = 1;
+            lambdaInputLambdaTopicSimilarity.max = 1.0;
             lambdaInputLambdaTopicSimilarity.step = data['lambda.step'];
             lambdaInputLambdaTopicSimilarity.value = vis_state.lambda_lambda_topic_similarity; //
             lambdaInputLambdaTopicSimilarity.id = lambdaID+"LambdaTopicSimilarity";
@@ -1594,19 +1606,23 @@ var LDAvis = function(to_select, data_or_file_name) {
             //hacer que el slider  parta con el menor similarity score de la matrix
             if(type_vis == 2){
                 var min_similarity_score = Infinity
+                var max_similarity_score = -Infinity
                 matrix_sankey[lambda_lambda_topic_similarity.current].links.filter(function(el){
                     if(el.value < min_similarity_score){
                         min_similarity_score = el.value
                     }
+                    if(el.value > max_similarity_score){
+                        max_similarity_score = el.value
+                    }
                 });
             
             
-            
+            //This slider allows to filter the paths of the sankey diagram. 
             var lambdaInputTopicSimilarity = document.createElement("input");
             lambdaInputTopicSimilarity.setAttribute("style", "width: 250px; margin-left: 100px; margin-right: 0px");
             lambdaInputTopicSimilarity.type = "range";
-            lambdaInputTopicSimilarity.min = Math.round((min_similarity_score-0.01)*100)/100;
-            lambdaInputTopicSimilarity.max = 1;
+            lambdaInputTopicSimilarity.min = min_similarity_score//Math.round((min_similarity_score-0.01)*100)/100; //-1
+            lambdaInputTopicSimilarity.max = max_similarity_score//Math.round((max_similarity_score-0.01)*100)/100;//1;
             lambdaInputTopicSimilarity.step = data['lambda.step'];
             lambdaInputTopicSimilarity.value = vis_state.lambda_topic_similarity; //
             lambdaInputTopicSimilarity.id = lambdaID+"TopicSimilarity";
@@ -1663,7 +1679,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 //console.log("idddd", lambdaID+"TopicSimilarity" + "-value")
                 //d3.select(lambdaID+"TopicSimilarity").property("value", vis_state.lambda_topic_similarity);
                 //d3.select(lambdaID+"TopicSimilarity" + "-value").text(0.5);
-                document.getElementById(lambdaID+"TopicSimilarity" + "-value").innerHTML = " <span id='" + lambdaID+"TopicSimilarity" + "-value'>" + vis_state.lambda_topic_similarity + "</span>";
+                document.getElementById(lambdaID+"TopicSimilarity" + "-value").innerHTML = " <span id='" + lambdaID+"TopicSimilarity" + "-value'>" + Math.round( vis_state.lambda_topic_similarity * 100) / 100 + "</span>";
 
                 document.getElementById(lambdaID+"TopicSimilarity").value = vis_state.lambda_topic_similarity;
                 
@@ -2217,7 +2233,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         }
         function topic_on(circle) {
-            
             if (circle == null) return null;
             
             // grab data bound to this element
@@ -2732,13 +2747,13 @@ var LDAvis = function(to_select, data_or_file_name) {
             if(model == 1){
                 $('.tableRelevantDocumentsClass_Model1').bootstrapTable("destroy");
                 $('.tableRelevantDocumentsClass_Model1').bootstrapTable({
-                    data: relevantDocumentsDict[topic_id]
+                    data: relevantDocumentsDict[topic_id].slice(0,R)
                 });
             }
             else{//model == 2
                 $('.tableRelevantDocumentsClass_Model2').bootstrapTable("destroy");
                 $('.tableRelevantDocumentsClass_Model2').bootstrapTable({
-                    data: relevantDocumentsDict[topic_id]
+                    data: relevantDocumentsDict[topic_id].slice(0,R)
                 });
             }
             
