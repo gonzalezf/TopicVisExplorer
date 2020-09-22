@@ -303,7 +303,7 @@ if type_vis == 2: #load two topic modeling output
             'text':row['text']
         })
 
-    with open('../data/cambridge_analytica/regional_datasets/files_northamerica/english_northamerica_tweets_20190411.csvsent_topics_sorteddf_mallet_ldamodel', 'rb') as f:
+    with open('../data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411.csvsent_topics_sorteddf_mallet_ldamodel', 'rb') as f:
         most_relevant_documents_collection_2 = pickle.load(f)
     most_relevant_documents_collection_2 = most_relevant_documents_collection_2[['Topic_Num','Topic_Perc_Contrib','text']]
 
@@ -343,31 +343,31 @@ if type_vis == 2: #load two topic modeling output
         with open('../data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411_prepared_data', 'wb') as f:
             pickle.dump(PreparedDataObtained_collection_1, f)
     try:
-        with open('../data/cambridge_analytica/regional_datasets/files_northamerica/english_northamerica_tweets_20190411_prepared_data', 'rb') as f:
+        with open('../data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411_prepared_data', 'rb') as f:
             PreparedDataObtained_collection_2 = pickle.load(f)
         print("We found prepared data file collection2")
     except:
         print("We need to create prepared data, collection 2")
         ##Load Gensim Model
         LdaModel = gensim.models.ldamodel.LdaModel
-        lda_model_collection_2 = LdaModel.load("../data/cambridge_analytica/regional_datasets/files_northamerica/english_northamerica_tweets_20190411.csv_gensim.model")
+        lda_model_collection_2 = LdaModel.load("../data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411.csv_gensim.model")
 
         ##Load corpus
-        with open('../data/cambridge_analytica/regional_datasets/files_northamerica/english_northamerica_tweets_20190411.csv_corpus.pkl', 'rb') as f:
+        with open('../data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411.csv_corpus.pkl', 'rb') as f:
             corpus_collection_2 = pickle.load(f)
 
         ##Load id2word
-        id2word_collection_2 = Dictionary.load("../data/cambridge_analytica/regional_datasets/files_northamerica/english_northamerica_tweets_20190411.csv_id2word")
+        id2word_collection_2 = Dictionary.load("../data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411.csv_id2word")
 
         data_dict_collection_2 = gensim_helpers.prepare(lda_model_collection_2, corpus_collection_2,id2word_collection_2, mds='pcoa')   #retorna un dict de preparedData
 
-        with open('../data/cambridge_analytica/regional_datasets/files_northamerica/english_northamerica_tweets_20190411_data_dict', 'wb') as f:
+        with open('../data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411_data_dict', 'wb') as f:
             pickle.dump(data_dict_collection_2, f)
         print("data dict collection 2 ha sido guardado")
 
         PreparedDataObtained_collection_2 = prepare(**data_dict_collection_2)
 
-        with open('../data/cambridge_analytica/regional_datasets/files_northamerica/english_northamerica_tweets_20190411_prepared_data', 'wb') as f:
+        with open('../data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411_prepared_data', 'wb') as f:
             pickle.dump(PreparedDataObtained_collection_2, f)
 
     PreparedData_dict_collection_1= PreparedDataObtained_collection_1.to_dict()    
@@ -379,7 +379,7 @@ if type_vis == 2: #load two topic modeling output
     PreparedData_dict_collection_2= PreparedDataObtained_collection_2.to_dict()
     topic_order_collection_2 = PreparedData_dict_collection_2['topic.order']
 
-    with open('../data/cambridge_analytica/regional_datasets/files_northamerica/english_northamerica_tweets_20190411_prepared_data_dict_with_more_info', 'wb') as f:
+    with open('../data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411_prepared_data_dict_with_more_info', 'wb') as f:
             pickle.dump(PreparedData_dict_collection_2, f)
     
 
@@ -393,7 +393,7 @@ if type_vis == 2: #load two topic modeling output
         with open('../data/cambridge_analytica/sample/categories_row', 'rb') as f:
             categories_row = pickle.load(f)
 
-        with open('../data/cambridge_analytica/regional_datasets//matrix_europe_vs_northamerica_own_wordembedding_final', 'rb') as f:
+        with open('../data/cambridge_analytica/regional_datasets//matrix_europe_vs_europe_own_wordembedding_final', 'rb') as f:
             matrix_sankey = pickle.load(f)
                 
         print("we found a matrix distance")

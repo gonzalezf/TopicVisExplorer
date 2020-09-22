@@ -135,6 +135,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
     var isSettingInitial = true
 
+    var number_top_keywords_name = 3
+
     ///probando
     
 
@@ -177,6 +179,33 @@ var LDAvis = function(to_select, data_or_file_name) {
             mdsData.push(obj);
         }
 
+        // a huge matrix with 3 columns: Term, Topic, Freq, where Freq is all non-zero probabilities of topics given terms
+        // for the terms that appear in the barcharts for this data
+        mdsData3 = [];
+        for (var i = 0; i < data['token.table'].Term.length; i++) {
+            var obj = {};
+            for (var key in data['token.table']) {
+                obj[key] = data['token.table'][key][i];
+            }
+            mdsData3.push(obj);
+        }
+
+    
+        // large data for the widths of bars in bar-charts. 6 columns: Term, logprob, loglift, Freq, Total, Category
+        // Contains all possible terms for topics in (1, 2, ..., k) and lambda in the user-supplied grid of lambda values
+        // which defaults to (0, 0.01, 0.02, ..., 0.99, 1).
+        lamData = [];
+        for (var i = 0; i < data['tinfo'].Term.length; i++) {
+            var obj = {};
+            for (var key in data['tinfo']) {
+                obj[key] = data['tinfo'][key][i];
+            }
+            lamData.push(obj);
+        }
+        
+        var dat3 = lamData.slice(0, R);
+
+
         var points2 = d3.select("#name_topics")
                     .data(mdsData)
                     .enter();
@@ -200,44 +229,41 @@ var LDAvis = function(to_select, data_or_file_name) {
                 })
                 .attr("stroke", "black")
                 .attr("id", function(d) {
-
-                    name_topics_circles[topicID + d.topics] = d.topics
+                    var dat2 = lamData.filter(function(e) {
+                        return e.Category == "Topic"+d.topics;
+                    });
                     
+
+                    // define relevance:
+                    for (var i = 0; i < dat2.length; i++) {
+                        dat2[i].relevance = lambda.current * dat2[i].logprob +
+                            (1 - lambda.current) * dat2[i].loglift;
+                    }
+        
+                    // sort by relevance:
+                    dat2.sort(fancysort("relevance"));
+
+                    // truncate to the top R tokens:
+                    var top_terms = dat2.slice(0, number_top_keywords_name);
+                    //console.log("ESTOS SON LOS TOP TERMS", top_terms)
+                    var name_string = '';
+
+                    for (var i=0; i < top_terms.length; i++){
+                        //console.log(top_terms[i].Term)
+                        //name_string.concat(top_terms[i].Term);
+                        name_string += top_terms[i].Term+" "
+                    }
+                    //console.log("este es el final string", name_string)
+                    //name_topics_circles[topicID + d.topics] = d.topics //Here, we need to change the default topic name. 
+                    name_topics_circles[topicID + d.topics] = name_string //Here, we need to change the default topic name. 
+
                     return (topicID + d.topics);
                 })
         
         
 
-        // a huge matrix with 3 columns: Term, Topic, Freq, where Freq is all non-zero probabilities of topics given terms
-        // for the terms that appear in the barcharts for this data
-        mdsData3 = [];
-        for (var i = 0; i < data['token.table'].Term.length; i++) {
-            var obj = {};
-            for (var key in data['token.table']) {
-                obj[key] = data['token.table'][key][i];
-            }
-            mdsData3.push(obj);
-        }
 
-        //Get probabilities of each word
-        
 
-        
-        
-
-        // large data for the widths of bars in bar-charts. 6 columns: Term, logprob, loglift, Freq, Total, Category
-        // Contains all possible terms for topics in (1, 2, ..., k) and lambda in the user-supplied grid of lambda values
-        // which defaults to (0, 0.01, 0.02, ..., 0.99, 1).
-        lamData = [];
-        for (var i = 0; i < data['tinfo'].Term.length; i++) {
-            var obj = {};
-            for (var key in data['tinfo']) {
-                obj[key] = data['tinfo'][key][i];
-            }
-            lamData.push(obj);
-        }
-        
-        var dat3 = lamData.slice(0, R);
 
         // Create the topic input & lambda slider forms. Inspired from:
         // http://bl.ocks.org/d3noob/10632804
@@ -388,21 +414,95 @@ var LDAvis = function(to_select, data_or_file_name) {
         */
         //https://bl.ocks.org/d3noob/013054e8d7807dff76247b81b0e29030}
 
-        function get_name_node_sankey(graph){
+        function get_name_node_sankey(graph, threshold){
+            graph.links.filter(function(el){
+                if(el.value >=threshold){
+                    if(el.target.node ==  undefined){
+                        if(el.target<=min_target_node_value){
+                            min_target_node_value=el.target
+                            }
+                        }
+                    else{
+                        if(el.target.node<=min_target_node_value){
+                            min_target_node_value=el.target.node
+                            }
+                        }
+                    }
+                }
+            );
+
             var nodes_filtered_set = new Set();
+
             graph.nodes.filter(function(d){
                 if(!(nodes_filtered_set.has(d.node))){
-                    name_topics_sankey[topicID + d.node] = d.name
+                    
+                    if(d.node >= min_target_node_value){
+                        // pertenece al modelo de corpus 2
+                        var topic_id_in_model = d.node-min_target_node_value
+                        var real_topic_id = topic_order_2[topic_id_in_model]-1
+                    
+                        lamData = [];
+                        for (var i = 0; i < jsonData_2['tinfo'].Term.length; i++) {
+                            var obj = {};
+                            for (var key in jsonData_2['tinfo']) {
+                                obj[key] = jsonData_2['tinfo'][key][i];
+                            }
+                            lamData.push(obj);
+                        }
+
+
+                    }
+                    else{
+                        var topic_id_in_model = d.node                                                
+                        lamData = [];
+                        for (var i = 0; i < jsonData['tinfo'].Term.length; i++) {
+                            var obj = {};
+                            for (var key in jsonData['tinfo']) {
+                                obj[key] = jsonData['tinfo'][key][i];
+                            }
+                            lamData.push(obj);
+                        }
+        
+                    }
+
+                    var dat2 = lamData.filter(function(e) {
+                        if(d.node==-1){ //haccer que esto ocurra
+                            return e.Category == "Default" //creo que estos son los terminos mas relevantes de todo el corpus
+                        }
+                        else{
+                            return e.Category == "Topic" + (d.node%min_target_node_value+1); // OJO! AQUI HAY UN +1, quizas hay que sacarlo y mejorar el codigo, esto esta medio mula
+                        }
+                        
+                    });
+
+        
+                    // define relevance:
+                    for (var i = 0; i < dat2.length; i++) {
+                        dat2[i].relevance = lambda.current * dat2[i].logprob +
+                            (1 - lambda.current) * dat2[i].loglift;
+                    }
+        
+                    dat2.sort(fancysort("relevance"));
+                
+                    var top_terms = dat2.slice(0, number_top_keywords_name);
+                    
+                    var name_string = '';
+
+                    for (var i=0; i < top_terms.length; i++){
+                        name_string += top_terms[i].Term+" "
+                    }
+                    name_topics_sankey[topicID + d.node] = name_string
                     nodes_filtered_set.add(d.node);
                     return d;
+
                 }
             });
 
+            
         }   
 
        function visualize_sankey(graph, threshold){
-            console.log("graph, visualize sankey", graph)
-            console.log("este es el threshold", threshold)
+
             d3.selectAll('#svg_sankey').remove();
         
             //var min_target_node_value = Infinity;
@@ -447,8 +547,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 return el.value >threshold;
                 }
             );
-            console.log("nodos filtrados, visualize sankey", nodes_filtered)
-            console.log("link filtrados, visualize sankey", links_filtered)
+            
             var units = "similarity";
             // set the dimensions and margins of the graph
             var margin = {top: 30, right: 10, bottom: 10, left: 10},
@@ -1049,7 +1148,7 @@ var LDAvis = function(to_select, data_or_file_name) {
        if(type_vis === 2){
         
            //visualize_sankey(matrix_sankey, vis_state.lambda_topic_similarity)
-           get_name_node_sankey(matrix_sankey[lambda_lambda_topic_similarity.current])
+           get_name_node_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
            visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
            //createBarPlot(dat3)
            createBarPlot(dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis",2 * margin.top , number_terms_sankey) //esto crea el bar plot por primera vez. 
