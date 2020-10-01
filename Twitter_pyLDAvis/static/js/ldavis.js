@@ -48,12 +48,12 @@ var LDAvis = function(to_select, data_or_file_name) {
         bottom: 70,
         left: 30
     },
-        mdswidth = 530, //530
+        mdswidth = 530, //530 //LA IDEA ES ELIMINAR MDSWIFTH Y MEDSHEIGHT. ESTO DEBE SER RESPONSIVE!!
         mdsheight = 530,
-        barwidth = 530,
+        barwidth = 530, //LA IDEA ES ELIMINAR TODO ESTO QUE ES BAR WIDTH, BARHEIGHT, ETC.
         barheight = 530,
-        termwidth = 90, // width to add between two panels to display terms
-        mdsarea = mdsheight * mdswidth;
+        termwidth = 90; // width to add between two panels to display terms
+        
     // controls how big the maximum circle can be
     // doesn't depend on data, only on mds width and height:
     var rMax = 60;
@@ -88,9 +88,11 @@ var LDAvis = function(to_select, data_or_file_name) {
     var barFreqsID_2 = visID + "-bar-freqs_2";
     var topID = visID + "-top";
     var lambdaInputID = visID + "-lambdaInput";
-    var lambdaZeroID = visID + "-lambdaZero";
-    var sliderDivID = visID + "-sliderdiv";
-    var lambdaLabelID = visID + "-lamlabel";
+    //var lambdaZeroID = visID + "-lambdaZero";
+    var lambdaZeroID = "relevanceSliderTexto";
+
+    var sliderDivID = "RelevanceSliderContenedor";
+    var lambdaLabelID = "RelevanceSliderLabel";
 
     var min_target_node_value = Infinity;
 
@@ -125,6 +127,16 @@ var LDAvis = function(to_select, data_or_file_name) {
     
     var real_last_clicked_sankey_model_1
     var real_last_clicked_sankey_model_2
+
+    var BarPlotPanelDivId = 'BarPlotPanelDiv'
+
+
+    //topic similarity metric proposed
+
+    var sliderDivIDLambdaTopicSimilarity = "sliderDivLambdaTopicSimilarity"
+    //to_select = BarPlotPanelDivId
+    
+    
     
 
     // sort array according to a specified object key name
@@ -248,7 +260,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         // Create the topic input & lambda slider forms. Inspired from:
         // http://bl.ocks.org/d3noob/10632804
         // http://bl.ocks.org/d3noob/10633704
-        init_forms(topicID, lambdaID, visID);
+        init_forms(topicID, lambdaID);
 
         // When the value of lambda changes, update the visualization
     
@@ -274,42 +286,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             });
 
 
-        // create linear scaling to pixels (and add some padding on outer region of scatterplot)
-        var xrange = d3.extent(mdsData, function(d) {
-            return d.x;
-        }); //d3.extent returns min and max of an array
-        var xdiff = xrange[1] - xrange[0],
-            xpad = 0.05;
-        var yrange = d3.extent(mdsData, function(d) {
-            return d.y;
-        });
-        var ydiff = yrange[1] - yrange[0],
-            ypad = 0.05;
 
-        if (xdiff > ydiff) {
-            var xScale = d3.scaleLinear()
-                    .range([0, mdswidth])
-                    .domain([xrange[0] - xpad * xdiff, xrange[1] + xpad * xdiff]);
-
-            var yScale = d3.scaleLinear()
-                    .range([mdsheight, 0])
-                    .domain([yrange[0] - 0.5*(xdiff - ydiff) - ypad*xdiff, yrange[1] + 0.5*(xdiff - ydiff) + ypad*xdiff]);
-        } else {
-            var xScale = d3.scaleLinear()
-                    .range([0, mdswidth])
-                    .domain([xrange[0] - 0.5*(ydiff - xdiff) - xpad*ydiff, xrange[1] + 0.5*(ydiff - xdiff) + xpad*ydiff]);
-
-            var yScale = d3.scaleLinear()
-                    .range([mdsheight, 0])
-                    .domain([yrange[0] - ypad * ydiff, yrange[1] + ypad * ydiff]);
-        }
-
-        // Create new svg element (that will contain everything):
-        
-        var svg = d3.select(to_select).append("svg") 
-                .attr("width", 2* mdswidth + barwidth + margin.left + termwidth + margin.right) // I creased the width to allow show the most relevant documents  .attr("width", mdswidth + barwidth + margin.left + termwidth + margin.right)
-                .attr("height", 3* mdsheight + 2 * margin.top + margin.bottom + 2 * rMax);
-                
 
         function get_name_node_sankey(graph, threshold){
             graph.links.filter(function(el){
@@ -458,14 +435,14 @@ var LDAvis = function(to_select, data_or_file_name) {
                 color = d3.scaleOrdinal(d3.schemeAccent);
             
 
- 
-            var svg_sankey = svg.append("svg")
-                .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
-                .attr("id", "svg_sankey")
+
+            var svg_sankey = d3.select("#CentralPanel").append("svg")
+                .attr("width", "100%")
+                .attr("height", "100%")
+                .attr("id", "svg_sankey");
                 
-                .append("g")
-                    .attr("transform", "translate(" + (termwidth+mdswidth+2*margin.left) + "," + (2*margin.top) + ")");
+                /*.append("g")
+                    .attr("transform", "translate(" + (termwidth+mdswidth+2*margin.left) + "," + (2*margin.top) + ")");*/
 
             
             var sankey = d3.sankey()
@@ -611,7 +588,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 d3.select("#"+last_clicked_model_2).style("fill","rgb(237, 62, 50)")
             }
             if(last_clicked_model_1!=-1){
-                console.log("entreeeeeeeeeeeeeeeeeeeee!!")
                 d3.select("#"+last_clicked_model_1).style("fill","rgb(14, 91, 201)")
             }
                 
@@ -628,25 +604,60 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         function createMdsPlot(number, mdsData, lambda_lambda_topic_similarity){
             
+            //if  previous mdsplot exists, remove it
+
+            d3.selectAll('#svgMdsPlot').remove();
+
+
+
+
+
+            //we need to append this to the central panel, not to the old svg
+            //all draws of central panel must appear in this svg variable
+            var svg = d3.select("#CentralPanel").append("svg")
+                        .attr("width", "100%")
+                        .attr("height", "100%")
+                        .attr("id", "svgMdsPlot")
+                        .style("background-color","yellow")
+             
+            var margin = { top: 30, right: 30, bottom: 30, left: 30 } // ocupar estos margenes
+
+            //get width, height according to client's window
+            var bounds = d3.selectAll('#svgMdsPlot').node().getBoundingClientRect();
+            console.log("bounds", bounds)
+            var user_width = bounds.width - margin.left - margin.right;
+            var user_height = bounds.height - margin.top - margin.bottom;
+            
+            var mdsheight = user_height-margin.top-margin.bottom;
+            var mdswidth = user_width-margin.left-margin.right;
+            var mdsarea = mdsheight * mdswidth;
+            console.log("cual son los valores actuales", mdsheight, mdswidth, mdsarea) //971.25 625.1953125 607220.947265625
+
+
+
+
+
+
             // Create a group for the mds plot Bubbles visualization
             d3.selectAll('#'+leftPanelID).remove();
 
             var mdsplot = svg.append("g")
                 .attr("id", leftPanelID) //now is central panel no leftpanel
                 .attr("class", "points")
-                .attr("transform", "translate("+(mdswidth+margin.left+termwidth)+","+(2*margin.top +(mdsheight +margin.bottom  + 2 * rMax)*(number-1))+")");//.attr("transform", "translate(" + margin.left + "," + 2 * margin.top + ")");
+                .attr("transform", "translate("+margin.left+","+margin.top+")")
+                
 
+                //.attr("transform", "translate("+(mdswidth+margin.left+termwidth)+","+(2*margin.top +(mdsheight +margin.bottom  + 2 * rMax)*(number-1))+")");//.attr("transform", "translate(" + margin.left + "," + 2 * margin.top + ")");
+                //should we need to translate this??
 
             mdsplot
                 .append("rect")
                 .attr("x", 0)
                 .attr("y", 0)
-                .attr("height", mdsheight)
-                .attr("width", mdswidth)
-                .style("fill", color1)
-                .attr("opacity", 0)
+                .attr("height", "100%")
+                .attr("width", "100%")
+                .attr("opacity", 0) //.style("fill", color1)
                 .on("click", function() {
-                    
                 });
 
             mdsplot.append("line") // draw x-axis
@@ -745,6 +756,40 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .data(mdsData)
                     .enter();
             
+            // create linear scaling to pixels (and add some padding on outer region of scatterplot)
+            var xrange = d3.extent(mdsData, function(d) {
+                return d.x;
+            }); //d3.extent returns min and max of an array
+            var xdiff = xrange[1] - xrange[0],
+                xpad = 0.05;
+            var yrange = d3.extent(mdsData, function(d) {
+                return d.y;
+            });
+            var ydiff = yrange[1] - yrange[0],
+                ypad = 0.05;
+            //mdsheight=mdsheight/2 hay que revisar la escala, es como muy grande para este plano
+            //mdswidth=mdswidth/2
+            if (xdiff > ydiff) {
+                console.log("height ocupada", mdsheight)    
+                var xScale = d3.scaleLinear()
+                        .range([0, mdswidth])
+                        .domain([xrange[0] - xpad * xdiff, xrange[1] + xpad * xdiff]);
+
+                var yScale = d3.scaleLinear()
+                        .range([mdsheight, 0])
+                        .domain([yrange[0] - 0.5*(xdiff - ydiff) - ypad*xdiff, yrange[1] + 0.5*(xdiff - ydiff) + ypad*xdiff]);
+            } else {
+                console.log("este es otro height", mdsheight)
+
+                var xScale = d3.scaleLinear()
+                        .range([0, mdswidth])
+                        .domain([xrange[0] - 0.5*(ydiff - xdiff) - xpad*ydiff, xrange[1] + 0.5*(ydiff - xdiff) + xpad*ydiff]);
+                var yScale = d3.scaleLinear()
+                        .range([mdsheight, 0])
+                        .domain([yrange[0] - ypad * ydiff, yrange[1] + ypad * ydiff]);
+            }
+            
+            
 
             // draw circles
             points.append("circle")
@@ -757,6 +802,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 })
                 .attr("cx", function(d) {
                     //return (xScale(+d.x));
+                    console.log("esto funciona?", +new_positions[topic_order[d.topics-1]-1][0])
                     return (xScale(+new_positions[topic_order[d.topics-1]-1][0])); //new position topic similarity metric proposed
                 })
                 .attr("cy", function(d) {
@@ -851,7 +897,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
             
-            createBarPlot(dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis",2 * margin.top, R ) //esto crea el bar plot por primera vez. 
+            createBarPlot(dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", R ) //esto crea el bar plot por primera vez. 
             //dejar la tabla en una buena posicion
             d3.selectAll('.tableRelevantDocumentsClass_Model1').attr("transform", "translate("  +0 + "," +0+ ")")
 
@@ -869,7 +915,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         
            get_name_node_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
         
-           createBarPlot(dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis",2 * margin.top , number_terms_sankey) //esto crea el bar plot por primera vez. 
+           createBarPlot(dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", number_terms_sankey) //esto crea el bar plot por primera vez. 
            createBarPlot(dat3, barFreqsID_2,"bar-totals_2", "terms_2", "bubble-tool_2", "xaxis_2", (8* margin.top + mdsheight), number_terms_sankey) //hay que modificar la altura aqui en funcion del alto de las barras
            visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
 
@@ -877,9 +923,27 @@ var LDAvis = function(to_select, data_or_file_name) {
        
        
         // establish layout and vars for bar chart
-        
-       
+               
+
+       console.log("este es el to_select")
+           
         function createBarPlot(dat3, barFreqsID_actual, bar_totals_actual, terms_actual,  bubble_tool, xaxis_class, height_bar, number_terms){
+            to_select = "#BarPlotPanelDiv"
+
+        
+            var svg = d3.select(to_select).append("svg") //BarPlotPanelDiv
+            .attr("width", "100%")
+            .attr("height", "50%");
+            
+
+            var bounds_barplot = svg.node().getBoundingClientRect();
+            console.log("bounds barplot", bounds_barplot)
+
+            barheight = bounds_barplot.height - 1.5*termwidth
+            barwidth = bounds_barplot.width - 1.5*termwidth
+        
+
+        
             var barDefault2 = dat3.filter(function(d) {
                 return d.Category == "Default";
             });
@@ -903,10 +967,13 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             // Add a group for the bar chart
             var chart = svg.append("g")
-                    .attr("transform", "translate("  +(termwidth) + "," +height_bar+ ")") //.attr("transform", "translate("  +(mdswidth + margin.left + termwidth) + "," +height_bar+ ")")
-                    .attr("id", barFreqsID_actual);
+                    .attr("transform", "translate("  +(termwidth) + "," +2*height_bar+ ")") //.attr("transform", "translate("  +(mdswidth + margin.left + termwidth) + "," +height_bar+ ")")
+                    .attr("id", barFreqsID_actual)
+                    .attr("class", "BarPlotClass");
             
             // bar chart legend/guide:
+            /* I will delete this for now. We need to figure out a way to explain the information to the user
+            mdsheight = 400
             var barguide = {"width": 100, "height": 15};
             d3.select("#" + barFreqsID_actual).append("rect")
                 .attr("x", 0)
@@ -933,8 +1000,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("y", mdsheight + 10 + (3/2)*barguide.height + 5)
                 .style("dominant-baseline", "middle")
                 .text("Estimated term frequency within the selected topic");
-            
+            */
             // footnotes:
+            /*
             d3.select("#" + barFreqsID_actual)
                 .append("a")
                 .attr("xlink:href", "http://vis.stanford.edu/files/2012-Termite-AVI.pdf")
@@ -953,7 +1021,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("y", mdsheight + 10 + (8/2)*barguide.height + 5)
                 .style("dominant-baseline", "middle")
                 .text("2. relevance(term w | topic t) = \u03BB * p(w | t) + (1 - \u03BB) * p(w | t)/p(w); see Sievert & Shirley (2014)");
-            
+            */
             // Bind 'default' data to 'default' bar chart
             var basebars = chart.selectAll(to_select + " ."+bar_totals_actual)
                     .data(barDefault2)
@@ -998,6 +1066,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     
                 });
             
+            /* We dont need this.
             var title = chart.append("text")
                     .attr("x", mdswidth+margin.left+termwidth+(barwidth/2))
                     .attr("y", -30)
@@ -1010,7 +1079,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("baseline-shift", "super")
                 .attr("font-size", "12px")
                 .text("(1)");
-            
+            */
             // barchart axis adapted from http://bl.ocks.org/mbostock/1166403
             var xAxis = d3.axisTop().scale(x).tickSize(-barheight).ticks(6);
             
@@ -1022,38 +1091,82 @@ var LDAvis = function(to_select, data_or_file_name) {
     
         }
         
-        
         // dynamically create the topic and lambda input forms at the top of the page:
-        function init_forms(topicID, lambdaID, visID) {
+        function init_forms(topicID, lambdaID) {
             
 
-            // create container div for topic and lambda input:
-            var TopPanel = document.createElement("div");
-            TopPanel.setAttribute("id", "TopPanel");
-            TopPanel.setAttribute("style", "width: "+3*mdswidth+"; height:50px; margin-left: 30px; background-color:  blue"); // to match the width of the main svg element
-            document.getElementById(visID).appendChild(TopPanel);
 
+            //div que contiene todo el panel izquierdo
+            var svgLeftPanel = d3.select("#BarPlotPanel").append("div")
+            svgLeftPanel.attr("id", BarPlotPanelDivId)
+            
+            
             var topicDiv = document.createElement("div");
-            topicDiv.setAttribute("style", "padding: 10px; background-color: #e8e8e8; display: inline-block; width: " + 3*mdswidth + "px; height: 50px; float: left");
-            TopPanel.appendChild(topicDiv);
+            topicDiv.setAttribute("id", "topic_name_and_buttons_div")
+            document.getElementById(BarPlotPanelDivId).appendChild(topicDiv) ////topicDiv.setAttribute("style", "width:100%; height:5%; background-color: red")
 
             
            var topic_title= document.createElement("span"); 
-           topic_title.innerText = "Topic :";
+           topic_title.innerText = "Topic: ";
            topicDiv.appendChild(topic_title); 
 
             
            var topic_name_selected_1 = document.createElement("span")
-           topic_name_selected_1.innerText = "wjiwjswj"
+           topic_name_selected_1.innerText = ""
            topic_name_selected_1.setAttribute("id", "topic_name_selected_1")
            topicDiv.appendChild(topic_name_selected_1); 
             
+           var merge = document.createElement("button");
+           merge.setAttribute("id", topicMerge);
+           merge.setAttribute("class", "btn btn-primary btnTopic")
+           merge.innerHTML = "Merge";
+           topicDiv.appendChild(merge);
 
+           d3.select("#"+topicMerge)
+               .on("click", function() {
+                   if(merging_topic_1!=-1){
+                       console.log("el mergin value is ", merging_topic_1)
+                       $('.merging_topic_1').html(merging_topic_1);
+                       $('#MergeModal_1').modal(); 
+                   }
+                   else{
+                       $('#MergeModal_0').modal(); 
+                   }
+                   
+               });
+
+
+           d3.select("#continue_merging") //el usuario desea continuar con el mergin
+           .on("click", function() {
+               hacer_merge = true
+           });
+
+           d3.select("#cancel_merging") //el usuario desea continuar con el mergin
+           .on("click", function() {
+               hacer_merge = false
+               
+           });
+
+           d3.select("#cancel_merging_2") //el usuario desea continuar con el mergin
+           .on("click", function() {
+               hacer_merge = false
+               merging_topic_1 = merging_topic_2
+               merging_topic_2 = -1
+               
+           });
+
+
+           var split = document.createElement("button");
+           split.setAttribute("id", topicSplit);
+           split.setAttribute("class", "btn btn-primary btnTopic")
+           split.innerHTML = "Split";
+           topicDiv.appendChild(split);
+
+  
         
             var edit = document.createElement("button");
             edit.setAttribute("id", topicEdit);
-            edit.setAttribute("style", "margin-left: 5px");
-            edit.setAttribute("class", "btn btn-primary")
+            edit.setAttribute("class", "btn btn-primary btnTopic")
             edit.innerHTML = "Rename";
             topicDiv.appendChild(edit);
 
@@ -1068,8 +1181,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                 var edit2 = document.createElement("button");
                 edit2.setAttribute("id", topicEdit2);
-                edit2.setAttribute("style", "margin-left: 5px");
-                edit2.setAttribute("class", "btn btn-primary");
+                edit2.setAttribute("class", "btn btn-primary btnTopic");
                 edit2.innerHTML = "Rename 2";
                 topicDiv.appendChild(edit2);
             }
@@ -1079,52 +1191,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     $('#renameTopic2').modal(); 
                 });
 
-            var split = document.createElement("button");
-            split.setAttribute("id", topicSplit);
-            split.setAttribute("style", "margin-left: 5px");
-            split.setAttribute("class", "btn btn-primary")
-            split.innerHTML = "Split";
-            topicDiv.appendChild(split);
-
-            var merge = document.createElement("button");
-            merge.setAttribute("id", topicMerge);
-            merge.setAttribute("style", "margin-left: 5px");
-            merge.setAttribute("class", "btn btn-primary")
-            merge.innerHTML = "Merge";
-            topicDiv.appendChild(merge);
-
-            d3.select("#"+topicMerge)
-                .on("click", function() {
-                    if(merging_topic_1!=-1){
-                        console.log("el mergin value is ", merging_topic_1)
-                        $('.merging_topic_1').html(merging_topic_1);
-                        $('#MergeModal_1').modal(); 
-                    }
-                    else{
-                        $('#MergeModal_0').modal(); 
-                    }
-                    
-                });
-
-
-            d3.select("#continue_merging") //el usuario desea continuar con el mergin
-            .on("click", function() {
-                hacer_merge = true
-            });
-
-            d3.select("#cancel_merging") //el usuario desea continuar con el mergin
-            .on("click", function() {
-                hacer_merge = false
-                
-            });
-
-            d3.select("#cancel_merging_2") //el usuario desea continuar con el mergin
-            .on("click", function() {
-                hacer_merge = false
-                merging_topic_1 = merging_topic_2
-                merging_topic_2 = -1
-                
-            });
+       
             
             if(type_vis == 1){
                 d3.select("#rename_topic_button")
@@ -1136,7 +1203,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                     //visualize the new name
                     createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
-                    console.log("CUAL ES EL VIS_STATE ACTUAL", vis_state.topic)
+
+
                     topic_on(document.getElementById(topicID+vis_state.topic))
 
 
@@ -1221,72 +1289,49 @@ var LDAvis = function(to_select, data_or_file_name) {
             */
 
 
-            //TOPIC SIMILARITY METRIC PANEL
+            
             var inputDiv = document.createElement("div");
-            inputDiv.setAttribute("id", topID);
-            inputDiv.setAttribute("style", "width: 1210px"); 
-            document.getElementById(visID).appendChild(inputDiv);
+            inputDiv.setAttribute("id", "BarPlotDiv");
+            document.getElementById(BarPlotPanelDivId).appendChild(inputDiv)  //document.getElementById(visID).appendChild(inputDiv); //creo que esto debiera estar unido al svg mejor
 
-
-
-
-            // lambda inputs (terms)
-            //var lambdaDivLeft = 8 + mdswidth + margin.left + termwidth;
-            var lambdaDivWidth = barwidth;
+            //Div for relevance slider. 
             var lambdaDiv = document.createElement("div");
-            lambdaDiv.setAttribute("id", lambdaInputID);
-            lambdaDiv.setAttribute("style", "padding: 5px; background-color: #e8e8e8; margin-top:5px; display: inline-block; height: 50px; width: " + lambdaDivWidth + "px; float: left; margin-left: 30px");
+            lambdaDiv.setAttribute("id", "relevanceSliderDiv");
+            lambdaDiv.setAttribute("class", "RowDiv");
             inputDiv.appendChild(lambdaDiv);
-
-            var lambdaZero = document.createElement("div");
-            lambdaZero.setAttribute("style", "padding: 5px; height: 20px; width: 220px; font-family: sans-serif; float: left");
-            lambdaZero.setAttribute("id", lambdaZeroID);
-            lambdaDiv.appendChild(lambdaZero);
-            var xx = d3.select("#" + lambdaZeroID)
-                    .append("text")
-                    .attr("x", 0)
-                    .attr("y", 0)
-                    .style("font-size", "14px")
-                    .text("Slide to adjust relevance metric:");
-            var yy = d3.select("#" + lambdaZeroID)
-                    .append("text")
-                    .attr("x", 125)
-                    .attr("y", -5)
-                    .style("font-size", "10px")
-                    .style("position", "absolute")
-                    .text("(2)");
 
             var sliderDiv = document.createElement("div");
             sliderDiv.setAttribute("id", sliderDivID);
-            sliderDiv.setAttribute("style", "padding: 5px; height: 40px; width: 250px; float: right; margin-top: -5px; margin-right: 10px");
+            sliderDiv.setAttribute("class", "ColumnDiv");
             lambdaDiv.appendChild(sliderDiv);
 
             var lambdaInput = document.createElement("input");
-            lambdaInput.setAttribute("style", "width: 250px; margin-left: 0px; margin-right: 0px");
+            lambdaInput.setAttribute("class", "SliderInput")
             lambdaInput.type = "range";
             lambdaInput.min = 0;
             lambdaInput.max = 1;
             lambdaInput.step = data['lambda.step'];
             lambdaInput.value = vis_state.lambda;
             lambdaInput.id = lambdaID;
-            lambdaInput.setAttribute("list", "ticks"); // to enable automatic ticks (with no labels, see below)
+            lambdaInput.setAttribute("list", "ticks"); 
             sliderDiv.appendChild(lambdaInput);
 
             var lambdaLabel = document.createElement("label");
             lambdaLabel.setAttribute("id", lambdaLabelID);
+            lambdaLabel.setAttribute("class", "ColumnDiv");
             lambdaLabel.setAttribute("for", lambdaID);
-            lambdaLabel.setAttribute("style", "height: 20px; width: 60px; font-family: sans-serif; font-size: 14px; margin-left: 80px");
-            lambdaLabel.innerHTML = "&#955 = <span id='" + lambdaID + "-value'>" + vis_state.lambda + "</span>";
+            lambdaLabel.innerHTML = "Relevance score: &#955 = <span id='" + lambdaID + "-value'>" + vis_state.lambda + "</span>";
             lambdaDiv.appendChild(lambdaLabel);
 
             // Create the svg to contain the slider scale:
             var scaleContainer = d3.select("#" + sliderDivID).append("svg")
-                    .attr("width", 250)
-                    .attr("height", 25);
+                    .attr("id", "scaleContainer");
+
+            var bounds_scaleContainer = scaleContainer.node().getBoundingClientRect();
 
             var sliderScale = d3.scaleLinear()
                     .domain([0, 1])
-                    .range([7.5, 242.5])  // trimmed by 7.5px on each side to match the input type=range slider:
+                    .range([7.5, bounds_scaleContainer.width-11])  //Now it is responsive
                     .nice();
 
 
@@ -1299,29 +1344,22 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("margin-top", "-10px")
                     .call(sliderAxis);
 
-            // Another strategy for tick marks on the slider; simpler, but not labels
-            // var sliderTicks = document.createElement("datalist");
-            // sliderTicks.setAttribute("id", "ticks");
-            // for (var tick = 0; tick <= 10; tick++) {
-            //     var tickOption = document.createElement("option");
-            //     //tickOption.value = tick/10;
-            //     tickOption.innerHTML = tick/10;
-            //     sliderTicks.appendChild(tickOption);
-            // }
-            // append the forms to the containers
-            //lambdaDiv.appendChild(sliderTicks);
 
 
-            
-            var TopicSimilarityMetricPanel = document.createElement("div");
-            TopicSimilarityMetricPanel.setAttribute("style", "padding: 5px; margin-top:5px; background-color: #e8e8e8; display: inline-block; width: " + mdswidth + "px; height: 50px; float: left");
-            inputDiv.appendChild(TopicSimilarityMetricPanel);
+            //Topic similarity slider (change the lambda of vector keywords and vector documents for topic similarity metric proposed)
 
+            var svgCentralPanel = d3.select("#CentralPanel").append("div")
+            svgCentralPanel.attr("id", "TopicSimilarityMetricPanel")
+
+
+
+            ////
 
             var sliderDivLambdaTopicSimilarity = document.createElement("div");
-            sliderDivLambdaTopicSimilarity.setAttribute("id", sliderDivID+"LambdaTopicSimilarity");
-            sliderDivLambdaTopicSimilarity.setAttribute("style", "padding: 5px; height: 40px; width: 250px; float: left; margin-top: -55px; margin-right: 10px");
-            TopicSimilarityMetricPanel.appendChild(sliderDivLambdaTopicSimilarity);
+            sliderDivLambdaTopicSimilarity.setAttribute("id", sliderDivIDLambdaTopicSimilarity);
+            sliderDivLambdaTopicSimilarity.setAttribute("class", "RowDiv");
+            document.getElementById("TopicSimilarityMetricPanel").appendChild(sliderDivLambdaTopicSimilarity)  //document.getElementById(visID).appendChild(inputDiv); //creo que esto debiera estar unido al svg mejor
+
 
             if(type_vis==2){
                 var sliderDivTopicSimilarity = document.createElement("div");
@@ -1330,25 +1368,51 @@ var LDAvis = function(to_select, data_or_file_name) {
                 TopicSimilarityMetricPanel.appendChild(sliderDivTopicSimilarity);
             }
 
+
+            var sliderDivInputOmegaTopicSimilarity = document.createElement("div");
+            sliderDivInputOmegaTopicSimilarity.setAttribute("id", sliderDivID+"OmegaTopicSimilarity");
+            sliderDivInputOmegaTopicSimilarity.setAttribute("class", "ColumnDiv");
+            sliderDivLambdaTopicSimilarity.appendChild(sliderDivInputOmegaTopicSimilarity);
+
             var lambdaInputLambdaTopicSimilarity = document.createElement("input");
-            lambdaInputLambdaTopicSimilarity.setAttribute("style", "width: 250px; margin-left: 100px; margin-right: 0px");
             lambdaInputLambdaTopicSimilarity.type = "range";
             lambdaInputLambdaTopicSimilarity.min = 0.0
             lambdaInputLambdaTopicSimilarity.max = 1.0;
             lambdaInputLambdaTopicSimilarity.step = data['lambda.step'];
             lambdaInputLambdaTopicSimilarity.value = vis_state.lambda_lambda_topic_similarity; //
-            lambdaInputLambdaTopicSimilarity.id = lambdaID+"LambdaTopicSimilarity";
+            lambdaInputLambdaTopicSimilarity.id = "lambdaInputLambdaTopicSimilarity";
             lambdaInputLambdaTopicSimilarity.setAttribute("list", "ticks"); // to enable automatic ticks (with no labels, see below)
-            sliderDivLambdaTopicSimilarity.appendChild(lambdaInputLambdaTopicSimilarity);
+            sliderDivInputOmegaTopicSimilarity.appendChild(lambdaInputLambdaTopicSimilarity);
 
             var lambdaLabelLambdaTopicSimilarity = document.createElement("label");
-            lambdaLabelLambdaTopicSimilarity.setAttribute("id", lambdaLabelID+"LambdaTopicSimilarity");
-            lambdaLabelLambdaTopicSimilarity.setAttribute("for", lambdaID+"LambdaTopicSimilarity");
-            lambdaLabelLambdaTopicSimilarity.setAttribute("style", "height: 20px; width: 60px; font-family: sans-serif; font-size: 14px; margin-left: 100px");
-            lambdaLabelLambdaTopicSimilarity.innerHTML = "&#955 = <span id='" + lambdaID+"LambdaTopicSimilarity" + "-value'>" + vis_state.lambda_lambda_topic_similarity + "</span>";
+            lambdaLabelLambdaTopicSimilarity.setAttribute("id", "LambdaLabelLambdaTopicSimilarity");
+            lambdaLabelLambdaTopicSimilarity.setAttribute("class", "ColumnDiv");
+            lambdaLabelLambdaTopicSimilarity.setAttribute("for", "lambdaInputLambdaTopicSimilarity");
+            lambdaLabelLambdaTopicSimilarity.innerHTML = "Omega score: &#937  = <span id='" + "lambdaInputLambdaTopicSimilarity" + "-value'>" + vis_state.lambda_lambda_topic_similarity + "</span>";
             sliderDivLambdaTopicSimilarity.appendChild(lambdaLabelLambdaTopicSimilarity);
 
 
+            // Create the svg to contain the slider scale:
+            var scaleContainerOmegaTopicSimilarity = d3.select("#" + sliderDivID+"OmegaTopicSimilarity").append("svg")
+            .attr("id", "scaleContainerOmegaTopicSimilarity");
+
+            var bounds_scaleContainer_omegatopicsimilarity = scaleContainerOmegaTopicSimilarity.node().getBoundingClientRect();
+
+            var sliderScaleOmegaTopicSimilarity = d3.scaleLinear()
+                    .domain([0, 1])
+                    .range([7.5, bounds_scaleContainer_omegatopicsimilarity.width-20])  //Now it is responsive
+                    .nice();
+
+
+
+            var sliderAxisOmegaTopicSimilarity = d3.axisBottom(sliderScaleOmegaTopicSimilarity).tickSize(10).ticks(6);
+                    
+            // group to contain the elements of the slider axis:
+            var sliderAxisGroup = scaleContainerOmegaTopicSimilarity.append("g")
+                    .attr("class", "slideraxis")
+                    .attr("margin-top", "-10px")
+                    .call(sliderAxisOmegaTopicSimilarity);
+    
 
             //hacer que el slider  parta con el menor similarity score de la matrix
             if(type_vis == 2){
@@ -1385,20 +1449,28 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             }
 
-            d3.select("#"+lambdaID+"LambdaTopicSimilarity")
+            d3.select("#"+"lambdaInputLambdaTopicSimilarity")
             .on("mouseup", function() {
                 lambda_lambda_topic_similarity.old = lambda_lambda_topic_similarity.current;
-                lambda_lambda_topic_similarity.current = document.getElementById(lambdaID+"LambdaTopicSimilarity").value;
+                lambda_lambda_topic_similarity.current = document.getElementById("lambdaInputLambdaTopicSimilarity").value;
                 
 
                 vis_state.lambda_lambda_topic_similarity =lambda_lambda_topic_similarity.current
             
-                document.getElementById(lambdaID+"LambdaTopicSimilarity" + "-value").innerHTML = " <span id='" + lambdaID+"LambdaTopicSimilarity" + "-value'>" + vis_state.lambda_lambda_topic_similarity + "</span>";
-                document.getElementById(lambdaID+"LambdaTopicSimilarity").value = vis_state.lambda_lambda_topic_similarity;
+                document.getElementById("lambdaInputLambdaTopicSimilarity" + "-value").innerHTML = " <span id='" + "lambdaInputLambdaTopicSimilarity" + "-value'>" + vis_state.lambda_lambda_topic_similarity + "</span>";
+                document.getElementById("lambdaInputLambdaTopicSimilarity").value = vis_state.lambda_lambda_topic_similarity;
 
 
-                console.log("LAMBDA LAMBDA ", lambda_lambda_topic_similarity.current)
-                console.log("similarity", vis_state.lambda_topic_similarity)
+                
+                if( lambda_lambda_topic_similarity.current == 0){
+                    lambda_lambda_topic_similarity.current = Number(0).toFixed(1) //we need to do this, because javascript converts 0.0 to 0 by default. 
+                }
+                if ( lambda_lambda_topic_similarity.current == 1){
+                    
+                    lambda_lambda_topic_similarity.current = Number(1).toFixed(1)
+                    console.log("que tenemos aqui", lambda_lambda_topic_similarity.current)
+                }
+
                 if(type_vis == 2){
                     visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
                 }
@@ -1429,25 +1501,29 @@ var LDAvis = function(to_select, data_or_file_name) {
             });
 
 
-            // Create the svg to contain the slider scale:
-            var scaleContainerTopicSimilarity = d3.select("#" + sliderDivID+"TopicSimilarity").append("svg")
-                    .attr("width", 250)
-                    .attr("height", 25);
 
-            var sliderScaleTopicSimilarity = d3.scaleLinear()
+
+            // Create the svg to contain the slider scale:
+            var scaleContainerTopicSimilarityFiltering = d3.select("#" + sliderDivID+"TopicSimilarity").append("svg")
+            .attr("id", " scaleContainerTopicSimilarityFiltering");
+
+            var bounds_scaleContainer_filtering = scaleContainerTopicSimilarityFiltering.node().getBoundingClientRect();
+
+
+            var sliderScaleTopicSimilarityFiltering = d3.scaleLinear()
                     .domain([0, 1])
-                    .range([7.5, 242.5])  // trimmed by 7.5px on each side to match the input type=range slider:
+                    .range([7.5, bounds_scaleContainer_filtering .width-20])  //HAY QUE CAMBIA RESTO, DEBIERA SER RESPONSIVE!
                     .nice();
 
             // adapted from http://bl.ocks.org/mbostock/1166403
-            var sliderAxisTopicSimilarity = d3.axisBottom(sliderScaleTopicSimilarity).tickSize(10).ticks(6);
+            var sliderAxisTopicSimilarityFiltering = d3.axisBottom(sliderScaleTopicSimilarityFiltering).tickSize(10).ticks(6);
                     
 
             // group to contain the elements of the slider axis:
-            var sliderAxisGroup = scaleContainerTopicSimilarity.append("g")
+            var sliderAxisGroupFiltering = scaleContainerTopicSimilarityFiltering.append("g")
                     .attr("class", "slideraxis")
                     .attr("margin-top", "-10px")
-                    .call(sliderAxisTopicSimilarity);
+                    .call(sliderAxisTopicSimilarityFiltering);
 
 
         }
@@ -2079,6 +2155,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         }
 
 
+
         function topic_off(circle) {
             if (circle == null) return circle;
             // go back to original opacity/fill
@@ -2149,6 +2226,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("class", "xaxis")
                 .call(xAxis);
         }
+
+       
 
        
 
