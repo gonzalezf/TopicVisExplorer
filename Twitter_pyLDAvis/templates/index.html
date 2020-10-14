@@ -211,45 +211,38 @@ if(type_vis == 2){
   <div class="row" style="height: 100%"> <!--All the visualization must be placed in this row-->
 
     <div class="col-4"  id="BarPlotPanel" >  <!--LDAvisContainer-->
-    </div>
 
-    <div class="col-5"   id="CentralPanel"> <!-- style="background-color: rgb(46, 206, 206)"-->
-    </div>
-
-
-    <div class="col-3" id="DocumentsPanel" style="background-color: rgb(247, 146, 221)">
-      <!--Table for topic modeling output 1-->
+      <!--
       <script>
         if(type_vis == 2){
-          var html = '<div style="height: 50%">'
+          var html = '<div  style="height: 50%"> <table  class="tableRelevantDocumentsClass_Model1 table table-hover "> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table></div>';
           document.write(html)
+
         }
-        else{
-          var html = '<div style="height: 100%">'
-          document.write(html)
-        }
-          
+
       </script>
-      
-        <table  class="tableRelevantDocumentsClass_Model1 table table-hover ">
-          <thead>
-          <tr>
-              <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th>
-              <th class="text-center" data-field="text" scope="col">Tweet</th>
-          </tr>
-          </thead>
-        </table>  
-      </div>
-      <!--Table for topic modeling output 2-->
+      -->
+    </div>
+
+    <div class="col-4"   id="CentralPanel"> <!-- style="background-color: rgb(46, 206, 206)"-->
+    </div>
+
+
+    <div class="col-4" id="DocumentsPanel" style="background-color: rgb(247, 146, 221)">
+    
+     
       <script>
-        if(type_vis == 2){
-            var html = '<div  style="height: 50%"> <table  class="tableRelevantDocumentsClass_Model2 table table-hover "> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table></div>';
+        if(type_vis == 1){
+          var html = '<div  style="height: 100%"> <table  class="tableRelevantDocumentsClass_Model1 table table-hover "> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table></div>';
+          document.write(html)
 
-            document.write(html)
+        }
 
-              
-          }
       </script>
+
+    </div>
+    
+
     </div>  
   </div>
 </div>

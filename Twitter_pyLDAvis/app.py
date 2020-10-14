@@ -177,7 +177,7 @@ def proposed_topic_similarity(wordembedding, lda_model, n_terms): #n_terms : num
 
 
 ######################Import data #########################
-type_vis = 2#2: two topic modeling output, 1: one topic modeling output
+type_vis = 1#2: two topic modeling output, 1: one topic modeling output
 
 if type_vis ==1: #load just one model
     ##Load relevant documents
@@ -244,7 +244,7 @@ if type_vis ==1: #load just one model
         matrix = pickle.load(f)
     
     new_circle_positions = dict()
-    for lambda_ in range(0, 100):
+    for lambda_ in range(0, 101):
         lambda_ = lambda_/100
         matrix_cosine_distance = 1-matrix[lambda_]
         np.fill_diagonal(matrix_cosine_distance,0)

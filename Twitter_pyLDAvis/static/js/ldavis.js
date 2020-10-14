@@ -59,7 +59,7 @@ var LDAvis = function(to_select, data_or_file_name) {
     var rMax = 60;
 
     // proportion of area of MDS plot to which the sum of default topic circle areas is set
-    var circle_prop = 0.25;
+    var circle_prop = 0.20;
     
 
     // opacity of topic circles:
@@ -378,6 +378,18 @@ var LDAvis = function(to_select, data_or_file_name) {
         //Inspired by: https://bl.ocks.org/d3noob/013054e8d7807dff76247b81b0e29030
        function visualize_sankey(graph, threshold){
 
+            var svgCentralSankeyDiv = d3.select("#CentralPanel").append("div")
+            svgCentralSankeyDiv.attr("id", "svgCentralSankeyDiv")
+
+
+            var margin = { top: 30, right: 30, bottom: 30, left: 30 } // ocupar estos margenes
+
+            //get width, height according to client's window
+            var bounds_svgCentralSankey = d3.selectAll('#svgCentralSankeyDiv').node().getBoundingClientRect();
+            var user_width_sankey = bounds_svgCentralSankey.width - margin.left - margin.right;
+            var user_height_sankey= bounds_svgCentralSankey.height - margin.top - margin.bottom;
+            
+
             d3.selectAll('#svg_sankey').remove();
         
             //var min_target_node_value = Infinity;
@@ -423,11 +435,12 @@ var LDAvis = function(to_select, data_or_file_name) {
                 }
             );
             
+
             var units = "similarity";
             // set the dimensions and margins of the graph
-            var margin = {top: 30, right: 10, bottom: 10, left: 10},
-                width = 3*mdswidth, //width = mdswidth - margin.left - margin.right,
-                height = 2*mdsheight - margin.top - margin.bottom;
+            var margin = {top: 30, right: 10, bottom: 10, left: 10};
+                //width = 3*mdswidth, //width = mdswidth - margin.left - margin.right,
+                //height = 2*mdsheight - margin.top - margin.bottom;
                         // format variables
             
             var formatNumber = d3.format(",.2f"),    // two decimal places
@@ -436,7 +449,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             
 
 
-            var svg_sankey = d3.select("#CentralPanel").append("svg")
+            var svg_sankey = d3.select("#svgCentralSankeyDiv").append("svg")// #CentralPanel
                 .attr("width", "100%")
                 .attr("height", "100%")
                 .attr("id", "svg_sankey");
@@ -563,7 +576,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("text-anchor", "end")
                 .attr("transform", null)
                 .text(function(d){return name_topics_sankey[topicID + d.node] ;}) //.text(function(d) { return d.name; })
-            .filter(function(d) { return d.x < width / 2; })
+            .filter(function(d) { return d.x < user_width_sankey / 2; })
                 .attr("x", 6 + sankey.nodeWidth())
                 .attr("text-anchor", "start");
         
@@ -576,7 +589,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     "translate(" 
                         + d.x + "," 
                         + (d.y = Math.max(
-                            0, Math.min(height - d.dy, d3.event.y))
+                            0, Math.min(user_height_sankey - d.dy, d3.event.y))
                         ) + ")");
             sankey.relayout();
             link.attr("d", path);
@@ -616,23 +629,22 @@ var LDAvis = function(to_select, data_or_file_name) {
             //all draws of central panel must appear in this svg variable
             var svg = d3.select("#CentralPanel").append("svg")
                         .attr("width", "100%")
-                        .attr("height", "100%")
+                        .attr("height", "95%")
                         .attr("id", "svgMdsPlot")
-                        .style("background-color","yellow")
+                        .style("background-color","lightblue")
              
             var margin = { top: 30, right: 30, bottom: 30, left: 30 } // ocupar estos margenes
 
             //get width, height according to client's window
             var bounds = d3.selectAll('#svgMdsPlot').node().getBoundingClientRect();
-            console.log("bounds", bounds)
-            var user_width = bounds.width - margin.left - margin.right;
-            var user_height = bounds.height - margin.top - margin.bottom;
+            //var user_width = bounds.width - margin.left - margin.right;
+            //var user_height = bounds.height - margin.top - margin.bottom;
+            var user_width = bounds.width; 
+            var user_height = bounds.height;
             
             var mdsheight = user_height-margin.top-margin.bottom;
             var mdswidth = user_width-margin.left-margin.right;
             var mdsarea = mdsheight * mdswidth;
-            console.log("cual son los valores actuales", mdsheight, mdswidth, mdsarea) //971.25 625.1953125 607220.947265625
-
 
 
 
@@ -687,6 +699,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("fill", "gray");
 
             // new definitions based on fixing the sum of the areas of the default topic circles:
+            
             var newSmall = Math.sqrt(0.02*mdsarea*circle_prop/Math.PI);
             var newMedium = Math.sqrt(0.05*mdsarea*circle_prop/Math.PI);
             var newLarge = Math.sqrt(0.10*mdsarea*circle_prop/Math.PI);
@@ -700,7 +713,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr('class', "circleGuide" + size)
                     .attr('r', rSize)
                     .attr('cx', cx)
-                    .attr('cy', mdsheight + rSize)
+                    .attr('cy', 0.88*mdsheight + rSize)
                     .style('fill', 'none')
                     .style('stroke-dasharray', '2 2')
                     .style('stroke', '#999');
@@ -708,8 +721,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr('class', "lineGuide" + size)
                     .attr("x1", cx)
                     .attr("x2", cx2)
-                    .attr("y1", mdsheight + 2 * rSize)
-                    .attr("y2", mdsheight + 2 * rSize)
+                    .attr("y1", 0.88*mdsheight + 2 * rSize)
+                    .attr("y2", 0.88*mdsheight + 2 * rSize)
                     .style("stroke", "gray")
                     .style("opacity", 0.3);
             };
@@ -722,55 +735,75 @@ var LDAvis = function(to_select, data_or_file_name) {
             var defaultLabelMedium = "5%";
             var defaultLabelLarge = "10%";
 
+
             d3.select("#" + leftPanelID).append("text")
                 .attr("x", 10)
-                .attr("y", mdsheight - 10)
+                .attr("y", 0.88*mdsheight-10)
                 .attr('class', "circleGuideTitle")
                 .style("text-anchor", "left")
                 .style("fontWeight", "bold")
                 .text("Marginal topic distribution");
             d3.select("#" + leftPanelID).append("text")
                 .attr("x", cx2 + 10)
-                .attr("y", mdsheight + 2 * newSmall)
+                .attr("y", 0.88*mdsheight + 2 * newSmall)
                 .attr('class', "circleGuideLabelSmall")
                 .style("text-anchor", "start")
                 .text(defaultLabelSmall);
             d3.select("#" + leftPanelID).append("text")
                 .attr("x", cx2 + 10)
-                .attr("y", mdsheight + 2 * newMedium)
+                .attr("y", 0.88*mdsheight + 2 * newMedium)
                 .attr('class', "circleGuideLabelMedium")
                 .style("text-anchor", "start")
                 .text(defaultLabelMedium);
             d3.select("#" + leftPanelID).append("text")
                 .attr("x", cx2 + 10)
-                .attr("y", mdsheight + 2 * newLarge)
+                .attr("y", 0.88*mdsheight + 2 * newLarge)
                 .attr('class', "circleGuideLabelLarge")
                 .style("text-anchor", "start")
                 .text(defaultLabelLarge);
+            
 
             // bind mdsData to the points in the left panel:
             
             var new_positions = new_circle_positions[lambda_lambda_topic_similarity]
+            
+            function getCol(matrix, col){
+                var column = [];
+                for(var i=0; i<matrix.length; i++){
+                   column.push(matrix[i][col]);
+                }
+                return column; // return column data..
+             }
 
+            
             var points = mdsplot.selectAll("points")
                     .data(mdsData)
                     .enter();
             
             // create linear scaling to pixels (and add some padding on outer region of scatterplot)
+            console.log("mdsData", mdsData)
+            console.log("new positions", new_positions)
+            var xrange = d3.extent( getCol(new_positions, 0));
+            /*
             var xrange = d3.extent(mdsData, function(d) {
                 return d.x;
             }); //d3.extent returns min and max of an array
+            */
+            console.log("cual es el  xrange", xrange)
             var xdiff = xrange[1] - xrange[0],
                 xpad = 0.05;
+
+            var yrange = d3.extent( getCol(new_positions, 1));
+            /*
             var yrange = d3.extent(mdsData, function(d) {
                 return d.y;
             });
+            */
             var ydiff = yrange[1] - yrange[0],
                 ypad = 0.05;
             //mdsheight=mdsheight/2 hay que revisar la escala, es como muy grande para este plano
             //mdswidth=mdswidth/2
             if (xdiff > ydiff) {
-                console.log("height ocupada", mdsheight)    
                 var xScale = d3.scaleLinear()
                         .range([0, mdswidth])
                         .domain([xrange[0] - xpad * xdiff, xrange[1] + xpad * xdiff]);
@@ -779,7 +812,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         .range([mdsheight, 0])
                         .domain([yrange[0] - 0.5*(xdiff - ydiff) - ypad*xdiff, yrange[1] + 0.5*(xdiff - ydiff) + ypad*xdiff]);
             } else {
-                console.log("este es otro height", mdsheight)
+
 
                 var xScale = d3.scaleLinear()
                         .range([0, mdswidth])
@@ -798,11 +831,12 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .style("fill", color1)
                 .attr("r", function(d) {
                     //return (rScaleMargin(+d.Freq));
-                    return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+                    //return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+                    return (Math.sqrt((mdsData[topic_order[d.topics-1]-1].Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI)); //se hace esto porque el new_positions array no inclue 'Freq', en cambioe el MdsDATA YA LO OBTIENE
+                    
                 })
                 .attr("cx", function(d) {
                     //return (xScale(+d.x));
-                    console.log("esto funciona?", +new_positions[topic_order[d.topics-1]-1][0])
                     return (xScale(+new_positions[topic_order[d.topics-1]-1][0])); //new position topic similarity metric proposed
                 })
                 .attr("cy", function(d) {
@@ -885,7 +919,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             svg.append("text")
                 .text("Intertopic Distance Map (via multidimensional scaling)")
                 .attr("x", mdswidth/2 + margin.left)
-                .attr("y", 30)
+                .attr("y", 20)
                 .attr("id","textMdsPlot")
                 .style("font-size", "16px")
                 .style("text-anchor", "middle");
@@ -897,7 +931,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
             
-            createBarPlot(dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", R ) //esto crea el bar plot por primera vez. 
+            createBarPlot("#BarPlotPanelDiv", dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", R ) //esto crea el bar plot por primera vez. 
             //dejar la tabla en una buena posicion
             d3.selectAll('.tableRelevantDocumentsClass_Model1').attr("transform", "translate("  +0 + "," +0+ ")")
 
@@ -915,8 +949,25 @@ var LDAvis = function(to_select, data_or_file_name) {
         
            get_name_node_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
         
-           createBarPlot(dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", number_terms_sankey) //esto crea el bar plot por primera vez. 
-           createBarPlot(dat3, barFreqsID_2,"bar-totals_2", "terms_2", "bubble-tool_2", "xaxis_2", (8* margin.top + mdsheight), number_terms_sankey) //hay que modificar la altura aqui en funcion del alto de las barras
+            // Add barplot into the left panel
+            createBarPlot("#BarPlotPanelDiv", dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", number_terms_sankey) //esto crea el bar plot por primera vez. 
+           
+            // Add barplot into the right panel
+            createBarPlot("#DocumentsPanel", dat3, barFreqsID_2,"bar-totals_2", "terms_2", "bubble-tool_2", "xaxis_2", number_terms_sankey) //hay que modificar la altura aqui en funcion del alto de las barras
+
+            // Add documents into the left panel. 
+           var RelevantDocumentsTableDiv = document.createElement("div");
+           RelevantDocumentsTableDiv.setAttribute("id", "RelevantDocumentsTableDiv");
+           document.getElementById(BarPlotPanelDivId).appendChild(RelevantDocumentsTableDiv) 
+
+           const  div = document.getElementById('RelevantDocumentsTableDiv');
+
+           div.insertAdjacentHTML('afterbegin', '<table  class="tableRelevantDocumentsClass_Model1 table table-hover "> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table>');
+
+
+
+           //Añadir este barplot despues
+           //createBarPlot(dat3, barFreqsID_2,"bar-totals_2", "terms_2", "bubble-tool_2", "xaxis_2", (8* margin.top + mdsheight), number_terms_sankey) //hay que modificar la altura aqui en funcion del alto de las barras
            visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
 
        }
@@ -925,10 +976,11 @@ var LDAvis = function(to_select, data_or_file_name) {
         // establish layout and vars for bar chart
                
 
-       console.log("este es el to_select")
-           
-        function createBarPlot(dat3, barFreqsID_actual, bar_totals_actual, terms_actual,  bubble_tool, xaxis_class, height_bar, number_terms){
-            to_select = "#BarPlotPanelDiv"
+
+
+
+        function createBarPlot(to_select, dat3, barFreqsID_actual, bar_totals_actual, terms_actual,  bubble_tool, xaxis_class, height_bar, number_terms){
+            
 
         
             var svg = d3.select(to_select).append("svg") //BarPlotPanelDiv
@@ -937,7 +989,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             
 
             var bounds_barplot = svg.node().getBoundingClientRect();
-            console.log("bounds barplot", bounds_barplot)
+            
 
             barheight = bounds_barplot.height - 1.5*termwidth
             barwidth = bounds_barplot.width - 1.5*termwidth
@@ -1097,6 +1149,106 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
             //div que contiene todo el panel izquierdo
+            if(type_vis == 2){
+                var svgRightPanel = d3.select("#DocumentsPanel").append("div")
+                svgRightPanel.attr("id", "svgRightPanel")
+
+                var topicDivRightPanel = document.createElement("div");
+                topicDivRightPanel.setAttribute("id", "topic_name_and_buttons_div_right_panel")
+                document.getElementById("svgRightPanel").appendChild(topicDivRightPanel) ////topicDiv.setAttribute("style", "width:100%; height:5%; background-color: red")
+
+                var topic_title_right_panel= document.createElement("span"); 
+                topic_title_right_panel.innerText = "Topic: ";
+                topicDivRightPanel.appendChild(topic_title_right_panel); 
+
+                var topic_name_selected_2 = document.createElement("span")
+                topic_name_selected_2.innerText = ""
+                topic_name_selected_2.setAttribute("id", "topic_name_selected_2")
+                topicDivRightPanel.appendChild(topic_name_selected_2); 
+
+                var merge_right_panel = document.createElement("button");
+                merge_right_panel.setAttribute("id", topicMerge+"rightPanel");
+                merge_right_panel.setAttribute("class", "btn btn-primary btnTopic")
+                merge_right_panel.innerHTML = "Merge";
+                topicDivRightPanel.appendChild(merge_right_panel);
+
+                var split_rigth_panel = document.createElement("button");
+                split_rigth_panel.setAttribute("id", topicSplit+"rightPanel");
+                split_rigth_panel.setAttribute("class", "btn btn-primary btnTopic")
+                split_rigth_panel.innerHTML = "Split";
+                topicDivRightPanel.appendChild(split_rigth_panel);
+
+                var edit2 = document.createElement("button");
+                edit2.setAttribute("id", topicEdit2);
+                edit2.setAttribute("class", "btn btn-primary btnTopic");
+                edit2.innerHTML = "Rename 2";
+                topicDivRightPanel.appendChild(edit2);
+                d3.select("#"+topicEdit2)
+                .on("click", function() {
+                    $('#renameTopic2').modal(); 
+                });
+
+                
+                //add relevance slider into the right panel. 
+                var inputDivRightPanel = document.createElement("div");
+                inputDivRightPanel.setAttribute("id", "BarPlotDivRightPanel");
+                document.getElementById("DocumentsPanel").appendChild(inputDivRightPanel)  //document.getElementById(visID).appendChild(inputDiv); //creo que esto debiera estar unido al svg mejor
+
+                //Div for relevance slider. 
+                var lambdaDivRightPanel = document.createElement("div");
+                lambdaDivRightPanel.setAttribute("id", "relevanceSliderDivRightPanel");
+                lambdaDivRightPanel.setAttribute("class", "RowDiv");
+                inputDivRightPanel.appendChild(lambdaDivRightPanel);
+
+                var sliderDivRightPanel = document.createElement("div");
+                sliderDivRightPanel.setAttribute("id", "RelevanceSliderContenedorRightPanel");
+                sliderDivRightPanel.setAttribute("class", "ColumnDiv");
+                lambdaDivRightPanel.appendChild(sliderDivRightPanel);
+
+                var lambdaInputRightPanel = document.createElement("input");
+                lambdaInputRightPanel.setAttribute("class", "SliderInput")
+                lambdaInputRightPanel.type = "range";
+                lambdaInputRightPanel.min = 0;
+                lambdaInputRightPanel.max = 1;
+                lambdaInputRightPanel.step = data['lambda.step'];
+                lambdaInputRightPanel.value = vis_state.lambda;
+                lambdaInputRightPanel.id = lambdaID+"RightPanel";
+                lambdaInputRightPanel.setAttribute("list", "ticks"); 
+                sliderDivRightPanel.appendChild(lambdaInputRightPanel);
+
+                var lambdaLabelRightPanel = document.createElement("label");
+                lambdaLabelRightPanel.setAttribute("id", lambdaLabelID+"RightPanel");
+                lambdaLabelRightPanel.setAttribute("class", "ColumnDiv");
+                lambdaLabelRightPanel.setAttribute("for", lambdaID+"RightPanel");
+                lambdaLabelRightPanel.innerHTML = "Relevance score: &#955 = <span id='" + lambdaID+"RightPanel" + "-value'>" + vis_state.lambda + "</span>";
+                lambdaDivRightPanel.appendChild(lambdaLabelRightPanel);
+
+                // Create the svg to contain the slider scale:
+                var scaleContainerRightPanel = d3.select("#" + "RelevanceSliderContenedorRightPanel").append("svg")
+                        .attr("id", "scaleContainerRightPanel");
+
+                var bounds_scaleContainer_right_panel = scaleContainerRightPanel.node().getBoundingClientRect();
+
+                var sliderScalerRightPanel = d3.scaleLinear()
+                        .domain([0, 1])
+                        .range([7.5, bounds_scaleContainer_right_panel.width-11])  //Now it is responsive
+                        .nice();
+
+
+
+                var sliderAxisRightPanel = d3.axisBottom(sliderScalerRightPanel).tickSize(10).ticks(6);
+                        
+                // group to contain the elements of the slider axis:
+                var sliderAxisGroupRightPanel = scaleContainerRightPanel.append("g")
+                        .attr("class", "slideraxis")
+                        .attr("margin-top", "-10px")
+                        .call(sliderAxisRightPanel);
+
+
+
+
+     
+            }
             var svgLeftPanel = d3.select("#BarPlotPanel").append("div")
             svgLeftPanel.attr("id", BarPlotPanelDivId)
             
@@ -1177,21 +1329,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 });
 
 
-            if(type_vis==2){
 
-                var edit2 = document.createElement("button");
-                edit2.setAttribute("id", topicEdit2);
-                edit2.setAttribute("class", "btn btn-primary btnTopic");
-                edit2.innerHTML = "Rename 2";
-                topicDiv.appendChild(edit2);
-            }
             
-            d3.select("#"+topicEdit2)
-                .on("click", function() {
-                    $('#renameTopic2').modal(); 
-                });
-
-       
             
             if(type_vis == 1){
                 d3.select("#rename_topic_button")
@@ -1216,7 +1355,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                     //rename the topic
                     name_topics_sankey[document.getElementById("idTopic").innerText] = document.getElementById("renameTopicId").value
-                    console.log("ESTE ES EL NUEVO ARREGLO", name_topics_sankey)
+                    
                     //visualize the new name
                     visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
                     
@@ -1362,10 +1501,79 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
             if(type_vis==2){
-                var sliderDivTopicSimilarity = document.createElement("div");
-                sliderDivTopicSimilarity.setAttribute("id", sliderDivID+"TopicSimilarity");
-                sliderDivTopicSimilarity.setAttribute("style", "padding: 5px; height: 40px; width: 250px; float: right; margin-top: -5px; margin-right: 10px");
-                TopicSimilarityMetricPanel.appendChild(sliderDivTopicSimilarity);
+
+
+                
+                /* This section is to allow users to filtering paths on sankey diagram*/
+
+                //This funciton allow to the slider use the min-max value of the sankey diagram
+                var min_similarity_score = Infinity
+                var max_similarity_score = -Infinity
+                matrix_sankey[lambda_lambda_topic_similarity.current].links.filter(function(el){
+                    if(el.value < min_similarity_score){
+                        min_similarity_score = el.value
+                    }
+                    if(el.value > max_similarity_score){
+                        max_similarity_score = el.value
+                    }
+                });
+                //round value min/max similarity score
+
+                min_similarity_score =   Math.round(  min_similarity_score* 100) / 100
+                max_similarity_score = Math.round(  max_similarity_score* 100) / 100
+               
+
+                var svgCentralPanelFiltering = d3.select("#CentralPanel").append("div")
+                svgCentralPanelFiltering.attr("id", "TopicSimilarityMetricPanelFiltering")
+
+                var sliderDivFiltering = document.createElement("div");
+                sliderDivFiltering.setAttribute("id", "sliderDivFiltering");
+                sliderDivFiltering.setAttribute("class", "RowDiv");
+                document.getElementById("TopicSimilarityMetricPanelFiltering").appendChild(sliderDivFiltering)  
+
+                var sliderDivInputFilteringTopicSimilarity = document.createElement("div");
+                sliderDivInputFilteringTopicSimilarity.setAttribute("id", "sliderDivInputFilteringTopicSimilarity");
+                sliderDivInputFilteringTopicSimilarity.setAttribute("class", "ColumnDiv");
+                sliderDivFiltering.appendChild(sliderDivInputFilteringTopicSimilarity);
+
+
+                var lambdaInputTopicSimilarity = document.createElement("input");
+                lambdaInputTopicSimilarity.type = "range";
+                lambdaInputTopicSimilarity.min = min_similarity_score//Math.round((min_similarity_score-0.01)*100)/100; //-1
+                lambdaInputTopicSimilarity.max = max_similarity_score//Math.round((max_similarity_score-0.01)*100)/100;//1;
+                lambdaInputTopicSimilarity.step = data['lambda.step'];
+                lambdaInputTopicSimilarity.value = vis_state.lambda_topic_similarity; //
+                lambdaInputTopicSimilarity.id = "lambdaInputTopicSimilarityFiltering";
+                lambdaInputTopicSimilarity.setAttribute("list", "ticks"); // to enable automatic ticks (with no labels, see below)
+                sliderDivInputFilteringTopicSimilarity.appendChild(lambdaInputTopicSimilarity);
+
+                var lambdaLabelTopicSimilarity = document.createElement("label");
+                lambdaLabelTopicSimilarity.setAttribute("id", "LabelFilteringTopicSimilarity");
+                lambdaLabelTopicSimilarity.setAttribute("class", "ColumnDiv");
+                lambdaLabelTopicSimilarity.setAttribute("for", "lambdaInputTopicSimilarityFiltering");
+                lambdaLabelTopicSimilarity.innerHTML = "Filtering = <span id='lambdaInputTopicSimilarityFiltering-value'>" + vis_state.lambda_topic_similarity + "</span>";
+                sliderDivFiltering.appendChild(lambdaLabelTopicSimilarity);
+
+                // Create the svg to contain the slider scale:
+                var scaleContainerTopicSimilarityFiltering = d3.select("#" + "sliderDivInputFilteringTopicSimilarity").append("svg")
+                .attr("id", "scaleContainerTopicSimilarityFiltering");
+
+                var bounds_scaleContainer_filtering = scaleContainerTopicSimilarityFiltering.node().getBoundingClientRect();
+                
+                var sliderScaleTopicSimilarityFiltering = d3.scaleLinear()
+                        .domain([min_similarity_score, max_similarity_score])
+                        .range([7.5, bounds_scaleContainer_filtering.width-20]);
+
+                // adapted from http://bl.ocks.org/mbostock/1166403
+                var sliderAxisTopicSimilarityFiltering = d3.axisBottom(sliderScaleTopicSimilarityFiltering).tickSize(10).ticks(20);
+                        
+                // group to contain the elements of the slider axis:
+                var sliderAxisGroupFiltering = scaleContainerTopicSimilarityFiltering.append("g")
+                        .attr("class", "slideraxis")
+                        .attr("margin-top", "-10px")
+                        .call(sliderAxisTopicSimilarityFiltering);
+
+
             }
 
 
@@ -1414,40 +1622,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .call(sliderAxisOmegaTopicSimilarity);
     
 
-            //hacer que el slider  parta con el menor similarity score de la matrix
-            if(type_vis == 2){
-                var min_similarity_score = Infinity
-                var max_similarity_score = -Infinity
-                matrix_sankey[lambda_lambda_topic_similarity.current].links.filter(function(el){
-                    if(el.value < min_similarity_score){
-                        min_similarity_score = el.value
-                    }
-                    if(el.value > max_similarity_score){
-                        max_similarity_score = el.value
-                    }
-                });
-            
-            
-            //This slider allows to filter the paths of the sankey diagram. 
-            var lambdaInputTopicSimilarity = document.createElement("input");
-            lambdaInputTopicSimilarity.setAttribute("style", "width: 250px; margin-left: 100px; margin-right: 0px");
-            lambdaInputTopicSimilarity.type = "range";
-            lambdaInputTopicSimilarity.min = min_similarity_score//Math.round((min_similarity_score-0.01)*100)/100; //-1
-            lambdaInputTopicSimilarity.max = max_similarity_score//Math.round((max_similarity_score-0.01)*100)/100;//1;
-            lambdaInputTopicSimilarity.step = data['lambda.step'];
-            lambdaInputTopicSimilarity.value = vis_state.lambda_topic_similarity; //
-            lambdaInputTopicSimilarity.id = lambdaID+"TopicSimilarity";
-            lambdaInputTopicSimilarity.setAttribute("list", "ticks"); // to enable automatic ticks (with no labels, see below)
-            sliderDivTopicSimilarity.appendChild(lambdaInputTopicSimilarity);
-
-            var lambdaLabelTopicSimilarity = document.createElement("label");
-            lambdaLabelTopicSimilarity.setAttribute("id", lambdaLabelID+"TopicSimilarity");
-            lambdaLabelTopicSimilarity.setAttribute("for", lambdaID+"TopicSimilarity");
-            lambdaLabelTopicSimilarity.setAttribute("style", "height: 20px; width: 60px; font-family: sans-serif; font-size: 14px; margin-left: 80px");
-            lambdaLabelTopicSimilarity.innerHTML = "sim= <span id='" + lambdaID+"TopicSimilarity" + "-value'>" + vis_state.lambda_topic_similarity + "</span>";
-            sliderDivTopicSimilarity.appendChild(lambdaLabelTopicSimilarity);
-
-            }
 
             d3.select("#"+"lambdaInputLambdaTopicSimilarity")
             .on("mouseup", function() {
@@ -1468,7 +1642,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 if ( lambda_lambda_topic_similarity.current == 1){
                     
                     lambda_lambda_topic_similarity.current = Number(1).toFixed(1)
-                    console.log("que tenemos aqui", lambda_lambda_topic_similarity.current)
+                    
                 }
 
                 if(type_vis == 2){
@@ -1480,20 +1654,22 @@ var LDAvis = function(to_select, data_or_file_name) {
                 }
             });
 
-            d3.select("#"+lambdaID+"TopicSimilarity")
+            d3.select("#lambdaInputTopicSimilarityFiltering") //Filtering paths of sankey diagram
             .on("mouseup", function() {
                 
                 // store the previous lambda value
                 lambda_topic_similarity.old = lambda_topic_similarity.current;
                 
-                lambda_topic_similarity.current = document.getElementById(lambdaID+"TopicSimilarity").value;
+                lambda_topic_similarity.current = document.getElementById("lambdaInputTopicSimilarityFiltering").value;
                 
                 
                 vis_state.lambda_topic_similarity =lambda_topic_similarity.current
-                
-                document.getElementById(lambdaID+"TopicSimilarity" + "-value").innerHTML = " <span id='" + lambdaID+"TopicSimilarity" + "-value'>" + Math.round( vis_state.lambda_topic_similarity * 100) / 100 + "</span>";
 
-                document.getElementById(lambdaID+"TopicSimilarity").value = vis_state.lambda_topic_similarity;
+                
+                
+                document.getElementById("lambdaInputTopicSimilarityFiltering-value").innerHTML = " <span id='lambdaInputTopicSimilarityFiltering-value'>" + Math.round( vis_state.lambda_topic_similarity * 100) / 100 + "</span>";
+
+                document.getElementById("lambdaInputTopicSimilarityFiltering").value = vis_state.lambda_topic_similarity;
                 
                 
                 visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
@@ -1503,27 +1679,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
 
-            // Create the svg to contain the slider scale:
-            var scaleContainerTopicSimilarityFiltering = d3.select("#" + sliderDivID+"TopicSimilarity").append("svg")
-            .attr("id", " scaleContainerTopicSimilarityFiltering");
-
-            var bounds_scaleContainer_filtering = scaleContainerTopicSimilarityFiltering.node().getBoundingClientRect();
-
-
-            var sliderScaleTopicSimilarityFiltering = d3.scaleLinear()
-                    .domain([0, 1])
-                    .range([7.5, bounds_scaleContainer_filtering .width-20])  //HAY QUE CAMBIA RESTO, DEBIERA SER RESPONSIVE!
-                    .nice();
-
-            // adapted from http://bl.ocks.org/mbostock/1166403
-            var sliderAxisTopicSimilarityFiltering = d3.axisBottom(sliderScaleTopicSimilarityFiltering).tickSize(10).ticks(6);
-                    
-
-            // group to contain the elements of the slider axis:
-            var sliderAxisGroupFiltering = scaleContainerTopicSimilarityFiltering.append("g")
-                    .attr("class", "slideraxis")
-                    .attr("margin-top", "-10px")
-                    .call(sliderAxisTopicSimilarityFiltering);
 
 
         }
@@ -1915,6 +2070,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             var text = d3.select(to_select + " ."+bubble_tool);
             text.remove();
 
+            /* Quite el titulo, quizas esto sea importante en el futuro. 
             d3.select("#" + barFreqsID_actual)
                 .append("text")
                 .attr("x", mdswidth+margin.left+termwidth+(barwidth/2))
@@ -1925,7 +2081,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .text("Top-" + number_terms_sankey + " Most Relevant Terms for Topic " + topic_id_in_model+ " (" + Freq + "% of tokens)");
                 //Freq jsonData
             
-            
+            */
             // grab the bar-chart data for this topic only:
             
             var dat2 = lamData.filter(function(d) {
@@ -2256,13 +2412,13 @@ var LDAvis = function(to_select, data_or_file_name) {
             //https://stackoverflow.com/questions/44336431/how-to-add-a-column-with-buttons-to-a-bootstrap-table-populated-by-data-from-mys/44343632
             $('.tableRelevantDocumentsClass_Split').on('click-row.bs.table', function (e, row, $element) {
                 var row_num = $element.index() + 1;
-                console.log("ESTOY HACIENDO CLICK EN LA TABLA")
-                console.log("esto es el row_num", row_num)
+                
+                
               });
 
         function getIdSelectionsFromTable() {
             var $table = $('.tableRelevantDocumentsClass_Split')
-            console.log("Estoy en la funcion getIdSelectiosnFromTable")
+            
             return $.map($table.bootstrapTable('getSelections'), function (row) {
                 return row.id
             })
@@ -2271,7 +2427,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         var checkedRows = [];
 
         $('.tableRelevantDocumentsClass_Split').on('check.bs.table', function (e, row) {
-            console.log("ESTA ES LA ROW", row)
+            
         checkedRows.push({topic_perc_contrib: row.topic_perc_contrib, text: row.text,uncategorized: row.uncategorized, subtopic1: row.subtopic1, subtopic2: row.subtopic2 }); // id: row.id ¿como obtener la id de la row? uwu //checkedRows.push({id: row.id, name: row.name, forks: row.forks});
         console.log(checkedRows);
         });
