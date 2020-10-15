@@ -73,6 +73,10 @@ var LDAvis = function(to_select, data_or_file_name) {
     var visID = to_select.replace("#", "");
     var topicID = visID + "-topic";
     var lambdaID = visID + "-lambda";
+    var lambdaIDRightPanel =  lambdaID+"RightPanel"; 
+
+
+
     var termID = visID + "-term";
     
     var topicEdit = topicID+"-edit";
@@ -263,9 +267,11 @@ var LDAvis = function(to_select, data_or_file_name) {
         init_forms(topicID, lambdaID);
 
         // When the value of lambda changes, update the visualization
-    
-        d3.select(lambda_select)
+            
+        d3.select("#"+lambdaID)
             .on("mouseup", function() {
+                console.log("hice click en esti", "#"+lambdaID)
+                //lambda_select = "#"+lambdaID
                 
                 // store the previous lambda value
                 
@@ -274,18 +280,45 @@ var LDAvis = function(to_select, data_or_file_name) {
                 lambda.current = document.getElementById(lambdaID).value;
                 vis_state.lambda = +this.value;
                 // adjust the text on the range slider
-                d3.select(lambda_select).property("value", vis_state.lambda);
-                d3.select(lambda_select + "-value").text(vis_state.lambda);
+                d3.select("#"+lambdaID).property("value", vis_state.lambda);
+                d3.select("#"+lambdaID + "-value").text(vis_state.lambda);
                 // transition the order of the bars
                 var increased = lambda.old < vis_state.lambda;
                 
-                if (vis_state.topic > 0) reorder_bars(increased);
+                if (vis_state.topic > 0){
+                    
+                    reorder_bars_new(increased, "left");
+                } 
                 // store the current lambda value
                 //state_save(true);
                 document.getElementById(lambdaID).value = vis_state.lambda;
             });
 
-
+        d3.select("#"+lambdaIDRightPanel)
+            .on("mouseup", function() {
+                console.log("hice click en esti", "#"+lambdaIDRightPanel)
+                //lambda_select = "#"+lambdaID
+                
+                // store the previous lambda value
+                
+                lambda.old = lambda.current;
+                
+                lambda.current = document.getElementById(lambdaIDRightPanel).value;
+                vis_state.lambda = +this.value;
+                // adjust the text on the range slider
+                d3.select("#"+lambdaIDRightPanel).property("value", vis_state.lambda);
+                d3.select("#"+lambdaIDRightPanel + "-value").text(vis_state.lambda);
+                // transition the order of the bars
+                var increased = lambda.old < vis_state.lambda;
+                
+                if (vis_state.topic > 0){
+                    
+                    reorder_bars_new(increased, "right");
+                } 
+                // store the current lambda value
+                //state_save(true);
+                document.getElementById(lambdaIDRightPanel).value = vis_state.lambda;
+            });
 
 
         function get_name_node_sankey(graph, threshold){
@@ -606,7 +639,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
             //It's the first time that this function is called, we are going to visualize the first topic of each model.
             if(isSettingInitial){
-                console.log("setting initial")
+                
                 real_last_clicked_sankey_model_1 = nodes_filtered[0]
                 real_last_clicked_sankey_model_2 = nodes_filtered[min_target_node_value]
                 topic_on_sankey(real_last_clicked_sankey_model_1, min_target_node_value) //topic on on first topic of first model
@@ -933,7 +966,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             createBarPlot("#BarPlotPanelDiv", dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", R) //esto crea el bar plot por primera vez. 
             //dejar la tabla en una buena posicion
-            d3.selectAll('.tableRelevantDocumentsClass_Model1').attr("transform", "translate("  +0 + "," +0+ ")")
+            d3.selectAll('#tableRelevantDocumentsClass_Model1').attr("transform", "translate("  +0 + "," +0+ ")")
 
             //hacer la configuracion inicial para cuando se quiera hacer el merge
             splitting_topic= vis_state.topic // es 1 by default
@@ -958,13 +991,19 @@ var LDAvis = function(to_select, data_or_file_name) {
             // Add documents into the left panel. 
            var RelevantDocumentsTableDiv = document.createElement("div");
            RelevantDocumentsTableDiv.setAttribute("id", "RelevantDocumentsTableDiv");
-           document.getElementById(BarPlotPanelDivId).appendChild(RelevantDocumentsTableDiv) 
-
+           RelevantDocumentsTableDiv.setAttribute("class", "RelevantDocumentsSankeyDiagram");
+           document.getElementById("BarPlotPanelDiv").appendChild(RelevantDocumentsTableDiv) 
            const  div = document.getElementById('RelevantDocumentsTableDiv');
+           div.insertAdjacentHTML('afterbegin', '<table  id="tableRelevantDocumentsClass_Model1" class="table table-hover"> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table>');
 
-           div.insertAdjacentHTML('afterbegin', '<table  class="tableRelevantDocumentsClass_Model1 table table-hover "> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table>');
 
-
+           // Add documents into the right panel. 
+           var RelevantDocumentsTableDiv_2 = document.createElement("div");
+           RelevantDocumentsTableDiv_2.setAttribute("id", "RelevantDocumentsTableDiv_2");
+           RelevantDocumentsTableDiv_2.setAttribute("class", "RelevantDocumentsSankeyDiagram");
+           document.getElementById("DocumentsPanel").appendChild(RelevantDocumentsTableDiv_2) 
+           const  div_2 = document.getElementById('RelevantDocumentsTableDiv_2');
+           div_2.insertAdjacentHTML('afterbegin', '<table  id="tableRelevantDocumentsClass_Model2" class="table table-hover"> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table>');
 
            //Añadir este barplot despues
            //createBarPlot(dat3, barFreqsID_2,"bar-totals_2", "terms_2", "bubble-tool_2", "xaxis_2", (8* margin.top + mdsheight), number_terms_sankey) //hay que modificar la altura aqui en funcion del alto de las barras
@@ -1127,7 +1166,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     
                 });
             
-            console.log("hay un chart o no?", chart)
+            
             var title = chart.append("text")
                     .attr("x", 0) //mdswidth+margin.left+termwidth+(barwidth/2)
                     .attr("y", 0)
@@ -1694,7 +1733,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         // function to re-order the bars (gray and red), and terms:
 
-        function reorder_bars_helper(increase, topic_id_in_model, barFreqsID_actual, bar_totals_actual, terms_actual, overlay, xaxis_class){
+        function reorder_bars_helper(to_select, increase, topic_id_in_model, barFreqsID_actual, bar_totals_actual, terms_actual, overlay, xaxis_class){
+            console.log("ojo, estos son los parametros que recibe reorder_bars_helper", increase, topic_id_in_model, barFreqsID_actual, bar_totals_actual, terms_actual, overlay, xaxis_class)
             
             var dat2 = lamData.filter(function(d) {
                 
@@ -1961,28 +2001,37 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
         }
 
-        function reorder_bars(increase) {
-            
-            // grab the bar-chart data for this topic only:
-            if(type_vis==2){
-                if(topic_id_model_1>-1){ //reordenar cuadro de arriba
-                
-                    reorder_bars_helper(increase, topic_id_model_1, barFreqsID,'bar-totals','terms','overlay', 'xaxis')
-                }
-                if(topic_id_model_2>-1){ //reordenar cuadro de abajo
-                    reorder_bars_helper(increase, topic_id_model_2, barFreqsID_2,'bar-totals_2','terms_2','overlay_2', 'xaxis_2')
-                }
+        function reorder_bars_new(increase, side) {
+            if(type_vis == 1){
+                console.log("ahhhhhhhhh nuevo")
+                // grab the bar-chart data for this topic only:
+                console.log("cual es el type vis", type_vis)
+                console.log("valores", increase, topic_id_in_model, barFreqsID)
+                var topic_id_in_model = vis_state.topic
+                reorder_bars_helper("#barplot_1", increase, topic_id_in_model, barFreqsID,'bar-totals','terms','overlay', 'xaxis')
             }
             else{
-                var topic_id_in_model = vis_state.topic
-                reorder_bars_helper(increase, topic_id_in_model, barFreqsID,'bar-totals','terms','overlay', 'xaxis')
+                //type_vis == 2
+                //hay que determinar si le hace click al slider de la izquierda o al de la derecha
+                if(side == "left"){
+                    reorder_bars_helper("#barplot_1", increase, topic_id_model_1+1, barFreqsID,'bar-totals','terms','overlay', 'xaxis')
+                }
+                else{
+                    //right
+                    reorder_bars_helper("#barplot_2", increase, topic_id_model_2+1, barFreqsID_2,'bar-totals_2','terms_2','overlay_2', 'xaxis_2')
+
+                }
                 
+
             }
+            
+
             
 
         }
 
-        //////////////////////////////////////////////////////////////////////////////
+
+
 
         // function to update bar chart when a topic is selected
         // the circle argument should be the appropriate circle element
@@ -2523,14 +2572,14 @@ var LDAvis = function(to_select, data_or_file_name) {
         }
         function updateRelevantDocuments(topic_id, relevantDocumentsDict, model){
             if(model == 1){
-                $('.tableRelevantDocumentsClass_Model1').bootstrapTable("destroy");
-                $('.tableRelevantDocumentsClass_Model1').bootstrapTable({
+                $('#tableRelevantDocumentsClass_Model1').bootstrapTable("destroy");
+                $('#tableRelevantDocumentsClass_Model1').bootstrapTable({
                     data: relevantDocumentsDict[topic_id].slice(0,R)
                 });
             }
             else{//model == 2
-                $('.tableRelevantDocumentsClass_Model2').bootstrapTable("destroy");
-                $('.tableRelevantDocumentsClass_Model2').bootstrapTable({
+                $('#tableRelevantDocumentsClass_Model2').bootstrapTable("destroy");
+                $('#tableRelevantDocumentsClass_Model2').bootstrapTable({
                     data: relevantDocumentsDict[topic_id].slice(0,R)
                 });
             }

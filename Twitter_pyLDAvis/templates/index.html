@@ -228,12 +228,12 @@ if(type_vis == 2){
     </div>
 
 
-    <div class="col-4" id="DocumentsPanel" style="background-color: rgb(247, 146, 221)">
+    <div class="col-4" id="DocumentsPanel">
     
      
       <script>
         if(type_vis == 1){
-          var html = '<div  style="height: 100%"> <table  class="tableRelevantDocumentsClass_Model1 table table-hover "> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table></div>';
+          var html = '<div  style="height: 100%"> <table  id="tableRelevantDocumentsClass_Model1" class= "table table-hover"> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table></div>';
           document.write(html)
 
         }
