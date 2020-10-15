@@ -16,7 +16,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
     // Set up a few 'global' variables to hold the data:
     var K, // number of topics
-        R, // number of terms to display in bar chart
         mdsData, // (x,y) locations and topic proportions
         mdsData3, // topic proportions for all terms in the viz
         lamData, // all terms that are among the top-R most relevant for all topics, lambda values
@@ -84,8 +83,8 @@ var LDAvis = function(to_select, data_or_file_name) {
     
 
     var leftPanelID = visID + "-leftpanel";
-    var barFreqsID = visID + "-bar-freqs";
-    var barFreqsID_2 = visID + "-bar-freqs_2";
+    var barFreqsID = "barplot_1";
+    var barFreqsID_2 = "barplot_2"
     var topID = visID + "-top";
     var lambdaInputID = visID + "-lambdaInput";
     //var lambdaZeroID = visID + "-lambdaZero";
@@ -97,6 +96,7 @@ var LDAvis = function(to_select, data_or_file_name) {
     var min_target_node_value = Infinity;
 
     var number_terms_sankey = 20
+    var number_terms_mdsplot = 20
 
     //esto se ocupa en la comparación de un corpus
     var topic_id_model_1 = -1
@@ -162,7 +162,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         K = data['mdsDat'].x.length;
 
         // R is the number of top relevant (or salient) words whose bars we display
-        R = Math.min(data['R'], 20);
+        var R = Math.min(data['R'], 20);
 
         // a (K x 5) matrix with columns x, y, topics, Freq, cluster (where x and y are locations for left panel)
         mdsData = [];
@@ -618,7 +618,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         function createMdsPlot(number, mdsData, lambda_lambda_topic_similarity){
             
             //if  previous mdsplot exists, remove it
-
+            
             d3.selectAll('#svgMdsPlot').remove();
 
 
@@ -781,15 +781,14 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .enter();
             
             // create linear scaling to pixels (and add some padding on outer region of scatterplot)
-            console.log("mdsData", mdsData)
-            console.log("new positions", new_positions)
+
             var xrange = d3.extent( getCol(new_positions, 0));
             /*
             var xrange = d3.extent(mdsData, function(d) {
                 return d.x;
             }); //d3.extent returns min and max of an array
             */
-            console.log("cual es el  xrange", xrange)
+            
             var xdiff = xrange[1] - xrange[0],
                 xpad = 0.05;
 
@@ -931,7 +930,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
             
-            createBarPlot("#BarPlotPanelDiv", dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", R ) //esto crea el bar plot por primera vez. 
+
+            createBarPlot("#BarPlotPanelDiv", dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", R) //esto crea el bar plot por primera vez. 
             //dejar la tabla en una buena posicion
             d3.selectAll('.tableRelevantDocumentsClass_Model1').attr("transform", "translate("  +0 + "," +0+ ")")
 
@@ -949,9 +949,9 @@ var LDAvis = function(to_select, data_or_file_name) {
         
            get_name_node_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
         
-            // Add barplot into the left panel
+            // Add barplot into the left panel 
             createBarPlot("#BarPlotPanelDiv", dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", number_terms_sankey) //esto crea el bar plot por primera vez. 
-           
+
             // Add barplot into the right panel
             createBarPlot("#DocumentsPanel", dat3, barFreqsID_2,"bar-totals_2", "terms_2", "bubble-tool_2", "xaxis_2", number_terms_sankey) //hay que modificar la altura aqui en funcion del alto de las barras
 
@@ -979,10 +979,10 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
 
-        function createBarPlot(to_select, dat3, barFreqsID_actual, bar_totals_actual, terms_actual,  bubble_tool, xaxis_class, height_bar, number_terms){
+        function createBarPlot(to_select, dat3, barFreqsID_actual, bar_totals_actual, terms_actual,  bubble_tool, xaxis_class, number_terms){
             
-
-        
+            var height_bar = 20
+            
             var svg = d3.select(to_select).append("svg") //BarPlotPanelDiv
             .attr("width", "100%")
             .attr("height", "50%");
@@ -1026,54 +1026,63 @@ var LDAvis = function(to_select, data_or_file_name) {
             // bar chart legend/guide:
             /* I will delete this for now. We need to figure out a way to explain the information to the user
             mdsheight = 400
-            var barguide = {"width": 100, "height": 15};
-            d3.select("#" + barFreqsID_actual).append("rect")
-                .attr("x", 0)
-                .attr("y", mdsheight + 10)
-                .attr("height", barguide.height)
-                .attr("width", barguide.width)
-                .style("fill", color1)
-                .attr("opacity", 0.4);
-            d3.select("#" + barFreqsID_actual).append("text")
-                .attr("x", barguide.width + 5)
-                .attr("y", mdsheight + 10 + barguide.height/2)
-                .style("dominant-baseline", "middle")
-                .text("Overall term frequency");
+            */
+            if(type_vis == 1){
+
+                var legend_svg = d3.select(to_select).append("svg") //BarPlotPanelDiv
+                .attr("width", "100%")
+                .attr("id", "legend_svg")
+                
+                mdsheight = 0
+                var barguide = {"width": 100, "height": 15};
+                d3.select("#legend_svg").append("rect")
+                    .attr("x", 0)
+                    .attr("y", mdsheight + 10)
+                    .attr("height", barguide.height)
+                    .attr("width", barguide.width)
+                    .style("fill", color1)
+                    .attr("opacity", 0.4);
+                d3.select("#legend_svg").append("text")
+                    .attr("x", barguide.width + 5)
+                    .attr("y", mdsheight + 10 + barguide.height/2)
+                    .style("dominant-baseline", "middle")
+                    .text("Overall term frequency");
+                
+                d3.select("#legend_svg").append("rect")
+                    .attr("x", 0)
+                    .attr("y", mdsheight + 10 + barguide.height + 5)
+                    .attr("height", barguide.height)
+                    .attr("width", barguide.width/2)
+                    .style("fill", color2)
+                    .attr("opacity", 0.8);
+                d3.select("#legend_svg").append("text")
+                    .attr("x", barguide.width/2 + 5)
+                    .attr("y", mdsheight + 10 + (3/2)*barguide.height + 5)
+                    .style("dominant-baseline", "middle")
+                    .text("Estimated term frequency within the selected topic");
+                
+                
+                
+                d3.select("#legend_svg")
+                    .append("a")
+                    .attr("xlink:href", "http://vis.stanford.edu/files/2012-Termite-AVI.pdf")
+                    .attr("target", "_blank")
+                    .append("text")
+                    .attr("x", 0)
+                    .attr("y", mdsheight + 10 + (6/2)*barguide.height + 5)
+                    .style("dominant-baseline", "middle")
+                    .text("1. saliency(term w) = frequency(w) * [sum_t p(t | w) * log(p(t | w)/p(t))] for topics t; see Chuang et. al (2012)");
+                d3.select("#legend_svg")
+                    .append("a")
+                    .attr("xlink:href", "http://nlp.stanford.edu/events/illvi2014/papers/sievert-illvi2014.pdf")
+                    .attr("target", "_blank")
+                    .append("text")
+                    .attr("x", 0)
+                    .attr("y", mdsheight + 10 + (8/2)*barguide.height + 5)
+                    .style("dominant-baseline", "middle")
+                    .text("2. relevance(term w | topic t) = \u03BB * p(w | t) + (1 - \u03BB) * p(w | t)/p(w); see Sievert & Shirley (2014)");
+            }
             
-            d3.select("#" + barFreqsID_actual).append("rect")
-                .attr("x", 0)
-                .attr("y", mdsheight + 10 + barguide.height + 5)
-                .attr("height", barguide.height)
-                .attr("width", barguide.width/2)
-                .style("fill", color2)
-                .attr("opacity", 0.8);
-            d3.select("#" + barFreqsID_actual).append("text")
-                .attr("x", barguide.width/2 + 5)
-                .attr("y", mdsheight + 10 + (3/2)*barguide.height + 5)
-                .style("dominant-baseline", "middle")
-                .text("Estimated term frequency within the selected topic");
-            */
-            // footnotes:
-            /*
-            d3.select("#" + barFreqsID_actual)
-                .append("a")
-                .attr("xlink:href", "http://vis.stanford.edu/files/2012-Termite-AVI.pdf")
-                .attr("target", "_blank")
-                .append("text")
-                .attr("x", 0)
-                .attr("y", mdsheight + 10 + (6/2)*barguide.height + 5)
-                .style("dominant-baseline", "middle")
-                .text("1. saliency(term w) = frequency(w) * [sum_t p(t | w) * log(p(t | w)/p(t))] for topics t; see Chuang et. al (2012)");
-            d3.select("#" + barFreqsID_actual)
-                .append("a")
-                .attr("xlink:href", "http://nlp.stanford.edu/events/illvi2014/papers/sievert-illvi2014.pdf")
-                .attr("target", "_blank")
-                .append("text")
-                .attr("x", 0)
-                .attr("y", mdsheight + 10 + (8/2)*barguide.height + 5)
-                .style("dominant-baseline", "middle")
-                .text("2. relevance(term w | topic t) = \u03BB * p(w | t) + (1 - \u03BB) * p(w | t)/p(w); see Sievert & Shirley (2014)");
-            */
             // Bind 'default' data to 'default' bar chart
             var basebars = chart.selectAll(to_select + " ."+bar_totals_actual)
                     .data(barDefault2)
@@ -1118,20 +1127,20 @@ var LDAvis = function(to_select, data_or_file_name) {
                     
                 });
             
-            /* We dont need this.
+            console.log("hay un chart o no?", chart)
             var title = chart.append("text")
-                    .attr("x", mdswidth+margin.left+termwidth+(barwidth/2))
-                    .attr("y", -30)
+                    .attr("x", 0) //mdswidth+margin.left+termwidth+(barwidth/2)
+                    .attr("y", 0)
                     .attr("class", bubble_tool) //  set class so we can remove it when highlight_off is called
                     .style("text-anchor", "middle")
                     .style("font-size", "16px")
-                    .text("Top-" + number_terms + " Most Salient Terms");
+                    .text("Top Most Salient Terms");
             
             title.append("tspan")
                 .attr("baseline-shift", "super")
                 .attr("font-size", "12px")
                 .text("(1)");
-            */
+            
             // barchart axis adapted from http://bl.ocks.org/mbostock/1166403
             var xAxis = d3.axisTop().scale(x).tickSize(-barheight).ticks(6);
             
@@ -1981,6 +1990,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             if(box.node>=min_target_node_value){
                 //pertenece al modelo de corpus 2
+                to_select = "#DocumentsPanel"
                 var topic_id_in_model = box.node-min_target_node_value
                 var real_topic_id = topic_order_2[topic_id_in_model]-1
                 
@@ -2019,6 +2029,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 $('#idTopic2').html(topicID + box.node); 
             }
             else{ // el topico seleccionado eprtenece al modelo del corpus 1
+                to_select =  "#BarPlotPanelDiv"
                 var topic_id_in_model = box.node
                 var real_topic_id = topic_order[topic_id_in_model]-1
                 
@@ -2183,6 +2194,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         }
         function topic_on(circle) {
+            to_select = "#BarPlotPanelDiv"
             if (circle == null) return null;
             
             
@@ -2205,16 +2217,27 @@ var LDAvis = function(to_select, data_or_file_name) {
             text.remove();
 
             // append text with info relevant to topic of interest
+            console.log("que hay aqui", d3.select("#" + barFreqsID))
+            
+            var bounds_barplot = d3.select("#BarPlotPanelDiv").node().getBoundingClientRect();
+            console.log("obtuve el ancho o no", bounds_barplot)
+
+            //barheight = bounds_barplot.height - 1.5*termwidth
+            //barwidth = bounds_barplot.width - 1.5*termwidth
+
             d3.select("#" + barFreqsID)
                 .append("text")
-                .attr("x", mdswidth+margin.left+termwidth+(barwidth/2))
-                .attr("y", -30)
+                .attr("x",(bounds_barplot.width)/2 - termwidth) //mdswidth+margin.left+termwidth+(barwidth/2) .attr("transform", "translate("  +(termwidth) + "," +2*height_bar+ ")") /
+                .attr("y", -20)
                 .attr("class", "bubble-tool") //  set class so we can remove it when highlight_off is called
                 .style("text-anchor", "middle")
                 .style("font-size", "16px")
-                .text("Top-" + R + " Most Relevant Terms for Topic " + topics + " (" + Freq + "% of tokens)");
+                .text("Top Most Relevant Terms for Topic  (" + Freq + "% of tokens)");
+                //.text("Top Most Relevant Terms for Topic " + topics + " (" + Freq + "% of tokens)");
             
-            
+
+
+
             // grab the bar-chart data for this topic only:
             var dat2 = lamData.filter(function(d) {
                 return d.Category == "Topic" + topics;
@@ -2231,7 +2254,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             // truncate to the top R tokens:
             var dat3 = dat2.slice(0, R);
-
+            
             
             //Show most relevant documents
             var real_topic_id = topic_order[d.topics-1]-1//Ojo! los topicos fueron ordenados de mayor a menor frecuencia, por eso que el orden cambia
@@ -2313,6 +2336,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
         function topic_off(circle) {
+            to_select = "#BarPlotPanelDiv"
+
             if (circle == null) return circle;
             // go back to original opacity/fill
             circle.style.opacity = base_opacity;
