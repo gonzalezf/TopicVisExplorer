@@ -159,8 +159,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 
+<!-- ADD JQUERY-->
+
+<script src="static/js/jquery.min.js"></script>  
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
 <!-- ADD JS-->
-<script src="static/js/jquery.min.js"></script>
+
 <script src="static/js/popper.min.js"></script>
 <script src="static/js/bootstrap.min.js" ></script>
 <!--<script src="static/js/mark.min.js" ></script> We are not using it anymore-->
@@ -172,6 +178,13 @@
 <link rel="stylesheet" href="static/css/bootstrap-table.min.css">
 <link rel="stylesheet" href="static/css/bootstrap.min.css">
 <link rel="stylesheet" type="text/css" href="{{ ldavis_css_url }}">
+
+
+<!--RANGE SLIDER-->
+
+<link href="static/css/nouislider.css" rel="stylesheet">
+<script src="static/js/nouislider.js"></script>
+
 
 
 <div id={{ visid }}></div>
@@ -212,16 +225,6 @@ if(type_vis == 2){
 
     <div class="col-4"  id="BarPlotPanel" >  <!--LDAvisContainer-->
 
-      <!--
-      <script>
-        if(type_vis == 2){
-          var html = '<div  style="height: 50%"> <table  class="tableRelevantDocumentsClass_Model1 table table-hover "> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table></div>';
-          document.write(html)
-
-        }
-
-      </script>
-      -->
     </div>
 
     <div class="col-4"   id="CentralPanel"> <!-- style="background-color: rgb(46, 206, 206)"-->
@@ -249,34 +252,8 @@ if(type_vis == 2){
 
 
 
-<!--
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-8" id="LDAvisContainer"> </div>
-    <div class="col-4 float-right" id="relevantDocumentPanel" >
-        <table  class="tableRelevantDocumentsClass_Model1 table table-hover ">
-            <thead>
-            <tr>
-                <th class="text-center" data-field="topic_perc_contrib" scope="col">Contribution</th>
-                <th class="text-center" data-field="text" scope="col">Tweet</th>
-            </tr>
-            </thead>
-        </table>    
-        
-        <script>
 
-          if(type_vis == 2){
-            var html = '<table  class="tableRelevantDocumentsClass_Model2 table table-hover "> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">Contribution</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table>';
 
-            document.write(html)
-
-              
-          }
-        </script>
-    </div>
-  </div>
-</div>
--->
 
 
 <script>

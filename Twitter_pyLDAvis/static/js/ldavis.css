@@ -96,6 +96,8 @@ rect.bordered {
   }
 
   #svg_sankey{
+    padding-top: 3px;
+
     background-color: lightblue;
   }
 
@@ -297,7 +299,7 @@ rect.bordered {
 
 #LabelFilteringTopicSimilarity{
   font-family: sans-serif; 
-  font-size: 20px; 
+  font-size: 16px; 
   float: left;
 }
 
@@ -317,7 +319,7 @@ margin-right: 10px;
 #sliderDivInputFilteringTopicSimilarity{
   width: 60%; 
   float: right; 
-  margin-top: -5px; 
+  /*margin-top: -5px; */
   margin-right: 10px;
 }
 
@@ -348,4 +350,61 @@ margin-right: 10px;
 
 #DocumentsPanel{
   height:100%;
+}
+
+/* Slider css*/
+
+section.range-slider {
+  position: relative;
+  width: 200px;
+  height: 35px;
+  text-align: center;
+}
+
+section.range-slider input {
+  pointer-events: none;
+  position: absolute;
+  overflow: hidden;
+  left: 0;
+  top: 15px;
+  width: 200px;
+  outline: none;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+}
+
+section.range-slider input::-webkit-slider-thumb {
+  pointer-events: all;
+  position: relative;
+  z-index: 1;
+  outline: 0;
+}
+
+section.range-slider input::-moz-range-thumb {
+  pointer-events: all;
+  position: relative;
+  z-index: 10;
+  -moz-appearance: none;
+  width: 9px;
+}
+
+section.range-slider input::-moz-range-track {
+  position: relative;
+  z-index: -1;
+  background-color: rgba(0, 0, 0, 1);
+  border: 0;
+}
+section.range-slider input:last-of-type::-moz-range-track {
+  -moz-appearance: none;
+  background: none transparent;
+  border: 0;
+}
+section.range-slider input[type=range]::-moz-focus-outer {
+border: 0;
+}
+
+#lamdaInputTopicSimilarity{
+ margin-right:8x;
+ margin-left:8px;
 }
