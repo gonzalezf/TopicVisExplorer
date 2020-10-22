@@ -413,6 +413,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         //Inspired by: https://bl.ocks.org/d3noob/013054e8d7807dff76247b81b0e29030
        function visualize_sankey(graph, threshold_min, threshold_max){
 
+            d3.selectAll('#svgCentralSankeyDiv').remove();
             var svgCentralSankeyDiv = d3.select("#CentralPanel").append("div")
             svgCentralSankeyDiv.attr("id", "svgCentralSankeyDiv")
 
@@ -652,7 +653,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         function createMdsPlot(number, mdsData, lambda_lambda_topic_similarity){
             
             //if  previous mdsplot exists, remove it
-            
+            console.log("ejecutando create mdsplot")
             d3.selectAll('#svgMdsPlot').remove();
 
 
@@ -929,6 +930,11 @@ var LDAvis = function(to_select, data_or_file_name) {
             // text to indicate topic
             points.append("text")
             .attr("class", "txt")
+            .attr("width", function(d) {
+                //return (rScaleMargin(+d.Freq));
+                //return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+                return (2*Math.sqrt((mdsData[topic_order[d.topics-1]-1].Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI))
+            })
             .attr("x", function(d) {
                 
                 return (xScale(+new_positions[topic_order[d.topics-1]-1][0]));
@@ -957,6 +963,37 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .style("font-size", "16px")
                 .style("text-anchor", "middle");
 
+
+        //overflow-text in svg
+        function dotme(text) {
+            //console.log("analizando este texto", text)
+            text.each(function() {
+                var text = d3.select(this);
+                var words = text.text().split(/\s+/);
+                
+                var ellipsis = text.text('').append('tspan').attr('class', 'elip').text('...');
+                console.log("que hay aqui", parseFloat(text.attr('width')), ellipsis.node().getComputedTextLength())
+                var width = parseFloat(text.attr('width')) - ellipsis.node().getComputedTextLength();
+                var numWords = words.length;
+                
+                var tspan = text.insert('tspan', ':first-child').text(words.join(' '));
+                
+                // Try the whole line
+                // While it's too long, and we have words left, keep removing words
+                //console.log("estas son las variables", text, words, ellipsis, width, numWords, tspan)
+                while (tspan.node().getComputedTextLength() > width && words.length) {
+                    words.pop();
+                    tspan.text(words.join(' '));
+                }
+                
+                if (words.length === numWords) {
+                    ellipsis.remove();
+                }
+            });
+        }
+        d3.selectAll('.txt').call(dotme);
+
+        
 
         }
                
@@ -1322,24 +1359,36 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             var topicDiv = document.createElement("div");
             topicDiv.setAttribute("id", "topic_name_and_buttons_div")
+            topicDiv.setAttribute("class", "RowDiv")
             document.getElementById(BarPlotPanelDivId).appendChild(topicDiv) ////topicDiv.setAttribute("style", "width:100%; height:5%; background-color: red")
 
-            
+        
+            var topicNameDiv = document.createElement("div");
+            topicNameDiv.setAttribute("id", "topic_name_div")
+            topicNameDiv.setAttribute("class", "ColumnDiv")
+            topicDiv.appendChild(topicNameDiv) ////topicDiv.setAttribute("style", "width:100%; height:5%; background-color: red")
+
+
+            var topicButtonsDiv = document.createElement("div");
+            topicButtonsDiv.setAttribute("id", "topic_buttons_div")
+            topicButtonsDiv.setAttribute("class", "ColumnDiv")
+            topicDiv.appendChild(topicButtonsDiv) ////topicDiv.setAttribute("style", "width:100%; height:5%; background-color: red")
+
            var topic_title= document.createElement("span"); 
            topic_title.innerText = "Topic: ";
-           topicDiv.appendChild(topic_title); 
+           topicNameDiv.appendChild(topic_title); 
 
             
            var topic_name_selected_1 = document.createElement("span")
            topic_name_selected_1.innerText = ""
            topic_name_selected_1.setAttribute("id", "topic_name_selected_1")
-           topicDiv.appendChild(topic_name_selected_1); 
+           topicNameDiv.appendChild(topic_name_selected_1); 
             
            var merge = document.createElement("button");
            merge.setAttribute("id", topicMerge);
            merge.setAttribute("class", "btn btn-primary btnTopic")
            merge.innerHTML = "Merge";
-           topicDiv.appendChild(merge);
+           topicButtonsDiv.appendChild(merge);
 
            d3.select("#"+topicMerge)
                .on("click", function() {
@@ -1379,7 +1428,7 @@ var LDAvis = function(to_select, data_or_file_name) {
            split.setAttribute("id", topicSplit);
            split.setAttribute("class", "btn btn-primary btnTopic")
            split.innerHTML = "Split";
-           topicDiv.appendChild(split);
+           topicButtonsDiv.appendChild(split);
 
   
         
@@ -1387,7 +1436,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             edit.setAttribute("id", topicEdit);
             edit.setAttribute("class", "btn btn-primary btnTopic")
             edit.innerHTML = "Rename";
-            topicDiv.appendChild(edit);
+            topicButtonsDiv.appendChild(edit);
 
             
             d3.select("#"+topicEdit)
@@ -1740,7 +1789,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                 if(type_vis == 1){
 
                     createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
+                    topic_on(document.getElementById(topicID+vis_state.topic))
+
                 }
+
+
             });
 
             d3.select("#lambdaInputTopicSimilarityFiltering") //Filtering paths of sankey diagram
@@ -2312,11 +2365,10 @@ var LDAvis = function(to_select, data_or_file_name) {
             var text = d3.select(to_select + " .bubble-tool");
             text.remove();
 
-            // append text with info relevant to topic of interest
-            console.log("que hay aqui", d3.select("#" + barFreqsID))
+            
             
             var bounds_barplot = d3.select("#BarPlotPanelDiv").node().getBoundingClientRect();
-            console.log("obtuve el ancho o no", bounds_barplot)
+            
 
             //barheight = bounds_barplot.height - 1.5*termwidth
             //barwidth = bounds_barplot.width - 1.5*termwidth

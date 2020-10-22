@@ -13,6 +13,7 @@ from os import path, walk
 from gensim.models.keyedvectors import KeyedVectors
 import sklearn
 from flask import Flask, jsonify, request, render_template
+from scipy.spatial import procrustes
 
 #from sklearn.metrics.pairwise import cosine_similarity
 #from calculate_topic_similarity import getTopicSimilarityMetric
@@ -177,7 +178,7 @@ def proposed_topic_similarity(wordembedding, lda_model, n_terms): #n_terms : num
 
 
 ######################Import data #########################
-type_vis = 2#2: two topic modeling output, 1: one topic modeling output
+type_vis = 1#2: two topic modeling output, 1: one topic modeling output
 
 if type_vis ==1: #load just one model
     ##Load relevant documents
@@ -250,9 +251,45 @@ if type_vis ==1: #load just one model
         np.fill_diagonal(matrix_cosine_distance,0)
         new_circle_positions[lambda_]=_pcoa(matrix_cosine_distance, n_components=2).tolist()
     #print(new_circle_positions)
-    new_circle_positions= json.dumps(new_circle_positions)
+    '''
+    with open('../jupyters/new_circle_positions.pkl', 'wb') as f:
+        pickle.dump(new_circle_positions, f)
+    '''
     
-   
+
+    #Apply procrusteres #get new matrix according to procrustes
+    
+    lambdas = list(new_circle_positions.keys())
+    standardized_matrix = dict()
+    disparity_values = dict()
+    original_a = new_circle_positions[0.0]
+    for i in range(len(lambdas)-1):
+        #print(lambdas[i], lambdas[i+1])
+        original_b = new_circle_positions[lambdas[i+1]]
+        mtx1, mtx2, disparity = procrustes(original_a, original_b)
+        disparity_values[lambdas[i]] = disparity
+        standardized_matrix[lambdas[i]] = mtx1.tolist()
+        original_a = mtx2
+        
+        
+    standardized_matrix[lambdas[len(lambdas)-1]] = mtx2.tolist()
+    disparity_values[lambdas[len(lambdas)-1]] = disparity
+
+    new_circle_positions = standardized_matrix
+
+    new_circle_positions= json.dumps(new_circle_positions)
+        
+    '''
+    with open('../jupyters/standardized_matrix.pkl', 'wb') as f:
+        pickle.dump(standardized_matrix, f)
+
+    '''
+    '''
+    with open('../jupyters/new_circle_positions.json', 'w') as outfile:
+        json.dump(new_circle_positions, outfile)
+    '''
+
+
     ###############Matriz de distancia - Baseline, word embedding #####################
     '''
     try:

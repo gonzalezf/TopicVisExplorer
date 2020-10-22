@@ -272,7 +272,7 @@ def prepared_html_in_flask(data, relevantDocumentsDict, topic_order,type_vis,new
     print("ESTE ES EL DATA QUE RECIBO", data)    
     kwargs['ldavis_url'] = '/static/js/LDAvis.js'
     kwargs['d3_url'] = 'static/js/d3.v5.min.js'
-    kwargs['ldavis_css_url'] = 'static/js/LDAvis.css'
+    kwargs['ldavis_css_url'] = 'static/css/LDAvis.css'
 
     html = prepared_data_to_html(data = data, relevantDocumentsDict = relevantDocumentsDict,topic_order = topic_order,type_vis = type_vis,new_circle_positions= new_circle_positions,  matrix_sankey = matrix_sankey, data_2 =  data_2, relevantDocumentsDict_2 = relevantDocumentsDict_2, topic_order_2 = topic_order_2,   **kwargs)
     
