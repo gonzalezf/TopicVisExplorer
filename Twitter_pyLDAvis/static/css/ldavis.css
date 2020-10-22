@@ -413,10 +413,7 @@ border: 0;
   width:100%;
 }
 
-#topic_name_selected_1{
-  overflow-x: hidden; /* Hide horizontal scrollbar */
-  overflow-y: scroll; /* Add vertical scrollbar */
-}
+
 
 #topic_buttons_div{
   width: 50%;
@@ -424,6 +421,21 @@ border: 0;
   float:right;
 }
 #topic_name_div{
+  overflow: hidden;
+  padding-top:10px;
+  width:50%;
+  height:100%;
+  float:left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+#topic_buttons_div_right_panel{
+  width: 50%;
+  height:100%;
+  float:right;
+}
+#topic_name_div_right_panel{
   overflow: hidden;
   padding-top:10px;
   width:50%;

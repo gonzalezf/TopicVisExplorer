@@ -469,20 +469,15 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             var links_filtered =  graph.links.filter(function(el){
                 return threshold_min <= el.value.toFixed(2) && el.value.toFixed(2) <= threshold_max;
-                //return el.value >threshold;
                 }
             );
             
 
-            var units = "similarity";
-            // set the dimensions and margins of the graph
+
             var margin = {top: 10, right: 10, bottom: 10, left: 10};
-                //width = 3*mdswidth, //width = mdswidth - margin.left - margin.right,
-                //height = 2*mdsheight - margin.top - margin.bottom;
-                        // format variables
             
             var formatNumber = d3.format(",.2f"),    // two decimal places
-                format = function(d) { return formatNumber(d) + " " + units; },
+                format = function(d) { return "similarity: "+formatNumber(d);},
                 color = d3.scaleOrdinal(d3.schemeAccent);
             
 
@@ -490,34 +485,29 @@ var LDAvis = function(to_select, data_or_file_name) {
             var svg_sankey = d3.select("#svgCentralSankeyDiv").append("svg")// #CentralPanel
                 .attr("width", "100%")
                 .attr("height", "100%")
-                .attr("id", "svg_sankey");//.attr("transform", "translate("+margin.left+","+ margin.top+")")
+                .attr("id", "svg_sankey");
                 
-                /*.append("g")
-                    .attr("transform", "translate(" + (termwidth+mdswidth+2*margin.left) + "," + (2*margin.top) + ")");*/
 
             
             var sankey = d3.sankey()
             .nodeWidth(36)
             .nodePadding(40)
             .size([user_width_sankey, user_height_sankey])
-            //.size([mdswidth-margin.right, 2*mdsheight-margin.top]);
+            
 
             var path = sankey.link();
             sankey
-                .nodes(nodes_filtered)//.nodes(graph.nodes)
-                .links(links_filtered)//.links(graph.links)
+                .nodes(nodes_filtered)
+                .links(links_filtered)
                 .layout(32); //32
         
-            // add in the links
-
+        
 
             var link = svg_sankey.append("g").selectAll(".link")
-                .data(links_filtered)//.data(graph.links)
-            .enter().append("path")
+                .data(links_filtered)
+                .enter().append("path")
                 .filter(function(d){
                     return d.value;
-                    //return d.value >= threshold;
-                    //                    
                 })
                 .attr("class", "link")
                 .attr("d", path)
@@ -525,14 +515,14 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .sort(function(a, b) { return b.dy - a.dy; });
 
             
-        // add the link titles
+    
             link.append("title")
                 .text(function(d) {
-                    return d.source.name + " → " + 
-                        d.target.name + "\n" + format(d.value); });
+                    return name_topics_sankey[topicID + d.source.node] + " → " + 
+                    name_topics_sankey[topicID + d.target.node] + "\n" + format(d.value);}); //return d.source.name + " → " + d.target.name + "\n" + format(d.value); });
+                    
         
-        // add in the nodes
-            
+            // add in the nodes
             var node = svg_sankey.append("g").selectAll(".node")
                 .data(nodes_filtered)//.data(graph.nodes)
                 .enter().append("g")
@@ -555,12 +545,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                 })
                 .on("mouseout", function(d) {
-
-
                     topic_on_sankey(real_last_clicked_sankey_model_1, min_target_node_value)
                     topic_on_sankey(real_last_clicked_sankey_model_2, min_target_node_value)
-
-                   
                 });
                 
 
@@ -592,9 +578,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                 .append("title")
                     .text(function(d) { 
-                                                
-                        return d.name + "--\n" + format(d.value); })
-                    
+                        return name_topics_sankey[topicID + d.node] ;}) //return d.name + "--\n" + format(d.value); }) here, d.value es la suma de todos los pesos que llegan al nodo. creo que no es necesario                    
                 .on("click", function(){
                     
                     alert("probando aqui", d.value);
@@ -605,6 +589,15 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("x", -6)
                 .attr("y", function(d) { return d.dy / 2; })
                 .attr("dy", ".35em")
+                .attr("width", function(d) {
+                    //return (rScaleMargin(+d.Freq));
+                    //return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+                    //return d3.selectAll('#svgSankey').node().getBoundingClientRect().width;
+                    return 0.25*d3.selectAll('#svg_sankey').node().getBoundingClientRect().width
+                    
+                })
+                .attr("class", "txt")
+                .attr("font-weight", "bold")
                 .attr("text-anchor", "end")
                 .attr("transform", null)
                 .text(function(d){return name_topics_sankey[topicID + d.node] ;}) //.text(function(d) { return d.name; })
@@ -637,18 +630,46 @@ var LDAvis = function(to_select, data_or_file_name) {
                 d3.select("#"+last_clicked_model_1).style("fill","rgb(14, 91, 201)")
             }
 
-            console.log("estoy en el setting initial", isSettingInitial)
+            
             
             if(isSettingInitial){
                 real_last_clicked_sankey_model_1 = nodes_filtered[0];
                 real_last_clicked_sankey_model_2 = nodes_filtered[min_target_node_value];
-                console.log("values", isSettingInitial, real_last_clicked_sankey_model_1, real_last_clicked_sankey_model_2, min_target_node_value);
+                
                 topic_on_sankey(real_last_clicked_sankey_model_1, min_target_node_value);
                 topic_on_sankey(real_last_clicked_sankey_model_2, min_target_node_value);
             }
             
+            d3.selectAll('.txt').call(dotme);
 
-        }   
+        }
+
+        function dotme(text) {
+            //console.log("analizando este texto", text)
+            text.each(function() {
+                var text = d3.select(this);
+                var words = text.text().split(/\s+/);
+                
+                var ellipsis = text.text('').append('tspan').attr('class', 'elip').text('...');
+                
+                var width = parseFloat(text.attr('width')) - ellipsis.node().getComputedTextLength();
+                var numWords = words.length;
+                
+                var tspan = text.insert('tspan', ':first-child').text(words.join(' '));
+                
+                // Try the whole line
+                // While it's too long, and we have words left, keep removing words
+                //console.log("estas son las variables", text, words, ellipsis, width, numWords, tspan)
+                while (tspan.node().getComputedTextLength() > width && words.length) {
+                    words.pop();
+                    tspan.text(words.join(' '));
+                }
+                
+                if (words.length === numWords) {
+                    ellipsis.remove();
+                }
+            });
+        }
 
         function createMdsPlot(number, mdsData, lambda_lambda_topic_similarity){
             
@@ -965,32 +986,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
         //overflow-text in svg
-        function dotme(text) {
-            //console.log("analizando este texto", text)
-            text.each(function() {
-                var text = d3.select(this);
-                var words = text.text().split(/\s+/);
-                
-                var ellipsis = text.text('').append('tspan').attr('class', 'elip').text('...');
-                console.log("que hay aqui", parseFloat(text.attr('width')), ellipsis.node().getComputedTextLength())
-                var width = parseFloat(text.attr('width')) - ellipsis.node().getComputedTextLength();
-                var numWords = words.length;
-                
-                var tspan = text.insert('tspan', ':first-child').text(words.join(' '));
-                
-                // Try the whole line
-                // While it's too long, and we have words left, keep removing words
-                //console.log("estas son las variables", text, words, ellipsis, width, numWords, tspan)
-                while (tspan.node().getComputedTextLength() > width && words.length) {
-                    words.pop();
-                    tspan.text(words.join(' '));
-                }
-                
-                if (words.length === numWords) {
-                    ellipsis.remove();
-                }
-            });
-        }
+       
         d3.selectAll('.txt').call(dotme);
 
         
@@ -1046,7 +1042,7 @@ var LDAvis = function(to_select, data_or_file_name) {
            //Añadir este barplot despues
            //createBarPlot(dat3, barFreqsID_2,"bar-totals_2", "terms_2", "bubble-tool_2", "xaxis_2", (8* margin.top + mdsheight), number_terms_sankey) //hay que modificar la altura aqui en funcion del alto de las barras
            visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.min_value_filtering, vis_state.max_value_filtering)
-           console.log("revisar estos values", isSettingInitial, real_last_clicked_sankey_model_1, real_last_clicked_sankey_model_2, min_target_node_value)
+           
 
 
          
@@ -1259,34 +1255,46 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                 var topicDivRightPanel = document.createElement("div");
                 topicDivRightPanel.setAttribute("id", "topic_name_and_buttons_div_right_panel")
-                document.getElementById("svgRightPanel").appendChild(topicDivRightPanel) ////topicDiv.setAttribute("style", "width:100%; height:5%; background-color: red")
+                topicDivRightPanel.setAttribute("class", "RowDiv")
+                document.getElementById("svgRightPanel").appendChild(topicDivRightPanel) 
+
+                
+                var topicNameRightPanel = document.createElement("div");
+                topicNameRightPanel.setAttribute("id", "topic_name_div_right_panel")
+                topicNameRightPanel.setAttribute("class", "ColumnDiv")
+                topicDivRightPanel.appendChild(topicNameRightPanel) 
+
+                var topicButtonsRightPanel = document.createElement("div");
+                topicButtonsRightPanel.setAttribute("id", "topic_buttons_div_right_panel")
+                topicButtonsRightPanel.setAttribute("class", "ColumnDiv")
+                topicDivRightPanel.appendChild(topicButtonsRightPanel) 
 
                 var topic_title_right_panel= document.createElement("span"); 
                 topic_title_right_panel.innerText = "Topic: ";
-                topicDivRightPanel.appendChild(topic_title_right_panel); 
+                topicNameRightPanel.appendChild(topic_title_right_panel); 
 
                 var topic_name_selected_2 = document.createElement("span")
                 topic_name_selected_2.innerText = ""
                 topic_name_selected_2.setAttribute("id", "topic_name_selected_2")
-                topicDivRightPanel.appendChild(topic_name_selected_2); 
+                topicNameRightPanel.appendChild(topic_name_selected_2); 
 
                 var merge_right_panel = document.createElement("button");
                 merge_right_panel.setAttribute("id", topicMerge+"rightPanel");
                 merge_right_panel.setAttribute("class", "btn btn-primary btnTopic")
                 merge_right_panel.innerHTML = "Merge";
-                topicDivRightPanel.appendChild(merge_right_panel);
+                topicButtonsRightPanel.appendChild(merge_right_panel);
 
                 var split_rigth_panel = document.createElement("button");
                 split_rigth_panel.setAttribute("id", topicSplit+"rightPanel");
                 split_rigth_panel.setAttribute("class", "btn btn-primary btnTopic")
                 split_rigth_panel.innerHTML = "Split";
-                topicDivRightPanel.appendChild(split_rigth_panel);
+                topicButtonsRightPanel.appendChild(split_rigth_panel);
 
                 var edit2 = document.createElement("button");
                 edit2.setAttribute("id", topicEdit2);
                 edit2.setAttribute("class", "btn btn-primary btnTopic");
                 edit2.innerHTML = "Rename";
-                topicDivRightPanel.appendChild(edit2);
+                topicButtonsRightPanel.appendChild(edit2);
                 d3.select("#"+topicEdit2)
                 .on("click", function() {
                     $('#renameTopic2').modal(); 
