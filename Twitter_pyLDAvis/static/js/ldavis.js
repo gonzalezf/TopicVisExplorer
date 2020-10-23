@@ -424,6 +424,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             var bounds_svgCentralSankey = d3.selectAll('#svgCentralSankeyDiv').node().getBoundingClientRect();
             var user_width_sankey = bounds_svgCentralSankey.width - margin.left - margin.right;
             var user_height_sankey= bounds_svgCentralSankey.height - margin.top - margin.bottom;
+
+            console.log("boundaries",bounds_svgCentralSankey, user_height_sankey, user_width_sankey)
             
 
             d3.selectAll('#svg_sankey').remove();
@@ -491,7 +493,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             var sankey = d3.sankey()
             .nodeWidth(36)
-            .nodePadding(40)
+            .nodePadding(25)
             .size([user_width_sankey, user_height_sankey])
             
 
@@ -502,7 +504,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .layout(32); //32
         
         
-
+            
             var link = svg_sankey.append("g").selectAll(".link")
                 .data(links_filtered)
                 .enter().append("path")
@@ -557,7 +559,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("id", function(d){
                     return "node_"+d.node //que esta sea la id unica del nodo
                 })
-                .attr("height", function(d) { return d.dy; })
+                .attr("height", function(d) { return d.dy; }) // aqui hay que calcular el nuevo alto accorde la contribucion!! Math.sqrt((mdsData[topic_order[d.topics-1]-1].Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI)
                 .attr("width", sankey.nodeWidth())
                 .style("fill", function(d) { 
                     if(d.node < min_target_node_value){
@@ -674,7 +676,6 @@ var LDAvis = function(to_select, data_or_file_name) {
         function createMdsPlot(number, mdsData, lambda_lambda_topic_similarity){
             
             //if  previous mdsplot exists, remove it
-            console.log("ejecutando create mdsplot")
             d3.selectAll('#svgMdsPlot').remove();
 
 
@@ -1076,16 +1077,16 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             var svg = d3.select(to_select).append("svg") //BarPlotPanelDiv
             .attr("width", "100%")
-            .attr("height", "50%");
+            .attr("height", "45%");
             
 
             var bounds_barplot = svg.node().getBoundingClientRect();
             
 
-            barheight = bounds_barplot.height - 1.5*termwidth
+            barheight = bounds_barplot.height - 0.5*termwidth
             barwidth = bounds_barplot.width - 1.5*termwidth
         
-
+            
         
             var barDefault2 = dat3.filter(function(d) {
                 return d.Category == "Default";
@@ -1219,6 +1220,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 });
             
             
+            /*
             var title = chart.append("text")
                     .attr("x", 0) //mdswidth+margin.left+termwidth+(barwidth/2)
                     .attr("y", 0)
@@ -1231,7 +1233,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("baseline-shift", "super")
                 .attr("font-size", "12px")
                 .text("(1)");
-            
+            */
             // barchart axis adapted from http://bl.ocks.org/mbostock/1166403
             var xAxis = d3.axisTop().scale(x).tickSize(-barheight).ticks(6);
             
@@ -1671,7 +1673,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
                 var slider = document.getElementById('lamdaInputTopicSimilarity');
                 noUiSlider.create(slider, {
-                    start: [(min_similarity_score+max_similarity_score)/2.0, max_similarity_score],
+                    start: [-0.5, 0.17],
+                    //start: [(min_similarity_score+max_similarity_score)/2.0, max_similarity_score],
                     connect: true,
                     range: {
                         'min': min_similarity_score,
@@ -1709,7 +1712,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
                 var sliderScaleTopicSimilarityFiltering = d3.scaleLinear()
                         .domain([min_similarity_score, max_similarity_score])
-                        .range([0+8, bounds_scaleContainer_filtering.width-8]);
+                        .range([0+8, bounds_scaleContainer_filtering.width-12]);
 
                 // adapted from http://bl.ocks.org/mbostock/1166403
                 var sliderAxisTopicSimilarityFiltering = d3.axisBottom(sliderScaleTopicSimilarityFiltering).tickSize(10).ticks(10);
@@ -1754,7 +1757,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             var sliderScaleOmegaTopicSimilarity = d3.scaleLinear()
                     .domain([0, 1])
-                    .range([7.5, bounds_scaleContainer_omegatopicsimilarity.width-7.5])  //Now it is responsive
+                    .range([7.5, bounds_scaleContainer_omegatopicsimilarity.width-12])  //Now it is responsive
                     .nice();
 
 
@@ -2176,6 +2179,10 @@ var LDAvis = function(to_select, data_or_file_name) {
                 document.getElementById("renameTopicId2").value = name_topics_sankey[topicID + box.node] 
                 $('#idTopic2').html(topicID + box.node); 
                 $('#topic_name_selected_2').html(name_topics_sankey[topicID + box.node] ); 
+
+                
+                
+
             }
             else{ // el topico seleccionado eprtenece al modelo del corpus 1
 
@@ -2238,18 +2245,9 @@ var LDAvis = function(to_select, data_or_file_name) {
             var text = d3.select(to_select + " ."+bubble_tool);
             text.remove();
 
-            /* Quite el titulo, quizas esto sea importante en el futuro. 
-            d3.select("#" + barFreqsID_actual)
-                .append("text")
-                .attr("x", mdswidth+margin.left+termwidth+(barwidth/2))
-                .attr("y", -30)
-                .attr("class", bubble_tool) //  set class so we can remove it when highlight_off is called
-                .style("text-anchor", "middle")
-                .style("font-size", "16px")
-                .text("Top-" + number_terms_sankey + " Most Relevant Terms for Topic " + topic_id_in_model+ " (" + Freq + "% of tokens)");
-                //Freq jsonData
             
-            */
+            
+            
             // grab the bar-chart data for this topic only:
             
             var dat2 = lamData.filter(function(d) {
@@ -2348,6 +2346,23 @@ var LDAvis = function(to_select, data_or_file_name) {
             //.attr("class", "xaxis")
                 .call(xAxis);
 
+            
+            if(!(d3.select("#" + barFreqsID_actual).empty())){
+            
+                var bounds_barplot = d3.select("#" + barFreqsID_actual).node().getBoundingClientRect();
+                d3.select("#" + barFreqsID_actual)
+                .append("text")
+                .attr("x", (bounds_barplot.width - termwidth)/2) 
+                .attr("y", -20)
+                .attr("class", bubble_tool) //  set class so we can remove it when highlight_off is called
+                .style("text-anchor", "middle")
+                .style("font-size", "16px")
+                .text("Top Most Relevant Terms for Topic  (" + Freq + "% of tokens)"); //.text("Top-" + number_terms_sankey + " Most Relevant Terms for Topic " + topic_id_in_model+ " (" + Freq + "% of tokens)");
+                
+            }
+
+                    
+
 
         }
         function topic_on(circle) {
@@ -2357,7 +2372,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             // grab data bound to this element
             var d = circle.__data__;
-
+            mdswidth+margin.left+termwidth+(barwidth/2)
             // update name in visualization
             $('#topic_name_selected_1').html(name_topics_circles[topicID + d.topics]); 
 
@@ -2375,7 +2390,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             
             
-            var bounds_barplot = d3.select("#BarPlotPanelDiv").node().getBoundingClientRect();
+            var bounds_barplot = d3.select("#" + barFreqsID).node().getBoundingClientRect();
             
 
             //barheight = bounds_barplot.height - 1.5*termwidth
@@ -2383,7 +2398,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             d3.select("#" + barFreqsID)
                 .append("text")
-                .attr("x",(bounds_barplot.width)/2 - termwidth) //mdswidth+margin.left+termwidth+(barwidth/2) .attr("transform", "translate("  +(termwidth) + "," +2*height_bar+ ")") /
+                .attr("x",(bounds_barplot.width - termwidth)/2) //mdswidth+margin.left+termwidth+(barwidth/2) .attr("transform", "translate("  +(termwidth) + "," +2*height_bar+ ")") /
                 .attr("y", -20)
                 .attr("class", "bubble-tool") //  set class so we can remove it when highlight_off is called
                 .style("text-anchor", "middle")
