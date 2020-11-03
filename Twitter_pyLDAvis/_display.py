@@ -146,8 +146,7 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order,   type_vis, 
         visid = 'ldavis_' + get_id(data[0]) + str(int(random.random() * 1E10))
     elif re.search('\s', visid):
         raise ValueError("visid must not contain spaces")
-    #print("sent topics sorted df mallet", relevantDocumentsDict)
-    #print(type(relevantDocumentsDict))
+    
     
     data_json_format = []
     for elem in data:
@@ -174,7 +173,6 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order,   type_vis, 
             lambda_ = lambda_/100
             matrix_dict = {"nodes":[], "links":[]}
             matrix_s = matrix_sankey[lambda_]
-            print("calculado para lambda_ = ", lambda_)
             for i in range(matrix_s.shape[0]):#matrix_s.shape[0]
                 matrix_dict["nodes"].append({"node":i, "name":"model1-"+str(i)})
                 for j in range(matrix_s.shape[1]): #matrix_s.shape[1]
@@ -185,7 +183,7 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order,   type_vis, 
                 matrix_dict["nodes"].append({"node":matrix_s.shape[0]+j, "name":"model2-"+str(j)})
             dict_matrix_dict[lambda_]=matrix_dict
         dict_matrix_json = json.dumps(dict_matrix_dict)
-
+        
 
         #matrix_json = json.dumps(matrix_dict)
         
@@ -197,7 +195,7 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order,   type_vis, 
             data_json_format_2.append(elem)
 
     
-    else:
+    else: #type_vis == 1
         
         dict_matrix_dict = dict()
         dict_matrix_json = json.dumps(dict_matrix_dict)
@@ -269,7 +267,7 @@ def prepared_html_in_flask(data, relevantDocumentsDict, topic_order,type_vis,new
     #kwargs['ldavis_url'] = '/LDAvis.js'
     #kwargs['d3_url'] = '/d3.js'
     #kwargs['ldavis_css_url'] = '/LDAvis.css'
-    print("ESTE ES EL DATA QUE RECIBO", data)    
+    
     kwargs['ldavis_url'] = '/static/js/LDAvis.js'
     kwargs['d3_url'] = 'static/js/d3.v5.min.js'
     kwargs['ldavis_css_url'] = 'static/css/LDAvis.css'

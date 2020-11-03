@@ -425,18 +425,21 @@ if type_vis == 2: #load two topic modeling output
     ###ESTO HAY QUE HACER UN UPDATE!!! Con el nuevo dataset (europe and northamerica datasets)
     try:
         #revisar si estan esos archivos
+        '''
         with open('../data/cambridge_analytica/sample/matrix', 'rb') as f:
             matrix = pickle.load(f)
+        
         with open('../data/cambridge_analytica/sample/categories_row', 'rb') as f:
             categories_row = pickle.load(f)
 
+        '''
         with open('../data/cambridge_analytica/regional_datasets//matrix_europe_vs_europe_own_wordembedding_final', 'rb') as f:
             matrix_sankey = pickle.load(f)
                 
         print("we found a matrix distance")
     except:
         print("We can't load matrix")
-    matrix = matrix.tolist()
+    #matrix = matrix.tolist()
     
     
 
