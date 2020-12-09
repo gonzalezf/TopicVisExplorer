@@ -39,18 +39,18 @@ text {
 */
 
 #totalContainer{
-    background-color: coral;
+    /*background-color: coral;*/
 }
 
 
 mark {
     padding: 0px;
-    background-color:yellow;
+    /*background-color:yellow;*/
   }
 
 
 #mdsplotHeatMap{
-    background-color: yellowgreen;
+    /*background-color: yellowgreen;*/
 }
 
 rect.bordered {
@@ -98,14 +98,14 @@ rect.bordered {
   #svg_sankey{
     padding-top: 3px;
 
-    background-color: lightblue;
+    /*background-color: lightblue;*/
   }
 
   
   th {
     position: sticky;
     top: 0px;  /* 0px if you don't have a navbar, but something is required */
-    background: white;
+    /*background: white;*/
   }
 
 
@@ -118,24 +118,34 @@ rect.bordered {
 
   }
 
+
 /*
 .tableRelevantDocumentsClass_Model2{
   margin-top: 20px;
 
 }
 */
+
+.border_box{
+  border-radius: 5px;
+  border: solid;
+  border-color: #c4c4c4;
+  border-width: 2px;
+  
+}
+
 #topic_name_and_buttons_div{
   width: 100%;
   font-size:22px;
   height: 5%;
-  background-color: lightblue;
+  /*background-color: lightblue;*/
 }
 
 #topic_name_and_buttons_div_right_panel{
   width: 100%;
   font-size:22px;
   height: 5%;
-  background-color: lightblue;
+  /*background-color: lightblue;*/
 }
 
 
@@ -143,25 +153,25 @@ rect.bordered {
   
   width:100%;
   height: 5%;
-  background-color: blue;
+  /*background-color: blue;*/
 }
 
 #BarPlotDivRightPanel{
   
   width:100%;
   height: 5%;
-  background-color: blue;
+  /*background-color: blue;*/
 }
 
 .RelevantDocumentsSankeyDiagram{
   width:100%;
   height: 45%;
-  background-color: orange;
+  /*background-color: orange;*/
 }
 
 #relevanceSliderDiv{
   padding: 5px;
-  background-color: yellow;
+  /*background-color: yellow;*/
   margin-top: 5px;
   display: inline-block;
   width: 100%;
@@ -169,7 +179,7 @@ rect.bordered {
 
 #relevanceSliderDivRightPanel{
   padding: 5px;
-  background-color: yellow;
+  /*background-color: yellow;*/
   margin-top: 5px;
   display: inline-block;
   width: 100%;
@@ -187,7 +197,7 @@ rect.bordered {
 }
 .ColumnDiv {
   display: table-cell;
-  background-color: red; /*Optional*/
+  /*background-color: red; */
 }
 
 
@@ -244,7 +254,7 @@ rect.bordered {
 
 
 .BarPlotClass{
-  background-color: red;
+  /*background-color: red;*/
 }
 
 
@@ -262,15 +272,18 @@ rect.bordered {
 }
 
 #TopicSimilarityMetricPanel{
+  margin-top:2%;
   width:100%;
   height:5%;
-  background-color: blue;
+
+  /*background-color: blue;*/
+
 }
 
 #TopicSimilarityMetricPanelFiltering{
   width:100%;
   height:5%;
-  background-color: green;
+  /*background-color: green;*/
 }
 
 
@@ -344,8 +357,12 @@ margin-right: 10px;
   height:100%;
 }
 
+.bootstrap-table{
+  /*height:80%;*/
+}
 #DocumentsPanel{
-  height:100%;
+  height:85%;
+  /*max-height:100%;*/
 }
 
 /* Slider css*/
@@ -409,7 +426,9 @@ border: 0;
   width:100%;
 }
 
-
+#renameTopicId2{
+  width:100%;
+}
 
 #topic_buttons_div{
   width: 50%;
@@ -440,3 +459,19 @@ border: 0;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+
+
+.headerdivider {
+  border-left: 1px solid #38546d;
+  background: #16222c;
+  width: 1px;
+  height: 80px;
+  position: absolute;
+  right: 250px;
+  top: 10px;
+}
+
+.search{
+  width:100%;
+}
+

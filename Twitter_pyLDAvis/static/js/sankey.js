@@ -37,7 +37,7 @@ d3.sankey = function() {
   sankey.jsonDataArray = function(_) {
     if (!arguments.length) return jsonData;
     jsonDataArray = _;
-    console.log("esto fue lo recibido en json data", jsonDataArray)
+    //console.log("esto fue lo recibido en json data", jsonDataArray)
     return sankey;
   };
 
@@ -129,15 +129,15 @@ d3.sankey = function() {
         }
       }
     });
-    ////console.log("cual es el min heigthmen este caso", min_height)
+    //////console.log("cual es el min heigthmen este caso", min_height)
     //if min_height is infinity, that means that there are not any paths in the sankey diagram. I will add a dummy min height to still showing the topics
     if(min_height == Infinity){
       min_height = 1;
       nodes.forEach(function(node) {
-        ////console.log("a verr cual es el node", node)
+        //////console.log("a verr cual es el node", node)
         node.x = 0;
       });  
-      ////console.log("estos son la posicion x final de los nodos", nodes)
+      //////console.log("estos son la posicion x final de los nodos", nodes)
     }
 
     nodes.forEach(function(node) {
@@ -147,7 +147,7 @@ d3.sankey = function() {
       );
     });
 
-    ////console.log("COMPUTE NODE VALUEEEES , FINAL NODE", nodes)
+    //////console.log("COMPUTE NODE VALUEEEES , FINAL NODE", nodes)
   }
 
   // Iteratively assign the breadth (x-position) for each node.
@@ -179,7 +179,7 @@ d3.sankey = function() {
       x = 2;
     }
     moveSinksRight(x);
-    //console.log("  ---  ------SCALE NODE BREADTHS", size[0], nodeWidth, x)
+    ////console.log("  ---  ------SCALE NODE BREADTHS", size[0], nodeWidth, x)
     scaleNodeBreadths((size[0] - nodeWidth) / (x - 1));
   }
   /*
@@ -199,19 +199,19 @@ d3.sankey = function() {
         node.x = x - 1;
       }
       if(node.node < min_target_node_value){ //nodos del primer modelo aparecen a la izquierda
-        ////console.log("esto se cumple o no??")
+        //////console.log("esto se cumple o no??")
         node.x = 0;
       }
     });
 
-    //console.log("veamos los nodos que se reciben aqui, ", nodes, x)
+    ////console.log("veamos los nodos que se reciben aqui, ", nodes, x)
   }
 
   function scaleNodeBreadths(kx) {
     nodes.forEach(function(node) {
-      //console.log("ANTES veamos cual es el kx", kx, node.x)
+      ////console.log("ANTES veamos cual es el kx", kx, node.x)
       node.x *= kx;
-      //console.log("DESPUES veamos cual es el kx", kx, node.x)
+      ////console.log("DESPUES veamos cual es el kx", kx, node.x)
     });
   }
 
@@ -313,7 +313,7 @@ d3.sankey = function() {
     }
 
     function ascendingDepth(a, b) { //ojo, se esta ordenando en base a este atributo! quizas aqui es donde hay que añadir la frecuencia del topico. Hay que mandar esos datos al sankey
-      console.log("ascending receives", a, b) //probemos ordenando por la frecuencia. 
+      //console.log("ascending receives", a, b) //probemos ordenando por la frecuencia. 
 
       if(a.node >= min_target_node_value){
         var Freq_1 = jsonData_2.mdsDat.Freq[a.node-min_target_node_value]    
@@ -328,7 +328,7 @@ d3.sankey = function() {
         var Freq_2 = jsonData.mdsDat.Freq[b.node]                       
       }
       
-      console.log("freq1, freq2", Freq_1, Freq_2)
+      //console.log("freq1, freq2", Freq_1, Freq_2)
       //return Freq_1-Freq_2
       return Freq_2-Freq_1
       //return a.y - b.y;

@@ -29,7 +29,7 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Rename Topic Model 2</h5>
+        <h5 class="modal-title" id="exampleModalLabel">Rename Topic Model</h5>
         <!--<button type="button" class="close" data-dismiss="modal" aria-label="Close">-->
           <!--<span aria-hidden="true">&times;</span>-->
         </button>
@@ -231,39 +231,28 @@ if(type_vis == 2){
 
   <div class="row" style="height: 100%"> <!--All the visualization must be placed in this row-->
 
-    <div class="col-4"  id="BarPlotPanel" >  <!--LDAvisContainer-->
-
+    <div class="col-4 border-right"  id="BarPlotPanel" >  <!--LDAvisContainer-->
     </div>
+    
 
-    <div class="col-4"   id="CentralPanel"> <!-- style="background-color: rgb(46, 206, 206)"-->
+    <div class="col-4 border-right "   id="CentralPanel"> <!-- "-->
 
     </div>
 
 
     <div class="col-4" id="DocumentsPanel">
-    
-     
       <script>
         if(type_vis == 1){
-          var html = '<div  style="height: 100%"> <table  id="tableRelevantDocumentsClass_Model1" class= "table table-hover"> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table></div>';
+          var html = '<div> <table  id="tableRelevantDocumentsClass_Model1" class= "table table-hover header-fixed"> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Document</th> </tr> </thead> </table></div>';
           document.write(html)
 
         }
 
       </script>
-
     </div>
-    
-
     </div>  
   </div>
 </div>
-
-
-
-
-
-
 
 <script>
   function LDAvis_load_lib(url, callback){

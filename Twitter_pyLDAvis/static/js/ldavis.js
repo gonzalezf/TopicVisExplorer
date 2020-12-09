@@ -36,8 +36,21 @@ var LDAvis = function(to_select, data_or_file_name) {
             current: 0.9
 
         },
-        color1 = "#1f77b4", // baseline color for default topic circles and overall term frequencies
-        color2 = "#d62728"; // 'highlight' color for selected topics and term-topic frequencies
+        //color1_1 = "#f1bd85",
+        color1_1 = "#BE7CF0", //violeta
+        color1_2 = "#632A9E", //morado
+        
+        //color2_1 = "#8ed5c6",
+        color2_1 = "#6BF0A7", //"red", //"#6BF0A7", //verde claro
+        color2_2 = "#00A385"; //"blue"; //"00A385"; //"13A383"; //verde oscuro
+        
+        //old
+        //color1_1 = "#1f77b4", // baseline color for default topic circles and overall term frequencies
+        //color2_1 = "#d62728"; // 'highlight' color for selected topics and term-topic frequencies
+
+        //color1_1 = "#56B4E9",
+        //color2_1 = "#E69F00";
+
 
     // Set the duration of each half of the transition:
     var duration = 750;
@@ -65,7 +78,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
     // opacity of topic circles:
     var base_opacity = 0.2,
-        highlight_opacity = 0.6;
+    highlight_opacity = 0.5;
 
     // lambda selection names are specific to *this* vis
     
@@ -163,7 +176,7 @@ var LDAvis = function(to_select, data_or_file_name) {
     function visualize(data) {
 
         // set the number of topics to global variable K:
-        ////////////console.log("ESTA ES LA DATA QUE RECIBE", data)
+        //////////////console.log("ESTA ES LA DATA QUE RECIBE", data)
         
         K = data['mdsDat'].x.length;
 
@@ -214,13 +227,13 @@ var LDAvis = function(to_select, data_or_file_name) {
         points2.append("circle")
                 .attr("class", "dot")
                 .style("opacity", 0.2)
-                .style("fill", color1)
+                .style("fill", color1_1)
                 .attr("r", function(d) {
                     //return (rScaleMargin(+d.Freq));
                     return 0;
                 })
                 .attr("cx", function(d) {
-                    //////////console.log("D.X", +d.x, new_positions[topic_order[d.topics-1]-1][0])
+                    ////////////console.log("D.X", +d.x, new_positions[topic_order[d.topics-1]-1][0])
                     //return (xScale(+d.x));
                     return 0;
                 })
@@ -246,15 +259,15 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                     // truncate to the top R tokens:
                     var top_terms = dat2.slice(0, number_top_keywords_name);
-                    //////////console.log("ESTOS SON LOS TOP TERMS", top_terms)
+                    ////////////console.log("ESTOS SON LOS TOP TERMS", top_terms)
                     var name_string = '';
 
                     for (var i=0; i < top_terms.length; i++){
-                        //////////console.log(top_terms[i].Term)
+                        ////////////console.log(top_terms[i].Term)
                         //name_string.concat(top_terms[i].Term);
                         name_string += top_terms[i].Term+" "
                     }
-                    //////////console.log("este es el final string", name_string)
+                    ////////////console.log("este es el final string", name_string)
                     //name_topics_circles[topicID + d.topics] = d.topics //Here, we need to change the default topic name. 
                     name_topics_circles[topicID + d.topics] = name_string //Here, we need to change the default topic name. 
 
@@ -272,7 +285,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             
         d3.select("#"+lambdaID)
             .on("mouseup", function() {
-                ////////console.log("hice click en esti", "#"+lambdaID)
+                //////////console.log("hice click en esti", "#"+lambdaID)
                 //lambda_select = "#"+lambdaID
                 
                 // store the previous lambda value
@@ -298,7 +311,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         d3.select("#"+lambdaIDRightPanel)
             .on("mouseup", function() {
-                ////////console.log("hice click en esti", "#"+lambdaIDRightPanel)
+                //////////console.log("hice click en esti", "#"+lambdaIDRightPanel)
                 //lambda_select = "#"+lambdaID
                 
                 // store the previous lambda value
@@ -416,7 +429,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         //Inspired by: https://bl.ocks.org/d3noob/013054e8d7807dff76247b81b0e29030
        function visualize_sankey(graph, threshold_min, threshold_max){
            var node_padding = 25
-            //////console.log("este es el graph que recibo", graph)
+            ////////console.log("este es el graph que recibo", graph)
             d3.selectAll('#svgCentralSankeyDiv').remove();
             var svgCentralSankeyDiv = d3.select("#CentralPanel").append("div")
             svgCentralSankeyDiv.attr("id", "svgCentralSankeyDiv")
@@ -494,11 +507,11 @@ var LDAvis = function(to_select, data_or_file_name) {
             );*/
 
             
-            //console.log("revisar el nodes filtered aqui", nodes_filtered_set)
+            ////console.log("revisar el nodes filtered aqui", nodes_filtered_set)
             /*
             var nodes_filtered = graph.nodes.filter(function(d){
                 if(nodes_filtered_set.has(d.node)){
-                    ////console.log("wohoo", d)
+                    //////console.log("wohoo", d)
                     graph.links.push({
                         source: d.node,
                         target: d.node,
@@ -515,19 +528,19 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
 
-            //console.log("este es el graph, ",graph)
+            ////console.log("este es el graph, ",graph)
             var links_filtered =  graph.links.filter(function(el){
                 return ((threshold_min <= el.value.toFixed(2) && el.value.toFixed(2) <= threshold_max));
                 }
             );
-            //console.log("links filtered", links_filtered)
+            ////console.log("links filtered", links_filtered)
 
             //add a link dummy para que siempre dibuje algo
             
             if( links_filtered.length == 0){
                 
             }
-            //console.log("WOOOW, este es el final links filtered", links_filtered.length)
+            ////console.log("WOOOW, este es el final links filtered", links_filtered.length)
 
 
             var margin = {top: 10, right: 10, bottom: 10, left: 10};
@@ -644,25 +657,24 @@ var LDAvis = function(to_select, data_or_file_name) {
                     if(d.node < min_target_node_value){
                         //return "blue";
                         //return "#1f77b4"; 
-                        return "rgb(95,160,254)";
+                        return color1_1;
                         
                     }
                     else{
                         //return "red";
-                        return "rgb(252,153,146)";
+                        return color2_1;
                         
                     }
                      
                 })
                 .style("stroke", function(d) { 
                     return d3.rgb(d.color).darker(2); })
-
+                .style("opacity", 0.6)
                 .append("title")
                     .text(function(d) { 
                         return name_topics_sankey[topicID + d.node] ;}) //return d.name + "--\n" + format(d.value); }) here, d.value es la suma de todos los pesos que llegan al nodo. creo que no es necesario                    
                 .on("click", function(){
                     
-                    alert("probando aqui", d.value);
                 });
         
         // add in the title for the nodes
@@ -705,10 +717,10 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
                 */
             if(last_clicked_model_2!=-1){
-                d3.select("#"+last_clicked_model_2).style("fill","rgb(237, 62, 50)")
+                d3.select("#"+last_clicked_model_2).style("fill",color2_1)
             }
             if(last_clicked_model_1!=-1){
-                d3.select("#"+last_clicked_model_1).style("fill","rgb(14, 91, 201)")
+                d3.select("#"+last_clicked_model_1).style("fill",color1_1)
             }
 
             
@@ -726,7 +738,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         }
 
         function dotme(text) {
-            //////////console.log("analizando este texto", text)
+            ////////////console.log("analizando este texto", text)
             text.each(function() {
                 var text = d3.select(this);
                 var words = text.text().split(/\s+/);
@@ -740,7 +752,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
                 // Try the whole line
                 // While it's too long, and we have words left, keep removing words
-                //////////console.log("estas son las variables", text, words, ellipsis, width, numWords, tspan)
+                ////////////console.log("estas son las variables", text, words, ellipsis, width, numWords, tspan)
                 while (tspan.node().getComputedTextLength() > width && words.length) {
                     words.pop();
                     tspan.text(words.join(' '));
@@ -756,19 +768,27 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             //if  previous mdsplot exists, remove it
             d3.selectAll('#svgMdsPlot').remove();
-
+            d3.selectAll('#divider_central_panel').remove();
 
 
 
 
             //we need to append this to the central panel, not to the old svg
             //all draws of central panel must appear in this svg variable
+
+            var divider_central_panel = document.createElement("hr");
+            divider_central_panel.setAttribute("class", "rounded");
+            divider_central_panel.setAttribute("id", "divider_central_panel");
+            document.getElementById("CentralPanel").appendChild(divider_central_panel) 
+            
+
             var svg = d3.select("#CentralPanel").append("svg")
                         .attr("width", "100%")
-                        .attr("height", "95%")
+                        .attr("height", "85%")
                         .attr("id", "svgMdsPlot")
-                        .style("background-color","lightblue")
-             
+                        
+
+
             var margin = { top: 30, right: 30, bottom: 30, left: 30 } // ocupar estos margenes
 
             //get width, height according to client's window
@@ -804,7 +824,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("y", 0)
                 .attr("height", "100%")
                 .attr("width", "100%")
-                .attr("opacity", 0) //.style("fill", color1)
+                .attr("opacity", 0) //.style("fill", color1_1)
                 .on("click", function() {
                 });
 
@@ -962,8 +982,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             // draw circles
             points.append("circle")
                 .attr("class", "dot")
-                .style("opacity", 0.2)
-                .style("fill", color1)
+                .style("opacity",0.2)
+                .style("fill", color1_1)
                 .attr("r", function(d) {
                     //return (rScaleMargin(+d.Freq));
                     //return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
@@ -1092,12 +1112,11 @@ var LDAvis = function(to_select, data_or_file_name) {
        }
 
        if(type_vis === 2){
-           ////console.log("matrix", matrix_sankey[0.8])
-           //////console.log("1----esto es lo primero que ve mi wea", matrix_sankey[0.80].links[1])
+           
            get_name_node_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
-           ////console.log("matrix", matrix_sankey[0.8])
+           
             // Add barplot into the left panel 
-            createBarPlot("#BarPlotPanelDiv", dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", number_terms_sankey) //esto crea el bar plot por primera vez. 
+            createBarPlot("#BarPlotDiv_zero", dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", number_terms_sankey) //esto crea el bar plot por primera vez. 
 
             // Add barplot into the right panel
             createBarPlot("#DocumentsPanel", dat3, barFreqsID_2,"bar-totals_2", "terms_2", "bubble-tool_2", "xaxis_2", number_terms_sankey) //hay que modificar la altura aqui en funcion del alto de las barras
@@ -1121,11 +1140,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
            //Añadir este barplot despues
            //createBarPlot(dat3, barFreqsID_2,"bar-totals_2", "terms_2", "bubble-tool_2", "xaxis_2", (8* margin.top + mdsheight), number_terms_sankey) //hay que modificar la altura aqui en funcion del alto de las barras
-           ////////console.log("esta es la matrix que se le pasa a visualize_sankey", matrix_sankey[lambda_lambda_topic_similarity.current])
-           ////////console.log("2----esto es lo primero que ve mi wea", matrix_sankey[0.80])
-
+           
            visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.min_value_filtering, vis_state.max_value_filtering)
-           ////////console.log("3----esto es lo primero que ve mi wea", matrix_sankey[0.80])
 
 
          
@@ -1134,10 +1150,8 @@ var LDAvis = function(to_select, data_or_file_name) {
            /*
                        //It's the first time that this function is called, we are going to visualize the first topic of each model.
             if(isSettingInitial){
-                ////////console.log("estoy en el setting initial")
                 real_last_clicked_sankey_model_1 = nodes_filtered[0]
                 real_last_clicked_sankey_model_2 = nodes_filtered[min_target_node_value]
-                ////////console.log("values", isSettingInitial, real_last_clicked_sankey_model_1, real_last_clicked_sankey_model_2, min_target_node_value)
                 topic_on_sankey(real_last_clicked_sankey_model_1, min_target_node_value) //topic on on first topic of first model
                 topic_on_sankey(real_last_clicked_sankey_model_2, min_target_node_value) //topic on first topic of second model
                 isSettingInitial = false
@@ -1214,7 +1228,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("y", mdsheight + 10)
                     .attr("height", barguide.height)
                     .attr("width", barguide.width)
-                    .style("fill", color1)
+                    .style("fill", color1_1)
                     .attr("opacity", 0.4);
                 d3.select("#legend_svg").append("text")
                     .attr("x", barguide.width + 5)
@@ -1227,7 +1241,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("y", mdsheight + 10 + barguide.height + 5)
                     .attr("height", barguide.height)
                     .attr("width", barguide.width/2)
-                    .style("fill", color2)
+                    .style("fill", color2_1)
                     .attr("opacity", 0.8);
                 d3.select("#legend_svg").append("text")
                     .attr("x", barguide.width/2 + 5)
@@ -1274,7 +1288,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("width", function(d) {
                     return x(d.Total);
                 })
-                .style("fill", color1)
+                .style("fill", color2_2)
                 .attr("opacity", 0.4);
             
             // Add word labels to the side of each bar
@@ -1447,11 +1461,12 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
             var svgLeftPanel = d3.select("#BarPlotPanel").append("div")
             svgLeftPanel.attr("id", BarPlotPanelDivId)
-            
+            //svgLeftPanel.attr("class", "border_box my-1")
             
             var topicDiv = document.createElement("div");
             topicDiv.setAttribute("id", "topic_name_and_buttons_div")
-            topicDiv.setAttribute("class", "RowDiv")
+            topicDiv.setAttribute("class", "RowDiv ") //border_box my-1
+            
             document.getElementById(BarPlotPanelDivId).appendChild(topicDiv) ////topicDiv.setAttribute("style", "width:100%; height:5%; background-color: red")
 
         
@@ -1485,7 +1500,7 @@ var LDAvis = function(to_select, data_or_file_name) {
            d3.select("#"+topicMerge)
                .on("click", function() {
                    if(merging_topic_1!=-1){
-                       ////////console.log("el mergin value is ", merging_topic_1)
+                       
                        $('.merging_topic_1').html(merging_topic_1);
                        $('#MergeModal_1').modal(); 
                    }
@@ -1576,7 +1591,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .on("click", function(){
                     //cambiar el nombre del topico segun lo especifique el usuario
                     name_topics_sankey[document.getElementById("idTopic2").innerText] = document.getElementById("renameTopicId2").value
-                    //////////console.log("ESTE ES EL NUEVO ARREGLO", name_topics_sankey)
+                    
                     visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.min_value_filtering, vis_state.max_value_filtering)
                     $('#topic_name_selected_2').html(name_topics_sankey[document.getElementById("idTopic2").innerText])                    
                     //visualizar el nuevo nombre
@@ -1594,7 +1609,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 if(splitting_topic!=-1){
                     var real_topic_id = topic_order[splitting_topic-1]-1//Ojo! los topicos fueron ordenados de mayor a menor frecuencia, por eso que el orden cambia
                     updateRelevantDocumentsSplitting(real_topic_id, relevantDocumentsDict);
-                    ////////console.log("se hara un split al topico", splitting_topic)
+                    
                     $('.splitting_topic_1').html(splitting_topic);
                     $('#SplitModal_1').modal(); //$("#myModal").show();
                 }
@@ -1606,7 +1621,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             .on("click", function() {
                 merging_topic_1 = 1
                 merging_topic_2 =2
-                ////////console.log("mezclar", merging_topic_1,topic_order[merging_topic_1-1]-1,"con", merging_topic_2, topic_order[merging_topic_2-1]-1)
+                
 
                 fetch('/merge_topics', {
 
@@ -1621,14 +1636,14 @@ var LDAvis = function(to_select, data_or_file_name) {
                 }).then(function (response) { // At this point, Flask has printed our JSON
                     response.json().then(function(data){
                       //return response.text();
-                        ////////console.log("DATA DEVUELTA", data)
+                
                     })
                 }).then(function (text) {
 
-                    ////////console.log('POST response: ');
+                
 
                     // Should be 'OK' if everything was successful
-                    ////////console.log(response)//////////console.log(text);
+                
                 });
                 
                 //createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
@@ -1637,15 +1652,23 @@ var LDAvis = function(to_select, data_or_file_name) {
             */
 
 
+
+            var inputDiv_zero = document.createElement("div");
+            inputDiv_zero.setAttribute("id", "BarPlotDiv_zero"); //inputDiv_zero.setAttribute("class", "border_box my-1");
+            document.getElementById(BarPlotPanelDivId).appendChild(inputDiv_zero)  //document.getElementById(visID).appendChild(inputDiv); //creo que esto debiera estar unido al svg mejor
             
+            var divider_topic_name_left = document.createElement("hr");
+            divider_topic_name_left.setAttribute("class", "rounded");
+            document.getElementById("BarPlotDiv_zero").appendChild(divider_topic_name_left) 
+
             var inputDiv = document.createElement("div");
             inputDiv.setAttribute("id", "BarPlotDiv");
-            document.getElementById(BarPlotPanelDivId).appendChild(inputDiv)  //document.getElementById(visID).appendChild(inputDiv); //creo que esto debiera estar unido al svg mejor
+            document.getElementById("BarPlotDiv_zero").appendChild(inputDiv)  //document.getElementById(visID).appendChild(inputDiv); //creo que esto debiera estar unido al svg mejor
 
             //Div for relevance slider. 
             var lambdaDiv = document.createElement("div");
             lambdaDiv.setAttribute("id", "relevanceSliderDiv");
-            lambdaDiv.setAttribute("class", "RowDiv");
+            lambdaDiv.setAttribute("class", "RowDiv ");
             inputDiv.appendChild(lambdaDiv);
 
             var sliderDiv = document.createElement("div");
@@ -1696,6 +1719,10 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             //Topic similarity slider (change the lambda of vector keywords and vector documents for topic similarity metric proposed)
 
+            
+
+
+
             var svgCentralPanel = d3.select("#CentralPanel").append("div")
             svgCentralPanel.attr("id", "TopicSimilarityMetricPanel")
 
@@ -1716,7 +1743,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 /* This section is to allow users to filtering paths on sankey diagram*/
 
                 //This funciton allow to the slider use the min-max value of the sankey diagram
-                //////console.log("sankey before", matrix_sankey)
+                ////////console.log("sankey before", matrix_sankey)
                 var min_similarity_score = Infinity
                 var max_similarity_score = -Infinity
                 matrix_sankey[lambda_lambda_topic_similarity.current].links.filter(function(el){
@@ -1727,7 +1754,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         max_similarity_score = el.value
                     }
                 });
-                //////console.log("sankey after", matrix_sankey)
+                ////////console.log("sankey after", matrix_sankey)
                 //round value min/max similarity score
 
                 min_similarity_score =   Math.round(  min_similarity_score* 100) / 100
@@ -1781,9 +1808,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 sliderDivFiltering.appendChild(lambdaLabelTopicSimilarity);
 
                 var origins = slider.getElementsByClassName('noUi-origin');
-                origins[1].setAttribute('disabled', true);
+                //origins[1].setAttribute('disabled', true);  //disable right slider
 
-                console.log("origins", origins)
+                //console.log("origins", origins)
 
                 slider.noUiSlider.on('update', function (values, handle) {
                     
@@ -1934,7 +1961,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         // function to re-order the bars (gray and red), and terms:
 
         function reorder_bars_helper(to_select, increase, topic_id_in_model, barFreqsID_actual, bar_totals_actual, terms_actual, overlay, xaxis_class){
-            ////////console.log("ojo, estos son los parametros que recibe reorder_bars_helper", increase, topic_id_in_model, barFreqsID_actual, bar_totals_actual, terms_actual, overlay, xaxis_class)
+            //////////console.log("ojo, estos son los parametros que recibe reorder_bars_helper", increase, topic_id_in_model, barFreqsID_actual, bar_totals_actual, terms_actual, overlay, xaxis_class)
             
             var dat2 = lamData.filter(function(d) {
                 
@@ -2007,7 +2034,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         return y(d.Term) + barheight + margin.bottom + 2 * rMax;
                     })
                     .attr("height", y.bandwidth())
-                    .style("fill", color1)
+                    .style("fill", color1_1)
                     .attr("opacity", 0.4);
 
             var labelsEnter = labels.enter()
@@ -2042,7 +2069,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         return y(d.Term) + barheight + margin.bottom + 2 * rMax;
                     })
                     .attr("height", y.bandwidth())
-                    .style("fill", color2)
+                    .style("fill", color2_1)
                     .attr("opacity", 0.8);
 
 
@@ -2265,12 +2292,13 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
                 //colorear el item seleccionado
                 if(last_clicked_model_2!=-1){
-                    d3.select("#"+last_clicked_model_2).style("fill","rgb(252,153,146)")
+                    d3.select("#"+last_clicked_model_2).style("fill",color2_1)
                 }
 
                 
                 last_clicked_model_2 = "node_"+box.node
-                d3.select("#"+last_clicked_model_2).style("fill","rgb(237, 62, 50)")
+                d3.select("#"+last_clicked_model_2).style("fill",color2_2) //color2_2
+                //d3.select("#"+last_clicked_model_2).style("opacity", 1.0)
                 document.getElementById("renameTopicId2").value = name_topics_sankey[topicID + box.node] 
                 $('#idTopic2').html(topicID + box.node); 
                 $('#topic_name_selected_2').html(name_topics_sankey[topicID + box.node] ); 
@@ -2315,11 +2343,11 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                 //colorear el item seleccionado
                 if(last_clicked_model_1!=-1){
-                    d3.select("#"+last_clicked_model_1).style("fill","rgb(95,160,254)")
+                    d3.select("#"+last_clicked_model_1).style("fill",color1_1)
                 }
 
                 last_clicked_model_1 = "node_"+box.node
-                d3.select("#"+last_clicked_model_1).style("fill","rgb(14, 91, 201)")
+                d3.select("#"+last_clicked_model_1).style("fill",color1_2)
                 //cual es el d al que le estoy haciendo click??
 
 
@@ -2397,7 +2425,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("width", function(d) {
                     return x(d.Total);
                 })
-                .style("fill", color1)
+                .style("fill", color1_1)
                 .attr("opacity", 0.4);
 
             // Change word labels
@@ -2429,7 +2457,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("width", function(d) {
                     return x(d.Freq);
                 })
-                .style("fill", color2)
+                .style("fill", color2_1)
                 .attr("opacity", 0.8);
 
             // adapted from http://bl.ocks.org/mbostock/1166403
@@ -2477,7 +2505,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             // change opacity and fill of the selected circle
             circle.style.opacity = highlight_opacity;
-            circle.style.fill = color2;
+            circle.style.fill = color1_2;
 
             // Remove 'old' bar chart title
             var text = d3.select(to_select + " .bubble-tool");
@@ -2554,7 +2582,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("width", function(d) {
                     return x(d.Total);
                 })
-                .style("fill", color1)
+                .style("fill", color1_1)
                 .attr("opacity", 0.4);
 
             // Change word labels
@@ -2586,7 +2614,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("width", function(d) {
                     return x(d.Freq);
                 })
-                .style("fill", color2)
+                .style("fill", color2_1)
                 .attr("opacity", 0.8);
 
             // adapted from http://bl.ocks.org/mbostock/1166403
@@ -2607,7 +2635,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             if (circle == null) return circle;
             // go back to original opacity/fill
             circle.style.opacity = base_opacity;
-            circle.style.fill = color1;
+            circle.style.fill = color1_1;
 
             var title = d3.selectAll(to_select + " .bubble-tool")
                     .text("Top-" + R + " Most Salient Terms");
@@ -2649,7 +2677,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("width", function(d) {
                     return x(d.Total);
                 })
-                .style("fill", color1)
+                .style("fill", color1_1)
                 .attr("opacity", 0.4);
 
             //Change word labels
@@ -2720,7 +2748,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         $('.tableRelevantDocumentsClass_Split').on('check.bs.table', function (e, row) {
             
         checkedRows.push({topic_perc_contrib: row.topic_perc_contrib, text: row.text,uncategorized: row.uncategorized, subtopic1: row.subtopic1, subtopic2: row.subtopic2 }); // id: row.id ¿como obtener la id de la row? uwu //checkedRows.push({id: row.id, name: row.name, forks: row.forks});
-        ////////console.log(checkedRows);
+        //////////console.log(checkedRows);
         });
 
         $('.tableRelevantDocumentsClass_Split').on('uncheck.bs.table', function (e, row) {
@@ -2729,7 +2757,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             checkedRows.splice(index,1);
             }
         });
-        ////////console.log(checkedRows);
+        //////////console.log(checkedRows);
         });
 
         $("#add_cart").click(function() {
@@ -2786,21 +2814,45 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
 
 
+
         }
+
+
         function updateRelevantDocuments(topic_id, relevantDocumentsDict, model){
             if(model == 1){
                 $('#tableRelevantDocumentsClass_Model1').bootstrapTable("destroy");
                 $('#tableRelevantDocumentsClass_Model1').bootstrapTable({
+                    toggle:true,
+                    pagination: true,
+                    search: true,
+                    sorting: true,
+                    //showRefresh: true, Hacer que esto funcione! ver :  https://examples.bootstrap-table.com/#view-source
+                    //showExport:true,
+                    //showColumns: true,
+                    columns:[
+                        {
+                            field: 'topic_perc_contrib',
+                            title: '%',
+                            sortable:'true'
+                        },{
+                            field: 'text',
+                            title: 'Document',
+                            sortable:'true'
+                        }
+                    ],
                     data: relevantDocumentsDict[topic_id].slice(0,R)
                 });
+
             }
             else{//model == 2
                 $('#tableRelevantDocumentsClass_Model2').bootstrapTable("destroy");
                 $('#tableRelevantDocumentsClass_Model2').bootstrapTable({
                     data: relevantDocumentsDict[topic_id].slice(0,R)
                 });
-            }
             
+            }
+            $(".search-input").attr("placeholder", "Search on documents").val("").focus().blur();
+
         
         }
         function get_RGB_by_relevance(c1_r,c1_g,c1_b, c2_r, c2_g, c2_b, r_min, r_max, r_actual){
