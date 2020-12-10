@@ -21,6 +21,8 @@ The left, central and right panels of our visualization are linked such that sel
 ## Scenario 2: Comparing topics from two topic modeling output
 You can interact with a **demo** of this second scenario [**here**](https://topicvisexplorer.herokuapp.com/scenario2 "here")
 
+![TopicVisExplorer Scenario 1](https://github.com/gonzalezf/TopicVisExplorer/blob/master/img/scenario_2.png?raw=true)
+
 In this second scenario, TopicVisExplorer introduces a visual representation to compare two topic modeling outputs. Here, the central panel contains a Sankey diagram to provides an overview of the relationships between the topics from different corpora. Nodes in the graph represent the topics, and the paths between nodes represent the similarity between them. The topics are represented as boxes, and their height depends on the number of connections with other topics. Topics are coloured according to the topic modeling output. The paths are represented with arcs that have a width proportional to the topic similarity score calculated by our proposed topic similarity metric. The order of the nodes is according to their frequency.
 
 Notice that after selecting topics from two different topic modeling outputs on the central panel, the left and right panels shows the most relevant keywords and the most relevant documents to each of them, respectively. Topic labelling, topic splitting and topic merging operations are allowed as well.
