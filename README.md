@@ -6,6 +6,8 @@ This project is being developed by Felipe González (Msc. Computer science stude
 ## Scenario 1: Interpreting a topic modeling output
 You can interact with a **demo** of this first scenario [**here**](https://topicvisexplorer.herokuapp.com/scenario1 "here")
 
+![TopicVisExplorer Scenario 1](https://github.com/gonzalezf/TopicVisExplorer/blob/master/img/scenario_1.png?raw=true)
+
 Given the topic modeling result of one corpus, our visualization has three basic pieces. First, the central panel of our visualization presents a global view of the topics and aims to answer questions “How prevalent is each topic?”, and “How do topics relate to each other?
 
 In this view, we plot the topics as circles in a two-dimensional space whose centers are determined by computing the distance between topics using a <ins> newly proposed topic similarity metric </ins>, and then by using multidimensional scaling to project the inter-topic distances onto two dimensions using principal coordinate analysis. We encode each topic's overall prevalence using the circles' areas, and we sort the topics in decreasing order of prevalence.
