@@ -5,7 +5,7 @@ Main transformation functions for preparing LDAdata to the visualization's data 
 """
 
 from __future__ import absolute_import
-from past.builtins import basestring
+#from past.builtins import basestring
 from collections import namedtuple
 import json
 import logging
@@ -373,7 +373,7 @@ def prepare(topic_term_dists, doc_topic_dists, doc_lengths, vocab, term_frequenc
     
 
     # parse mds
-    if isinstance(mds, basestring):
+    if type(mds) == str:
         mds = mds.lower()
         if mds == 'pcoa':
             mds = js_PCoA

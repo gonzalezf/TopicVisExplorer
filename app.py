@@ -561,7 +561,7 @@ def launch():    # on running python app.py
     '''
     #debug
     port = 5000
-    app.run(port=port, debug=False, host="0.0.0.0", extra_files=extra_files)
+    app.run(port=port, debug=True, host="0.0.0.0", extra_files=extra_files)
     
 
 
