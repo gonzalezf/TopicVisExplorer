@@ -1389,13 +1389,15 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                 var merge_right_panel = document.createElement("button");
                 merge_right_panel.setAttribute("id", topicMerge+"rightPanel");
-                merge_right_panel.setAttribute("class", "btn btn-primary btnTopic")
+                merge_right_panel.setAttribute("class", "btn btn-light")
+                merge_right_panel.setAttribute("disabled", true)
                 merge_right_panel.innerHTML = "Merge";
                 topicButtonsRightPanel.appendChild(merge_right_panel);
 
                 var split_rigth_panel = document.createElement("button");
                 split_rigth_panel.setAttribute("id", topicSplit+"rightPanel");
-                split_rigth_panel.setAttribute("class", "btn btn-primary btnTopic")
+                split_rigth_panel.setAttribute("class", "btn btn-light")
+                split_right_panel.setAttribute("disabled", true)
                 split_rigth_panel.innerHTML = "Split";
                 topicButtonsRightPanel.appendChild(split_rigth_panel);
 
@@ -1514,7 +1516,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             
            var merge = document.createElement("button");
            merge.setAttribute("id", topicMerge);
-           merge.setAttribute("class", "btn btn-primary btnTopic")
+           merge.setAttribute("class", "btn btn-light")
+           merge.setAttribute("disabled", true)
            merge.innerHTML = "Merge";
            topicButtonsDiv.appendChild(merge);
 
@@ -1554,7 +1557,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
            var split = document.createElement("button");
            split.setAttribute("id", topicSplit);
-           split.setAttribute("class", "btn btn-primary btnTopic")
+           split.setAttribute("class", "btn btn-light")
+           split.setAttribute("disabled", true)
            split.innerHTML = "Split";
            topicButtonsDiv.appendChild(split);
 
