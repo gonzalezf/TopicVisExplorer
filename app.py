@@ -14,6 +14,7 @@ from gensim.models.keyedvectors import KeyedVectors
 import sklearn
 from flask import Flask, jsonify, request, render_template
 from scipy.spatial import procrustes
+import os
 
 #from sklearn.metrics.pairwise import cosine_similarity
 #from calculate_topic_similarity import getTopicSimilarityMetric
@@ -560,7 +561,7 @@ def launch():    # on running python app.py
     app.run(port=port, debug=False)
     '''
     #debug
-    port = 5000
+    port = int(os.environ.get("PORT", 5000))
     app.run(port=port, debug=True, host="0.0.0.0", extra_files=extra_files)
     
 
