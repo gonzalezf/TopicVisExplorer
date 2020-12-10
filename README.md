@@ -3,7 +3,7 @@ Note: This is work-in-progress. Currently, we are conducting  a  user study to e
 
 This project is being developed by Felipe González (Msc. Computer science student at Universidad Técnica Federico Santa María) and it is being guided by Dr. Evangelos Millos (Dalhousie Univerisity), Dr. FernandoPaulovich (Dalhousie University), Dr. Claudia López (Universidad Técnica Federico Santa María), and Dr. Marcelo Mendoza(Universidad Técnica Federico Santa María)
 
-### Scenario 1: Interpreting a topic modeling output
+## Scenario 1: Interpreting a topic modeling output
 You can interact with a **demo** of this first scenario [**here**](https://topicvisexplorer.herokuapp.com/scenario1 "here")
 
 Given the topic modeling result of one corpus, our visualization has three basic pieces. First, the central panel of our visualization presents a global view of the topics and aims to answer questions “How prevalent is each topic?”, and “How do topics relate to each other?
@@ -16,7 +16,7 @@ Finally, to help users answer to question 1, the left panel of our visualization
 
 The left, central and right panels of our visualization are linked such that selecting a topic (on the central panel) reveals the most useful terms (on the left panel) and the most useful documents (on the right panel) for interpreting the selected topic automatically.
 
-### Scenario 2: Comparing topics from two topic modeling output
+## Scenario 2: Comparing topics from two topic modeling output
 You can interact with a **demo** of this second scenario [**here**](https://topicvisexplorer.herokuapp.com/scenario2 "here")
 
 In this second scenario, TopicVisExplorer introduces a visual representation to compare two topic modeling outputs. Here, the central panel contains a Sankey diagram to provides an overview of the relationships between the topics from different corpora. Nodes in the graph represent the topics, and the paths between nodes represent the similarity between them. The topics are represented as boxes, and their height depends on the number of connections with other topics. Topics are coloured according to the topic modeling output. The paths are represented with arcs that have a width proportional to the topic similarity score calculated by our proposed topic similarity metric. The order of the nodes is according to their frequency.
