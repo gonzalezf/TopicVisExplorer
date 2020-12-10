@@ -431,8 +431,15 @@ var LDAvis = function(to_select, data_or_file_name) {
            var node_padding = 25
             ////////console.log("este es el graph que recibo", graph)
             d3.selectAll('#svgCentralSankeyDiv').remove();
+            d3.selectAll('#divider_central_panel_sankey').remove();
+            
             var svgCentralSankeyDiv = d3.select("#CentralPanel").append("div")
             svgCentralSankeyDiv.attr("id", "svgCentralSankeyDiv")
+
+            var divider_central_panel_sankey = document.createElement("hr");
+            divider_central_panel_sankey.setAttribute("class", "rounded");
+            divider_central_panel_sankey.setAttribute("id", "divider_central_panel_sankey");
+            document.getElementById("svgCentralSankeyDiv").appendChild(divider_central_panel_sankey) 
 
 
             var margin = { top: 10, right: 10, bottom: 10, left: 10 } // ocupar estos margenes
@@ -1118,13 +1125,17 @@ var LDAvis = function(to_select, data_or_file_name) {
             // Add barplot into the left panel 
             createBarPlot("#BarPlotDiv_zero", dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", number_terms_sankey) //esto crea el bar plot por primera vez. 
 
+            //var divider_documents_left = document.createElement("hr");
+            //divider_documents_left.setAttribute("class", "rounded");
+            //document.getElementById("BarPlotDiv_zero").appendChild(divider_documents_left) 
+
             // Add barplot into the right panel
             createBarPlot("#DocumentsPanel", dat3, barFreqsID_2,"bar-totals_2", "terms_2", "bubble-tool_2", "xaxis_2", number_terms_sankey) //hay que modificar la altura aqui en funcion del alto de las barras
 
             // Add documents into the left panel. 
            var RelevantDocumentsTableDiv = document.createElement("div");
            RelevantDocumentsTableDiv.setAttribute("id", "RelevantDocumentsTableDiv");
-           RelevantDocumentsTableDiv.setAttribute("class", "RelevantDocumentsSankeyDiagram");
+           RelevantDocumentsTableDiv.setAttribute("class", "RelevantDocumentsSankeyDiagram mt-4");
            document.getElementById("BarPlotPanelDiv").appendChild(RelevantDocumentsTableDiv) 
            const  div = document.getElementById('RelevantDocumentsTableDiv');
            div.insertAdjacentHTML('afterbegin', '<table  id="tableRelevantDocumentsClass_Model1" class="table table-hover"> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table>');
@@ -1133,7 +1144,7 @@ var LDAvis = function(to_select, data_or_file_name) {
            // Add documents into the right panel. 
            var RelevantDocumentsTableDiv_2 = document.createElement("div");
            RelevantDocumentsTableDiv_2.setAttribute("id", "RelevantDocumentsTableDiv_2");
-           RelevantDocumentsTableDiv_2.setAttribute("class", "RelevantDocumentsSankeyDiagram");
+           RelevantDocumentsTableDiv_2.setAttribute("class", "RelevantDocumentsSankeyDiagram mt-4");
            document.getElementById("DocumentsPanel").appendChild(RelevantDocumentsTableDiv_2) 
            const  div_2 = document.getElementById('RelevantDocumentsTableDiv_2');
            div_2.insertAdjacentHTML('afterbegin', '<table  id="tableRelevantDocumentsClass_Model2" class="table table-hover"> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table>');
@@ -1169,11 +1180,11 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         function createBarPlot(to_select, dat3, barFreqsID_actual, bar_totals_actual, terms_actual,  bubble_tool, xaxis_class, number_terms){
             
-            var height_bar = 20
+            var height_bar = 80
             
             var svg = d3.select(to_select).append("svg") //BarPlotPanelDiv
             .attr("width", "100%")
-            .attr("height", "45%");
+            .attr("height", "32%");
             
 
             var bounds_barplot = svg.node().getBoundingClientRect();
@@ -1207,7 +1218,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             // Add a group for the bar chart
             var chart = svg.append("g")
-                    .attr("transform", "translate("  +(termwidth) + "," +2*height_bar+ ")") //.attr("transform", "translate("  +(mdswidth + margin.left + termwidth) + "," +height_bar+ ")")
+                    .attr("transform", "translate("  +(termwidth) + "," +50+ ")") //.attr("transform", "translate("  +(mdswidth + margin.left + termwidth) + "," +height_bar+ ")")
                     .attr("id", barFreqsID_actual)
                     .attr("class", "BarPlotClass");
             
@@ -1398,11 +1409,21 @@ var LDAvis = function(to_select, data_or_file_name) {
                     $('#renameTopic2').modal(); 
                 });
 
+
+
                 
                 //add relevance slider into the right panel. 
+                var inputDivRightPanel_zero = document.createElement("div");
+                inputDivRightPanel_zero.setAttribute("id", "BarPlotDivRightPanel_zero");
+                document.getElementById("DocumentsPanel").appendChild(inputDivRightPanel_zero)  //document.getElementById(visID).appendChild(inputDiv); //creo que esto debiera estar unido al svg mejor
+
+                var divider_topic_name_right = document.createElement("hr");
+                divider_topic_name_right.setAttribute("class", "rounded");
+                document.getElementById("BarPlotDivRightPanel_zero").appendChild(divider_topic_name_right) 
+
                 var inputDivRightPanel = document.createElement("div");
                 inputDivRightPanel.setAttribute("id", "BarPlotDivRightPanel");
-                document.getElementById("DocumentsPanel").appendChild(inputDivRightPanel)  //document.getElementById(visID).appendChild(inputDiv); //creo que esto debiera estar unido al svg mejor
+                document.getElementById("BarPlotDivRightPanel_zero").appendChild(inputDivRightPanel)
 
                 //Div for relevance slider. 
                 var lambdaDivRightPanel = document.createElement("div");
@@ -1784,7 +1805,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
                 var slider = document.getElementById('lamdaInputTopicSimilarity');
                 var range_slider = noUiSlider.create(slider, {
-                    start: [(min_similarity_score+max_similarity_score)/2, max_similarity_score],
+                    start: [(max_similarity_score)*0.65, max_similarity_score],
                     //start: [-0.5, 0.17],
                     //start: [(min_similarity_score+max_similarity_score)/2.0, max_similarity_score],
                     connect: true,
@@ -2840,14 +2861,33 @@ var LDAvis = function(to_select, data_or_file_name) {
                             sortable:'true'
                         }
                     ],
-                    data: relevantDocumentsDict[topic_id].slice(0,R)
+                    data: relevantDocumentsDict[topic_id] //.slice(0,R)
                 });
 
             }
             else{//model == 2
                 $('#tableRelevantDocumentsClass_Model2').bootstrapTable("destroy");
                 $('#tableRelevantDocumentsClass_Model2').bootstrapTable({
-                    data: relevantDocumentsDict[topic_id].slice(0,R)
+                    //data: relevantDocumentsDict[topic_id].slice(0,R)
+                    toggle:true,
+                    pagination: true,
+                    search: true,
+                    sorting: true,
+                    //showRefresh: true, Hacer que esto funcione! ver :  https://examples.bootstrap-table.com/#view-source
+                    //showExport:true,
+                    //showColumns: true,
+                    columns:[
+                        {
+                            field: 'topic_perc_contrib',
+                            title: '%',
+                            sortable:'true'
+                        },{
+                            field: 'text',
+                            title: 'Document',
+                            sortable:'true'
+                        }
+                    ],
+                    data: relevantDocumentsDict[topic_id] //.slice(0,R)
                 });
             
             }
