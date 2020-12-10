@@ -1,7 +1,8 @@
-#TopicVisExplorer: Supporting multi-corpora comparison through visual exploration of topic modeling
+# TopicVisExplorer: Supporting multi-corpora comparison through visual exploration of topic modeling
 Note: This is work-in-progress. Currently, we are conducting  a  user study to evaluate if the proposed functionalities of TopicVisExplorer allow better interpretation of topics.
 
 This project is being developed by Felipe González (Msc. Computer science student at Universidad Técnica Federico Santa María) and it is being guided by Dr. Evangelos Millos (Dalhousie Univerisity), Dr. FernandoPaulovich (Dalhousie University), Dr. Claudia López (Universidad Técnica Federico Santa María), and Dr. Marcelo Mendoza(Universidad Técnica Federico Santa María)
+
 ### Scenario 1: Interpreting a topic modeling output
 You can interact with a **demo** of this first scenario [**here**](https://topicvisexplorer.herokuapp.com/scenario1 "here")
 
