@@ -1359,8 +1359,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             //div que contiene todo el panel izquierdo
             if(type_vis == 2){
-                var svgRightPanel = d3.select("#DocumentsPanel").append("div")
-                svgRightPanel.attr("id", "svgRightPanel")
+                var svgRightPanel = d3.select("#DocumentsPanel").append("div");
+                svgRightPanel.attr("id", "svgRightPanel");
 
                 var topicDivRightPanel = document.createElement("div");
                 topicDivRightPanel.setAttribute("id", "topic_name_and_buttons_div_right_panel")
@@ -1382,7 +1382,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 topic_title_right_panel.innerText = "Topic: ";
                 topicNameRightPanel.appendChild(topic_title_right_panel); 
 
-                var topic_name_selected_2 = document.createElement("span")
+                var topic_name_selected_2 = document.createElement("span");
                 topic_name_selected_2.innerText = ""
                 topic_name_selected_2.setAttribute("id", "topic_name_selected_2")
                 topicNameRightPanel.appendChild(topic_name_selected_2); 
@@ -1397,7 +1397,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 var split_rigth_panel = document.createElement("button");
                 split_rigth_panel.setAttribute("id", topicSplit+"rightPanel");
                 split_rigth_panel.setAttribute("class", "btn btn-primary btnTopic");
-                split_right_panel.setAttribute("disabled", true);
+                split_rigth_panel.setAttribute("disabled", true);
                 split_rigth_panel.innerHTML = "Split";
                 topicButtonsRightPanel.appendChild(split_rigth_panel);
 
