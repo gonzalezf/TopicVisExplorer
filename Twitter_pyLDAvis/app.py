@@ -178,9 +178,11 @@ def proposed_topic_similarity(wordembedding, lda_model, n_terms): #n_terms : num
 
 
 ######################Import data #########################
-type_vis = 1#2: two topic modeling output, 1: one topic modeling output
+type_vis = 2#2: two topic modeling output, 1: one topic modeling output
 
-if type_vis ==1: #load just one model
+#if type_vis ==1: #load just one model
+@app.route("/scenario1")
+def single_corpos():
     ##Load relevant documents
     #relevant documents were already calculated
     with open('../data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411.csvsent_topics_sorteddf_mallet_ldamodel', 'rb') as f:
@@ -320,11 +322,12 @@ if type_vis ==1: #load just one model
 
     '''
 
-    html = prepared_html_in_flask(data = [PreparedDataObtained], relevantDocumentsDict = relevantDocumentsDict, topic_order = topic_order,  type_vis = type_vis,  new_circle_positions = new_circle_positions)
+    html = prepared_html_in_flask(data = [PreparedDataObtained], relevantDocumentsDict = relevantDocumentsDict, topic_order = topic_order,  type_vis = 1,  new_circle_positions = new_circle_positions)
+    return render_template_string(html)
 
 
-
-if type_vis == 2: #load two topic modeling output
+@app.route("/scenario2")
+def multi_corpora():
     
     with open('../data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411.csvsent_topics_sorteddf_mallet_ldamodel', 'rb') as f:
         most_relevant_documents_collection_1 = pickle.load(f)
@@ -440,12 +443,11 @@ if type_vis == 2: #load two topic modeling output
     except:
         print("We can't load matrix")
     #matrix = matrix.tolist()
-    
-    
+
 
                                                                                 
-    html = prepared_html_in_flask(data = [PreparedDataObtained_collection_1], relevantDocumentsDict = relevantDocumentsDict_collection_1,topic_order =  topic_order_collection_1, type_vis = type_vis, matrix_sankey = matrix_sankey, data_2 = [PreparedDataObtained_collection_2], relevantDocumentsDict_2 = relevantDocumentsDict_collection_2, topic_order_2 = topic_order_collection_2)
-
+    html = prepared_html_in_flask(data = [PreparedDataObtained_collection_1], relevantDocumentsDict = relevantDocumentsDict_collection_1,topic_order =  topic_order_collection_1, type_vis = 2, matrix_sankey = matrix_sankey, data_2 = [PreparedDataObtained_collection_2], relevantDocumentsDict_2 = relevantDocumentsDict_collection_2, topic_order_2 = topic_order_collection_2)
+    return render_template_string(html)
 
 
 
