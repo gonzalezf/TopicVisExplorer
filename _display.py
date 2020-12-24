@@ -200,7 +200,8 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order,   type_vis, 
         dict_matrix_dict = dict()
         dict_matrix_json = json.dumps(dict_matrix_dict)
         data_json_format_2=[None]
-
+    
+    
     return template.render(visid=json.dumps(visid),
                            new_circle_positions = new_circle_positions, 
                            relevantDocumentsDict = relevantDocumentsDict, #esto debiese ser un arreglo
@@ -215,7 +216,7 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order,   type_vis, 
                            ldavis_css_url=ldavis_css_url,
                            matrix_sankey=dict_matrix_json,#matrix_json, #matrix_sankey[0.0].tolist(), 
                            #matrix_sankey_2 = dict_matrix_json,
-                           type_vis = type_vis #2: two topic modeling outputs, 1:one topic modeling output
+                           type_vis = type_vis#2: two topic modeling outputs, 1:one topic modeling output,                                               
                            )
 
 
@@ -268,15 +269,17 @@ def prepared_html_in_flask(data, relevantDocumentsDict, topic_order,type_vis,new
     #kwargs['d3_url'] = '/d3.js'
     #kwargs['ldavis_css_url'] = '/LDAvis.css'
     
-    #kwargs['ldavis_url'] = '/static/js/LDAvis.js'
-    #kwargs['d3_url'] = 'static/js/d3.v5.min.js'
-    #kwargs['ldavis_css_url'] = 'static/css/LDAvis.css'
+    #uncomment these lines on debugging testing
+    kwargs['ldavis_url'] = '/static/js/LDAvis.js'
+    kwargs['d3_url'] = 'static/js/d3.v5.min.js'
+    kwargs['ldavis_css_url'] = 'static/css/LDAvis.css'
+    
+    #uncomment when it is necessary to upload to heroku
+    #kwargs['ldavis_url'] = 'https://topicvisexplorer.herokuapp.com/static/js/ldavis.js'
+    #kwargs['d3_url'] = 'https://topicvisexplorer.herokuapp.com/static/js/d3.v5.min.js'
+    #kwargs['ldavis_css_url'] = 'https://topicvisexplorer.herokuapp.com/static/css/ldavis.css'
 
-    kwargs['ldavis_url'] = 'https://topicvisexplorer.herokuapp.com/static/js/ldavis.js'
-    kwargs['d3_url'] = 'https://topicvisexplorer.herokuapp.com/static/js/d3.v5.min.js'
-    kwargs['ldavis_css_url'] = 'https://topicvisexplorer.herokuapp.com/static/css/ldavis.css'
-
-    html = prepared_data_to_html(data = data, relevantDocumentsDict = relevantDocumentsDict,topic_order = topic_order,type_vis = type_vis,new_circle_positions= new_circle_positions,  matrix_sankey = matrix_sankey, data_2 =  data_2, relevantDocumentsDict_2 = relevantDocumentsDict_2, topic_order_2 = topic_order_2,   **kwargs)
+    html = prepared_data_to_html(data = data, relevantDocumentsDict = relevantDocumentsDict,topic_order = topic_order,type_vis = type_vis,new_circle_positions= new_circle_positions,  matrix_sankey = matrix_sankey, data_2 =  data_2, relevantDocumentsDict_2 = relevantDocumentsDict_2, topic_order_2 = topic_order_2,  **kwargs)
     
     return html
     

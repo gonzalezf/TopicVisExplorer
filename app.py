@@ -7,7 +7,8 @@ import numpy as np
 from gensim.corpora import Dictionary
 from flask import Flask, render_template, request, json
 from _display import *
-from _prepare import prepare, js_PCoA, PreparedData, _pcoa
+#from _prepare import prepare, js_PCoA, PreparedData, _pcoa
+from _prepare_vis import prepare, js_PCoA, PreparedData, _pcoa
 from flask import render_template_string
 from os import path, walk
 from gensim.models.keyedvectors import KeyedVectors
@@ -15,6 +16,7 @@ import sklearn
 from flask import Flask, jsonify, request, render_template
 from scipy.spatial import procrustes
 import os
+import pandas as pd
 
 #from sklearn.metrics.pairwise import cosine_similarity
 #from calculate_topic_similarity import getTopicSimilarityMetric
@@ -178,70 +180,19 @@ def proposed_topic_similarity(wordembedding, lda_model, n_terms): #n_terms : num
 
 
 
-######################Import data #########################
-type_vis = 2#2: two topic modeling output, 1: one topic modeling output
 
 #if type_vis ==1: #load just one model
 @app.route("/scenario1")
-def single_corpos():
-    ##Load relevant documents
-    #relevant documents were already calculated
-    with open('data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411.csvsent_topics_sorteddf_mallet_ldamodel', 'rb') as f:
-        sent_topics_sorteddf_mallet = pickle.load(f)
-    sent_topics_sorteddf_mallet = sent_topics_sorteddf_mallet[['Topic_Num','Topic_Perc_Contrib','text']]
+def single_corpos(lda_model, corpus, id2word, relevantDocumentsDict, PreparedDataObtained = None, data_dict = None):
 
-    relevantDocumentsDict = {}
-    for index,row in sent_topics_sorteddf_mallet.iterrows():
-        topic_id = int(row['Topic_Num'])
-        if topic_id not in relevantDocumentsDict:
-            relevantDocumentsDict[topic_id]=[]
-        relevantDocumentsDict[topic_id].append({
-            'topic_perc_contrib':str(round(row['Topic_Perc_Contrib']*100,1))+"%",
-            'text':row['text']
-        })
-    #load prepared data
-    try: #if file exits
-        
-        with open('data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411_prepared_data', 'rb') as f: #voy a echar a perder este archivo, para que siempre se tenga que calcular data/cambridge_analytica/collection_I/collection_1_prepared_data
-            PreparedDataObtained = pickle.load(f)
-        print("We found prepared data file")
-
-        with open('data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411_data_dict', 'rb') as f: #voy a echar a perder este archivo, para que siempre se tenga que calcular data/cambridge_analytica/collection_I/collection_1_prepared_data
-            data_dict = pickle.load(f)
-        print("We found prepared data dict")
-
-    except:
-        print("We need to create prepared data")
-        ##Load Gensim Model
-        LdaModel = gensim.models.ldamodel.LdaModel
-        lda_model = LdaModel.load("data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411.csv_gensim.model")
-
-        ##Load corpus
-        with open('data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411.csv_corpus.pkl', 'rb') as f:
-            corpus = pickle.load(f)
-
-        ##Load id2word
-        id2word = Dictionary.load("data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411.csv_id2word")
-
-        data_dict = gensim_helpers.prepare(lda_model, corpus,id2word, mds='pcoa')   #retorna un dict de preparedData
-
-        with open('data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411_data_dict', 'wb') as f:
-            pickle.dump(data_dict, f)
-        print("data dict ha sido guardado")
-
+    if PreparedDataObtained == None: # we need to create it
         PreparedDataObtained = prepare(**data_dict)
-
-        with open('data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411_prepared_data', 'wb') as f:
-            pickle.dump(PreparedDataObtained, f)
+    if data_dict == None:
+        data_dict = gensim_helpers.prepare(lda_model, corpus,id2word, mds='pcoa')   
 
     PreparedData_dict= PreparedDataObtained.to_dict()
-
-    with open('data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411_prepared_data_dict_with_more_info', 'wb') as f:
-        pickle.dump(PreparedData_dict, f)
-
     topic_order = PreparedData_dict['topic.order']
-    print("ESTE ES EL LEN DE TOPIC ORDER", len(topic_order))
-    #Matriz de distancia - Topic similarity metric proposed
+    
 
     #hay que calcular la matriz de distancia! no solo precalcularla
     with open('data/cambridge_analytica/regional_datasets/matrix_europe_vs_europe_own_wordembedding_final', 'rb') as f:
@@ -322,41 +273,29 @@ def single_corpos():
     matrix = matrix.tolist()
 
     '''
-
+    
+    print(type(relevantDocumentsDict))
     html = prepared_html_in_flask(data = [PreparedDataObtained], relevantDocumentsDict = relevantDocumentsDict, topic_order = topic_order,  type_vis = 1,  new_circle_positions = new_circle_positions)
     return render_template_string(html)
 
 
 @app.route("/scenario2")
 def multi_corpora():
+    #these are samples of european and northamerican dataset
+    matrix_document_topic_distribution = pd.read_csv("data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411.csv_matrix_document_topic_distribution_sample.csv")
+    matrix_document_topic_distribution['texto_completo'].replace({'{':''}, regex=True, inplace = True)
+    matrix_document_topic_distribution['texto_completo'].replace({'}':''}, regex=True, inplace = True)
+    matrix_document_topic_distribution = matrix_document_topic_distribution[['0','1','2','3','4','5','6','7','8','9','10','texto_completo']]
+    relevantDocumentsDict_collection_1 = matrix_document_topic_distribution.to_dict(orient='records')
+
+
+    matrix_document_topic_distribution = pd.read_csv("data/cambridge_analytica/regional_datasets/files_northamerica/english_northamerica_tweets_20190411.csv_matrix_document_topic_distribution.csv_sample.csv")
+    matrix_document_topic_distribution['texto_completo'].replace({'{':''}, regex=True, inplace = True)
+    matrix_document_topic_distribution['texto_completo'].replace({'}':''}, regex=True, inplace = True)
+    matrix_document_topic_distribution = matrix_document_topic_distribution[['0','1','2','3','4','5','6','7','8','9','10','texto_completo']]
+    relevantDocumentsDict_collection_2 = matrix_document_topic_distribution.to_dict(orient='records')
+
     
-    with open('data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411.csvsent_topics_sorteddf_mallet_ldamodel', 'rb') as f:
-        most_relevant_documents_collection_1 = pickle.load(f)
-    most_relevant_documents_collection_1 = most_relevant_documents_collection_1[['Topic_Num','Topic_Perc_Contrib','text']]
-
-    relevantDocumentsDict_collection_1 = {}
-    for index,row in most_relevant_documents_collection_1.iterrows():
-        topic_id = int(row['Topic_Num'])
-        if topic_id not in relevantDocumentsDict_collection_1:
-            relevantDocumentsDict_collection_1[topic_id]=[]
-        relevantDocumentsDict_collection_1[topic_id].append({
-            'topic_perc_contrib':str(round(row['Topic_Perc_Contrib']*100,1))+"%",
-            'text':row['text']
-        })
-
-    with open('data/cambridge_analytica/regional_datasets/files_northamerica/english_northamerica_tweets_20190411.csvsent_topics_sorteddf_mallet_ldamodel', 'rb') as f:
-        most_relevant_documents_collection_2 = pickle.load(f)
-    most_relevant_documents_collection_2 = most_relevant_documents_collection_2[['Topic_Num','Topic_Perc_Contrib','text']]
-
-    relevantDocumentsDict_collection_2 = {}
-    for index,row in most_relevant_documents_collection_2.iterrows():
-        topic_id = int(row['Topic_Num'])
-        if topic_id not in relevantDocumentsDict_collection_2:
-            relevantDocumentsDict_collection_2[topic_id]=[]
-        relevantDocumentsDict_collection_2[topic_id].append({
-            'topic_perc_contrib':str(round(row['Topic_Perc_Contrib']*100,1))+"%",
-            'text':row['text']
-        })
     try: 
         with open('data/cambridge_analytica/regional_datasets/files_europe/english_europe_tweets_20190411_prepared_data', 'rb') as f:
             PreparedDataObtained_collection_1 = pickle.load(f)

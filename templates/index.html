@@ -153,6 +153,29 @@
 </div>
 
 
+
+<div class="modal fade" id="MergeModal_new_design" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Topic Merging</h5>
+      </div>
+      <div class="modal-body">
+        <span hidden="hidden" class="merging_topic_1"></span>
+        From the list, select the topic with wich you want to merge the selected topic: <span id="merging_topic_1_name"></span>
+       <!--Choose the topicgoing to merge the current selected topic (<span class="merging_topic_1"></span>) with another one.  Do you want to continue?-->
+       <form id="myForm">
+        <select id="selectTopicMerge">
+        </select>
+      </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="cancel_merging" data-dismiss="modal">Cancel</button>
+        <button type="button" id="apply_topic_merging"  data-dismiss="modal" class="btn btn-primary">Confirm Merge</button>
+      </div>
+    </div>
+  </div>
+</div>
 <!--END OF MODALS -->
 
 
@@ -162,8 +185,8 @@
 <!-- ADD JQUERY-->
 
 <script src="static/js/jquery.min.js"></script>  
-<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<!--<script src="https://code.jquery.com/jquery-1.12.4.js"></script>-->
+<!--<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>-->
 
 <!-- ADD JS-->
 

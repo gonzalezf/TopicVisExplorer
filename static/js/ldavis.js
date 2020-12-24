@@ -124,7 +124,7 @@ var LDAvis = function(to_select, data_or_file_name) {
     /////////////////////////
     ////topic mergin
     var merging_topic_1 = -1
-    var merging_topic_2 = -1
+    var merging_topic_2 = -1 //esta var no la usaremos con la nueva modalidad del merge
 
     var splitting_topic = -1
 
@@ -173,10 +173,12 @@ var LDAvis = function(to_select, data_or_file_name) {
     }
     
 
+  
+
     function visualize(data) {
 
         // set the number of topics to global variable K:
-        //////////////console.log("ESTA ES LA DATA QUE RECIBE", data)
+        
         
         K = data['mdsDat'].x.length;
 
@@ -204,7 +206,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             mdsData3.push(obj);
         }
 
-    
+        
         // large data for the widths of bars in bar-charts. 6 columns: Term, logprob, loglift, Freq, Total, Category
         // Contains all possible terms for topics in (1, 2, ..., k) and lambda in the user-supplied grid of lambda values
         // which defaults to (0, 0.01, 0.02, ..., 0.99, 1).
@@ -217,7 +219,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             lamData.push(obj);
         }
         
-        var dat3 = lamData.slice(0, R);
+        var dat3 = lamData//lamData.slice(0, R);
 
 
         var points2 = d3.select("#name_topics")
@@ -259,15 +261,14 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                     // truncate to the top R tokens:
                     var top_terms = dat2.slice(0, number_top_keywords_name);
-                    ////////////console.log("ESTOS SON LOS TOP TERMS", top_terms)
+                    
                     var name_string = '';
 
                     for (var i=0; i < top_terms.length; i++){
-                        ////////////console.log(top_terms[i].Term)
-                        //name_string.concat(top_terms[i].Term);
+                    
+                    
                         name_string += top_terms[i].Term+" "
                     }
-                    ////////////console.log("este es el final string", name_string)
                     //name_topics_circles[topicID + d.topics] = d.topics //Here, we need to change the default topic name. 
                     name_topics_circles[topicID + d.topics] = name_string //Here, we need to change the default topic name. 
 
@@ -770,9 +771,157 @@ var LDAvis = function(to_select, data_or_file_name) {
                 }
             });
         }
+    
+
+        
+        function get_topics_sorted_by_distance(mdsData, lambda_lambda_topic_similarity_current, vis_state_topic){
+            //revisar el topic mergin 1 que recibe!!!
+            //this is the current distance matrix  
+            //console.log("nombres", name_topics_circles)
+            var new_positions = new_circle_positions[lambda_lambda_topic_similarity_current]
+            //save the index, it is important to mantaint it after sorting
+            var new_positions_dict = {};
+                for(var i=0; i<new_positions.length; i++){
+                    new_positions_dict[i+1] = new_positions[i]
+                }
+    
+              // Create items array
+            var items = Object.keys(new_positions_dict).map(function(key) {
+                return [key, new_positions_dict[key]];
+            });
+            //console.log("estas son las new positions para este lambda", new_positions_dict) //esto esta super bien
+            //console.log("POSICION ACTUAL", new_positions_dict[vis_state_topic])
+            // Sort the array based on the second element. Using distance
+            const distance = (coor1, coor2) => {
+                const x = coor2[0] - coor1[0];
+                const y = coor2[1] - coor1[1];
+                return Math.sqrt((x*x) + (y*y));
+            };
+            
+            items.sort(function(first, second) {
+                return distance(new_positions_dict[vis_state_topic], first[1]) - distance(new_positions_dict[vis_state_topic], second[1]);            
+            });
+            //this is the final result
+
+            //console.log("items final", items);
+            //console.log("nombres", name_topics_circles)
+            var new_topic_names_sorted = []
+            for(var i = 0; i<items.length; i++){
+                new_topic_names_sorted.push(name_topics_circles[topicID + items[i][0]])
+            }
+            //console.log("nombres ordenados", new_topic_names_sorted)
+            return new_topic_names_sorted
+
+
+        }
+
+        function findWithAttr(array, attr, value) {
+            for(var i = 0; i < array.length; i += 1) {
+                if(array[i][attr] === value) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+  
+        function merging_topics_scenario_1(topic_name_1, topic_name_2){
+            
+            //get index topic from name
+            var current_index = 0
+            for (var [key, value] of Object.entries(name_topics_circles)) {
+                if(value.trim() == topic_name_1.trim()){
+                
+                    var index_topic_name_1 = current_index
+                }
+                if(value.trim() == topic_name_2.trim()){
+                    var index_topic_name_2 = current_index
+                }
+                current_index+=1
+            }
+
+            //get the real topic id para cada uno
+            var real_topic_id_1 = topic_order[index_topic_name_1]-1
+            var real_topic_id_2 = topic_order[index_topic_name_2]-1
+            
+            //1.- Join relevant documents
+            for (var row in relevantDocumentsDict)
+            {             
+                relevantDocumentsDict[row][real_topic_id_1] = relevantDocumentsDict[row][real_topic_id_1]+relevantDocumentsDict[row][real_topic_id_2]
+                relevantDocumentsDict[row][real_topic_id_2] = relevantDocumentsDict[row][real_topic_id_1]+relevantDocumentsDict[row][real_topic_id_2]             
+            }
+            
+            
+            // 2.- Join top keywords
+            var terms_topic_1 = lamData.filter(function(d) {
+                return d.Category == "Topic" + (index_topic_name_1+1);
+            });
+            var terms_topic_2 = lamData.filter(function(d) {
+                return d.Category == "Topic" + (index_topic_name_2+1);
+            });
+
+            //ver una forma de optimizar esto, finding index of object                        
+            console.log("estos son los indices", index_topic_name_1+1, index_topic_name_2+1)
+            var new_array = []
+            for(var i = 0; i < lamData.length; i += 1) {   
+                if(terms_topic_1.includes(lamData[i]) && terms_topic_1.includes(lamData[i])){ //cambiar a topic_2
+
+                    var row_topic_1 = terms_topic_1.find( row => row.Term === lamData[i].Term)
+                    var row_topic_2 = terms_topic_1.find( row => row.Term === lamData[i].Term) //cambiar a 2
+
+                    //console.log("inicio", lamData[i].logprob, lamData[i].loglift)
+                    //replace new probability of the term on new merged topic
+                    var new_probability_term = Math.exp(row_topic_1.logprob)+Math.exp(row_topic_2.logprob)
+                    
+                    //replace lift
+                    var probability_term_in_corpus = Math.exp(row_topic_1.logprob)/Math.exp(row_topic_1.loglift) //esto deberia estar ok                
+                    lamData[i].logprob = Math.log(new_probability_term) //the log prob es la suma de ambas probabilidades. Luego se le aplica logaritmo natural a esa suma
+                    lamData[i].loglift = Math.log(new_probability_term/probability_term_in_corpus)                
+                    //update frequency of terms in the new merged topic
+                    lamData[i].Freq = row_topic_1.Freq+row_topic_2.Freq                    
+                }
+                else{//these are words that do not appear in both topics
+                    if(lamData[i].Category==="Topic" + (index_topic_name_1+1)){
+                        //añadir con topic index-topic_name_2
+                        
+                        var temp = JSON.parse(JSON.stringify(lamData[i]))                    
+                        temp.Category =  "Topic" + (index_topic_name_2+1)
+                        new_array.push(temp)
+                        
+                    }
+                    if(lamData[i].Category==="Topic" + (index_topic_name_2+1)){
+                        //añadir con topic index-topic_name_1
+
+                        var temp = JSON.parse(JSON.stringify(lamData[i]))                        
+                        temp.Category =  "Topic" + (index_topic_name_1+1)                        
+                        new_array.push(temp)
+                    }                                                        
+                }                
+            }            
+            lamData = lamData.concat(new_array)
+            
+            //3.- Update frequency of mdsData
+
+            var new_frequency =  mdsData[index_topic_name_1].Freq+mdsData[index_topic_name_2].Freq
+            mdsData[index_topic_name_1].Freq =new_frequency
+            mdsData[index_topic_name_2].Freq = new_frequency
+
+            //4.- Create new new_position circle arrray
+            
+            //el mdsData son las coordenadas de los circulos, la frecuencia de los topicos. Crear nuevo mdsData
+            //createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
+            //ahora hay que sacar un nuevo mdsData!!
+            
+
+            //show results of topic merging
+            createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
+            topic_on(document.getElementById(topicID+vis_state.topic))
+        }
+
+
 
         function createMdsPlot(number, mdsData, lambda_lambda_topic_similarity){
-            
+            console.log("este es el mdsdata que hay que reemplazar", mdsData)
             //if  previous mdsplot exists, remove it
             d3.selectAll('#svgMdsPlot').remove();
             d3.selectAll('#divider_central_panel').remove();
@@ -999,11 +1148,17 @@ var LDAvis = function(to_select, data_or_file_name) {
                 })
                 .attr("cx", function(d) {
                     //return (xScale(+d.x));
-                    return (xScale(+new_positions[topic_order[d.topics-1]-1][0])); //new position topic similarity metric proposed
+                    //console.log("----------------------")
+                    //la siguiente linea tiraba el orden malo de los topicos!
+                    //console.log("resultado",d.topics,  name_topics_circles[topicID + d.topics], +new_positions[topic_order[d.topics-1]-1][0], +new_positions[topic_order[d.topics-1]-1][1])
+                    //console.log("resultado improved", d.topics, name_topics_circles[topicID + d.topics], +new_positions[d.topics-1][0], +new_positions[d.topics-1][1])
+                    return (xScale(+new_positions[d.topics-1][0])); //new position topic similarity metric proposed
+
+
                 })
                 .attr("cy", function(d) {
                     //return (yScale(+d.y));
-                    return (yScale(+new_positions[topic_order[d.topics-1]-1][1]));
+                    return (yScale(+new_positions[d.topics-1][1]));
                 })
                 .attr("stroke", "black")
                 .attr("id", function(d) {                    
@@ -1026,20 +1181,27 @@ var LDAvis = function(to_select, data_or_file_name) {
                     
                     document.getElementById("renameTopicId").value = name_topics_circles[topicID + d.topics]
                     $('#idTopic').html(topicID + d.topics);
+                    //merging_topic_1 = d.topics //la id
+                    //$('.merging_topic_1').html(merging_topic_1)
+                    //$('.merging_topic_1_name').html(name_topics_circles[topicID + d.topics])
+                    
+                    
                     //hacer merge de topicos
+                    /*
                     if(hacer_merge==false){
                         merging_topic_1= vis_state.topic
                     }                    
                     else{
                         merging_topic_2 = vis_state.topic
                     }
+                    
                     if(hacer_merge==true){
                         //preguntarle al usuario si quiere hacer este merge
                         $('.merging_topic_1').html(merging_topic_1);
                         $('.merging_topic_2').html(merging_topic_2);
                         $('#MergeModal_2').modal(); 
                     }
-
+                    */
                     
                     topic_on(this);                
                 })
@@ -1049,38 +1211,46 @@ var LDAvis = function(to_select, data_or_file_name) {
                         topic_off(document.getElementById(old_topic));
                     }
                     topic_on(this);
-                })
+                })             
                 .on("mouseout", function(d) {
                     if (vis_state.topic != d.topics) topic_off(this);
                     if (vis_state.topic > 0) topic_on(document.getElementById(topicID + vis_state.topic));
-                });
+                })
+                .append("title")
+                    .text(function(d) { 
+                        return name_topics_circles[topicID + d.topics] ;});
 
             // text to indicate topic
-            points.append("text")
-            .attr("class", "txt")
-            .attr("width", function(d) {
-                //return (rScaleMargin(+d.Freq));
-                //return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
-                return (2*Math.sqrt((mdsData[topic_order[d.topics-1]-1].Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI))
-            })
-            .attr("x", function(d) {
-                
-                return (xScale(+new_positions[topic_order[d.topics-1]-1][0]));
+            
+            
 
-            })
-            .attr("y", function(d) {
-                //return (yScale(+d.y) + 4);
-                return (yScale(+new_positions[topic_order[d.topics-1]-1][1]));
-            })
-            .attr("stroke", "black")
-            .attr("opacity", 1)
-            .style("text-anchor", "middle")
-            .style("font-size", "11px")
-            .style("fontWeight", 100)
-            .text(function(d) {
-                return name_topics_circles[topicID + d.topics];
-                
-            });
+            points.append("text")
+                .attr("class", "txt")
+                .attr("width", function(d) {
+                    //return (rScaleMargin(+d.Freq));
+                    //return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+                    return (2*Math.sqrt((mdsData[topic_order[d.topics-1]-1].Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI))
+                })
+                .attr("x", function(d) {
+                    
+                    return (xScale(+new_positions[d.topics-1][0]));
+
+                })
+                .attr("y", function(d) {
+                    //return (yScale(+d.y) + 4);
+                    return (yScale(+new_positions[d.topics-1][1]));
+                })
+                .attr("stroke", "black")
+                .attr("opacity", 1)
+                .style("text-anchor", "middle")
+                .style("font-size", "11px")
+                .style("fontWeight", 100)
+                .text(function(d) {
+                    //return d.topics;
+                    return name_topics_circles[topicID + d.topics];
+                    
+                });
+
 
                         
             svg.append("text")
@@ -1199,7 +1369,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 return d.Category == "Default";
             });
             
-            
+            barDefault2 = barDefault2.slice(0, R)
             
             var y = d3.scaleBand()
                     .domain(barDefault2.map(function(d) {
@@ -1281,7 +1451,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .style("dominant-baseline", "middle")
                     .text("2. relevance(term w | topic t) = \u03BB * p(w | t) + (1 - \u03BB) * p(w | t)/p(w); see Sievert & Shirley (2014)");
             }
-            
             // Bind 'default' data to 'default' bar chart
             var basebars = chart.selectAll(to_select + " ."+bar_totals_actual)
                     .data(barDefault2)
@@ -1475,12 +1644,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 var sliderAxisGroupRightPanel = scaleContainerRightPanel.append("g")
                         .attr("class", "slideraxis")
                         .attr("margin-top", "-10px")
-                        .call(sliderAxisRightPanel);
-
-
-
-
-     
+                        .call(sliderAxisRightPanel);     
             }
             var svgLeftPanel = d3.select("#BarPlotPanel").append("div")
             svgLeftPanel.attr("id", BarPlotPanelDivId)
@@ -1516,43 +1680,51 @@ var LDAvis = function(to_select, data_or_file_name) {
             
            var merge = document.createElement("button");
            merge.setAttribute("id", topicMerge);
-           merge.setAttribute("class", "btn btn-primary btnTopic");
-           merge.setAttribute("disabled", true);
+           merge.setAttribute("class", "btn btn-primary btnTopic"); //merge.setAttribute("disabled", true);
            merge.innerHTML = "Merge";
            topicButtonsDiv.appendChild(merge);
 
+           d3.select("#apply_topic_merging") //el usuario desea continuar con el mergin
+                .on("click", function() {
+                    //hacer_merge = true
+                    
+                    var merging_final_topic_1 = document.getElementById("merging_topic_1_name").innerText;
+                    var merging_final_topic_2 =  $("#selectTopicMerge" ).val()
+            
+            
+                    
+                    merging_topics_scenario_1(merging_final_topic_1, merging_final_topic_2)
+
+                });
+       
            d3.select("#"+topicMerge)
                .on("click", function() {
-                   if(merging_topic_1!=-1){
+                   if(merging_topic_1!=-1){  
+                       $('.merging_topic_1').html(merging_topic_1); //this is one topic wish I would like to merge
+                       //populate el dropdown, topics should be sorted according to the distance to the current topic
+                       $('#selectTopicMerge').empty();
+                       var topics_name_sorted_by_distance = get_topics_sorted_by_distance(mdsData, lambda_lambda_topic_similarity.current, merging_topic_1)
+                       $.each(topics_name_sorted_by_distance, function(i, p) {
+                           //add the array with the topics sorted according to the distance to the current topic
+                           if(i!=0){ //el primer elemento no se ocupa, ya que es el mismo topico con el q se quiere unir. ESTO NO OCURRE ASI EN EL SCENARIO 2
+                            $('#selectTopicMerge').append($('<option></option>').val(topics_name_sorted_by_distance[i]).html(topics_name_sorted_by_distance[i]));
+                           }
+                           else{
+                               //console.log("no agregamos este", topics_name_sorted_by_distance[i])
+                           }
+                           
+                       });
+
+                       $('#MergeModal_new_design').modal(); 
                        
-                       $('.merging_topic_1').html(merging_topic_1);
-                       $('#MergeModal_1').modal(); 
                    }
-                   else{
+                   else{ //you need to select a topic first
                        $('#MergeModal_0').modal(); 
                    }
                    
                });
 
 
-           d3.select("#continue_merging") //el usuario desea continuar con el mergin
-           .on("click", function() {
-               hacer_merge = true
-           });
-
-           d3.select("#cancel_merging") //el usuario desea continuar con el mergin
-           .on("click", function() {
-               hacer_merge = false
-               
-           });
-
-           d3.select("#cancel_merging_2") //el usuario desea continuar con el mergin
-           .on("click", function() {
-               hacer_merge = false
-               merging_topic_1 = merging_topic_2
-               merging_topic_2 = -1
-               
-           });
 
 
            var split = document.createElement("button");
@@ -1945,10 +2117,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                     visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.min_value_filtering, vis_state.max_value_filtering)
                 }
                 if(type_vis == 1){
-
                     createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
                     topic_on(document.getElementById(topicID+vis_state.topic))
-
                 }
 
 
@@ -2514,6 +2684,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         }
         function topic_on(circle) {
+            
             to_select = "#BarPlotPanelDiv"
             if (circle == null) return null;
             
@@ -2536,7 +2707,10 @@ var LDAvis = function(to_select, data_or_file_name) {
             var text = d3.select(to_select + " .bubble-tool");
             text.remove();
 
-            
+            // MERGING topic 1 data
+            merging_topic_1 = d.topics //la id
+            $('#merging_topic_1').html(merging_topic_1)
+            $('#merging_topic_1_name').html(name_topics_circles[topicID + d.topics])
             
             var bounds_barplot = d3.select("#" + barFreqsID).node().getBoundingClientRect();
             
@@ -2561,7 +2735,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             var dat2 = lamData.filter(function(d) {
                 return d.Category == "Topic" + topics;
             });
-
+            
             // define relevance:
             for (var i = 0; i < dat2.length; i++) {
                 dat2[i].relevance = lambda.current * dat2[i].logprob +
@@ -2571,12 +2745,14 @@ var LDAvis = function(to_select, data_or_file_name) {
             // sort by relevance:
             dat2.sort(fancysort("relevance"));
             
+
             // truncate to the top R tokens:
             var dat3 = dat2.slice(0, R);
             
             
             //Show most relevant documents
             var real_topic_id = topic_order[d.topics-1]-1//Ojo! los topicos fueron ordenados de mayor a menor frecuencia, por eso que el orden cambia
+            
             updateRelevantDocuments(real_topic_id, relevantDocumentsDict, 1);
             
             var y = d3.scaleBand()
@@ -2773,7 +2949,6 @@ var LDAvis = function(to_select, data_or_file_name) {
         $('.tableRelevantDocumentsClass_Split').on('check.bs.table', function (e, row) {
             
         checkedRows.push({topic_perc_contrib: row.topic_perc_contrib, text: row.text,uncategorized: row.uncategorized, subtopic1: row.subtopic1, subtopic2: row.subtopic2 }); // id: row.id ¿como obtener la id de la row? uwu //checkedRows.push({id: row.id, name: row.name, forks: row.forks});
-        //////////console.log(checkedRows);
         });
 
         $('.tableRelevantDocumentsClass_Split').on('uncheck.bs.table', function (e, row) {
@@ -2782,7 +2957,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             checkedRows.splice(index,1);
             }
         });
-        //////////console.log(checkedRows);
         });
 
         $("#add_cart").click(function() {
@@ -2828,23 +3002,20 @@ var LDAvis = function(to_select, data_or_file_name) {
                         }
                     ],
                     data: relevantDocumentsDict[topic_id]
-                });
-                //add dinamically row to a boostrapTable
-                //$('.tableRelevantDocumentsClass_Split tbody tr').append('<td><input type="radio" id="uncategorized" ></td>');
-                //$('.tableRelevantDocumentsClass_Split tbody tr').append('<td><input type="radio" id="subtopic1"></td>');
-                //$('.tableRelevantDocumentsClass_Split tbody tr').append('<td><input type="radio" id="subtopic2"></td>');
-                //$('.tableRelevantDocumentsClass_Split tbody tr').append('<td><input type="radio" id="uncategorized" name="group1"></td>');
-                //$('.tableRelevantDocumentsClass_Split tbody tr').append('<td><input type="radio" id="subtopic1" name="group2"></td>');
+                });            
+        }
 
-                
-
-
+        function to_percentage(number){
+            return (number*100).toFixed(1) + '%'
 
         }
 
-
         function updateRelevantDocuments(topic_id, relevantDocumentsDict, model){
-            if(model == 1){
+            
+            relevantDocumentsDict.sort(function(row_1, row_2){
+                return row_2[String(topic_id)]-row_1[String(topic_id)];
+            });
+            if(model == 1){                        
                 $('#tableRelevantDocumentsClass_Model1').bootstrapTable("destroy");
                 $('#tableRelevantDocumentsClass_Model1').bootstrapTable({
                     toggle:true,
@@ -2856,16 +3027,18 @@ var LDAvis = function(to_select, data_or_file_name) {
                     //showColumns: true,
                     columns:[
                         {
-                            field: 'topic_perc_contrib',
+                            field: String(topic_id),
+                            formatter:to_percentage,
                             title: '%',
                             sortable:'true'
                         },{
-                            field: 'text',
+                            field: 'texto_completo',
+                            escape:"true",
                             title: 'Document',
                             sortable:'true'
                         }
                     ],
-                    data: relevantDocumentsDict[topic_id] //.slice(0,R)
+                    data: relevantDocumentsDict
                 });
 
             }
@@ -2877,21 +3050,20 @@ var LDAvis = function(to_select, data_or_file_name) {
                     pagination: true,
                     search: true,
                     sorting: true,
-                    //showRefresh: true, Hacer que esto funcione! ver :  https://examples.bootstrap-table.com/#view-source
-                    //showExport:true,
-                    //showColumns: true,
                     columns:[
                         {
-                            field: 'topic_perc_contrib',
+                            field: String(topic_id),
+                            formatter:to_percentage,
                             title: '%',
                             sortable:'true'
                         },{
-                            field: 'text',
+                            field: 'texto_completo',
+                            escape:"true",
                             title: 'Document',
                             sortable:'true'
                         }
                     ],
-                    data: relevantDocumentsDict[topic_id] //.slice(0,R)
+                    data: relevantDocumentsDict
                 });
             
             }
@@ -2926,4 +3098,5 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
 };
+
 
