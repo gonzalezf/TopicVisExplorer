@@ -220,28 +220,35 @@
 
 <script type="text/javascript">
 var {{ visid_raw }}_data = {{ vis_json }};
-var relevantDocumentsDict = {{relevantDocumentsDict|safe}};
-var type_vis = {{type_vis}}
-var topic_order = {{topic_order}}
-var jsonData = {{vis_json}}
+var type_vis = {{type_vis}};
 
-
-
-
-//console.log("AFTER MERGE, ESTE ES EL JSON DATA QUE LLEGA", jsonData)
-
+var topic_order = {{topic_order}};
+var jsonData = {{vis_json}};
 if(type_vis == 1){
   var new_circle_positions = {{new_circle_positions}} 
 
 }
+
+
+var relevantDocumentsDict = {{relevantDocumentsDict}};
+
+console.log("aqui tengo el relevant documents 1", relevantDocumentsDict)
+
+
+//console.log("AFTER MERGE, ESTE ES EL JSON DATA QUE LLEGA", jsonData)
+
+
 if(type_vis == 2){
   
 
-  var matrix_sankey = {{matrix_sankey}}
+
+  var matrix_sankey = {{matrix_sankey}};
   
-  var relevantDocumentsDict_2 = {{relevantDocumentsDict_2|safe}}
-  var jsonData_2 = {{vis_json_2|safe}}
-  var topic_order_2 = {{topic_order_2}}
+  var jsonData_2 = {{vis_json_2|safe}};
+  var topic_order_2 = {{topic_order_2}};
+  
+  var relevantDocumentsDict_2 = {{relevantDocumentsDict_2}};
+  
 }
 
 

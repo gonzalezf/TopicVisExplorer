@@ -149,8 +149,11 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order,   type_vis, 
     
     
     data_json_format = []
+    #print("este es el formato de data",data)
+    #print("este es el elemento", data)
     for elem in data:
-        elem = elem.to_json()
+        #elem = elem.to_json() esto lo borre
+        elem = json.dumps(elem, cls=NumPyEncoder)
         data_json_format.append(elem)
     
 
@@ -191,7 +194,8 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order,   type_vis, 
 
         data_json_format_2 = []
         for elem in data_2:
-            elem = elem.to_json()
+            #elem = elem.to_json()
+            elem = json.dumps(elem, cls=NumPyEncoder)
             data_json_format_2.append(elem)
 
     
@@ -201,7 +205,13 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order,   type_vis, 
         dict_matrix_json = json.dumps(dict_matrix_dict)
         data_json_format_2=[None]
     
+    print("que le pase a jinja ", type(relevantDocumentsDict))
+
+    #escape jinja2 comments that could appear on relevant documents
+    relevantDocumentsDict = json.dumps(relevantDocumentsDict).replace("{#", "{{ '{#' }}").replace("#}", "{{ '#}' }}")
+    relevantDocumentsDict_2  = json.dumps(relevantDocumentsDict_2).replace("{#", "{{ '{#' }}").replace("#}", "{{ '#}' }}")
     
+
     return template.render(visid=json.dumps(visid),
                            new_circle_positions = new_circle_positions, 
                            relevantDocumentsDict = relevantDocumentsDict, #esto debiese ser un arreglo

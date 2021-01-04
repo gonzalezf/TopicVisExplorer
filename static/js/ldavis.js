@@ -1270,11 +1270,11 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         }
                
+        
        if( type_vis === 1){
+           
 
-            createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
-            
-
+            createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)        
             createBarPlot("#BarPlotPanelDiv", dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", R) //esto crea el bar plot por primera vez. 
             //dejar la tabla en una buena posicion
             d3.selectAll('#tableRelevantDocumentsClass_Model1').attr("transform", "translate("  +0 + "," +0+ ")")
@@ -3009,9 +3009,25 @@ var LDAvis = function(to_select, data_or_file_name) {
             return (number*100).toFixed(1) + '%'
 
         }
+        function get_name_text_column_on_relevant_documents(relevantDocumentsDict){
+            //get the name of the columns
+            var name_columns = Object.keys(relevantDocumentsDict[0])
+            var column_text_name = ''
+            name_columns.forEach(
+                element => {
+                    if(typeof relevantDocumentsDict[0][element] == "string"){                        
+                        console.log("YAY!! este es el nombre de la columan donde hay texto", element)
+                        column_text_name = element
+                        
+                    }
+                })
+            console.log("voy a retonar esta wea", column_text_name)
+            return column_text_name                                      
+        }
 
         function updateRelevantDocuments(topic_id, relevantDocumentsDict, model){
-            
+            var column_text_name = get_name_text_column_on_relevant_documents(relevantDocumentsDict)
+            //sorted regarding to its contribution
             relevantDocumentsDict.sort(function(row_1, row_2){
                 return row_2[String(topic_id)]-row_1[String(topic_id)];
             });
@@ -3032,7 +3048,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                             title: '%',
                             sortable:'true'
                         },{
-                            field: 'texto_completo',
+                            field: column_text_name,
                             escape:"true",
                             title: 'Document',
                             sortable:'true'
@@ -3043,6 +3059,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             }
             else{//model == 2
+                var column_text_name = get_name_text_column_on_relevant_documents(relevantDocumentsDict)
                 $('#tableRelevantDocumentsClass_Model2').bootstrapTable("destroy");
                 $('#tableRelevantDocumentsClass_Model2').bootstrapTable({
                     //data: relevantDocumentsDict[topic_id].slice(0,R)
@@ -3057,7 +3074,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                             title: '%',
                             sortable:'true'
                         },{
-                            field: 'texto_completo',
+                            field: column_text_name,
                             escape:"true",
                             title: 'Document',
                             sortable:'true'

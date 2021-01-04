@@ -303,7 +303,6 @@ def _token_table(topic_info, term_topic_freq, vocab, term_frequency):
 def prepare(topic_term_dists, doc_topic_dists, doc_lengths, vocab, term_frequency,
             R=30, lambda_step=0.01, mds=js_PCoA, n_jobs=-1,
             plot_opts={'xlab': 'PC1', 'ylab': 'PC2'}, sort_topics=True):
-    
     """Transforms the topic model distributions and related corpus data into
     the data structures needed for the visualization.
 
@@ -395,7 +394,7 @@ def prepare(topic_term_dists, doc_topic_dists, doc_lengths, vocab, term_frequenc
     doc_lengths = _series_with_name(doc_lengths, 'doc_length')
     vocab = _series_with_name(vocab, 'vocab')
     _input_validate(topic_term_dists, doc_topic_dists, doc_lengths, vocab, term_frequency)
-    R = min(R, len(vocab))
+    R = len(vocab)
 
     topic_freq = (doc_topic_dists.T * doc_lengths).T.sum()
     # topic_freq       = np.dot(doc_topic_dists.T, doc_lengths)
