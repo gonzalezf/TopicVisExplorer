@@ -10,6 +10,7 @@ from nltk.tokenize import TweetTokenizer
 from sklearn.metrics.pairwise import cosine_similarity
 from nltk.corpus import stopwords
 from gensim.utils import lemmatize, simple_preprocess
+import time
 
 '''My own tokenizer '''
 def remove_stopwords(texts):
@@ -69,6 +70,17 @@ def get_dicts_relevant_keywords_documents(lda_model,df_relevant_documents, n_ter
         PreparedData_dict_with_more_info.loc[PreparedData_dict_with_more_info['Category'] == 'Topic'+str(topic_id+1)].sort_values(by='relevance', ascending=False)[['Term','relevance']][:n_terms].apply(save_relevant_keywords_in_dict, axis=1)    
     return topKeywordsDict
 
+def get_dicts_relevant_keywords_documents_by_topic_id(topic_id, lda_model,df_relevant_documents, n_terms, PreparedData_dict_with_more_info):    
+    topKeywordsDict = {}
+    topKeywordsDict[topic_id] = []        
+    def save_relevant_keywords_in_dict(row):
+        topKeywordsDict[topic_id].append({  #el topic_id, debe ser segun el orden de lda_model
+            "term":row['Term'],
+            "relevance":row['relevance']
+        })
+    PreparedData_dict_with_more_info.loc[PreparedData_dict_with_more_info['Category'] == 'Topic'+str(topic_id+1)].sort_values(by='relevance', ascending=False)[['Term','relevance']][:n_terms].apply(save_relevant_keywords_in_dict, axis=1)    
+    return topKeywordsDict
+
 
 def getDocumentVector(text, wordembedding,  topic_id ,  PreparedData_dict_with_more_info):    
     #print("este es el texto", text)
@@ -87,8 +99,40 @@ def getDocumentVector(text, wordembedding,  topic_id ,  PreparedData_dict_with_m
                 #print("WARNING, Word not found:", word)    
     return document_vector
             
+
+def get_topkeywords_relevantdocuments_by_topic_id(topic_id, wordembedding, lda_model,matrix_documents_topic_contribution,  n_terms,PreparedData_dict_with_more_info, topkdocuments): #n_terms : numero de top keywords a considerar
+    matrix_documents_topic_contribution.columns = matrix_documents_topic_contribution.columns.map(str)
+    topKeywordsDict = get_dicts_relevant_keywords_documents_by_topic_id(topic_id, lda_model, matrix_documents_topic_contribution, n_terms,   PreparedData_dict_with_more_info)    
+
+    ##Create top keyword vector per topic
+    topkeywords_vectors_dict = {}    
+    topkeywords_vector = 0
+    ranking = 1.0
+    for item in topKeywordsDict[topic_id]: #cambiar esta parte!
+        if item['term'] in wordembedding: 
+            topkeywords_vector += wordembedding[item['term']]/ranking
+        else:
+            pass
+            #print("WARNING NOT FOUND: ", item['term']," position:",ranking)
+        ranking+=1
+    topkeywords_vectors_dict[topic_id] = topkeywords_vector
+        
+    #Create a top relevant document vector    
+    relevantdocuments_vectors_dict = {}
+
+    relevantDocumentsvector = 0.0
+    j = 0
+    for index, item in matrix_documents_topic_contribution.sort_values(by=[str(topic_id)], ascending=False)[0:topkdocuments].iterrows():
+        j+=1                                    
+        relevantDocumentsvector+= float(item[str(topic_id)])*getDocumentVector(item[matrix_documents_topic_contribution.columns[-1]], wordembedding, topic_id, PreparedData_dict_with_more_info)             
+    relevantdocuments_vectors_dict[topic_id] = relevantDocumentsvector        
+    
+    return (topkeywords_vectors_dict, relevantdocuments_vectors_dict)
+
+
 def get_topkeywords_relevantdocuments_vectors(wordembedding, lda_model,matrix_documents_topic_contribution,  n_terms,PreparedData_dict_with_more_info, topkdocuments): #n_terms : numero de top keywords a considerar
-    topKeywordsDict = get_dicts_relevant_keywords_documents(lda_model, matrix_documents_topic_contribution, n_terms,   PreparedData_dict_with_more_info)
+    matrix_documents_topic_contribution.columns = matrix_documents_topic_contribution.columns.map(str)
+    topKeywordsDict = get_dicts_relevant_keywords_documents(lda_model, matrix_documents_topic_contribution, n_terms,   PreparedData_dict_with_more_info)    
 
     ##Create top keyword vector per topic
     topkeywords_vectors_dict = {}
@@ -110,10 +154,9 @@ def get_topkeywords_relevantdocuments_vectors(wordembedding, lda_model,matrix_do
     for topic_id in range(num_topics):
         relevantDocumentsvector = 0.0
         j = 0
-        for index, item in matrix_documents_topic_contribution.sort_values(by=[topic_id], ascending=False)[[topic_id,matrix_documents_topic_contribution.columns[-1]]][0:topkdocuments].iterrows():
-            j+=1                                            
-            relevantDocumentsvector+= float(item[topic_id])*getDocumentVector(item[matrix_documents_topic_contribution.columns[-1]], wordembedding, topic_id, PreparedData_dict_with_more_info) 
-            #print("document contribution", item[topic_id])
+        for index, item in matrix_documents_topic_contribution.sort_values(by=[str(topic_id)], ascending=False)[0:topkdocuments].iterrows():
+            j+=1                                    
+            relevantDocumentsvector+= float(item[str(topic_id)])*getDocumentVector(item[matrix_documents_topic_contribution.columns[-1]], wordembedding, topic_id, PreparedData_dict_with_more_info)             
         relevantdocuments_vectors_dict[topic_id] = relevantDocumentsvector        
     
     return (topkeywords_vectors_dict, relevantdocuments_vectors_dict)
@@ -121,28 +164,34 @@ def get_topkeywords_relevantdocuments_vectors(wordembedding, lda_model,matrix_do
 #Here, we calculate once the topkeywords_vector and the relevant documents_vector for each topic
 #We are going to calculate several times:      #final topic vector = (lambda)topic_keyword_vector + (lambda-1)topic_document_vector
 #because we are going to try different lambda (between 0 and 1)
-def get_topic_vectors(wordembedding, lda_model,most_relevant_documents,  n_terms, lambda_,  PreparedData_dict_with_more_info, topkdocuments):
-    num_topics = lda_model.num_topics
-    topkeywords_vectors_dict, relevantdocuments_vectors_dict = get_topkeywords_relevantdocuments_vectors(wordembedding, lda_model,most_relevant_documents,  n_terms, PreparedData_dict_with_more_info, topkdocuments)
-    final_topic_vectors_dict = dict()
-    #print("dic...t",relevantdocuments_vectors_dict)
-    for topic_id in range(num_topics):
-        final_topic_vector = lambda_*topkeywords_vectors_dict[topic_id]+(1-lambda_)*relevantdocuments_vectors_dict[topic_id]
-        #print("vector documentos", relevantdocuments_vectors_dict[topic_id][0:5])
-        final_topic_vectors_dict[topic_id] = final_topic_vector
-    #print("lambda", lambda_, "final vector", final_topic_vectors_dict)
-    return final_topic_vectors_dict
+
 
 #This matrix is calculated by a specific lambda. 
-def get_matrix_by_lambda(wordembedding, lda_model_1,most_relevant_documents_1,lda_model_2,most_relevant_documents_2, n_terms, lambda_, PreparedData_dict_with_more_info_1, PreparedData_dict_with_more_info_2, topkdocuments, relevance_lambda):
+def get_matrix_by_lambda(wordembedding, lda_model_1,most_relevant_documents_1,lda_model_2,most_relevant_documents_2, n_terms, lambda_, PreparedData_dict_with_more_info_1, PreparedData_dict_with_more_info_2, topkdocuments, relevance_lambda, topkeywords_vectors_dict_1, relevantdocuments_vectors_dict_1, topkeywords_vectors_dict_2, relevantdocuments_vectors_dict_2):
     #final topic vector = (lambda)topic_keyword_vector + (lambda-1)topic_document_vector
-    final_topic_vectors_dict_1 =  get_topic_vectors(wordembedding, lda_model_1,most_relevant_documents_1,  n_terms, lambda_,  PreparedData_dict_with_more_info_1, topkdocuments)
-    final_topic_vectors_dict_2 =  get_topic_vectors(wordembedding, lda_model_2,most_relevant_documents_2,  n_terms, lambda_,   PreparedData_dict_with_more_info_2, topkdocuments)
     
+
+    #get final topic vectors model 1    
+    num_topics_1 = lda_model_1.num_topics
+    final_topic_vectors_dict_1 = dict()
+    for topic_id in range(num_topics_1):
+        final_topic_vector = lambda_*topkeywords_vectors_dict_1[topic_id]+(1-lambda_)*relevantdocuments_vectors_dict_1[topic_id]
+        final_topic_vectors_dict_1[topic_id] = final_topic_vector
+    
+    #get final topic vectors model 2
+    num_topics_2 = lda_model_2.num_topics
+    final_topic_vectors_dict_2 = dict()
+    for topic_id in range(num_topics_2):
+        final_topic_vector = lambda_*topkeywords_vectors_dict_2[topic_id]+(1-lambda_)*relevantdocuments_vectors_dict_2[topic_id]
+        final_topic_vectors_dict_2[topic_id] = final_topic_vector
+    
+
+
+    #lets calculate the topic similarity matrix for this omega (lambda_)
     topic_similarity_matrix = []
-    for i in range(lda_model_1.num_topics):
+    for i in range(num_topics_1):
         row = []
-        for j in range(lda_model_2.num_topics):
+        for j in range(num_topics_2):
             topic_i = final_topic_vectors_dict_1[i].reshape(1,-1)
             topic_j = final_topic_vectors_dict_2[j].reshape(1,-1)
             row.append(float(cosine_similarity(topic_i,topic_j)))
@@ -150,21 +199,75 @@ def get_matrix_by_lambda(wordembedding, lda_model_1,most_relevant_documents_1,ld
     topic_similarity_matrix= np.asarray(topic_similarity_matrix)
     return topic_similarity_matrix
 
-def get_dict_topic_similarity_matrix(wordembedding, lda_model_1,relevantDocumentsDict_1,lda_model_2,relevantDocumentsDict_2, topn_terms, PreparedData_dict_with_more_info_1, PreparedData_dict_with_more_info_2, topkdocuments, relevance_lambda):    
-    tinfo_collection_1 = pd.DataFrame.from_dict(PreparedData_dict_with_more_info_1['tinfo'])
-    tinfo_collection_1['relevance'] = relevance_lambda * tinfo_collection_1['logprob']+ (1.00-relevance_lambda)*tinfo_collection_1['loglift']
+#optimize this function. Right now is the same than get_matrix_by_lambda
+def get_matrix_by_lambda_by_topic_ids(old_topic_similarity_matrix, id_topic_1, id_topic_2, wordembedding, lda_model_1,most_relevant_documents_1,lda_model_2,most_relevant_documents_2, n_terms, lambda_, PreparedData_dict_with_more_info_1, PreparedData_dict_with_more_info_2, topkdocuments, relevance_lambda, topkeywords_vectors_dict_1, relevantdocuments_vectors_dict_1, topkeywords_vectors_dict_2, relevantdocuments_vectors_dict_2):
+    #final topic vector = (lambda)topic_keyword_vector + (lambda-1)topic_document_vector
+    
 
-    tinfo_collection_2 = pd.DataFrame.from_dict(PreparedData_dict_with_more_info_1['tinfo'])
-    tinfo_collection_2['relevance'] = relevance_lambda * tinfo_collection_2['logprob']+ (1.00-relevance_lambda)*tinfo_collection_2['loglift']
+    #get final topic vectors model 1    
+    num_topics_1 = lda_model_1.num_topics
+    final_topic_vectors_dict_1 = dict()
+    for topic_id in range(num_topics_1):
+        final_topic_vector = lambda_*topkeywords_vectors_dict_1[topic_id]+(1-lambda_)*relevantdocuments_vectors_dict_1[topic_id]
+        final_topic_vectors_dict_1[topic_id] = final_topic_vector
+    
+    #get final topic vectors model 2
+    num_topics_2 = lda_model_2.num_topics
+    final_topic_vectors_dict_2 = dict()
+    for topic_id in range(num_topics_2):
+        final_topic_vector = lambda_*topkeywords_vectors_dict_2[topic_id]+(1-lambda_)*relevantdocuments_vectors_dict_2[topic_id]
+        final_topic_vectors_dict_2[topic_id] = final_topic_vector
+    
 
+    #replace the values only when it is necessary
+    
+    #lets calculate the topic similarity matrix for this omega (lambda_)
+    topic_similarity_matrix = []
+    for i in range(num_topics_1):
+        row = []
+        for j in range(num_topics_2):
+            topic_i = final_topic_vectors_dict_1[i].reshape(1,-1)
+            topic_j = final_topic_vectors_dict_2[j].reshape(1,-1)
+            row.append(float(cosine_similarity(topic_i,topic_j)))
+        topic_similarity_matrix.append(row)
+    topic_similarity_matrix= np.asarray(topic_similarity_matrix)
+
+    return topic_similarity_matrix
+
+
+#this function only recalculate the similarity between the new merged topic and the others
+def get_dict_topic_similarity_matrix_by_topic_ids(old_topic_similarity_matrix, id_topic1, id_topic2, wordembedding, lda_model_1,relevantDocumentsDict_1,lda_model_2,relevantDocumentsDict_2, topn_terms, PreparedData_dict_with_more_info_1, PreparedData_dict_with_more_info_2, topkdocuments, relevance_lambda, tinfo_collection_1, tinfo_collection_2, topkeywords_vectors_dict_1,topkeywords_vectors_dict_2,  relevantdocuments_vectors_dict_1, relevantdocuments_vectors_dict_2):    
+    relevantDocumentsDict_1.columns = relevantDocumentsDict_1.columns.map(str)
+    relevantDocumentsDict_2.columns = relevantDocumentsDict_2.columns.map(str)
+
+    #calculate topic similarity metric for different omega values
     
     i = 0.0
     matrices_dict = dict()
+    print("Calculating for different omegas")
     while i <=1.01:
         lambda_ = round(i*100/100,2)        
-        print("Calculating for omega = ", lambda_)
-        matrix = get_matrix_by_lambda(wordembedding, lda_model_1, relevantDocumentsDict_1, lda_model_2, relevantDocumentsDict_2,topn_terms, lambda_,  tinfo_collection_1, tinfo_collection_2, topkdocuments, relevance_lambda)
-        #print("matriiix", matrix)
+        
+        matrix = get_matrix_by_lambda_by_topic_ids(old_topic_similarity_matrix, id_topic1, id_topic2, wordembedding, lda_model_1, relevantDocumentsDict_1, lda_model_2, relevantDocumentsDict_2,topn_terms, lambda_,  tinfo_collection_1, tinfo_collection_2, topkdocuments, relevance_lambda, topkeywords_vectors_dict_1, relevantdocuments_vectors_dict_1 , topkeywords_vectors_dict_2, relevantdocuments_vectors_dict_2 )    
+        matrices_dict[lambda_] = matrix
+        i+=0.01
+    return matrices_dict
+
+
+
+def get_dict_topic_similarity_matrix(wordembedding, lda_model_1,relevantDocumentsDict_1,lda_model_2,relevantDocumentsDict_2, topn_terms, PreparedData_dict_with_more_info_1, PreparedData_dict_with_more_info_2, topkdocuments, relevance_lambda, tinfo_collection_1, tinfo_collection_2, topkeywords_vectors_dict_1,topkeywords_vectors_dict_2,  relevantdocuments_vectors_dict_1, relevantdocuments_vectors_dict_2):    
+    relevantDocumentsDict_1.columns = relevantDocumentsDict_1.columns.map(str)
+    relevantDocumentsDict_2.columns = relevantDocumentsDict_2.columns.map(str)
+
+    #calculate topic similarity metric for different omega values
+    
+    i = 0.0
+    matrices_dict = dict()
+    print("Calculating for different omegas")
+    while i <=1.01:
+        lambda_ = round(i*100/100,2)        
+        
+        matrix = get_matrix_by_lambda(wordembedding, lda_model_1, relevantDocumentsDict_1, lda_model_2, relevantDocumentsDict_2,topn_terms, lambda_,  tinfo_collection_1, tinfo_collection_2, topkdocuments, relevance_lambda, topkeywords_vectors_dict_1, relevantdocuments_vectors_dict_1 , topkeywords_vectors_dict_2, relevantdocuments_vectors_dict_2 )    
         matrices_dict[lambda_] = matrix
         i+=0.01
     return matrices_dict

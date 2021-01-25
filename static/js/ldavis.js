@@ -3,9 +3,15 @@
 /* MIT Licence */
 
 'use strict';
+var global_terms_1;
+var global_lamData;
+var merged_topic_to_delete = [];
+var name_merged_topic_to_delete = [];
+var old_topic_model_states = []; //here we are going to save previous topic models. This should be a array of dictionaries
 var LDAvis = function(to_select, data_or_file_name) {
 
-        // This section sets up the logic for event handling
+    // This section sets up the logic for event handling
+    
     var vis_state = {
             lambda: 0.6,
             min_value_filtering:-1.0,
@@ -36,21 +42,13 @@ var LDAvis = function(to_select, data_or_file_name) {
             current: 0.9
 
         },
-        //color1_1 = "#f1bd85",
         color1_1 = "#BE7CF0", //violeta
         color1_2 = "#632A9E", //morado
         
-        //color2_1 = "#8ed5c6",
+
         color2_1 = "#6BF0A7", //"red", //"#6BF0A7", //verde claro
         color2_2 = "#00A385"; //"blue"; //"00A385"; //"13A383"; //verde oscuro
-        
-        //old
-        //color1_1 = "#1f77b4", // baseline color for default topic circles and overall term frequencies
-        //color2_1 = "#d62728"; // 'highlight' color for selected topics and term-topic frequencies
-
-        //color1_1 = "#56B4E9",
-        //color2_1 = "#E69F00";
-
+                
 
     // Set the duration of each half of the transition:
     var duration = 750;
@@ -93,7 +91,9 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
     var termID = visID + "-term";
-    
+
+    var topicReverse = topicID+"-reverse";    
+
     var topicEdit = topicID+"-edit";
     var topicEdit2 = topicID+"-edit_2";
     var topicSplit = topicID+"-split";
@@ -104,18 +104,15 @@ var LDAvis = function(to_select, data_or_file_name) {
     var leftPanelID = visID + "-leftpanel";
     var barFreqsID = "barplot_1";
     var barFreqsID_2 = "barplot_2"
-    var topID = visID + "-top";
-    var lambdaInputID = visID + "-lambdaInput";
-    //var lambdaZeroID = visID + "-lambdaZero";
-    var lambdaZeroID = "relevanceSliderTexto";
-
+    
+    
     var sliderDivID = "RelevanceSliderContenedor";
     var lambdaLabelID = "RelevanceSliderLabel";
 
     var min_target_node_value = Infinity;
 
     var number_terms_sankey = 20
-    var number_terms_mdsplot = 20
+    
 
     //esto se ocupa en la comparación de un corpus
     var topic_id_model_1 = -1
@@ -124,18 +121,18 @@ var LDAvis = function(to_select, data_or_file_name) {
     /////////////////////////
     ////topic mergin
     var merging_topic_1 = -1
-    var merging_topic_2 = -1 //esta var no la usaremos con la nueva modalidad del merge
+    
 
     var splitting_topic = -1
 
-    var hacer_merge = false
+    
 
     var last_clicked_model_1 = -1
     var last_clicked_model_2 = -1
 
 
     //rename topic variables
-    var renameTopicId = -1
+    
     var name_topics_circles = {}
     var name_topics_sankey = {}
 
@@ -150,18 +147,56 @@ var LDAvis = function(to_select, data_or_file_name) {
     var BarPlotPanelDivId = 'BarPlotPanelDiv'
 
 
-    //topic similarity metric proposed
+    
 
     var sliderDivIDLambdaTopicSimilarity = "sliderDivLambdaTopicSimilarity"
     //to_select = BarPlotPanelDivId
     
-    
-    
+    //Get relevant documents from ajax
+    if(type_vis === 1){
+        var relevantDocumentsDict;    
+        $.ajax({
+            url: "/SingleCorpus_documents",
+            dataType: 'json',
+            async: false,
+            success: function(data) {        
+                relevantDocumentsDict = data            
+            }
+        });        
+    }
 
+    if(type_vis === 2){
+     
+        var relevantDocumentsDict;
+        var relevantDocumentsDict_2;
+    
+        $.ajax({
+            url: "/MultiCorpora_documents_1",
+            dataType: 'json',
+            async: false,
+            success: function(data) {        
+                relevantDocumentsDict = data
+                
+            }
+        });
+    
+        $.ajax({
+            url: "/MultiCorpora_documents_2",
+            dataType: 'json',
+            async: false,
+            success: function(data) {        
+                relevantDocumentsDict_2 = data            
+            }
+        });
+        
+    }
+    
     // sort array according to a specified object key name
     // Note that default is decreasing sort, set decreasing = -1 for increasing
     // adpated from http://stackoverflow.com/questions/16648076/sort-array-on-key-value
     function fancysort(key_name, decreasing) {
+
+        
         decreasing = (typeof decreasing === "undefined") ? 1 : decreasing;
         return function(a, b) {
             if (a[key_name] < b[key_name])
@@ -178,7 +213,7 @@ var LDAvis = function(to_select, data_or_file_name) {
     function visualize(data) {
 
         // set the number of topics to global variable K:
-        
+        ////console.log("este data yo recibi", data)
         
         K = data['mdsDat'].x.length;
 
@@ -219,7 +254,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             lamData.push(obj);
         }
         
-        var dat3 = lamData//lamData.slice(0, R);
+        var dat3 = lamData.slice(0, R);
 
 
         var points2 = d3.select("#name_topics")
@@ -234,13 +269,10 @@ var LDAvis = function(to_select, data_or_file_name) {
                     //return (rScaleMargin(+d.Freq));
                     return 0;
                 })
-                .attr("cx", function(d) {
-                    ////////////console.log("D.X", +d.x, new_positions[topic_order[d.topics-1]-1][0])
-                    //return (xScale(+d.x));
+                .attr("cx", function(d) {                    
                     return 0;
                 })
-                .attr("cy", function(d) {
-                    //return (yScale(+d.y));
+                .attr("cy", function(d) {                    
                     return 0;
                 })
                 .attr("stroke", "black")
@@ -254,10 +286,15 @@ var LDAvis = function(to_select, data_or_file_name) {
                     for (var i = 0; i < dat2.length; i++) {
                         dat2[i].relevance = lambda.current * dat2[i].logprob +
                             (1 - lambda.current) * dat2[i].loglift;
+
+                        if(isNaN(dat2[i].relevance)){
+                            dat2[i].relevance  = -Infinity;
+                        }
                     }
         
                     // sort by relevance:
                     dat2.sort(fancysort("relevance"));
+                    
 
                     // truncate to the top R tokens:
                     var top_terms = dat2.slice(0, number_top_keywords_name);
@@ -269,8 +306,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                     
                         name_string += top_terms[i].Term+" "
                     }
-                    //name_topics_circles[topicID + d.topics] = d.topics //Here, we need to change the default topic name. 
-                    name_topics_circles[topicID + d.topics] = name_string //Here, we need to change the default topic name. 
+                    
+                    name_topics_circles[topicID + d.topics] = name_string 
 
                     return (topicID + d.topics);
                 })
@@ -286,10 +323,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             
         d3.select("#"+lambdaID)
             .on("mouseup", function() {
-                //////////console.log("hice click en esti", "#"+lambdaID)
-                //lambda_select = "#"+lambdaID
-                
-                // store the previous lambda value
+
                 
                 lambda.old = lambda.current;
                 
@@ -312,7 +346,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         d3.select("#"+lambdaIDRightPanel)
             .on("mouseup", function() {
-                //////////console.log("hice click en esti", "#"+lambdaIDRightPanel)
+                ////////////console.log("hice click en esti", "#"+lambdaIDRightPanel)
                 //lambda_select = "#"+lambdaID
                 
                 // store the previous lambda value
@@ -363,7 +397,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     if(d.node >= min_target_node_value){
                         // pertenece al modelo de corpus 2
                         var topic_id_in_model = d.node-min_target_node_value
-                        var real_topic_id = topic_order_2[topic_id_in_model]-1
+                        //var real_topic_id = topic_order_2[topic_id_in_model]-1
                     
                         lamData = [];
                         for (var i = 0; i < jsonData_2['tinfo'].Term.length; i++) {
@@ -404,10 +438,14 @@ var LDAvis = function(to_select, data_or_file_name) {
                     for (var i = 0; i < dat2.length; i++) {
                         dat2[i].relevance = lambda.current * dat2[i].logprob +
                             (1 - lambda.current) * dat2[i].loglift;
+
+                        if(isNaN(dat2[i].relevance)){
+                            dat2[i].relevance  = -Infinity;
+                        }
                     }
         
                     dat2.sort(fancysort("relevance"));
-                
+                    
                     var top_terms = dat2.slice(0, number_top_keywords_name);
                     
                     var name_string = '';
@@ -430,7 +468,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         //Inspired by: https://bl.ocks.org/d3noob/013054e8d7807dff76247b81b0e29030
        function visualize_sankey(graph, threshold_min, threshold_max){
            var node_padding = 25
-            ////////console.log("este es el graph que recibo", graph)
+            //////////console.log("este es el graph que recibo", graph)
             d3.selectAll('#svgCentralSankeyDiv').remove();
             d3.selectAll('#divider_central_panel_sankey').remove();
             
@@ -486,69 +524,22 @@ var LDAvis = function(to_select, data_or_file_name) {
                 }
             );
 
-            /*
-            var links_filtered =  graph.links.filter(function(el){
-
-                if(threshold_min <= el.value.toFixed(2) && el.value.toFixed(2) <= threshold_max){
-                    if(el.source.node ==  undefined){
-                        nodes_filtered_set.add(el.source);
-                        }
-                    else{
-                        nodes_filtered_set.add(el.source.node);
-                        
-                        }
-                    if(el.target.node ==  undefined){
-                        nodes_filtered_set.add(el.target);
-                        if(el.target<=min_target_node_value){
-                            min_target_node_value=el.target
-                            }
-                        }
-                    else{
-                        nodes_filtered_set.add(el.target.node);
-                        if(el.target.node<=min_target_node_value){
-                            min_target_node_value=el.target.node
-                            }
-                        }
-                    return el.value
-                    }
-                }
-            );*/
-
-            
-            ////console.log("revisar el nodes filtered aqui", nodes_filtered_set)
-            /*
-            var nodes_filtered = graph.nodes.filter(function(d){
-                if(nodes_filtered_set.has(d.node)){
-                    //////console.log("wohoo", d)
-                    graph.links.push({
-                        source: d.node,
-                        target: d.node,
-                        value:  0
-                      })
-                    //añadir ahora al graph links un link del nodo consigo mismo, de esta forma todos los topicos aparezcan siempre
-                    
-                    return d;
-                }
-            });
-            */
-
-            //añadir un nodo conectandose consigo mismo en el graph.
 
 
 
-            ////console.log("este es el graph, ",graph)
+
+            //////console.log("este es el graph, ",graph)
             var links_filtered =  graph.links.filter(function(el){
                 return ((threshold_min <= el.value.toFixed(2) && el.value.toFixed(2) <= threshold_max));
                 }
             );
-            ////console.log("links filtered", links_filtered)
 
             //add a link dummy para que siempre dibuje algo
             
             if( links_filtered.length == 0){
                 
             }
-            ////console.log("WOOOW, este es el final links filtered", links_filtered.length)
+
 
 
             var margin = {top: 10, right: 10, bottom: 10, left: 10};
@@ -601,7 +592,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             link.append("title")
                 .text(function(d) {
                     return name_topics_sankey[topicID + d.source.node] + " → " + 
-                    name_topics_sankey[topicID + d.target.node] + "\n" + format(d.value);}); //return d.source.name + " → " + d.target.name + "\n" + format(d.value); });
+                    name_topics_sankey[topicID + d.target.node] + "\n" + format(d.value);});
                     
         
             // add in the nodes
@@ -656,20 +647,18 @@ var LDAvis = function(to_select, data_or_file_name) {
                     }
                     
                     //return  Freq/100*(user_height_sankey-(min_target_node_value*1.5*node_padding));
-                    return  d.dy; //Freq/100*(user_height_sankey-min_target_node_value*node_padding); //function(d) { return d.dy; } 
-                    //return 3;
+                    return  d.dy; 
+                    
                 }
                 ) 
                 .attr("width", sankey.nodeWidth())
                 .style("fill", function(d) { 
                     if(d.node < min_target_node_value){
-                        //return "blue";
-                        //return "#1f77b4"; 
+
                         return color1_1;
                         
                     }
                     else{
-                        //return "red";
                         return color2_1;
                         
                     }
@@ -680,7 +669,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .style("opacity", 0.6)
                 .append("title")
                     .text(function(d) { 
-                        return name_topics_sankey[topicID + d.node] ;}) //return d.name + "--\n" + format(d.value); }) here, d.value es la suma de todos los pesos que llegan al nodo. creo que no es necesario                    
+                        return name_topics_sankey[topicID + d.node] ;}) 
                 .on("click", function(){
                     
                 });
@@ -691,9 +680,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("y", function(d) { return d.dy / 2; })
                 .attr("dy", ".35em")
                 .attr("width", function(d) {
-                    //return (rScaleMargin(+d.Freq));
-                    //return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
-                    //return d3.selectAll('#svgSankey').node().getBoundingClientRect().width;
                     return 0.25*d3.selectAll('#svg_sankey').node().getBoundingClientRect().width
                     
                 })
@@ -746,7 +732,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         }
 
         function dotme(text) {
-            ////////////console.log("analizando este texto", text)
+            
             text.each(function() {
                 var text = d3.select(this);
                 var words = text.text().split(/\s+/);
@@ -758,9 +744,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
                 var tspan = text.insert('tspan', ':first-child').text(words.join(' '));
                 
-                // Try the whole line
-                // While it's too long, and we have words left, keep removing words
-                ////////////console.log("estas son las variables", text, words, ellipsis, width, numWords, tspan)
+                
                 while (tspan.node().getComputedTextLength() > width && words.length) {
                     words.pop();
                     tspan.text(words.join(' '));
@@ -776,8 +760,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         
         function get_topics_sorted_by_distance(mdsData, lambda_lambda_topic_similarity_current, vis_state_topic){
             //revisar el topic mergin 1 que recibe!!!
-            //this is the current distance matrix  
-            //console.log("nombres", name_topics_circles)
+            
             var new_positions = new_circle_positions[lambda_lambda_topic_similarity_current]
             //save the index, it is important to mantaint it after sorting
             var new_positions_dict = {};
@@ -789,8 +772,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             var items = Object.keys(new_positions_dict).map(function(key) {
                 return [key, new_positions_dict[key]];
             });
-            //console.log("estas son las new positions para este lambda", new_positions_dict) //esto esta super bien
-            //console.log("POSICION ACTUAL", new_positions_dict[vis_state_topic])
+            
             // Sort the array based on the second element. Using distance
             const distance = (coor1, coor2) => {
                 const x = coor2[0] - coor1[0];
@@ -803,13 +785,11 @@ var LDAvis = function(to_select, data_or_file_name) {
             });
             //this is the final result
 
-            //console.log("items final", items);
-            //console.log("nombres", name_topics_circles)
             var new_topic_names_sorted = []
             for(var i = 0; i<items.length; i++){
                 new_topic_names_sorted.push(name_topics_circles[topicID + items[i][0]])
             }
-            //console.log("nombres ordenados", new_topic_names_sorted)
+
             return new_topic_names_sorted
 
 
@@ -824,110 +804,219 @@ var LDAvis = function(to_select, data_or_file_name) {
             return -1;
         }
 
-  
-        function merging_topics_scenario_1(topic_name_1, topic_name_2){
+        Array.prototype.sum = function (prop) {
+            var total = 0
+            for ( var i = 0, _len = this.length; i < _len; i++ ) {
+                total += this[i][prop]
+            }
+            return total
+        }
+        
+        //https://flaviocopes.com/how-to-clone-javascript-object/
+        //https://lodash.com/docs/4.17.15#cloneDeep
+        function save_state_data(){
+            //before merging, save the current state (in case we want to reverse these changes)
+
+            var current_state_dict = {};
+
             
-            //get index topic from name
-            var current_index = 0
+
+            current_state_dict.relevantDocumentsDict = _.cloneDeep(relevantDocumentsDict);
+            
+            current_state_dict.lamData = _.cloneDeep(lamData);
+            current_state_dict.mdsData = _.cloneDeep(mdsData);
+            current_state_dict.new_circle_positions = _.cloneDeep(new_circle_positions);
+            current_state_dict.name_topics_circles = _.cloneDeep(name_topics_circles);
+            current_state_dict.current_topic_id = _.cloneDeep(vis_state.topic);
+            old_topic_model_states.push(current_state_dict);
+            console.log("en el merge acabo de guardar este estado", current_state_dict);
+            console.log("en la pila tengo esto",old_topic_model_states);
+        }
+        
+
+        function merging_topics_scenario_1(topic_name_1, topic_name_2){
+            //console.log("estos son los nonbres parametros de la funcion", topic_name_1, topic_name_2);
+            //console.log("estos son los name topics circles", name_topics_circles);
+            
+            
+            
+
+            
+            //get index topic from name    
+            var current_index = 0;
             for (var [key, value] of Object.entries(name_topics_circles)) {
+                //console.log("topic_name_1", topic_name_1.trim());
+                //console.log("value ", value.trim());
                 if(value.trim() == topic_name_1.trim()){
                 
-                    var index_topic_name_1 = current_index
+                    var index_topic_name_1 = current_index;
                 }
                 if(value.trim() == topic_name_2.trim()){
-                    var index_topic_name_2 = current_index
+                    var index_topic_name_2 = current_index;
                 }
-                current_index+=1
+                current_index+=1;
             }
+            
 
-            //get the real topic id para cada uno
-            var real_topic_id_1 = topic_order[index_topic_name_1]-1
-            var real_topic_id_2 = topic_order[index_topic_name_2]-1
             
             //1.- Join relevant documents
+
             for (var row in relevantDocumentsDict)
             {             
-                relevantDocumentsDict[row][real_topic_id_1] = relevantDocumentsDict[row][real_topic_id_1]+relevantDocumentsDict[row][real_topic_id_2]
-                relevantDocumentsDict[row][real_topic_id_2] = relevantDocumentsDict[row][real_topic_id_1]+relevantDocumentsDict[row][real_topic_id_2]             
+
+                var new_prob_documents = relevantDocumentsDict[row][index_topic_name_1]+relevantDocumentsDict[row][index_topic_name_2];
+                relevantDocumentsDict[row][index_topic_name_1] = new_prob_documents;
+                relevantDocumentsDict[row][index_topic_name_2] = new_prob_documents;
             }
             
             
             // 2.- Join top keywords
             var terms_topic_1 = lamData.filter(function(d) {
-                return d.Category == "Topic" + (index_topic_name_1+1);
+                return d.Category == "Topic" + (index_topic_name_1+1); //we have to add '1' to index_topic_name, because prepareddata starts from 1 instead of 0
             });
             var terms_topic_2 = lamData.filter(function(d) {
                 return d.Category == "Topic" + (index_topic_name_2+1);
             });
-
-            //ver una forma de optimizar esto, finding index of object                        
-            console.log("estos son los indices", index_topic_name_1+1, index_topic_name_2+1)
-            var new_array = []
-            for(var i = 0; i < lamData.length; i += 1) {   
-                if(terms_topic_1.includes(lamData[i]) && terms_topic_1.includes(lamData[i])){ //cambiar a topic_2
-
-                    var row_topic_1 = terms_topic_1.find( row => row.Term === lamData[i].Term)
-                    var row_topic_2 = terms_topic_1.find( row => row.Term === lamData[i].Term) //cambiar a 2
-
-                    //console.log("inicio", lamData[i].logprob, lamData[i].loglift)
-                    //replace new probability of the term on new merged topic
-                    var new_probability_term = Math.exp(row_topic_1.logprob)+Math.exp(row_topic_2.logprob)
-                    
-                    //replace lift
-                    var probability_term_in_corpus = Math.exp(row_topic_1.logprob)/Math.exp(row_topic_1.loglift) //esto deberia estar ok                
-                    lamData[i].logprob = Math.log(new_probability_term) //the log prob es la suma de ambas probabilidades. Luego se le aplica logaritmo natural a esa suma
-                    lamData[i].loglift = Math.log(new_probability_term/probability_term_in_corpus)                
-                    //update frequency of terms in the new merged topic
-                    lamData[i].Freq = row_topic_1.Freq+row_topic_2.Freq                    
-                }
-                else{//these are words that do not appear in both topics
-                    if(lamData[i].Category==="Topic" + (index_topic_name_1+1)){
-                        //añadir con topic index-topic_name_2
-                        
-                        var temp = JSON.parse(JSON.stringify(lamData[i]))                    
-                        temp.Category =  "Topic" + (index_topic_name_2+1)
-                        new_array.push(temp)
-                        
-                    }
-                    if(lamData[i].Category==="Topic" + (index_topic_name_2+1)){
-                        //añadir con topic index-topic_name_1
-
-                        var temp = JSON.parse(JSON.stringify(lamData[i]))                        
-                        temp.Category =  "Topic" + (index_topic_name_1+1)                        
-                        new_array.push(temp)
-                    }                                                        
-                }                
-            }            
-            lamData = lamData.concat(new_array)
             
-            //3.- Update frequency of mdsData
 
-            var new_frequency =  mdsData[index_topic_name_1].Freq+mdsData[index_topic_name_2].Freq
-            mdsData[index_topic_name_1].Freq =new_frequency
-            mdsData[index_topic_name_2].Freq = new_frequency
+            
+            var total_sum_frequency_corpus = terms_topic_1.sum("Total");
+            var contador = 0;
+            for(var i = 0; i < terms_topic_1.length; i += 1) {            //we have a 'matrix'. There is the same information for all the terms.                                                                                 
+                var row_topic_1 = terms_topic_1[i];
+                var row_topic_2 = terms_topic_2.find( row => row.Term ===  terms_topic_1[i].Term);
+
+                var new_probability_term = Math.exp(row_topic_1.logprob)+Math.exp(row_topic_2.logprob);
+                var new_logprob = Math.log(new_probability_term);                                    
+                var new_loglift = Math.log(new_probability_term/(row_topic_1.Total/total_sum_frequency_corpus));                    
+                var new_frequency_term = row_topic_1.Freq+row_topic_2.Freq;     
+
+
+
+                row_topic_1.logprob = new_logprob;
+                row_topic_2.logprob = new_logprob;
+
+                
+                row_topic_1.loglift = new_loglift;
+                row_topic_2.loglift = new_loglift;
+                
+                row_topic_1.Freq = new_frequency_term;
+                row_topic_2.Freq = new_frequency_term;
+
+
+                var new_relevance = vis_state.lambda * row_topic_1.logprob +(1 - vis_state.lambda) * row_topic_1.loglift;
+                //console.log("en APPLY MERGING TOPIC TENGO ESTOS VALORES", vis_state.lambda, lambda.current ); retorna los ismos valores.
+
+
+                if(isNaN(new_relevance)){
+                    new_relevance = -Infinity;
+                }
+                
+
+                row_topic_1.relevance = new_relevance;
+                row_topic_2.relevance = new_relevance;
+
+           
+                
+                if(row_topic_1.relevance != row_topic_2.relevance){
+                    console.log("puta nacho, era esta weaaaa ME LA QUIERO CORTAR", row_topic_1, row_topic_2)
+                }
+                contador+=1;
+                
+
+            }      
+                        
+
+            terms_topic_1.sort(fancysort("relevance"));
+            terms_topic_2.sort(fancysort("relevance"));
+
+ 
+            
+
+            //3.- Update frequency of mdsData
+            //console.log("------")
+            //console.log("este es el mds data", mdsData)
+            //console.log("estos son los indiceees!! ", index_topic_name_1, index_topic_name_2);
+            //console.log("accedamos al primer elemento", mdsData[index_topic_name_1]);
+            //console.log("accedamos al primer elemento", mdsData[index_topic_name_2]);
+            var new_frequency =  mdsData[index_topic_name_1].Freq+mdsData[index_topic_name_2].Freq;
+            //console.log("OLD FRECUENCIA", mdsData[index_topic_name_1], mdsData[index_topic_name_2]);
+
+            
+            mdsData[index_topic_name_1].Freq =new_frequency;
+            mdsData[index_topic_name_2].Freq = new_frequency;
+            //console.log("new mdsdata", mdsData[index_topic_name_1], mdsData[index_topic_name_2])
+
+
+            //4.- Pass to python, the new relevant documents and the new Lambdata
+            //Python shoudl recalculate the new topic similarity metric and the new positions!!
+
+            
+            var postData = {
+                relevantDocumentsDict_new: relevantDocumentsDict,
+                lamData_new: lamData,
+                omega_value: vis_state.lambda_lambda_topic_similarity,
+                old_circle_positions: new_circle_positions,
+                index_topic_name_1: index_topic_name_1,
+                index_topic_name_2: index_topic_name_2,
+                
+            };
 
             //4.- Create new new_position circle arrray
+
+            $.ajax({
+                type: 'POST',
+                url: '/get_new_topic_vector',
+                async: false,
+                data: JSON.stringify(postData),
+                success: function(data) {
+                                
+                    new_circle_positions = data
+                },
+                contentType: "application/json",
+                dataType: 'json'
+
+             });
+
+
+            //5.- get new topic name
+            //console.log("AQUIII QUEREMOS BANEAR UNA ID!!!!")
+
             
-            //el mdsData son las coordenadas de los circulos, la frecuencia de los topicos. Crear nuevo mdsData
-            //createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
-            //ahora hay que sacar un nuevo mdsData!!
+            var new_merged_topic_name = name_topics_circles[topicID + (index_topic_name_1+1)].trim()+' - '+ name_topics_circles[topicID + (index_topic_name_2+1)].trim();
+            name_topics_circles[topicID + (index_topic_name_1+1)] = new_merged_topic_name;
+            name_topics_circles[topicID + (index_topic_name_2+1)] = new_merged_topic_name+"-delete";
+            merged_topic_to_delete.push(index_topic_name_2+1);
+            name_merged_topic_to_delete.push(new_merged_topic_name+"-delete");
+            
             
 
-            //show results of topic merging
-            createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
-            topic_on(document.getElementById(topicID+vis_state.topic))
+            d3.selectAll('#svgMdsPlot').remove();
+            d3.selectAll('#divider_central_panel').remove();
+
+            document.getElementById("renameTopicId").value = name_topics_circles[topicID + vis_state.topic];
+            $('#idTopic').html(topicID + vis_state.topic);
+
+
+
+            createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current); //update central panel
+            topic_on(document.getElementById(topicID+vis_state.topic));
+
+            
+            
+         
         }
 
 
 
         function createMdsPlot(number, mdsData, lambda_lambda_topic_similarity){
-            console.log("este es el mdsdata que hay que reemplazar", mdsData)
+
+            console.log("EN CREATE MDS PLOT LLEGO ESTO", mdsData);
+            
+            //console.log("este es el mdsdata que hay que reemplazar", mdsData)
             //if  previous mdsplot exists, remove it
             d3.selectAll('#svgMdsPlot').remove();
             d3.selectAll('#divider_central_panel').remove();
-
-
-
 
             //we need to append this to the central panel, not to the old svg
             //all draws of central panel must appear in this svg variable
@@ -949,8 +1038,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             //get width, height according to client's window
             var bounds = d3.selectAll('#svgMdsPlot').node().getBoundingClientRect();
-            //var user_width = bounds.width - margin.left - margin.right;
-            //var user_height = bounds.height - margin.top - margin.bottom;
+            
             var user_width = bounds.width; 
             var user_height = bounds.height;
             
@@ -958,21 +1046,13 @@ var LDAvis = function(to_select, data_or_file_name) {
             var mdswidth = user_width-margin.left-margin.right;
             var mdsarea = mdsheight * mdswidth;
 
-
-
-
-
             // Create a group for the mds plot Bubbles visualization
             d3.selectAll('#'+leftPanelID).remove();
 
             var mdsplot = svg.append("g")
                 .attr("id", leftPanelID) //now is central panel no leftpanel
                 .attr("class", "points")
-                .attr("transform", "translate("+margin.left+","+margin.top+")")
-                
-
-                //.attr("transform", "translate("+(mdswidth+margin.left+termwidth)+","+(2*margin.top +(mdsheight +margin.bottom  + 2 * rMax)*(number-1))+")");//.attr("transform", "translate(" + margin.left + "," + 2 * margin.top + ")");
-                //should we need to translate this??
+                .attr("transform", "translate("+margin.left+","+margin.top+")")                                
 
             mdsplot
                 .append("rect")
@@ -1095,25 +1175,17 @@ var LDAvis = function(to_select, data_or_file_name) {
             // create linear scaling to pixels (and add some padding on outer region of scatterplot)
 
             var xrange = d3.extent( getCol(new_positions, 0));
-            /*
-            var xrange = d3.extent(mdsData, function(d) {
-                return d.x;
-            }); //d3.extent returns min and max of an array
-            */
+            
             
             var xdiff = xrange[1] - xrange[0],
                 xpad = 0.05;
 
             var yrange = d3.extent( getCol(new_positions, 1));
-            /*
-            var yrange = d3.extent(mdsData, function(d) {
-                return d.y;
-            });
-            */
+            
             var ydiff = yrange[1] - yrange[0],
                 ypad = 0.05;
-            //mdsheight=mdsheight/2 hay que revisar la escala, es como muy grande para este plano
-            //mdswidth=mdswidth/2
+            
+
             if (xdiff > ydiff) {
                 var xScale = d3.scaleLinear()
                         .range([0, mdswidth])
@@ -1132,8 +1204,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                         .range([mdsheight, 0])
                         .domain([yrange[0] - ypad * ydiff, yrange[1] + ypad * ydiff]);
             }
-            
-            
+            //console.log("---")
+            //console.log("AQUI ESTAN LOS TOPICOS MERGEEED", merged_topic_to_delete)
+            //console.log("este es el mds data", mdsData)
+            //console.log("que hay en este topic order", topic_order)
+            //console.log("---")
 
             // draw circles
             points.append("circle")
@@ -1141,18 +1216,13 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .style("opacity",0.2)
                 .style("fill", color1_1)
                 .attr("r", function(d) {
-                    //return (rScaleMargin(+d.Freq));
-                    //return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
-                    return (Math.sqrt((mdsData[topic_order[d.topics-1]-1].Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI)); //se hace esto porque el new_positions array no inclue 'Freq', en cambioe el MdsDATA YA LO OBTIENE
+                    
+                    return (Math.sqrt((mdsData[d.topics-1].Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI)); //se hace esto porque el new_positions array no inclue 'Freq', en cambioe el MdsDATA YA LO OBTIENE
                     
                 })
                 .attr("cx", function(d) {
-                    //return (xScale(+d.x));
-                    //console.log("----------------------")
-                    //la siguiente linea tiraba el orden malo de los topicos!
-                    //console.log("resultado",d.topics,  name_topics_circles[topicID + d.topics], +new_positions[topic_order[d.topics-1]-1][0], +new_positions[topic_order[d.topics-1]-1][1])
-                    //console.log("resultado improved", d.topics, name_topics_circles[topicID + d.topics], +new_positions[d.topics-1][0], +new_positions[d.topics-1][1])
-                    return (xScale(+new_positions[d.topics-1][0])); //new position topic similarity metric proposed
+                    
+                    return (xScale(+new_positions[d.topics-1][0])); 
 
 
                 })
@@ -1161,7 +1231,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                     return (yScale(+new_positions[d.topics-1][1]));
                 })
                 .attr("stroke", "black")
-                .attr("id", function(d) {                    
+                .attr("id", function(d) {        
+                    //console.log("estas son las idssss de los topicooos", d.topics)            
                     return (topicID + d.topics);
                 })
                 .on("click", function(d) {
@@ -1181,27 +1252,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     
                     document.getElementById("renameTopicId").value = name_topics_circles[topicID + d.topics]
                     $('#idTopic').html(topicID + d.topics);
-                    //merging_topic_1 = d.topics //la id
-                    //$('.merging_topic_1').html(merging_topic_1)
-                    //$('.merging_topic_1_name').html(name_topics_circles[topicID + d.topics])
                     
-                    
-                    //hacer merge de topicos
-                    /*
-                    if(hacer_merge==false){
-                        merging_topic_1= vis_state.topic
-                    }                    
-                    else{
-                        merging_topic_2 = vis_state.topic
-                    }
-                    
-                    if(hacer_merge==true){
-                        //preguntarle al usuario si quiere hacer este merge
-                        $('.merging_topic_1').html(merging_topic_1);
-                        $('.merging_topic_2').html(merging_topic_2);
-                        $('#MergeModal_2').modal(); 
-                    }
-                    */
                     
                     topic_on(this);                
                 })
@@ -1218,6 +1269,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 })
                 .append("title")
                     .text(function(d) { 
+                        //console.log("este es el nombre del topico, ", name_topics_circles[topicID + d.topics] )
                         return name_topics_circles[topicID + d.topics] ;});
 
             // text to indicate topic
@@ -1227,9 +1279,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             points.append("text")
                 .attr("class", "txt")
                 .attr("width", function(d) {
-                    //return (rScaleMargin(+d.Freq));
-                    //return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
-                    return (2*Math.sqrt((mdsData[topic_order[d.topics-1]-1].Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI))
+                    
+                    return (2*Math.sqrt((mdsData[d.topics-1].Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI))
                 })
                 .attr("x", function(d) {
                     
@@ -1237,8 +1288,11 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                 })
                 .attr("y", function(d) {
-                    //return (yScale(+d.y) + 4);
+                    
                     return (yScale(+new_positions[d.topics-1][1]));
+                })
+                .attr("id", function(d) {        
+                    return ("text-"+topicID + d.topics);
                 })
                 .attr("stroke", "black")
                 .attr("opacity", 1)
@@ -1246,7 +1300,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .style("font-size", "11px")
                 .style("fontWeight", 100)
                 .text(function(d) {
-                    //return d.topics;
+                    
                     return name_topics_circles[topicID + d.topics];
                     
                 });
@@ -1265,7 +1319,15 @@ var LDAvis = function(to_select, data_or_file_name) {
         //overflow-text in svg
        
         d3.selectAll('.txt').call(dotme);
+        
+        //remove topic merged
+        for(var i = 0; i<merged_topic_to_delete.length; i++){
+            var d_topics_current = merged_topic_to_delete[i];
+            d3.selectAll('#text-'+topicID + d_topics_current).remove();
+            d3.selectAll('#'+topicID + d_topics_current).remove();
+            //console.log("topico borradoooo")
 
+        }
         
 
         }
@@ -1273,13 +1335,15 @@ var LDAvis = function(to_select, data_or_file_name) {
         
        if( type_vis === 1){
            
+ 
+
+
 
             createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)        
             createBarPlot("#BarPlotPanelDiv", dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", R) //esto crea el bar plot por primera vez. 
-            //dejar la tabla en una buena posicion
             d3.selectAll('#tableRelevantDocumentsClass_Model1').attr("transform", "translate("  +0 + "," +0+ ")")
 
-            //hacer la configuracion inicial para cuando se quiera hacer el merge
+            
             splitting_topic= vis_state.topic // es 1 by default
             
             document.getElementById("renameTopicId").value = name_topics_circles[topicID + vis_state.topic]
@@ -1289,16 +1353,12 @@ var LDAvis = function(to_select, data_or_file_name) {
        }
 
        if(type_vis === 2){
-           
-           get_name_node_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
+        
+  
+            get_name_node_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
            
             // Add barplot into the left panel 
-            createBarPlot("#BarPlotDiv_zero", dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", number_terms_sankey) //esto crea el bar plot por primera vez. 
-
-            //var divider_documents_left = document.createElement("hr");
-            //divider_documents_left.setAttribute("class", "rounded");
-            //document.getElementById("BarPlotDiv_zero").appendChild(divider_documents_left) 
-
+            createBarPlot("#BarPlotDiv_zero", dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", number_terms_sankey) //esto crea el bar plot por primera vez.             
             // Add barplot into the right panel
             createBarPlot("#DocumentsPanel", dat3, barFreqsID_2,"bar-totals_2", "terms_2", "bubble-tool_2", "xaxis_2", number_terms_sankey) //hay que modificar la altura aqui en funcion del alto de las barras
 
@@ -1319,8 +1379,7 @@ var LDAvis = function(to_select, data_or_file_name) {
            const  div_2 = document.getElementById('RelevantDocumentsTableDiv_2');
            div_2.insertAdjacentHTML('afterbegin', '<table  id="tableRelevantDocumentsClass_Model2" class="table table-hover"> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table>');
 
-           //Añadir este barplot despues
-           //createBarPlot(dat3, barFreqsID_2,"bar-totals_2", "terms_2", "bubble-tool_2", "xaxis_2", (8* margin.top + mdsheight), number_terms_sankey) //hay que modificar la altura aqui en funcion del alto de las barras
+           
            
            visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.min_value_filtering, vis_state.max_value_filtering)
 
@@ -1328,29 +1387,12 @@ var LDAvis = function(to_select, data_or_file_name) {
          
 
 
-           /*
-                       //It's the first time that this function is called, we are going to visualize the first topic of each model.
-            if(isSettingInitial){
-                real_last_clicked_sankey_model_1 = nodes_filtered[0]
-                real_last_clicked_sankey_model_2 = nodes_filtered[min_target_node_value]
-                topic_on_sankey(real_last_clicked_sankey_model_1, min_target_node_value) //topic on on first topic of first model
-                topic_on_sankey(real_last_clicked_sankey_model_2, min_target_node_value) //topic on first topic of second model
-                isSettingInitial = false
-            }
-            */
 
        }
        
-       
-        // establish layout and vars for bar chart
-               
-
-
-
-
+        
         function createBarPlot(to_select, dat3, barFreqsID_actual, bar_totals_actual, terms_actual,  bubble_tool, xaxis_class, number_terms){
-            
-            var height_bar = 80
+
             
             var svg = d3.select(to_select).append("svg") //BarPlotPanelDiv
             .attr("width", "100%")
@@ -1392,10 +1434,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("id", barFreqsID_actual)
                     .attr("class", "BarPlotClass");
             
-            // bar chart legend/guide:
-            /* I will delete this for now. We need to figure out a way to explain the information to the user
-            mdsheight = 400
-            */
             if(type_vis == 1){
 
                 var legend_svg = d3.select(to_select).append("svg") //BarPlotPanelDiv
@@ -1496,20 +1534,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 });
             
             
-            /*
-            var title = chart.append("text")
-                    .attr("x", 0) //mdswidth+margin.left+termwidth+(barwidth/2)
-                    .attr("y", 0)
-                    .attr("class", bubble_tool) //  set class so we can remove it when highlight_off is called
-                    .style("text-anchor", "middle")
-                    .style("font-size", "16px")
-                    .text("Top Most Salient Terms");
-            
-            title.append("tspan")
-                .attr("baseline-shift", "super")
-                .attr("font-size", "12px")
-                .text("(1)");
-            */
+
             // barchart axis adapted from http://bl.ocks.org/mbostock/1166403
             var xAxis = d3.axisTop().scale(x).tickSize(-barheight).ticks(6);
             
@@ -1578,6 +1603,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 d3.select("#"+topicEdit2)
                 .on("click", function() {
                     $('#renameTopic2').modal(); 
+                    
+                    
                 });
 
 
@@ -1667,7 +1694,83 @@ var LDAvis = function(to_select, data_or_file_name) {
             topicButtonsDiv.setAttribute("id", "topic_buttons_div")
             topicButtonsDiv.setAttribute("class", "ColumnDiv")
             topicDiv.appendChild(topicButtonsDiv) ////topicDiv.setAttribute("style", "width:100%; height:5%; background-color: red")
+            
+            var reverse = document.createElement("button");
+            reverse.setAttribute("id", topicReverse);
 
+            
+            
+
+
+            reverse.setAttribute("class", "btn btn-primary btnTopic");
+            reverse.innerHTML = "Undo";
+            //reverse.setAttribute("disabled", true);
+
+            topicButtonsDiv.appendChild(reverse);
+
+            
+            d3.select("#"+topicReverse)
+                .on("click", function() {
+                    $('#ReverseModel').modal(); 
+                });
+
+            d3.select("#apply_reverse_topic_model") //el usuario desea continuar con el mergin
+                .on("click", function() {
+                    console.log("que bacan, voy a revertir los cambios!!!");
+                    console.log("PRE reverse esto es lo q queda en la pila", old_topic_model_states);
+
+                    var last_state_dict = old_topic_model_states.pop();
+                    console.log("este es mi last state dict", last_state_dict)
+
+                    relevantDocumentsDict = last_state_dict.relevantDocumentsDict;
+                    lamData = last_state_dict.lamData;
+                    mdsData = last_state_dict.mdsData;
+                    new_circle_positions = last_state_dict.new_circle_positions;
+                    name_topics_circles = last_state_dict.name_topics_circles;
+                    vis_state.topic = last_state_dict.current_topic_id;
+
+
+                    //quitar del arreglo de topicos a no mostrar. En un split hay que crear la condicion para saber de que arreglo sacar el ultimo topico baneado
+                    merged_topic_to_delete.pop();
+                    name_merged_topic_to_delete.pop();
+
+
+                    d3.selectAll('#svgMdsPlot').remove();
+                    d3.selectAll('#divider_central_panel').remove();
+        
+                    document.getElementById("renameTopicId").value = name_topics_circles[topicID + vis_state.topic]
+                    $('#idTopic').html(topicID + vis_state.topic);
+        
+        
+        
+                    createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current); //update central panel
+                    topic_on(document.getElementById(topicID+vis_state.topic));
+        
+                    
+                    console.log("debiese haberse actualizado todo");
+                    console.log("post reverse esto es lo q queda en la pila", old_topic_model_states);
+                    /*
+
+                    if(old_topic_model_states.length!=0){
+                        reverse.setAttribute("disabled", false);
+                        d3.select("#"+topicReverse).setAttribute("disabled", false);
+                        console.log("esto fue lo q seleccione aqui", d3.select("#"+topicReverse));
+                        console.log("este reverse es undefined seguri", reverse);
+                        
+
+                    }
+                    else{
+                        reverse.setAttribute("disabled", true);
+                        d3.select("#"+topicReverse).setAttribute("disabled", true);
+                        console.log("esto fue lo q seleccione aqui", d3.select("#"+topicReverse));
+                        console.log("este reverse es undefined seguri", reverse);
+                    }
+                    console.log("este es el length",old_topic_model_states.length);
+                    */
+
+            });
+    
+            
            var topic_title= document.createElement("span"); 
            topic_title.innerText = "Topic: ";
            topicNameDiv.appendChild(topic_title); 
@@ -1684,17 +1787,43 @@ var LDAvis = function(to_select, data_or_file_name) {
            merge.innerHTML = "Merge";
            topicButtonsDiv.appendChild(merge);
 
+           
+           
+
+
+
            d3.select("#apply_topic_merging") //el usuario desea continuar con el mergin
                 .on("click", function() {
                     //hacer_merge = true
                     
                     var merging_final_topic_1 = document.getElementById("merging_topic_1_name").innerText;
                     var merging_final_topic_2 =  $("#selectTopicMerge" ).val()
-            
-            
-                    
-                    merging_topics_scenario_1(merging_final_topic_1, merging_final_topic_2)
+                    save_state_data()
 
+                    merging_topics_scenario_1(merging_final_topic_1, merging_final_topic_2);
+                    console.log("antes reverse", document.getElementById(topicReverse));
+                    //document.getElementById(topicReverse).attr('disabled', null);
+                    
+                    console.log("despues es el reverse", document.getElementById(topicReverse));
+                    /*
+                    
+                    
+                    if(old_topic_model_states.length!=0){
+                        reverse.setAttribute("disabled", false);
+                        console.log("esto fue lo q seleccione aqui", d3.select("#"+topicReverse));
+                        d3.select("#"+topicReverse).     attr("disabled", false);
+                        console.log("este reverse es undefined seguri", reverse);
+                        
+
+                    }
+                    else{
+                        reverse.setAttribute("disabled", true);
+                        d3.select("#"+topicReverse).setAttribute("disabled", true);
+                        console.log("esto fue lo q seleccione aqui", d3.select("#"+topicReverse));
+                        console.log("este reverse es undefined seguri", reverse);
+                    }
+                    console.log("este es el length en apply topic merging",old_topic_model_states.length);
+                    */
                 });
        
            d3.select("#"+topicMerge)
@@ -1706,17 +1835,14 @@ var LDAvis = function(to_select, data_or_file_name) {
                        var topics_name_sorted_by_distance = get_topics_sorted_by_distance(mdsData, lambda_lambda_topic_similarity.current, merging_topic_1)
                        $.each(topics_name_sorted_by_distance, function(i, p) {
                            //add the array with the topics sorted according to the distance to the current topic
-                           if(i!=0){ //el primer elemento no se ocupa, ya que es el mismo topico con el q se quiere unir. ESTO NO OCURRE ASI EN EL SCENARIO 2
+                           if(i!=0 && ( !(name_merged_topic_to_delete.includes(topics_name_sorted_by_distance[i])))){ //el primer elemento no se ocupa, ya que es el mismo topico con el q se quiere unir. ESTO NO OCURRE ASI EN EL SCENARIO 2. Ojo, tambien chequeamos que ese elemento no haya que borrarse
                             $('#selectTopicMerge').append($('<option></option>').val(topics_name_sorted_by_distance[i]).html(topics_name_sorted_by_distance[i]));
                            }
                            else{
-                               //console.log("no agregamos este", topics_name_sorted_by_distance[i])
-                           }
-                           
+                               ////console.log("no agregamos este", topics_name_sorted_by_distance[i])
+                           }                           
                        });
-
-                       $('#MergeModal_new_design').modal(); 
-                       
+                       $('#MergeModal_new_design').modal();                        
                    }
                    else{ //you need to select a topic first
                        $('#MergeModal_0').modal(); 
@@ -1729,10 +1855,10 @@ var LDAvis = function(to_select, data_or_file_name) {
 
            var split = document.createElement("button");
            split.setAttribute("id", topicSplit);
-           split.setAttribute("class", "btn btn-primary btnTopic");
-           split.setAttribute("disabled", true);
+           split.setAttribute("class", "btn btn-primary btnTopic");           
            split.innerHTML = "Split";
            topicButtonsDiv.appendChild(split);
+           //split.setAttribute("disabled", true);
 
   
         
@@ -1750,7 +1876,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
 
-            
             
             if(type_vis == 1){
                 d3.select("#rename_topic_button")
@@ -1803,9 +1928,10 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             d3.select("#"+topicSplit)
             .on("click",function(){
+                console.log("cual es este numero splitting_topic", splitting_topic);
                 if(splitting_topic!=-1){
-                    var real_topic_id = topic_order[splitting_topic-1]-1//Ojo! los topicos fueron ordenados de mayor a menor frecuencia, por eso que el orden cambia
-                    updateRelevantDocumentsSplitting(real_topic_id, relevantDocumentsDict);
+                    //var real_topic_id = topic_order[splitting_topic-1]-1//Ojo! los topicos fueron ordenados de mayor a menor frecuencia, por eso que el orden cambia
+                    updateRelevantDocumentsSplitting(splitting_topic-1, relevantDocumentsDict);
                     
                     $('.splitting_topic_1').html(splitting_topic);
                     $('#SplitModal_1').modal(); //$("#myModal").show();
@@ -1813,42 +1939,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             });
             
             
-            /*
-            d3.select("#"+topicSplit) //el usuario desea continuar con el mergin #"#"+topicSplit
-            .on("click", function() {
-                merging_topic_1 = 1
-                merging_topic_2 =2
-                
-
-                fetch('/merge_topics', {
-
-                    // Specify the method
-                    method: 'POST',
-
-                    // A JSON payload
-                    body: JSON.stringify({
-                        "merging_topic_1": topic_order[merging_topic_1-1]-1, //no estoy seguro que numero de topico pasarle
-                        "merging_topic_2": topic_order[merging_topic_2-1]-1
-                    })
-                }).then(function (response) { // At this point, Flask has printed our JSON
-                    response.json().then(function(data){
-                      //return response.text();
-                
-                    })
-                }).then(function (text) {
-
-                
-
-                    // Should be 'OK' if everything was successful
-                
-                });
-                
-                //createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
-                
-            });
-            */
-
-
 
             var inputDiv_zero = document.createElement("div");
             inputDiv_zero.setAttribute("id", "BarPlotDiv_zero"); //inputDiv_zero.setAttribute("class", "border_box my-1");
@@ -1914,19 +2004,11 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
 
-            //Topic similarity slider (change the lambda of vector keywords and vector documents for topic similarity metric proposed)
-
-            
-
-
+            //Topic similarity slider (change the lambda of vector keywords and vector documents for topic similarity metric proposed)        
 
             var svgCentralPanel = d3.select("#CentralPanel").append("div")
             svgCentralPanel.attr("id", "TopicSimilarityMetricPanel")
-
-
-
-            ////
-
+    
             var sliderDivLambdaTopicSimilarity = document.createElement("div");
             sliderDivLambdaTopicSimilarity.setAttribute("id", sliderDivIDLambdaTopicSimilarity);
             sliderDivLambdaTopicSimilarity.setAttribute("class", "RowDiv");
@@ -1939,8 +2021,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
                 /* This section is to allow users to filtering paths on sankey diagram*/
 
-                //This funciton allow to the slider use the min-max value of the sankey diagram
-                ////////console.log("sankey before", matrix_sankey)
                 var min_similarity_score = Infinity
                 var max_similarity_score = -Infinity
                 matrix_sankey[lambda_lambda_topic_similarity.current].links.filter(function(el){
@@ -1951,8 +2031,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                         max_similarity_score = el.value
                     }
                 });
-                ////////console.log("sankey after", matrix_sankey)
-                //round value min/max similarity score
 
                 min_similarity_score =   Math.round(  min_similarity_score* 100) / 100
                 max_similarity_score = Math.round(  max_similarity_score* 100) / 100
@@ -1990,13 +2068,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                         'max': max_similarity_score
                     }
                 });
-                //disable right handle of the slider
-                
-
-                
+                //disable right handle of the slider                    
                 //read values from slider slider-value-lower
                 
-
                 var lambdaLabelTopicSimilarity = document.createElement("label");
                 lambdaLabelTopicSimilarity.setAttribute("id", "LabelFilteringTopicSimilarity");
                 lambdaLabelTopicSimilarity.setAttribute("class", "ColumnDiv");
@@ -2005,9 +2079,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 sliderDivFiltering.appendChild(lambdaLabelTopicSimilarity);
 
                 var origins = slider.getElementsByClassName('noUi-origin');
-                //origins[1].setAttribute('disabled', true);  //disable right slider
-
-                //console.log("origins", origins)
+                
 
                 slider.noUiSlider.on('update', function (values, handle) {
                     
@@ -2156,7 +2228,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         // function to re-order the bars (gray and red), and terms:
 
         function reorder_bars_helper(to_select, increase, topic_id_in_model, barFreqsID_actual, bar_totals_actual, terms_actual, overlay, xaxis_class){
-            //////////console.log("ojo, estos son los parametros que recibe reorder_bars_helper", increase, topic_id_in_model, barFreqsID_actual, bar_totals_actual, terms_actual, overlay, xaxis_class)
+            ////////////console.log("ojo, estos son los parametros que recibe reorder_bars_helper", increase, topic_id_in_model, barFreqsID_actual, bar_totals_actual, terms_actual, overlay, xaxis_class)
             
             var dat2 = lamData.filter(function(d) {
                 
@@ -2168,15 +2240,17 @@ var LDAvis = function(to_select, data_or_file_name) {
             for (var i = 0; i < dat2.length; i++) {
                 dat2[i].relevance = vis_state.lambda * dat2[i].logprob +
                     (1 - vis_state.lambda) * dat2[i].loglift;
+            
+                if(isNaN(dat2[i].relevance)){
+                    dat2[i].relevance  = -Infinity;
+                }
             }
             
 
             // sort by relevance:
             dat2.sort(fancysort("relevance"));
-
             
-
-            // truncate to the top R tokens:
+            
             var dat3 = dat2.slice(0, R);
             
             var y = d3.scaleBand()
@@ -2185,7 +2259,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     }))
                     .rangeRound([0, barheight])
                     .padding(0.15);
-                    //.rangeRoundBands([0, barheight], 0.15);
+            
             var x = d3.scaleLinear()
                     .domain([1, d3.max(dat3, function(d) {
                         return d.Total;
@@ -2460,13 +2534,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                 //pertenece al modelo de corpus 2
                 to_select = "#DocumentsPanel"
                 var topic_id_in_model = box.node-min_target_node_value
-                var real_topic_id = topic_order_2[topic_id_in_model]-1
-                
-                
-                updateRelevantDocuments(real_topic_id, relevantDocumentsDict_2,2);
+                                
+                updateRelevantDocuments(topic_id_in_model, relevantDocumentsDict_2,2);
                 
                 var Freq = jsonData_2.mdsDat.Freq[box.node-min_target_node_value]    
-
+                
                 lamData = [];
                 for (var i = 0; i < jsonData_2['tinfo'].Term.length; i++) {
                     var obj = {};
@@ -2504,17 +2576,12 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
             else{ // el topico seleccionado eprtenece al modelo del corpus 1
 
-
-                //show topic namename_topics_sankey
-                //$('#topic_name_selected_1').html(name_topics_circles[topicID + d.topics]); 
-                
-
-
+        
                 to_select =  "#BarPlotPanelDiv"
                 var topic_id_in_model = box.node
-                var real_topic_id = topic_order[topic_id_in_model]-1
+
                 
-                updateRelevantDocuments(real_topic_id, relevantDocumentsDict, 1);
+                updateRelevantDocuments(topic_id_in_model, relevantDocumentsDict, 1);
                 
                 var Freq = jsonData.mdsDat.Freq[box.node]   
 
@@ -2583,7 +2650,12 @@ var LDAvis = function(to_select, data_or_file_name) {
             for (var i = 0; i < dat2.length; i++) {
                 dat2[i].relevance = lambda.current * dat2[i].logprob +
                     (1 - lambda.current) * dat2[i].loglift;
+
+                if(isNaN(dat2[i].relevance)){
+                    dat2[i].relevance  = -Infinity;
+                }
             }
+
 
             dat2.sort(fancysort("relevance"));
             // truncate to the top R tokens:
@@ -2687,8 +2759,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             to_select = "#BarPlotPanelDiv"
             if (circle == null) return null;
-            
-            
+                        
             // grab data bound to this element
             var d = circle.__data__;
             mdswidth+margin.left+termwidth+(barwidth/2)
@@ -2698,7 +2769,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             var Freq = Math.round(d.Freq * 10) / 10,
                 topics = d.topics;
-
             // change opacity and fill of the selected circle
             circle.style.opacity = highlight_opacity;
             circle.style.fill = color1_2;
@@ -2715,53 +2785,51 @@ var LDAvis = function(to_select, data_or_file_name) {
             var bounds_barplot = d3.select("#" + barFreqsID).node().getBoundingClientRect();
             
 
-            //barheight = bounds_barplot.height - 1.5*termwidth
-            //barwidth = bounds_barplot.width - 1.5*termwidth
 
             d3.select("#" + barFreqsID)
                 .append("text")
-                .attr("x",(bounds_barplot.width - termwidth)/2) //mdswidth+margin.left+termwidth+(barwidth/2) .attr("transform", "translate("  +(termwidth) + "," +2*height_bar+ ")") /
+                .attr("x",(bounds_barplot.width - termwidth)/2) 
                 .attr("y", -20)
                 .attr("class", "bubble-tool") //  set class so we can remove it when highlight_off is called
                 .style("text-anchor", "middle")
                 .style("font-size", "16px")
                 .text("Top Most Relevant Terms for Topic  (" + Freq + "% of tokens)");
-                //.text("Top Most Relevant Terms for Topic " + topics + " (" + Freq + "% of tokens)");
-            
-
-
-
-            // grab the bar-chart data for this topic only:
+                
+                        
+            // grab the bar-chart data for this topic only:            
             var dat2 = lamData.filter(function(d) {
                 return d.Category == "Topic" + topics;
             });
             
+                        
             // define relevance:
+            var new_relevance;
             for (var i = 0; i < dat2.length; i++) {
-                dat2[i].relevance = lambda.current * dat2[i].logprob +
-                    (1 - lambda.current) * dat2[i].loglift;
+
+                new_relevance = lambda.current * dat2[i].logprob +(1 - lambda.current) * dat2[i].loglift;
+                if(isNaN(new_relevance)){
+                    new_relevance = -Infinity;
+                }
+
+                dat2[i].relevance = new_relevance;
             }
-
-            // sort by relevance:
-            dat2.sort(fancysort("relevance"));
             
-
-            // truncate to the top R tokens:
+            
+            // sort by relevance:
+            dat2.sort(fancysort("relevance"));        
             var dat3 = dat2.slice(0, R);
             
+
             
-            //Show most relevant documents
-            var real_topic_id = topic_order[d.topics-1]-1//Ojo! los topicos fueron ordenados de mayor a menor frecuencia, por eso que el orden cambia
-            
-            updateRelevantDocuments(real_topic_id, relevantDocumentsDict, 1);
+            //Show most relevant documents                    
+            updateRelevantDocuments(d.topics-1, relevantDocumentsDict, 1);
             
             var y = d3.scaleBand()
                     .domain(dat3.map(function(d) {
                         return d.Term;
                     }))
                     .rangeRound([0, barheight])
-                    .padding(0.15);
-                    //.rangeRoundBands([0, barheight], 0.15);
+                    .padding(0.15);                    
             var x = d3.scaleLinear()
                     .domain([1, d3.max(dat3, function(d) {
                         return d.Total;
@@ -3009,28 +3077,154 @@ var LDAvis = function(to_select, data_or_file_name) {
             return (number*100).toFixed(1) + '%'
 
         }
+
+
+        function s2ab(s) { 
+            var buf = new ArrayBuffer(s.length); //convert s to arrayBuffer
+            var view = new Uint8Array(buf);  //create uint8array as viewer
+            for (var i=0; i<s.length; i++) view[i] = s.charCodeAt(i) & 0xFF; //convert to octet
+            return buf;    
+        }
+
+        
+        //fab menu to download data
+        $(function() {
+            $('.btn-group-fab').on('click', '.btn', function() {
+              $('.btn-group-fab').toggleClass('active');
+            });
+            $('has-tooltip').tooltip();
+          });
+        //https://docs.sheetjs.com/        
+        function s2ab(s) {
+            var buf = new ArrayBuffer(s.length);
+            var view = new Uint8Array(buf);
+            for (var i=0; i<s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+            return buf;
+          }
+          
+        d3.select("#export_to_csv") 
+        .on("click", function() {
+            //create worksheet for single corpus data
+            if(type_vis == 1){
+                
+                var wb = XLSX.utils.book_new();
+
+                wb.Props = {
+                        Title: "Topic Modeling - Single Corpus"                        
+                    };
+
+                //create a worksheet - most relevant documents topic model 1                        
+                wb.SheetNames.push("Documents");
+                var documents_1 = XLSX.utils.json_to_sheet(relevantDocumentsDict);            
+                wb.Sheets["Documents"] = documents_1;
+
+                //export the top keywords for each topic, add lambda, loflift values, etc.
+                wb.SheetNames.push("Top keywords");
+                var documents_1 = XLSX.utils.json_to_sheet(dat3);            
+                wb.Sheets["Top keywords"] = documents_1;
+
+                var topic_similarity_matrix_excel;    
+                //console.log("se ejecuta esto y xk no el ajax")
+                $.ajax({
+                    url: "/get_topic_similarity_matrix_single_corpus",
+                    dataType: 'json',
+                    async: false,
+                    method: "GET",
+                    data: {"value":String(lambda_lambda_topic_similarity.current)},
+                    success: function(matrix) {        
+                        topic_similarity_matrix_excel = matrix;  
+                    }
+                });        
+                
+                //add topic similarity matrix
+                wb.SheetNames.push("Topic similarities");
+                var documents_1 = XLSX.utils.aoa_to_sheet(topic_similarity_matrix_excel);            
+                wb.Sheets["Topic similarities"] = documents_1;
+                            
+            }
+            //create worksheet for multicorpus
+            if(type_vis === 2){
+                //create workbook
+                var wb = XLSX.utils.book_new();
+                ////console.log("que hay en merge lassmbData", lamData, dat3,jsonData_2)   
+                wb.Props = {
+                        Title: "Topic Modeling - Multi Corpora"
+                    };
+
+                //create a worksheet - most relevant documents topic model 1                        
+                wb.SheetNames.push("Documents 1");
+                var documents_1 = XLSX.utils.json_to_sheet(relevantDocumentsDict);
+                wb.Sheets["Documents 1"] = documents_1;
+                
+                //create a worksheet - most relevant documents topic model 2                      
+                wb.SheetNames.push("Documents 2");
+                var documents_2 = XLSX.utils.json_to_sheet(relevantDocumentsDict_2);
+                wb.Sheets["Documents 2"] = documents_2;
+
+                //export the top keywords for each topic, add lambda, loflift values, etc.
+                wb.SheetNames.push("Top keywords");
+                var documents_1 = XLSX.utils.json_to_sheet(lamData);            
+                wb.Sheets["Top keywords"] = documents_1;
+
+                
+                /*var topic_similarity_matrix_excel;    
+                //console.log("se ejecuta esto y xk no el ajax")
+                $.ajax({
+                    url: "/get_topic_similarity_matrix_single_corpus",
+                    dataType: 'json',
+                    async: false,
+                    method: "GET",
+                    data: {"value":String(lambda_lambda_topic_similarity.current)},
+                    success: function(matrix) {        
+                        topic_similarity_matrix_excel = matrix;  
+                    }
+                });        
+                
+                //add topic similarity matrix
+                wb.SheetNames.push("Topic similarities");
+                var documents_1 = XLSX.utils.aoa_to_sheet(topic_similarity_matrix_excel);            
+                wb.Sheets["Topic similarities"] = documents_1;*/
+
+
+            }
+            
+            //exporting to download
+            var wbout = XLSX.write(wb, {bookType:'xlsx',  type: 'binary'});
+            saveAs(new Blob([s2ab(wbout)],{type:"application/octet-stream"}), 'Topic Modeling data.xlsx');
+            
+                            
+
+            
+
+        });
+
+
         function get_name_text_column_on_relevant_documents(relevantDocumentsDict){
             //get the name of the columns
             var name_columns = Object.keys(relevantDocumentsDict[0])
             var column_text_name = ''
             name_columns.forEach(
                 element => {
-                    if(typeof relevantDocumentsDict[0][element] == "string"){                        
-                        console.log("YAY!! este es el nombre de la columan donde hay texto", element)
+                    if(typeof relevantDocumentsDict[0][element] == "string"){                                            
                         column_text_name = element
                         
                     }
                 })
-            console.log("voy a retonar esta wea", column_text_name)
             return column_text_name                                      
         }
 
+        
+
+
         function updateRelevantDocuments(topic_id, relevantDocumentsDict, model){
+            
             var column_text_name = get_name_text_column_on_relevant_documents(relevantDocumentsDict)
             //sorted regarding to its contribution
             relevantDocumentsDict.sort(function(row_1, row_2){
                 return row_2[String(topic_id)]-row_1[String(topic_id)];
             });
+
+            
             if(model == 1){                        
                 $('#tableRelevantDocumentsClass_Model1').bootstrapTable("destroy");
                 $('#tableRelevantDocumentsClass_Model1').bootstrapTable({

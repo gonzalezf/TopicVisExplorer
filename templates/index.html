@@ -164,7 +164,7 @@
         <span hidden="hidden" class="merging_topic_1"></span>
         From the list, select the topic with wich you want to merge the selected topic: <span id="merging_topic_1_name"></span>
        <!--Choose the topicgoing to merge the current selected topic (<span class="merging_topic_1"></span>) with another one.  Do you want to continue?-->
-       <form id="myForm">
+       <form id="selectTopicMergeForm">
         <select id="selectTopicMerge">
         </select>
       </form>
@@ -176,10 +176,33 @@
     </div>
   </div>
 </div>
+
+<!--Modal to reverse changes (merging and splitting)-->
+<div class="modal fade" id="ReverseModel" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Topic Merging</h5>
+      </div>
+      <div class="modal-body">
+        This action will reverse the last topic merging/topic splitting operation. Are you sure do you want to continue?
+      </div>
+      <div class="modal-footer">
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="cancel_merging" data-dismiss="modal">Cancel</button>
+          <button type="button" id="apply_reverse_topic_model"  data-dismiss="modal" class="btn btn-primary">Continue</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <!--END OF MODALS -->
 
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 
 
 <!-- ADD JQUERY-->
@@ -190,15 +213,26 @@
 
 <!-- ADD JS-->
 
+
+
+
 <script src="static/js/popper.min.js"></script>
 <script src="static/js/bootstrap.min.js" ></script>
 <!--<script src="static/js/mark.min.js" ></script> We are not using it anymore-->
 <script src="static/js/d3.v5.min.js"></script>
 <script src="static/js/sankey.js"></script>
 
+<!--To create spreedsheets and  save it-->
+<script src="static/js/xlsx.full.min.js"></script>
+<script src="static/js/FileSaver.js"></script>
 
 
 
+
+<!--Fontawesome-->
+<link href="/static/fontawesome/css/fontawesome.css" rel="stylesheet">
+<link href="/static/fontawesome/css/brands.css" rel="stylesheet">
+<link href="/static/fontawesome/css/solid.css" rel="stylesheet">
 
 <!--ADD CSS-->
 <link rel="stylesheet" href="static/css/bootstrap-table.min.css">
@@ -212,42 +246,36 @@
 <script src="static/js/nouislider.js"></script>
 
 <!-- Plotly-->
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script> <!---what, ocupo plotly? revisar-->
+
+<!--for deep copy in JS-->
+<script src="static/js/lodash.js"></script>  
+
 
 
 
 <div id={{ visid }}></div>
 
+
+
+
 <script type="text/javascript">
+
 var {{ visid_raw }}_data = {{ vis_json }};
 var type_vis = {{type_vis}};
-
 var topic_order = {{topic_order}};
 var jsonData = {{vis_json}};
+
+
 if(type_vis == 1){
   var new_circle_positions = {{new_circle_positions}} 
-
 }
 
 
-var relevantDocumentsDict = {{relevantDocumentsDict}};
-
-console.log("aqui tengo el relevant documents 1", relevantDocumentsDict)
-
-
-//console.log("AFTER MERGE, ESTE ES EL JSON DATA QUE LLEGA", jsonData)
-
-
-if(type_vis == 2){
-  
-
-
-  var matrix_sankey = {{matrix_sankey}};
-  
+if(type_vis == 2){  
+  var matrix_sankey = {{matrix_sankey}};  
   var jsonData_2 = {{vis_json_2|safe}};
   var topic_order_2 = {{topic_order_2}};
-  
-  var relevantDocumentsDict_2 = {{relevantDocumentsDict_2}};
   
 }
 
@@ -257,26 +285,26 @@ if(type_vis == 2){
 
 
 <div class="container-fluid">
-  
-
   <div class="row" style="height: 100%"> <!--All the visualization must be placed in this row-->
-
     <div class="col-4 border-right"  id="BarPlotPanel" >  <!--LDAvisContainer-->
     </div>
-    
-
     <div class="col-4 border-right "   id="CentralPanel"> <!-- "-->
-
     </div>
-
-
     <div class="col-4" id="DocumentsPanel">
       <script>
-        if(type_vis == 1){
+        if(type_vis === 1){
+          
           var html = '<div id="DocumentsPanel_scenario_1"> <table  id="tableRelevantDocumentsClass_Model1" class= "table table-hover header-fixed"> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Document</th> </tr> </thead> </table></div>';
+          //add button fab
+          html+='<div class="btn-group-fab" role="group" aria-label="FAB Menu"> <div> <button type="button" class="btn btn-main btn-primary has-tooltip" data-placement="left" title="Download data"> <i class="fa fa-download"></i> </button><button type="button" class="btn btn-sub btn-danger has-tooltip" data-placement="left" title="Download xlsx" id="export_to_csv"> <i class="fa fa-file-excel"></i> </button> <button type="button" class="btn btn-sub btn-warning has-tooltip" data-placement="left" title="Download CSV file"> <i class="fas fa-file-csv"></i> </button> </div> </div>'
           document.write(html)
 
         }
+        if(type_vis === 2)
+        //console.log("estoy aqui leyendo ijiji")
+        //document.write('<button class="button" id="export_to_csv">Export data</button>')
+        var html ='<div class="btn-group-fab" role="group" aria-label="FAB Menu"> <div> <button type="button" class="btn btn-main btn-primary has-tooltip" data-placement="left" id="export_to_csv" title="Download data"> <i class="fa fa-download"></i> </button><button type="button" class="btn btn-sub btn-danger has-tooltip" data-placement="left" title="Download xlsx" id="export_to_csv"> <i class="fa fa-file-excel"></i> </button> <button type="button" class="btn btn-sub btn-warning has-tooltip" data-placement="left" title="Download CSV file"> <i class="fas fa-file-csv"></i> </button> </div> </div>'
+        document.write(html)
 
       </script>
     </div>
@@ -322,10 +350,6 @@ if(type_vis == 2){
            });
   }
 </script>
-
-
-
-
 
 <script src="static/js/bootstrap-table.min.js"></script>
 

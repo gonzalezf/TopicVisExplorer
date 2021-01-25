@@ -4,6 +4,9 @@
 
 
 ###Local ignores###
+.git/
+.vscode/
+.ipynb_checkpoints/
 
 # Ignore word embeddings
 *.vec
@@ -11,6 +14,12 @@
 
 #ignore csv files
 *.csv
+
+#ignore pkl
+*.pkl
+
+#ignore model outputs
+models_output/
 
 #ignore jupyter notebooks
 *.ipynb

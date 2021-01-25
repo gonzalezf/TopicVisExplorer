@@ -3,7 +3,7 @@
 # It was adapted for pyLDAvis by Ben Mabey
 import warnings
 import random
-import json
+import json 
 import jinja2
 import re
 import urls
@@ -12,8 +12,10 @@ from utils import get_id, write_ipynb_local_js, NumPyEncoder
 from _prepare import PreparedData
 from jinja2 import Template
 from flask import render_template
-
-
+import random
+from jinja2 import Template, escape
+from flask import Markup
+from flask import json as json_flask
 __all__ = ["prepared_data_to_html", "display",
            "show", "save_html", "save_json",
            "enable_notebook", "disable_notebook","prepared_html_in_flask"]
@@ -82,7 +84,7 @@ TEMPLATE_DICT = {"simple": SIMPLE_HTML,
                  "general": GENERAL_HTML}
 
 
-def prepared_data_to_html(data, relevantDocumentsDict, topic_order,   type_vis, new_circle_positions=None,matrix_sankey=None,  data_2=None, relevantDocumentsDict_2 = None, topic_order_2 = None, d3_url=None, ldavis_url=None, ldavis_css_url=None,
+def prepared_data_to_html(data, topic_order,   type_vis, new_circle_positions=None,matrix_sankey=None,  data_2=None,  topic_order_2 = None, d3_url=None, ldavis_url=None, ldavis_css_url=None,
                           template_type="general", visid=None, use_http=False):
 
     """Output HTML with embedded visualization
@@ -205,17 +207,13 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order,   type_vis, 
         dict_matrix_json = json.dumps(dict_matrix_dict)
         data_json_format_2=[None]
     
-    print("que le pase a jinja ", type(relevantDocumentsDict))
 
-    #escape jinja2 comments that could appear on relevant documents
-    relevantDocumentsDict = json.dumps(relevantDocumentsDict).replace("{#", "{{ '{#' }}").replace("#}", "{{ '#}' }}")
-    relevantDocumentsDict_2  = json.dumps(relevantDocumentsDict_2).replace("{#", "{{ '{#' }}").replace("#}", "{{ '#}' }}")
+    
+
     
 
     return template.render(visid=json.dumps(visid),
-                           new_circle_positions = new_circle_positions, 
-                           relevantDocumentsDict = relevantDocumentsDict, #esto debiese ser un arreglo
-                           relevantDocumentsDict_2 = relevantDocumentsDict_2, #esto debiese ser un arreglo
+                           new_circle_positions = new_circle_positions,                            
                            topic_order = topic_order,
                            topic_order_2 = topic_order_2,#matrix_heatmap = matrix,#categories_row = categories_row,
                            visid_raw=visid,
@@ -274,7 +272,7 @@ def display(data, local=False, **kwargs):
 
     return HTML(prepared_data_to_html(data, **kwargs))
 
-def prepared_html_in_flask(data, relevantDocumentsDict, topic_order,type_vis,new_circle_positions = None, matrix_sankey=None, data_2 = None, relevantDocumentsDict_2 = None, topic_order_2 = None, **kwargs):
+def prepared_html_in_flask(data, topic_order,type_vis,new_circle_positions = None, matrix_sankey=None, data_2 = None, topic_order_2 = None, **kwargs):
     #kwargs['ldavis_url'] = '/LDAvis.js'
     #kwargs['d3_url'] = '/d3.js'
     #kwargs['ldavis_css_url'] = '/LDAvis.css'
@@ -289,7 +287,7 @@ def prepared_html_in_flask(data, relevantDocumentsDict, topic_order,type_vis,new
     #kwargs['d3_url'] = 'https://topicvisexplorer.herokuapp.com/static/js/d3.v5.min.js'
     #kwargs['ldavis_css_url'] = 'https://topicvisexplorer.herokuapp.com/static/css/ldavis.css'
 
-    html = prepared_data_to_html(data = data, relevantDocumentsDict = relevantDocumentsDict,topic_order = topic_order,type_vis = type_vis,new_circle_positions= new_circle_positions,  matrix_sankey = matrix_sankey, data_2 =  data_2, relevantDocumentsDict_2 = relevantDocumentsDict_2, topic_order_2 = topic_order_2,  **kwargs)
+    html = prepared_data_to_html(data = data, topic_order = topic_order,type_vis = type_vis,new_circle_positions= new_circle_positions,  matrix_sankey = matrix_sankey, data_2 =  data_2,  topic_order_2 = topic_order_2,  **kwargs)
     
     return html
     
