@@ -8,6 +8,8 @@ var global_lamData;
 var merged_topic_to_delete = [];
 var name_merged_topic_to_delete = [];
 var old_topic_model_states = []; //here we are going to save previous topic models. This should be a array of dictionaries
+
+var slider_topic_splitting_values = {};
 var LDAvis = function(to_select, data_or_file_name) {
 
     // This section sets up the logic for event handling
@@ -1011,9 +1013,9 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         function createMdsPlot(number, mdsData, lambda_lambda_topic_similarity){
 
-            console.log("EN CREATE MDS PLOT LLEGO ESTO", mdsData);
             
-            //console.log("este es el mdsdata que hay que reemplazar", mdsData)
+            
+            
             //if  previous mdsplot exists, remove it
             d3.selectAll('#svgMdsPlot').remove();
             d3.selectAll('#divider_central_panel').remove();
@@ -1929,13 +1931,26 @@ var LDAvis = function(to_select, data_or_file_name) {
             d3.select("#"+topicSplit)
             .on("click",function(){
                 console.log("cual es este numero splitting_topic", splitting_topic);
-                if(splitting_topic!=-1){
+                $('#topic_to_split_name').html(name_topics_circles[topicID + vis_state.topic]);                    
+                $('#SplitTopicModal').modal();
+                //updateRelevantDocumentsSplitting(splitting_topic-1, relevantDocumentsDict);
+                updateRelevantDocumentsTopicSplitting(splitting_topic-1, relevantDocumentsDict, 1);
+                
+                //if(splitting_topic!=-1){
                     //var real_topic_id = topic_order[splitting_topic-1]-1//Ojo! los topicos fueron ordenados de mayor a menor frecuencia, por eso que el orden cambia
-                    updateRelevantDocumentsSplitting(splitting_topic-1, relevantDocumentsDict);
+                    //updateRelevantDocumentsSplitting(splitting_topic-1, relevantDocumentsDict);
                     
-                    $('.splitting_topic_1').html(splitting_topic);
-                    $('#SplitModal_1').modal(); //$("#myModal").show();
-                }
+                    //$('.splitting_topic_1').html(splitting_topic);
+                    //$('#SplitModal_1').modal(); //$("#myModal").show();
+                    
+                    
+                //}
+
+
+     
+
+
+
             });
             
             
@@ -2997,81 +3012,6 @@ var LDAvis = function(to_select, data_or_file_name) {
         
 
 
-            //https://stackoverflow.com/questions/44336431/how-to-add-a-column-with-buttons-to-a-bootstrap-table-populated-by-data-from-mys/44343632
-            $('.tableRelevantDocumentsClass_Split').on('click-row.bs.table', function (e, row, $element) {
-                var row_num = $element.index() + 1;
-                
-                
-              });
-
-        function getIdSelectionsFromTable() {
-            var $table = $('.tableRelevantDocumentsClass_Split')
-            
-            return $.map($table.bootstrapTable('getSelections'), function (row) {
-                return row.id
-            })
-        }
-
-        var checkedRows = [];
-
-        $('.tableRelevantDocumentsClass_Split').on('check.bs.table', function (e, row) {
-            
-        checkedRows.push({topic_perc_contrib: row.topic_perc_contrib, text: row.text,uncategorized: row.uncategorized, subtopic1: row.subtopic1, subtopic2: row.subtopic2 }); // id: row.id ¿como obtener la id de la row? uwu //checkedRows.push({id: row.id, name: row.name, forks: row.forks});
-        });
-
-        $('.tableRelevantDocumentsClass_Split').on('uncheck.bs.table', function (e, row) {
-        $.each(checkedRows, function(index, value) {
-            if (value.id === row.id) {
-            checkedRows.splice(index,1);
-            }
-        });
-        });
-
-        $("#add_cart").click(function() {
-        $("#output").empty();
-        $.each(checkedRows, function(index, value) {
-            $('#output').append($('<li></li>').text(value.text+"---"+value.topic_perc_contrib+"---"+value.uncategorized+"---"+value.subtopic1+"---"+value.subtopic2));
-        });
-        });
-
-        function updateRelevantDocumentsSplitting(topic_id, relevantDocumentsDict){
-            $('.tableRelevantDocumentsClass_Split').bootstrapTable("destroy");
-                $('.tableRelevantDocumentsClass_Split').bootstrapTable({
-                    toggle:true,
-                    pagination: true,
-                    search: true,
-                    sorting: true,
-                    //showRefresh: true, Hacer que esto funcione! ver :  https://examples.bootstrap-table.com/#view-source
-                    //showExport:true,
-                    //showColumns: true,
-                    columns:[
-                        {
-                            field: 'topic_perc_contrib',
-                            title: 'Contribution',
-                            sortable:'true'
-                        },{
-                            field: 'text',
-                            title: 'Text',
-                            sortable:'true'
-                        },{
-                            field: 'uncategorized',
-                            title:'Uncategorized',
-                            checkbox: true,
-                        },
-                        {
-                            field: 'subtopic1',
-                            title:'Sub topic 1',
-                            radio: true,
-                        },
-                        {
-                            field: 'subtopic2',
-                            title:'Sub topic 2',
-                            radio: true,
-                        }
-                    ],
-                    data: relevantDocumentsDict[topic_id]
-                });            
-        }
 
         function to_percentage(number){
             return (number*100).toFixed(1) + '%'
@@ -3213,7 +3153,183 @@ var LDAvis = function(to_select, data_or_file_name) {
             return column_text_name                                      
         }
 
+        /*
+        $('#tableRelevantDocumentsClass_TopicSplitting').on('click-row.bs.table', function (e, row, $element) {
+            var row_num = $element.index() + 1;
+            console.log("esta es la row que estoy sseleccionando",row);
+            
+          });
         
+        function getIdSelectionsFromTable() {
+            var $table = $('#tableRelevantDocumentsClass_TopicSplitting')
+            
+            return $.map($table.bootstrapTable('getSelections'), function (row) {
+                return row.id
+            })
+        }
+
+        */
+
+        $("#add_cart").click(function() {
+            console.log("que encontramos en esta weaaaaaa", getIdSelectionsFromTable());
+            console.log("obteniendo la selecion gracias a bootsrap ---", $("#tableRelevantDocumentsClass_TopicSplitting").bootstrapTable('getSelections'));
+
+            var mySlider = $(".sliderCool").bootstrapSlider();
+            for(var i=0; i<mySlider.length; i++){
+                console.log("esto funcaaaaaa porfi vooor",mySlider[i].getValue());
+            }
+            console.log("o si no veamos como hacer algoo con este objeto", mySlider);
+            
+            //console.log("funciona esto my slider", mySlider.getValue());
+            //console.log("y estoooooo tambn", $(".sliderCool").getValue());
+
+            
+            //alert('getSelections: ' + JSON.stringify());
+        });
+
+        
+
+        //https://www.jqueryscript.net/form/shift-select-multiple-checkboxes.html
+
+        function generateColumns(param) {
+            return  [{
+                field: 'id',
+                title: 'ID',
+                visible: false,
+                align: 'center',
+                valign: 'middle'
+            }];            
+        }
+
+        function priceFormatter(value) {
+            // 16777215 == ffffff in decimal
+            var color = '#' + Math.floor(Math.random() * 6777215).toString(16)
+            return '<div style="color: ' + color + '">' +
+              '<i class="fa fa-dollar-sign"></i>' +
+              value.substring(1) +
+              '</div>'
+          }
+
+        function updateRelevantDocumentsTopicSplitting(topic_id, relevantDocumentsDict, model){
+            
+            var column_text_name = get_name_text_column_on_relevant_documents(relevantDocumentsDict)
+            //sorted regarding to its contribution
+            relevantDocumentsDict.sort(function(row_1, row_2){
+                return row_2[String(topic_id)]-row_1[String(topic_id)];
+            });
+
+            
+            if(model == 1){
+                $('#tableRelevantDocumentsClass_TopicSplitting').bootstrapTable("destroy");
+                $('#tableRelevantDocumentsClass_TopicSplitting').bootstrapTable({
+                    toggle:true,
+                    //height:420,
+                    pagination: true,
+                    showRefresh: true,
+                    search: true,
+                    sorting: true,
+                    pageList: [10, 25, 50, 100],
+                    checkboxHeader: false,           
+                    multipleSelectRow: true,         
+                    //showRefresh: true, Hacer que esto funcione! ver :  https://examples.bootstrap-table.com/#view-source
+                    //showExport:true,
+                    //showColumns: true,
+                    columns:[
+                        {
+                            field: String(topic_id),
+                            formatter:to_percentage,
+                            title: '%',
+                            sortable:'true'
+                        },{
+                            field: column_text_name,
+                            escape:"true",
+                            title: 'Document',
+                            sortable:'true'
+                        },
+                        {
+                            field: String(topic_id),
+                            title: 'Edit',
+                            align: 'center',
+                            valign: 'middle',
+                            clickToSelect: false,
+                            formatter : function(value,row,index) { //ojo, value es la contribucion al topico, row es toda la fila de la matrix relevant documents dict y el index, el index                                
+                        
+                            return '<div class="sliderCool" id="inputSlider_'+index+'"></div>';
+
+                            }
+
+                          }
+                        
+                    ],
+                    data: relevantDocumentsDict
+                    //data: relevantDocumentsDict.slice(0,40)
+                });
+            }
+
+            function probando_esto(){
+                console.log("CTMM NACHO FUNCIONAAA");
+            }
+
+
+            $('#tableRelevantDocumentsClass_TopicSplitting').on('post-body.bs.table', function (e) {
+                /*This add a slider too all the table*/
+                console.log("este e sun eee",e);
+                $(".sliderCool").slider({
+                    //class: 'prueba_slider_class',
+                    min:0, 
+                    max:100, 
+                    step: 1, 
+                    precision:0, 
+                    value:50,
+                    //ticks: [0,25, 50, 75, 100],
+                    //ticks_labels: ['0', '25', '50','75', '100'],
+                    //ticks_snap_bounds: 30,
+                    rangeHighlights: [
+                        { "start": 0, "end": 50, "class": "category1" },
+                        { "start": 51, "end": 100, "class": "category2" }
+                    ]
+                });
+
+                $(".sliderCool").on("change", function(event){
+                    
+                    //update the values in the dictionary
+                    slider_topic_splitting_values[event.currentTarget.id] = event.value.newValue;
+                    //console.log("este es el event", event.currentTarget.id);
+                    //console.log("Changed to ", event.value.newValue);
+                    //console.log("asi va mi dictionary", slider_topic_splitting_values);
+                });
+
+                //update values regarding to dictionary
+                console.log("asi va esto", slider_topic_splitting_values);
+
+                for (const [key, value] of Object.entries(slider_topic_splitting_values)) {
+                    console.log(key, value);
+                    $("#"+String(key)).slider('setValue', value);
+                    console.log("cambiadoo");
+                    //recordar que esta el getValue
+
+                }
+
+                /*
+                for(var i = 0; i < Object.keys(slider_topic_splitting_values).length; i++){
+                    //set value
+                    slider_topic_splitting_values
+
+
+                }*/
+
+
+                
+                
+
+                
+              });
+
+            $(".search-input").attr("placeholder", "Search on documents").val("").focus().blur();
+           
+        }
+
+
 
 
         function updateRelevantDocuments(topic_id, relevantDocumentsDict, model){

@@ -109,15 +109,27 @@ rect.bordered {
   }
 
 
-
-  #modal_dialog_SplitModal_1{
-    width: 700px;
-    height:700px;
+  #tableRelevantDocumentsClass_TopicSplitting{
     overflow-y: scroll;
-    /*overflow-x: scroll;*/
 
   }
 
+
+/*
+
+#SplitTopicModal{
+  
+  width: 80%;
+  height:50%;
+  margin: auto;
+  overflow-y: scroll;
+  overflow-y: hidden;
+
+
+  
+}
+
+*/
 
 /*
 .tableRelevantDocumentsClass_Model2{
@@ -575,4 +587,12 @@ tbody{
 
 #selectTopicMerge{
   width:100%;
+}
+
+.slider-rangeHighlight.category1 {
+  background: rgb(190, 124, 240);
+}
+
+.slider-rangeHighlight.category2 {
+  background: rgb(107, 240, 167);
 }
