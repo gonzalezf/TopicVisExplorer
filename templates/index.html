@@ -70,6 +70,11 @@
         <button id="add_cart">Add to card</button>
         <!--<div id="input"></div>      -->
         
+        <div id="KeywordsPanel_TopicSplitting"> <!--Here the user is goign to be able to change the distribution of the most relevant keywords-->
+
+
+
+        </div>
         <div id="DocumentsPanel_TopicSplitting">
           <table id="tableRelevantDocumentsClass_TopicSplitting"  class= "overflow-hidden table table-hover header-fixed" >
             <thead>
@@ -82,7 +87,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" id="rename_topic_button" data-dismiss="modal" >Split topics</button>
+        <button type="button" class="btn btn-primary" id="split_topics_button" data-dismiss="modal" >Split topics</button>
       </div>
     </div>
   </div>
@@ -262,7 +267,9 @@
 
 
 
-
+<!--cross symbol for scenario 1 circles-->
+<script src="https://d3js.org/d3-path.v2.min.js"></script>
+<script src="https://d3js.org/d3-shape.v2.min.js"></script>
 
 
 <div id={{ visid }}></div>
@@ -370,9 +377,5 @@ if(type_vis == 2){
 <input type='text' name='somename' data-provide='slider' data-slider-ticks='[1, 2, 3]'  data-slider-min='1' data-slider-max='3' data-slider-step='1' data-slider-value='3' data-slider-tooltip='hide' >-->
 
 
-<input class="your-slider" type="text"/>
-<input class="your-slider" type="text"/>
-
-<input class="your-slider" type="text"/>
 
 
