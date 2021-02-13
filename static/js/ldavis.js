@@ -9,6 +9,8 @@ var merged_topic_to_delete = [];
 var name_merged_topic_to_delete = [];
 var old_topic_model_states = []; //here we are going to save previous topic models. This should be a array of dictionaries
 
+
+var list_terms_for_topic_splitting = [];
 var slider_topic_splitting_values = {};
 var LDAvis = function(to_select, data_or_file_name) {
 
@@ -105,7 +107,12 @@ var LDAvis = function(to_select, data_or_file_name) {
 
     var leftPanelID = visID + "-leftpanel";
     var barFreqsID = "barplot_1";
-    var barFreqsID_2 = "barplot_2"
+    var barFreqsID_2 = "barplot_2";
+
+    var barFreqsIDTopicSplitting = "barplot_1_TopicSplitting";
+
+
+
     
     
     var sliderDivID = "RelevanceSliderContenedor";
@@ -1552,8 +1559,213 @@ var LDAvis = function(to_select, data_or_file_name) {
 
        }
        
+       function createCentralPanelTopicSplitting(){
+            console.log("cuales son los terminos que aparecen aqui ene l panel central", list_terms_for_topic_splitting);
+            var centralPanelRow = document.createElement('div');
+            centralPanelRow.setAttribute("id", "CentralPanelTopicSplittingRow")
+            centralPanelRow.setAttribute("class", "RowDiv")
+            document.getElementById('CentralPanelTopicSplitting').appendChild(centralPanelRow);
+
+            
+            var RelevantKeywordsTopicSplitting = document.createElement("div");
+            RelevantKeywordsTopicSplitting.setAttribute("id", "RelevantKeywordsTopicSplitting")
+            RelevantKeywordsTopicSplitting.setAttribute("class", "ColumnDiv")
+            centralPanelRow.appendChild(RelevantKeywordsTopicSplitting) 
+
+            var SlidersTopicSplitting = document.createElement("div");
+            SlidersTopicSplitting.setAttribute("id", "SlidersTopicSplitting")
+            SlidersTopicSplitting.setAttribute("class", "ColumnDiv")
+            centralPanelRow.appendChild(SlidersTopicSplitting) 
+
+            /*
+            var testlabel= document.createElement("span"); 
+            testlabel.innerText = "Topic: ";
+            RelevantKeywordsTopicSplitting.appendChild(testlabel); 
+            console.log("esta funcion debiese estar ok");
+            */
+
+           $('#CentralPanelTopicSplittingRow').bootstrapTable("destroy");
+           $('#CentralPanelTopicSplittingRow').bootstrapTable({
+               toggle:true,
+               //height:420,
+               //pagination: true,
+               //showRefresh: true,
+               sorting: true,
+               //pageList: [10, 25, 50, 100],
+               //pageList: [10],
+               checkboxHeader: false,           
+               //multipleSelectRow: true,         
+               //showRefresh: true, Hacer que esto funcione! ver :  https://examples.bootstrap-table.com/#view-source
+               //showExport:true,
+               //showColumns: true,
+               columns:[
+                   {
+                       field: 'Term',
+                       title: 'Terms',
+                       sortable:'true'
+                   },
+                   {
+                       field: 'Term',
+                       title: 'Create New subtopics',
+                       align: 'center',
+                       valign: 'middle',
+                       clickToSelect: false,
+                       formatter : function(value,row,index) { //ojo, value es la contribucion al topico, row es toda la fila de la matrix relevant documents dict y el index, el index                                
+                   
+                       return '<div class="sliderCool" id="inputSlider_'+index+'"></div>';
+
+                       }
+
+                     }
+
+                   
+                   
+               ],
+               data: list_terms_for_topic_splitting
+               //data: relevantDocumentsDict.slice(0,40)
+           });
+
+
+       }
+
+
+       
+       function createBarPlotTopicSplitting(to_select, dat3, barFreqsID_actual, bar_totals_actual, terms_actual,  splitting, xaxis_class, number_terms){
+
+
         
-        function createBarPlot(to_select, dat3, barFreqsID_actual, bar_totals_actual, terms_actual,  bubble_tool, xaxis_class, number_terms){
+        var termwidth_splitting = 90;
+        d3.selectAll("#svg_keywords_topic_splitting").remove();
+
+            
+        var svg_topicsplitting = d3.select("#KeywordsPanel_TopicSplitting").append("svg") //BarPlotPanelDiv
+        .attr("width", "100%")
+        .attr('id',"svg_keywords_topic_splitting")
+        .attr("class", "graph-svg-component")
+        .attr("height", "100%");
+        
+
+        
+        var topicDivRightPanel = document.createElement("div");
+        topicDivRightPanel.setAttribute("id", "topic_splitting_slider_row")
+        topicDivRightPanel.setAttribute("class", "RowDiv")
+        document.getElementById("svg_keywords_topic_splitting").appendChild(topicDivRightPanel) 
+        
+
+        //Lets draw the term frequency barplot
+        //for the first demo, the size of the barplot panel in the topic splitting modal is equal to the size of the barplot panel in tghe scenario 1
+        var bounds_barplot_splitting = d3.select("#BarPlotPanelDiv").node().getBoundingClientRect();
+
+        console.log("este es el tamañooo", bounds_barplot_splitting);
+
+        var barheight_splitting = barheight  //bounds_barplot_splitting.height - 0.5*termwidth_splitting
+        var barwidth_splitting = barwidth   //bounds_barplot_splitting.width - 1.5*termwidth_splitting
+    
+
+
+
+    
+        var barDefault2_splitting = dat3.filter(function(d) {
+            return d.Category == "Default";
+        });
+        
+        barDefault2_splitting = barDefault2_splitting.slice(0, number_terms)
+       
+
+
+        
+        var y_splitting = d3.scaleBand()
+                .domain(barDefault2_splitting.map(function(d) {
+                    return d.Term;
+                }))
+                .rangeRound([0, barheight_splitting])
+                .padding(0.15);
+
+        var x_splitting = d3.scaleLinear()
+                .domain([1, d3.max(barDefault2_splitting, function(d) {
+                    return d.Total;
+                })])
+                .range([0, barwidth_splitting])
+                .nice();
+        var yAxis_splitting = d3.axisLeft(y_splitting);
+
+        // Add a group for the bar chart
+        var chart_splitting = svg_topicsplitting.append("g")
+                .attr("transform", "translate("  +(termwidth_splitting) + "," +50+ ")") //.attr("transform", "translate("  +(mdswidth + margin.left + termwidth) + "," +height_bar+ ")")
+                .attr("id", barFreqsID_actual);
+
+        // Bind 'default' data to 'default' bar chart
+        var basebars_splitting = chart_splitting.selectAll(to_select + " ."+bar_totals_actual)
+                .data(barDefault2_splitting)
+                .enter();
+
+        // Draw the gray background bars defining the overall frequency of each word
+        basebars_splitting
+            .append("rect")
+            .attr("class", bar_totals_actual)
+            .attr("x", 0)
+            .attr("y", function(d) {
+                return y_splitting(d.Term);
+            })
+            .attr("height", y_splitting.bandwidth())
+            .attr("width", function(d) {
+                return x_splitting(d.Total);
+            })
+            .style("fill", color1_1)//color2_2
+            .attr("opacity", 0.4);
+
+        // Add word labels to the side of each bar
+        basebars_splitting
+            .append("text")
+            .attr("x", -5)
+            .attr("class", terms_actual)
+            .attr("y", function(d) {
+                return y_splitting(d.Term) + 12;
+            })
+            .attr("cursor", "pointer")
+            .attr("id", function(d) {
+                return (termID + d.Term);
+            })
+            .style("text-anchor", "end") // right align text - use 'middle' for center alignment
+            .text(function(d) {
+                return d.Term;
+            })
+            .on("mouseover", function() {
+                
+            })
+            .on("mouseout", function() {
+                vis_state.term = "";
+                
+            });
+
+
+
+        // barchart axis adapted from http://bl.ocks.org/mbostock/1166403
+        var xAxis_splitting = d3.axisTop().scale(x_splitting).tickSize(-barheight_splitting).ticks(6);
+
+
+
+        chart_splitting.append("g")
+            .attr("class", xaxis_class)
+            .call(xAxis_splitting);
+        
+
+
+        //Add bar of term frequency estimated for the selected topic
+
+
+
+
+        var topic_id_in_model = vis_state.topic
+        var increase = false
+
+        show_bars_withouth_transitions("#svg_keywords_topic_splitting", increase, topic_id_in_model, barFreqsID_actual, bar_totals_actual,terms_actual,'overlay', xaxis_class)
+
+
+
+        }
+
+        function createBarPlot(to_select, dat3, barFreqsID_actual, bar_totals_actual, terms_actual,  splitting, xaxis_class, number_terms){
 
             
             var svg = d3.select(to_select).append("svg") //BarPlotPanelDiv
@@ -1596,7 +1808,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("id", barFreqsID_actual)
                     .attr("class", "BarPlotClass");
             
-            if(type_vis == 1){
+            if(type_vis == 1 && splitting!=1){
 
                 var legend_svg = d3.select(to_select).append("svg") //BarPlotPanelDiv
                 .attr("width", "100%")
@@ -2095,7 +2307,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 $('#SplitTopicModal').modal();
                 //updateRelevantDocumentsSplitting(splitting_topic-1, relevantDocumentsDict);
                 updateRelevantDocumentsTopicSplitting(splitting_topic-1, relevantDocumentsDict, 1);                
-                
+                //createBarPlot("#KeywordsPanel_TopicSplitting", dat3, barFreqsIDTopicSplitting,"bar-totals-TopicSplitting", "terms-TopicSplitting", 1, "xaxis-TopicSplitting", R) //esto crea el bar plot por primera vez. 
+                createBarPlotTopicSplitting("#KeywordsPanel_TopicSplitting", dat3, barFreqsIDTopicSplitting,"bar-totals_TopicSplitting", "TopicSplitting", 1, "xaxis-TopicSplitting", 20); //hay que modificar la altura aqui en funcion del alto de las barras
+                createCentralPanelTopicSplitting();
             });
 
             $("#add_cart").click(function() {
@@ -2721,6 +2935,279 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
         }
 
+        function show_bars_withouth_transitions(to_select, increase, topic_id_in_model, barFreqsID_actual, bar_totals_actual, terms_actual, overlay, xaxis_class){
+            ////////////console.log("ojo, estos son los parametros que recibe reorder_bars_helper", increase, topic_id_in_model, barFreqsID_actual, bar_totals_actual, terms_actual, overlay, xaxis_class)
+            
+            var dat2 = lamData.filter(function(d) {
+                
+                return d.Category == "Topic" + topic_id_in_model;
+            });
+            
+            
+            // define relevance:
+            for (var i = 0; i < dat2.length; i++) {
+                dat2[i].relevance = vis_state.lambda * dat2[i].logprob +
+                    (1 - vis_state.lambda) * dat2[i].loglift;
+            
+                if(isNaN(dat2[i].relevance)){
+                    dat2[i].relevance  = -Infinity;
+                }
+            }
+            
+
+            // sort by relevance:
+            dat2.sort(fancysort("relevance"));
+            
+            
+            var dat3 = dat2.slice(0, R);
+            list_terms_for_topic_splitting = dat3;
+
+            var y = d3.scaleBand()
+                    .domain(dat3.map(function(d) {
+                        return d.Term;
+                    }))
+                    .rangeRound([0, barheight])
+                    .padding(0.15);
+            
+            var x = d3.scaleLinear()
+                    .domain([1, d3.max(dat3, function(d) {
+                        return d.Total;
+                    })])
+                    .range([0, barwidth])
+                    .nice();
+
+            // Change Total Frequency bars
+            var graybars = d3.select("#" + barFreqsID_actual)
+                    .selectAll(to_select + " ."+bar_totals_actual) //.bar-totals
+                    .data(dat3, function(d) {
+                        return d.Term;
+                    });
+
+            // Change word labels
+            var labels = d3.select("#" + barFreqsID_actual)
+                    .selectAll(to_select + " ."+terms_actual)
+                    .data(dat3, function(d) {
+                        return d.Term;
+                    });
+
+            // Create red bars (drawn over the gray ones) to signify the frequency under the selected topic
+            var redbars = d3.select("#" + barFreqsID_actual)
+                    .selectAll(to_select + " ."+overlay)
+                    .data(dat3, function(d) {
+                        return d.Term;
+                    });
+
+            // adapted from http://bl.ocks.org/mbostock/1166403
+
+            var xAxis = d3.axisTop(x).tickSize(-barheight).ticks(6);
+            
+            // New axis definition:
+            var newaxis = d3.selectAll(to_select + " ."+xaxis_class);
+
+            // define the new elements to enter:
+            var graybarsEnter = graybars.enter().append("rect")
+                    .attr("class", bar_totals_actual)
+                    .attr("x", 0)
+                    .attr("y", function(d) {
+                        return y(d.Term) + barheight + margin.bottom + 2 * rMax;
+                    })
+                    .attr("height", y.bandwidth())
+                    .style("fill", color1_1)
+                    .attr("opacity", 0.4);
+
+            var labelsEnter = labels.enter()
+                    .append("text")
+                    .attr("x", -5)
+                    .attr("class", terms_actual)
+                    .attr("y", function(d) {
+                        return y(d.Term) + 12 + barheight + margin.bottom + 2 * rMax;
+                    })
+                    .attr("cursor", "pointer")
+                    .style("text-anchor", "end")
+                    .attr("id", function(d) {
+                        return (termID + d.Term);
+                    })
+                    .text(function(d) {
+                        return d.Term;
+                    })
+                    .on("mouseover", function() {
+                        //term_hover(this); esto lo desactive
+                    })
+            
+                    .on("mouseout", function() {
+                        vis_state.term = "";
+                        term_off(this);
+                        //state_save(true);
+                    });
+
+            var redbarsEnter = redbars.enter().append("rect")
+                    .attr("class", overlay)
+                    .attr("x", 0)
+                    .attr("y", function(d) {
+                        return y(d.Term) + barheight + margin.bottom + 2 * rMax;
+                    })
+                    .attr("height", y.bandwidth())
+                    .style("fill", color2_1)
+                    .attr("opacity", 0.8);
+            var old_duration = duration;
+            duration = 0;
+            if (increase) {
+                graybarsEnter
+                    .attr("width", function(d) {
+                        return x(d.Total);
+                    })
+                    .transition().duration(duration)
+                    .delay(duration)
+                    .attr("y", function(d) {
+                        return y(d.Term);
+                    });
+                labelsEnter
+                    .transition().duration(duration)
+                    .delay(duration)
+                    .attr("y", function(d) {
+                        return y(d.Term) + 12;
+                    });
+                redbarsEnter
+                    .attr("width", function(d) {
+                        return x(d.Freq);
+                    })
+                    .transition().duration(duration)
+                    .delay(duration)
+                    .attr("y", function(d) {
+                        return y(d.Term);
+                    });
+
+                graybars.transition().duration(duration)
+                    .attr("width", function(d) {
+                        return x(d.Total);
+                    })
+                    .transition().duration(duration)
+                    .attr("y", function(d) {
+                        return y(d.Term);
+                    });
+                labels.transition().duration(duration)
+                    .delay(duration)
+                    .attr("y", function(d) {
+                        return y(d.Term) + 12;
+                    });
+                redbars.transition().duration(duration)
+                    .attr("width", function(d) {
+                        return x(d.Freq);
+                    })
+                    .transition().duration(duration)
+                    .attr("y", function(d) {
+                        return y(d.Term);
+                    });
+
+                // Transition exiting rectangles to the bottom of the barchart:
+                graybars.exit()
+                    .transition().duration(duration)
+                    .attr("width", function(d) {
+                        return x(d.Total);
+                    })
+                    .transition().duration(duration)
+                    .attr("y", function(d, i) {
+                        return barheight + margin.bottom + 6 + i * 18;
+                    })
+                    .remove();
+                labels.exit()
+                    .transition().duration(duration)
+                    .delay(duration)
+                    .attr("y", function(d, i) {
+                        return barheight + margin.bottom + 18 + i * 18;
+                    })
+                    .remove();
+                redbars.exit()
+                    .transition().duration(duration)
+                    .attr("width", function(d) {
+                        return x(d.Freq);
+                    })
+                    .transition().duration(duration)
+                    .attr("y", function(d, i) {
+                        return barheight + margin.bottom + 6 + i * 18;
+                    })
+                    .remove();
+                // https://github.com/mbostock/d3/wiki/Transitions#wiki-d3_ease
+                newaxis.transition().duration(duration)
+                    .call(xAxis)
+                    .transition().duration(duration);
+            } else {
+                graybarsEnter
+                    .attr("width", 100) // FIXME by looking up old width of these bars
+                    .transition().duration(duration)
+                    .attr("y", function(d) {
+                        return y(d.Term);
+                    })
+                    .transition().duration(duration)
+                    .attr("width", function(d) {
+                        return x(d.Total);
+                    });
+                labelsEnter
+                    .transition().duration(duration)
+                    .attr("y", function(d) {
+                        return y(d.Term) + 12;
+                    });
+                redbarsEnter
+                    .attr("width", 50) // FIXME by looking up old width of these bars
+                    .transition().duration(duration)
+                    .attr("y", function(d) {
+                        return y(d.Term);
+                    })
+                    .transition().duration(duration)
+                    .attr("width", function(d) {
+                        return x(d.Freq);
+                    });
+
+                graybars.transition().duration(duration)
+                    .attr("y", function(d) {
+                        return y(d.Term);
+                    })
+                    .transition().duration(duration)
+                    .attr("width", function(d) {
+                        return x(d.Total);
+                    });
+                labels.transition().duration(duration)
+                    .attr("y", function(d) {
+                        return y(d.Term) + 12;
+                    });
+                redbars.transition().duration(duration)
+                    .attr("y", function(d) {
+                        return y(d.Term);
+                    })
+                    .transition().duration(duration)
+                    .attr("width", function(d) {
+                        return x(d.Freq);
+                    });
+
+                // Transition exiting rectangles to the bottom of the barchart:
+                graybars.exit()
+                    .transition().duration(duration)
+                    .attr("y", function(d, i) {
+                        return barheight + margin.bottom + 6 + i * 18 + 2 * rMax;
+                    })
+                    .remove();
+                labels.exit()
+                    .transition().duration(duration)
+                    .attr("y", function(d, i) {
+                        return barheight + margin.bottom + 18 + i * 18 + 2 * rMax;
+                    })
+                    .remove();
+                redbars.exit()
+                    .transition().duration(duration)
+                    .attr("y", function(d, i) {
+                        return barheight + margin.bottom + 6 + i * 18 + 2 * rMax;
+                    })
+                    .remove();
+
+                // https://github.com/mbostock/d3/wiki/Transitions#wiki-d3_ease
+                newaxis.transition().duration(duration)
+                    .transition().duration(duration)
+                    .call(xAxis);
+
+                duration = old_duration;
+            }
+        }
+
         function reorder_bars_new(increase, side) {
             if(type_vis == 1){
                 // grab the bar-chart data for this topic only:
@@ -2738,13 +3225,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     reorder_bars_helper("#barplot_2", increase, topic_id_model_2+1, barFreqsID_2,'bar-totals_2','terms_2','overlay_2', 'xaxis_2')
 
                 }
-                
-
             }
-            
-
-            
-
         }
 
 
@@ -3042,9 +3523,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             // sort by relevance:
             dat2.sort(fancysort("relevance"));        
             var dat3 = dat2.slice(0, R);
-            
 
-            
             //Show most relevant documents                    
             updateRelevantDocuments(d.topics-1, relevantDocumentsDict, 1);
             
@@ -3422,7 +3901,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                     //showRefresh: true,
                     search: true,
                     sorting: true,
-                    pageList: [10, 25, 50, 100],
+                    //pageList: [10, 25, 50, 100],
+                    pageList: [10],
                     checkboxHeader: false,           
                     multipleSelectRow: true,         
                     //showRefresh: true, Hacer que esto funcione! ver :  https://examples.bootstrap-table.com/#view-source
@@ -3440,6 +3920,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                             title: 'Document',
                             sortable:'true'
                         },
+                        /*
                         {
                             field: String(topic_id),
                             title: 'Edit',
@@ -3453,6 +3934,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                             }
 
                           }
+
+                        */
                         
                     ],
                     data: relevantDocumentsDict
