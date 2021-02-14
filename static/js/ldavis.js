@@ -831,12 +831,44 @@ var LDAvis = function(to_select, data_or_file_name) {
             console.log("en la pila tengo esto",old_topic_model_states);
         }
         
+        function splitting_topics_scenario_1(){
+
+
+            console.log('estoy en la funcion splitting topics scenario 1');
+            var topic_id = splitting_topic-1;
+
+            for (const [key, value] of Object.entries(slider_topic_splitting_values[splitting_topic])) {
+                console.log('que tenemos aquiiii', key, value);                    
+
+            }
+
+            var postDataTopicSplitting = {
+                new_keywords_seeds: slider_topic_splitting_values[splitting_topic],
+                
+                
+            };
+
+            //4.- Create new new_position circle arrray
+
+            $.ajax({
+                type: 'POST',
+                url: '/get_new_lda_model',
+                async: false,
+                data: JSON.stringify(postDataTopicSplitting),
+                success: function(data) {
+                    console.log('buenaaaaaa esta funcion ha sido todo un exito, topic splitting');                                    
+                    //new_circle_positions = data
+                },
+                contentType: "application/json",
+                dataType: 'json'
+
+             });
+
+
+        }
 
         function merging_topics_scenario_1(topic_name_1, topic_name_2){
-            //console.log("estos son los nonbres parametros de la funcion", topic_name_1, topic_name_2);
-            //console.log("estos son los name topics circles", name_topics_circles);
-            
-            
+
             
 
             
@@ -932,23 +964,16 @@ var LDAvis = function(to_select, data_or_file_name) {
             
 
             //3.- Update frequency of mdsData
-            //console.log("------")
-            //console.log("este es el mds data", mdsData)
-            //console.log("estos son los indiceees!! ", index_topic_name_1, index_topic_name_2);
-            //console.log("accedamos al primer elemento", mdsData[index_topic_name_1]);
-            //console.log("accedamos al primer elemento", mdsData[index_topic_name_2]);
+
             var new_frequency =  mdsData[index_topic_name_1].Freq+mdsData[index_topic_name_2].Freq;
-            //console.log("OLD FRECUENCIA", mdsData[index_topic_name_1], mdsData[index_topic_name_2]);
 
             
             mdsData[index_topic_name_1].Freq =new_frequency;
             mdsData[index_topic_name_2].Freq = new_frequency;
-            //console.log("new mdsdata", mdsData[index_topic_name_1], mdsData[index_topic_name_2])
 
 
             //4.- Pass to python, the new relevant documents and the new Lambdata
             //Python shoudl recalculate the new topic similarity metric and the new positions!!
-
             
             var postData = {
                 relevantDocumentsDict_new: relevantDocumentsDict,
@@ -1560,7 +1585,6 @@ var LDAvis = function(to_select, data_or_file_name) {
        }
        
        function createCentralPanelTopicSplitting(){
-            console.log("cuales son los terminos que aparecen aqui ene l panel central", list_terms_for_topic_splitting);
             var centralPanelRow = document.createElement('div');
             centralPanelRow.setAttribute("id", "CentralPanelTopicSplittingRow")
             centralPanelRow.setAttribute("class", "RowDiv")
@@ -1656,7 +1680,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         //for the first demo, the size of the barplot panel in the topic splitting modal is equal to the size of the barplot panel in tghe scenario 1
         var bounds_barplot_splitting = d3.select("#BarPlotPanelDiv").node().getBoundingClientRect();
 
-        console.log("este es el tamañooo", bounds_barplot_splitting);
+       
 
         var barheight_splitting = barheight  //bounds_barplot_splitting.height - 0.5*termwidth_splitting
         var barwidth_splitting = barwidth   //bounds_barplot_splitting.width - 1.5*termwidth_splitting
@@ -2314,78 +2338,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             $("#add_cart").click(function() {
 
-                //1 Get slider values for most relevant keywords. These are the seeds for the version of GuidedLDA
-
-                console.log("this is the current topic",splitting_topic);
-                console.log("este es el arreglo", slider_topic_splitting_values[splitting_topic]);
-                console.log("WAIT; Esta es la lista de palabraaas", list_terms_for_topic_splitting);
-                var topic_id = splitting_topic-1;
-
-                for (const [key, value] of Object.entries(slider_topic_splitting_values[splitting_topic])) {
-                    var current_index = key.split("_")[1]; //current index of term for the current list terms for topic splitting
-                    var current_term = list_terms_for_topic_splitting[current_index];
-                    //add to the dictionary. topic -> list of terms -> value on the slider
-
-
-                    //var current_row = relevantDocumentsDict[current_index];
-                    //var current_topic_document_contribution = current_row[splitting_topic-1];
-                    //console.log("current_topic_document_contribution", current_topic_document_contribution);
-                    //var id_first_subtopic = [splitting_topic-1, 1].join('.'); //the future splitting indices are going to be 'id_in_relevant_documents.1', 'id_in_relevant_documents.2', and so on...
-                    //var id_second_subtopic = [splitting_topic-1, 2].join('.');
-
-                    //update document topic contributions to both new subtopics
-                    current_row[id_first_subtopic] = parseFloat(value/100)*current_topic_document_contribution;
-                    current_row[id_second_subtopic] = parseFloat((100-value)/100)*current_topic_document_contribution;
-                    console.log(key, value, current_index);
-                    console.log("current row", current_row);
-                    
-                    
-                    
-
-                }
-
-
-
-                //1.- Get the slider values for relevant documents. Old version
-                /*
-                
-                console.log("this is the current topic",splitting_topic);
-                console.log("este es el arreglo", slider_topic_splitting_values[splitting_topic]);
-
-                var topic_id = splitting_topic-1;
-                relevantDocumentsDict.sort(function(row_1, row_2){
-                    return row_2[String(topic_id)]-row_1[String(topic_id)];
-                });
-                console.log("veamos estos documentos", relevantDocumentsDict);
-
-                for (const [key, value] of Object.entries(slider_topic_splitting_values[splitting_topic])) {
-                    var current_index = key.split("_")[1];
-                    var current_row = relevantDocumentsDict[current_index];
-                    var current_topic_document_contribution = current_row[splitting_topic-1];
-                    console.log("current_topic_document_contribution", current_topic_document_contribution);
-                    var id_first_subtopic = [splitting_topic-1, 1].join('.'); //the future splitting indices are going to be 'id_in_relevant_documents.1', 'id_in_relevant_documents.2', and so on...
-                    var id_second_subtopic = [splitting_topic-1, 2].join('.');
-
-                    //update document topic contributions to both new subtopics
-                    current_row[id_first_subtopic] = parseFloat(value/100)*current_topic_document_contribution;
-                    current_row[id_second_subtopic] = parseFloat((100-value)/100)*current_topic_document_contribution;
-                    console.log(key, value, current_index);
-                    console.log("current row", current_row);
-                    
-                    
-                    
-
-                }
-
-                */
-                
-
-
-            
-                
-    
-                
-                //alert('getSelections: ' + JSON.stringify());
+                splitting_topics_scenario_1()
             });
 
 
@@ -3705,11 +3658,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .call(xAxis);
         }
 
-       
-
-       
-
-        
+            
     
         
         var ctx_list = document.querySelectorAll(".the-svg");
@@ -3872,24 +3821,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             return column_text_name                                      
         }
 
-        /*
-        $('#tableRelevantDocumentsClass_TopicSplitting').on('click-row.bs.table', function (e, row, $element) {
-            var row_num = $element.index() + 1;
-            console.log("esta es la row que estoy sseleccionando",row);
-            
-          });
-        
-        function getIdSelectionsFromTable() {
-            var $table = $('#tableRelevantDocumentsClass_TopicSplitting')
-            
-            return $.map($table.bootstrapTable('getSelections'), function (row) {
-                return row.id
-            })
-        }
-
-        */
-
-        
+    
 
         
 
@@ -3905,14 +3837,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             }];            
         }
 
-        function priceFormatter(value) {
-            // 16777215 == ffffff in decimal
-            var color = '#' + Math.floor(Math.random() * 6777215).toString(16)
-            return '<div style="color: ' + color + '">' +
-              '<i class="fa fa-dollar-sign"></i>' +
-              value.substring(1) +
-              '</div>'
-          }
 
         function updateRelevantDocumentsTopicSplitting(topic_id, relevantDocumentsDict, model){
             
@@ -3951,26 +3875,10 @@ var LDAvis = function(to_select, data_or_file_name) {
                             title: 'Document',
                             sortable:'true'
                         },
-                        /*
-                        {
-                            field: String(topic_id),
-                            title: 'Edit',
-                            align: 'center',
-                            valign: 'middle',
-                            clickToSelect: false,
-                            formatter : function(value,row,index) { //ojo, value es la contribucion al topico, row es toda la fila de la matrix relevant documents dict y el index, el index                                
-                        
-                            return '<div class="sliderCool" id="inputSlider_'+index+'"></div>';
-
-                            }
-
-                          }
-
-                        */
+                      
                         
                     ],
                     data: relevantDocumentsDict
-                    //data: relevantDocumentsDict.slice(0,40)
                 });
             }
 
@@ -4013,7 +3921,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     var current_term = list_terms_for_topic_splitting[current_index].Term;
                     slider_topic_splitting_values[splitting_topic][current_term] = current_value;
                     //console.log('values ', current_index, current_value, current_term, list_terms_for_topic_splitting);
-                    console.log('asiva estoo', slider_topic_splitting_values);
                 });
 
                 //update values regarding to dictionary

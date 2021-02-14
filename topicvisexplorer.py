@@ -16,6 +16,8 @@ from _display import *
 from _prepare import prepare, js_PCoA, PreparedData, _pcoa
 from _topic_similarity_matrix import *
 from _get_new_circle_positions import *
+from _guidedLda_helpers import *
+
 from os import path, walk
 from gensim.models.keyedvectors import KeyedVectors
 from scipy.spatial import procrustes
@@ -269,6 +271,43 @@ class TestView(FlaskView):
         global single_corpus_data   
         #return Response(js.dumps( single_corpus_data['relevantDocumentsDict']),  mimetype='application/json')
         return Response(js.dumps( random.sample(single_corpus_data['relevantDocumentsDict'],2000)),  mimetype='application/json')
+
+
+    #Split topic
+    @route('/get_new_lda_model',  methods=['GET', 'POST'])
+    def get_new_lda_model(self):
+
+
+
+        print('estoy en la funcion para hacer el splitting')
+
+        #1.= Get old seeds from the topics that it shouldnt change
+        lda_model = single_corpus_data['lda_model']
+        id2word = single_corpus_data['id2word']
+        corpus = single_corpus_data['corpus']
+
+
+
+        last_lda_model_dict = dict()
+        for topic_id in range(lda_model.num_topics):
+            current_list = [id2word[w]for w,p in lda_model.get_topic_terms(topic_id, topn=10)]
+            for elem in current_list:
+                last_lda_model_dict[elem] = topic_id
+        #2 Add new seeds
+        json_file = request.get_json()
+        print("ESTO FUE LO Q SE RECIBIOOO", json_file)
+        print('estas son las semillas o no', json_file['new_keywords_seeds'])
+
+        #3 Create eta
+        eta = create_eta(last_lda_model_dict, id2word, ntopics = lda_model.num_topics)
+        new_guided_lda_model = create_new_guided_lda_model(eta, id2word, corpus, lda_model.num_topics)
+
+        print('esto fue lo q se genero', new_guided_lda_model)
+
+        return new_guided_lda_model
+
+
+
 
     #Merge topic
     @route('/get_new_topic_vector',  methods=['GET', 'POST'])
