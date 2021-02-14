@@ -2314,9 +2314,40 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             $("#add_cart").click(function() {
 
+                //1 Get slider values for most relevant keywords. These are the seeds for the version of GuidedLDA
 
-                //1.- Get the slider values
+                console.log("this is the current topic",splitting_topic);
+                console.log("este es el arreglo", slider_topic_splitting_values[splitting_topic]);
+                console.log("WAIT; Esta es la lista de palabraaas", list_terms_for_topic_splitting);
+                var topic_id = splitting_topic-1;
 
+                for (const [key, value] of Object.entries(slider_topic_splitting_values[splitting_topic])) {
+                    var current_index = key.split("_")[1]; //current index of term for the current list terms for topic splitting
+                    var current_term = list_terms_for_topic_splitting[current_index];
+                    //add to the dictionary. topic -> list of terms -> value on the slider
+
+
+                    //var current_row = relevantDocumentsDict[current_index];
+                    //var current_topic_document_contribution = current_row[splitting_topic-1];
+                    //console.log("current_topic_document_contribution", current_topic_document_contribution);
+                    //var id_first_subtopic = [splitting_topic-1, 1].join('.'); //the future splitting indices are going to be 'id_in_relevant_documents.1', 'id_in_relevant_documents.2', and so on...
+                    //var id_second_subtopic = [splitting_topic-1, 2].join('.');
+
+                    //update document topic contributions to both new subtopics
+                    current_row[id_first_subtopic] = parseFloat(value/100)*current_topic_document_contribution;
+                    current_row[id_second_subtopic] = parseFloat((100-value)/100)*current_topic_document_contribution;
+                    console.log(key, value, current_index);
+                    console.log("current row", current_row);
+                    
+                    
+                    
+
+                }
+
+
+
+                //1.- Get the slider values for relevant documents. Old version
+                /*
                 
                 console.log("this is the current topic",splitting_topic);
                 console.log("este es el arreglo", slider_topic_splitting_values[splitting_topic]);
@@ -2346,7 +2377,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                 }
 
-                
+                */
                 
 
 
@@ -3965,37 +3996,43 @@ var LDAvis = function(to_select, data_or_file_name) {
                     ]
                 });
 
-                $(".sliderCool").on("change", function(event){
+                $(".sliderCool").on("change", function(event){ //ojo, esto quizqas va a fallar con el nuevo cambio 
                     
                     //update the values in the dictionary
                     
-
+                    //console.log('este es el evento actual', event);
                     
-                    if(slider_topic_splitting_values[splitting_topic] !== undefined ){
-                        slider_topic_splitting_values[splitting_topic][event.currentTarget.id] = event.value.newValue;
+                    if(slider_topic_splitting_values[splitting_topic] == undefined ){
+                        slider_topic_splitting_values[splitting_topic] = {};
+                        //slider_topic_splitting_values[splitting_topic][event.currentTarget.id] = event.value.newValue;
                         
                     }
-                    else{
-                        slider_topic_splitting_values[splitting_topic] = [];
-                        slider_topic_splitting_values[splitting_topic][event.currentTarget.id] = event.value.newValue;
-                        
-                    }                    
-                    
+                    //var current_index = key.split("_")[1];
+                    var current_index = event.currentTarget.id.split("_")[1];
+                    var current_value = event.value.newValue
+                    var current_term = list_terms_for_topic_splitting[current_index].Term;
+                    slider_topic_splitting_values[splitting_topic][current_term] = current_value;
+                    //console.log('values ', current_index, current_value, current_term, list_terms_for_topic_splitting);
+                    console.log('asiva estoo', slider_topic_splitting_values);
                 });
 
                 //update values regarding to dictionary
-
+                
                 if(slider_topic_splitting_values[splitting_topic] !== undefined ){
-                    
-                    var current_topic_slider = slider_topic_splitting_values[splitting_topic];
-                    for (const [key, value] of Object.entries(current_topic_slider)) {
-                        console.log(key, value);
-                        $("#"+String(key)).slider('setValue', value);
-                    
-                        //recordar que esta el getValue
-    
+                    //arreglar estooo
+                    console.log("ojo, esta es la lista de terminos aqui para hacer el update!", list_terms_for_topic_splitting);
+                    for(var i=0; i<list_terms_for_topic_splitting.length;i++){
+                        var current_term = list_terms_for_topic_splitting[i].Term;
+                        if(slider_topic_splitting_values[splitting_topic][current_term] !== undefined){
+                            var stored_value_for_this_term = slider_topic_splitting_values[splitting_topic][current_term];
+                            $("#inputSlider_"+String(i)).slider('setValue', stored_value_for_this_term);
+
+                        }
                     }
+
+
                 }
+                
                         
                 
               });
