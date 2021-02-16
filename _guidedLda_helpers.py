@@ -27,7 +27,7 @@ def create_new_guided_lda_model(eta, dictionary,corpus, ntopics, print_topics=Tr
     if print_topics:
         # display the top terms for each topic
         for topic in range(ntopics):
-            print('Topic {}: {}'.format(topic, [dictionary[w] for w,p in model.get_topic_terms(topic, topn=10)]))
+            print('Topic {}: {}'.format(topic, [dictionary[w] for w,p in model.get_topic_terms(topic, topn=20)]))
     return model
 
 

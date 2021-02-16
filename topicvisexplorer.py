@@ -232,6 +232,7 @@ class TopicVisExplorer:
 
 
     def load_single_corpus_data(self, route_file):
+
         with open(route_file, 'rb') as handle:
             global single_corpus_data
             single_corpus_data = pickle.load(handle)            
@@ -287,12 +288,23 @@ class TestView(FlaskView):
         corpus = single_corpus_data['corpus']
 
 
-
+        
         last_lda_model_dict = dict()
         for topic_id in range(lda_model.num_topics):
             current_list = [id2word[w]for w,p in lda_model.get_topic_terms(topic_id, topn=10)]
             for elem in current_list:
                 last_lda_model_dict[elem] = topic_id
+
+        
+        last_lda_model_dict_all_terms = dict()
+        for topic_id in range(lda_model.num_topics):
+            current_list = [id2word[w]for w,p in lda_model.get_topic_terms(topic_id, topn=4)]
+            last_lda_model_dict_all_terms[topic_id] = current_list
+        print('Estas son las semillas actualeees', last_lda_model_dict)
+        #2 Add new seeds
+
+
+
         #2 Add new seeds
         json_file = request.get_json()
         print("ESTO FUE LO Q SE RECIBIOOO", json_file)
@@ -303,8 +315,60 @@ class TestView(FlaskView):
         new_guided_lda_model = create_new_guided_lda_model(eta, id2word, corpus, lda_model.num_topics)
 
         print('esto fue lo q se genero', new_guided_lda_model)
+        #update the LDA model
+        lda_model = new_guided_lda_model 
+        print('Creando nuevos archivos para actualizar la visualizacion')
+        # Get new datat dict
+        data_dict = gensim_helpers.prepare(lda_model, corpus,id2word) 
+        single_corpus_data['data_dict']  = data_dict  
+        #Update the preparedDataObtained
+        print("A NEW PREPARED DATA HA SIDO CREADO -0 Topics splitting!!")
+        temp = prepare(**single_corpus_data['data_dict'])            
+        single_corpus_data['PreparedDataObtained'] =  temp.to_dict()
+        print('Obteniendo nuevos documentos relevantes')
+        matrix_documents_topic_contribution, _ = lda_model.inference(corpus)
+        matrix_documents_topic_contribution /= matrix_documents_topic_contribution.sum(axis=1)[:, None]
+        matrix_documents_topic_contribution = pd.DataFrame(matrix_documents_topic_contribution)
 
-        return new_guided_lda_model
+        df = pd.DataFrame(single_corpus_data['relevantDocumentsDict'])
+        contents = df[df.columns[-1]].reset_index(drop=True)
+        matrix_documents_topic_contribution = pd.concat([matrix_documents_topic_contribution, contents], axis=1)
+        print('Esta es la matriz final resultante', matrix_documents_topic_contribution.head())
+
+
+        #print('Nuevos documentos', matrix_documents_topic_contribution.head())
+        relevantDocumentsDict = matrix_documents_topic_contribution.to_dict(orient='records')
+        single_corpus_data['relevantDocumentsDict'] = relevantDocumentsDict
+
+        #calcular metrica de similutd
+        print('creando nueva class')
+        newClass = TopicVisExplorer("name")
+        word_embedding_model = single_corpus_data['word_embedding_model']
+        topn_terms = 20
+        topk_documents = 20
+        relevance_lambda = 0.6
+        print('Calculando topic similarity metrix')
+        topic_similarity_matrix = newClass.calculate_topic_similarity_on_single_corpus(word_embedding_model, lda_model, corpus, id2word, matrix_documents_topic_contribution,topn_terms, topk_documents, relevance_lambda)
+        topic_similarity_matrix = single_corpus_data['topic_similarity_matrix']         
+        print('Topic similarity matrix has been calculated')
+
+        print('Calculating new circle positions')
+        new_circle_positions = get_circle_positions(topic_similarity_matrix)
+        single_corpus_data['new_circle_positions'] = new_circle_positions
+
+        print('------- falta calcular el nuevo topic orderingX')                 
+        topic_order =  single_corpus_data['topic.order']
+
+
+        #visualizar neuvos resultados
+
+        PreparedDataObtained = single_corpus_data['PreparedDataObtained'] 
+
+        #prepare and run html
+        html = prepared_html_in_flask(data = [PreparedDataObtained],  topic_order = topic_order,  type_vis = 1,  new_circle_positions = new_circle_positions)
+        print('obtuvo un nuevo html')
+        return render_template_string(html)
+    
 
 
 
@@ -411,6 +475,9 @@ class TestView(FlaskView):
         data_dict = single_corpus_data['data_dict'] 
         new_circle_positions = single_corpus_data['new_circle_positions'] 
         topic_order =  single_corpus_data['topic.order']
+        topic_similarity_matrix = single_corpus_data['topic_similarity_matrix']         
+
+
 
 
         #prepare and run html
