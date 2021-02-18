@@ -789,8 +789,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
 
             return new_topic_names_sorted
-
-
         }
 
         function findWithAttr(array, attr, value) {
@@ -850,28 +848,47 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             //4.- Create new new_position circle arrray
 
+            var new_dict_topic_splitting; 
             $.ajax({
                 type: 'POST',
-                url: '/get_new_lda_model',
+                url: '/getLdaModel',
                 async: false,
                 data: JSON.stringify(postDataTopicSplitting),
                 success: function(data) {
-                    console.log('buenaaaaaa esta funcion ha sido todo un exito, topic splitting');                                    
-                    //new_circle_positions = data
+                                
+                    new_dict_topic_splitting = data
                 },
-                contentType: "application/json",
-                dataType: 'json'
-
+                error: function(XMLHttpRequest, textStatus, errorThrown) { 
+                    alert("Status: " + textStatus); alert("Error: " + errorThrown); 
+                },    
              });
 
+            //console.log('esto es lo q ', new_dict_topic_splitting);
+            //console.log('esta wea gunciona o noo', JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython']));
+           
+            //1. Update relevantDocumentsDict
+            relevantDocumentsDict = JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython']);
+
+            //2.-Updarte variables for keyboard panel       
+            //visualize(new_dict_topic_splitting['PreparedDataObtained_fromPython'])
+            console.log( 'ahora debi haber actualizado los datoooos')
+
+
+            //d3.selectAll('#svgMdsPlot').remove();
+            //d3.selectAll('#divider_central_panel').remove();
+
+            createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current); //update central panel
+
+            //createBarPlot("#BarPlotPanelDiv", dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", R) //esto crea el bar plot por primera vez. 
+
+
+
+            topic_on(document.getElementById(topicID+vis_state.topic))
 
         }
 
         function merging_topics_scenario_1(topic_name_1, topic_name_2){
-
-            
-
-            
+                    
             //get index topic from name    
             var current_index = 0;
             for (var [key, value] of Object.entries(name_topics_circles)) {
@@ -886,8 +903,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 }
                 current_index+=1;
             }
-            
-
             
             //1.- Join relevant documents
 
@@ -1233,11 +1248,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         .range([mdsheight, 0])
                         .domain([yrange[0] - ypad * ydiff, yrange[1] + ypad * ydiff]);
             }
-            //console.log("---")
-            //console.log("AQUI ESTAN LOS TOPICOS MERGEEED", merged_topic_to_delete)
-            //console.log("este es el mds data", mdsData)
-            //console.log("que hay en este topic order", topic_order)
-            //console.log("---")
+
 
             // draw circles
             
@@ -1306,7 +1317,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             
 
 
-            
+        //We dont need the exactly position of the circles. Therefore we could remove the cross that indicates the center oft he circle
+        /*
         points.append("text")
         .attr("class", "circles_center")
         .attr("width", function(d) {
@@ -1338,6 +1350,9 @@ var LDAvis = function(to_select, data_or_file_name) {
             return "+";
             
         });
+        */
+
+
 
         points.append("text")
         .attr("class", "txt")
@@ -2071,6 +2086,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                         .attr("margin-top", "-10px")
                         .call(sliderAxisRightPanel);     
             }
+
+            d3.selectAll('#'+BarPlotPanelDivId).remove();
+
             var svgLeftPanel = d3.select("#BarPlotPanel").append("div")
             svgLeftPanel.attr("id", BarPlotPanelDivId)
             //svgLeftPanel.attr("class", "border_box my-1")
@@ -2336,7 +2354,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 createCentralPanelTopicSplitting();
             });
 
-            $("#add_cart").click(function() {
+            $("#apply_topic_splitting").click(function() {
 
                 splitting_topics_scenario_1()
             });

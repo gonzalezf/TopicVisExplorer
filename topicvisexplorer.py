@@ -8,6 +8,9 @@ import sklearn
 import os
 import pandas as pd
 import pickle
+import json as js
+import time
+
 
 from gensim.corpora import Dictionary
 from flask import Flask, render_template, request, json, Response, render_template_string, jsonify
@@ -21,8 +24,10 @@ from _guidedLda_helpers import *
 from os import path, walk
 from gensim.models.keyedvectors import KeyedVectors
 from scipy.spatial import procrustes
-import json as js
-import time
+
+
+from utils import get_id, write_ipynb_local_js, NumPyEncoder
+from _prepare import PreparedData
 
 
 single_corpus_data = {}
@@ -275,11 +280,62 @@ class TestView(FlaskView):
 
 
     #Split topic
-    @route('/get_new_lda_model',  methods=['GET', 'POST'])
+
+    @route('/getLdaModel',  methods=['GET', 'POST'])
     def get_new_lda_model(self):
+        print('voy a retornar nueva lista de documentos')
+        new_dict = dict()
+        new_dict['relevantDocumentsDict_fromPython'] =js.dumps( random.sample(single_corpus_data['relevantDocumentsDict'],2000))
+        #new_dict['PreparedDataObtained_fromPython'] = single_corpus_data['PreparedDataObtained']
+
+        data = [single_corpus_data['PreparedDataObtained']]
+        data_json_format = []
+        for elem in data:
+            elem = js.dumps(elem, cls=NumPyEncoder)
+            data_json_format.append(elem)
+    
+        new_dict['PreparedDataObtained_fromPython'] = js.loads(data_json_format[0])
+        #new_dict['PreparedDataObtained_fromPython']
+        #mandar_esto = json.dumps(new_dict['PreparedDataObtained_fromPython']['tinfo'])
+        #mandar_esto = jsonify(new_dict['PreparedDataObtained_fromPython']['tinfo'])
+      
+        #The following line is necessary to delete inf and nan values that javascript JSON.parse cant process
+      
+        new_dict['PreparedDataObtained_fromPython']['tinfo'] = pd.DataFrame(new_dict['PreparedDataObtained_fromPython']['tinfo']).replace([np.inf, -np.inf, np.nan], 0).to_dict()
+
+        #print(type(mandar_esto))
+        print('arrtiba333444 debe estar el tipo de datooo a amandar ')
+
+
+        
+        #print('veamos estooo', new_dict['PreparedDataObtained_fromPython'])
 
 
 
+        return new_dict
+        #return jsonify(new_dict)
+
+        #return (js.dumps( random.sample(single_corpus_data['relevantDocumentsDict'],2000)), js.dumps( random.sample(single_corpus_data['relevantDocumentsDict'],2000)))
+
+        #dumping = js.dumps( single_corpus_data['PreparedDataObtained'])
+        #return Response(dumping,  mimetype='application/json')
+        #print('voy a llamar a mi clase')
+        #return self.single_corpus()
+        #return  single_corpus_data['PreparedDataObtained']
+
+        #new_test_dictionary = dict()
+        # new_test_dictionary['a']= single_corpus_data['']
+        #answer = Response(js.dumps( single_corpus_data['PreparedDataObtained']),  mimetype='application/json')
+        
+        
+        
+        #answer = js.dumps( single_corpus_data['PreparedDataObtained'])
+        #print('ESTOY EN GET NEW LDA MODEL FUNCTION', answer)
+        #return answer
+
+
+        '''
+        start = time.time()
         print('estoy en la funcion para hacer el splitting')
 
         #1.= Get old seeds from the topics that it shouldnt change
@@ -365,9 +421,14 @@ class TestView(FlaskView):
         PreparedDataObtained = single_corpus_data['PreparedDataObtained'] 
 
         #prepare and run html
-        html = prepared_html_in_flask(data = [PreparedDataObtained],  topic_order = topic_order,  type_vis = 1,  new_circle_positions = new_circle_positions)
+        #html = prepared_html_in_flask(data = [PreparedDataObtained],  topic_order = topic_order,  type_vis = 1,  new_circle_positions = new_circle_positions)
         print('obtuvo un nuevo html')
-        return render_template_string(html)
+        end = time.time()
+        print("Tiempo en realizar el topic splitting", end - start)
+        #return render_template_string(html)
+        return Response(js.dumps( single_corpus_data),  mimetype='application/json')
+        '''
+
     
 
 
@@ -461,7 +522,8 @@ class TestView(FlaskView):
 
 
     @route('/singlecorpus')
-    def single_corpus(self):            
+    def single_corpus(self):           
+        print('Estoy en la funcion single corpuuuus') 
         #load data
         global single_corpus_data        
 
