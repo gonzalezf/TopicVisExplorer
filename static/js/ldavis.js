@@ -215,6 +215,114 @@ var LDAvis = function(to_select, data_or_file_name) {
             return 0;
         };
     }
+
+    function updateTopicNamesCircles(data){
+        
+        // set the number of topics to global variable K:
+        ////console.log("este data yo recibi", data)
+        
+        K = data['mdsDat'].x.length;
+
+        // R is the number of top relevant (or salient) words whose bars we display
+        var R = Math.min(data['R'], 20);
+
+        // a (K x 5) matrix with columns x, y, topics, Freq, cluster (where x and y are locations for left panel)
+        mdsData = [];
+        for (var i = 0; i < K; i++) {
+            var obj = {};
+            for (var key in data['mdsDat']) {
+                obj[key] = data['mdsDat'][key][i];
+            }
+            mdsData.push(obj);
+        }
+        console.log('fin mdsDATA');
+
+        // a huge matrix with 3 columns: Term, Topic, Freq, where Freq is all non-zero probabilities of topics given terms
+        // for the terms that appear in the barcharts for this data
+        mdsData3 = [];
+        for (var i = 0; i < data['token.table'].Term.length; i++) {
+            var obj = {};
+            for (var key in data['token.table']) {
+                obj[key] = data['token.table'][key][i];
+            }
+            mdsData3.push(obj);
+        }
+        console.log('fin mdsDATA3');
+
+        
+        // large data for the widths of bars in bar-charts. 6 columns: Term, logprob, loglift, Freq, Total, Category
+        // Contains all possible terms for topics in (1, 2, ..., k) and lambda in the user-supplied grid of lambda values
+        // which defaults to (0, 0.01, 0.02, ..., 0.99, 1).
+
+        data['tinfo'].Term = Object.values( data['tinfo'].Term);
+
+
+
+
+        lamData = [];
+        for (var i = 0; i <  data['tinfo'].Term.length ; i++) {
+            var obj = {};
+            for (var key in data['tinfo']) {
+                obj[key] = data['tinfo'][key][i];
+            }
+            lamData.push(obj);
+            //console.log('i', i);
+        }
+        console.log('fin LAMDATA', lamData);
+
+        var dat3 = lamData.slice(0, R);
+        console.log('esto es dat3', dat3);
+
+
+    
+
+
+        //console.log(data);
+        //console.log('estos datos a mirar , se debieron actualizar ojala mdsData', mdsData,'mdsdata3 ',  mdsData3, 'lamdata', lamData,'r',R,'k',K,data);
+
+        //assign name to array
+        d3.select("#name_topics")
+                    .data(mdsData)
+                    .enter()
+                    .each(
+                    function(d) {
+                        var dat2 = lamData.filter(function(e) {
+                            return e.Category == "Topic"+d.topics;s
+                        });
+                        
+    
+                        // define relevance:
+                        for (var i = 0; i < dat2.length; i++) {
+                            dat2[i].relevance = lambda.current * dat2[i].logprob +
+                                (1 - lambda.current) * dat2[i].loglift;
+    
+                            if(isNaN(dat2[i].relevance)){
+                                dat2[i].relevance  = -Infinity;
+                            }
+                        }
+            
+                        // sort by relevance:
+                        dat2.sort(fancysort("relevance"));
+                        
+    
+                        // truncate to the top R tokens:
+                        var top_terms = dat2.slice(0, number_top_keywords_name);
+                        console.log('cuales son los nombres de esto', top_terms, 'number top keywords', number_top_keywords_name, 'dat2', dat2);
+                        
+                        var name_string = '';
+    
+                        for (var i=0; i < top_terms.length; i++){
+                        
+                        
+                            name_string += top_terms[i].Term+" "
+                        }
+                        
+                        name_topics_circles[topicID + d.topics] = name_string 
+    
+                        return (topicID + d.topics);
+                    });
+
+    }
     
 
   
@@ -254,6 +362,10 @@ var LDAvis = function(to_select, data_or_file_name) {
         // large data for the widths of bars in bar-charts. 6 columns: Term, logprob, loglift, Freq, Total, Category
         // Contains all possible terms for topics in (1, 2, ..., k) and lambda in the user-supplied grid of lambda values
         // which defaults to (0, 0.01, 0.02, ..., 0.99, 1).
+
+        
+
+
         lamData = [];
         for (var i = 0; i < data['tinfo'].Term.length; i++) {
             var obj = {};
@@ -262,7 +374,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
             lamData.push(obj);
         }
-        
+
         var dat3 = lamData.slice(0, R);
 
         //assign name to array
@@ -842,12 +954,13 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             var postDataTopicSplitting = {
                 new_keywords_seeds: slider_topic_splitting_values[splitting_topic],
+                old_circle_positions: new_circle_positions,
                 
                 
             };
 
             //4.- Create new new_position circle arrray
-
+            console.log('Se mando estos datos en este arreglo', postDataTopicSplitting);
             var new_dict_topic_splitting; 
             $.ajax({
                 type: 'POST',
@@ -860,9 +973,10 @@ var LDAvis = function(to_select, data_or_file_name) {
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) { 
                     alert("Status: " + textStatus); alert("Error: " + errorThrown); 
-                },    
-             });
-
+                }, 
+                contentType: "application/json"             
+            });
+           
             //console.log('esto es lo q ', new_dict_topic_splitting);
             //console.log('esta wea gunciona o noo', JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython']));
            
@@ -871,6 +985,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             //2.-Updarte variables for keyboard panel       
             //visualize(new_dict_topic_splitting['PreparedDataObtained_fromPython'])
+            updateTopicNamesCircles(new_dict_topic_splitting['PreparedDataObtained_fromPython']);
             console.log( 'ahora debi haber actualizado los datoooos')
 
 
@@ -2221,25 +2336,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     //document.getElementById(topicReverse).attr('disabled', null);
                     
                     console.log("despues es el reverse", document.getElementById(topicReverse));
-                    /*
-                    
-                    
-                    if(old_topic_model_states.length!=0){
-                        reverse.setAttribute("disabled", false);
-                        console.log("esto fue lo q seleccione aqui", d3.select("#"+topicReverse));
-                        d3.select("#"+topicReverse).     attr("disabled", false);
-                        console.log("este reverse es undefined seguri", reverse);
-                        
 
-                    }
-                    else{
-                        reverse.setAttribute("disabled", true);
-                        d3.select("#"+topicReverse).setAttribute("disabled", true);
-                        console.log("esto fue lo q seleccione aqui", d3.select("#"+topicReverse));
-                        console.log("este reverse es undefined seguri", reverse);
-                    }
-                    console.log("este es el length en apply topic merging",old_topic_model_states.length);
-                    */
                 });
        
            d3.select("#"+topicMerge)

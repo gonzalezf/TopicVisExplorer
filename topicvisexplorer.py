@@ -283,59 +283,17 @@ class TestView(FlaskView):
 
     @route('/getLdaModel',  methods=['GET', 'POST'])
     def get_new_lda_model(self):
-        print('voy a retornar nueva lista de documentos')
-        new_dict = dict()
-        new_dict['relevantDocumentsDict_fromPython'] =js.dumps( random.sample(single_corpus_data['relevantDocumentsDict'],2000))
-        #new_dict['PreparedDataObtained_fromPython'] = single_corpus_data['PreparedDataObtained']
+        global single_corpus_data   
+        json_file = request.get_json()
+        old_circle_positions = json_file['old_circle_positions']
 
-        data = [single_corpus_data['PreparedDataObtained']]
-        data_json_format = []
-        for elem in data:
-            elem = js.dumps(elem, cls=NumPyEncoder)
-            data_json_format.append(elem)
+        print("ESTO FUE LO Q SE RECIBIOOO", old_circle_positions)
+
+
     
-        new_dict['PreparedDataObtained_fromPython'] = js.loads(data_json_format[0])
-        #new_dict['PreparedDataObtained_fromPython']
-        #mandar_esto = json.dumps(new_dict['PreparedDataObtained_fromPython']['tinfo'])
-        #mandar_esto = jsonify(new_dict['PreparedDataObtained_fromPython']['tinfo'])
-      
-        #The following line is necessary to delete inf and nan values that javascript JSON.parse cant process
-      
-        new_dict['PreparedDataObtained_fromPython']['tinfo'] = pd.DataFrame(new_dict['PreparedDataObtained_fromPython']['tinfo']).replace([np.inf, -np.inf, np.nan], 0).to_dict()
-
-        #print(type(mandar_esto))
-        print('arrtiba333444 debe estar el tipo de datooo a amandar ')
-
-
         
-        #print('veamos estooo', new_dict['PreparedDataObtained_fromPython'])
-
-
-
-        return new_dict
-        #return jsonify(new_dict)
-
-        #return (js.dumps( random.sample(single_corpus_data['relevantDocumentsDict'],2000)), js.dumps( random.sample(single_corpus_data['relevantDocumentsDict'],2000)))
-
-        #dumping = js.dumps( single_corpus_data['PreparedDataObtained'])
-        #return Response(dumping,  mimetype='application/json')
-        #print('voy a llamar a mi clase')
-        #return self.single_corpus()
-        #return  single_corpus_data['PreparedDataObtained']
-
-        #new_test_dictionary = dict()
-        # new_test_dictionary['a']= single_corpus_data['']
-        #answer = Response(js.dumps( single_corpus_data['PreparedDataObtained']),  mimetype='application/json')
-        
-        
-        
-        #answer = js.dumps( single_corpus_data['PreparedDataObtained'])
-        #print('ESTOY EN GET NEW LDA MODEL FUNCTION', answer)
-        #return answer
-
-
-        '''
         start = time.time()
+        
         print('estoy en la funcion para hacer el splitting')
 
         #1.= Get old seeds from the topics that it shouldnt change
@@ -356,15 +314,15 @@ class TestView(FlaskView):
         for topic_id in range(lda_model.num_topics):
             current_list = [id2word[w]for w,p in lda_model.get_topic_terms(topic_id, topn=4)]
             last_lda_model_dict_all_terms[topic_id] = current_list
+
         print('Estas son las semillas actualeees', last_lda_model_dict)
         #2 Add new seeds
 
 
 
         #2 Add new seeds
-        json_file = request.get_json()
-        print("ESTO FUE LO Q SE RECIBIOOO", json_file)
-        print('estas son las semillas o no', json_file['new_keywords_seeds'])
+
+        #print('estas son las semillas o no', json_file['new_keywords_seeds'])
 
         #3 Create eta
         eta = create_eta(last_lda_model_dict, id2word, ntopics = lda_model.num_topics)
@@ -404,12 +362,18 @@ class TestView(FlaskView):
         topk_documents = 20
         relevance_lambda = 0.6
         print('Calculando topic similarity metrix')
-        topic_similarity_matrix = newClass.calculate_topic_similarity_on_single_corpus(word_embedding_model, lda_model, corpus, id2word, matrix_documents_topic_contribution,topn_terms, topk_documents, relevance_lambda)
-        topic_similarity_matrix = single_corpus_data['topic_similarity_matrix']         
+
+
+
+
+        new_topic_similarity_matrix = newClass.calculate_topic_similarity_on_single_corpus(word_embedding_model, lda_model, corpus, id2word, matrix_documents_topic_contribution,topn_terms, topk_documents, relevance_lambda)
+        single_corpus_data['topic_similarity_matrix'] = new_topic_similarity_matrix
         print('Topic similarity matrix has been calculated')
 
-        print('Calculating new circle positions')
-        new_circle_positions = get_circle_positions(topic_similarity_matrix)
+        print('Calculating new circle positions with procrustes')
+
+        new_circle_positions = get_circle_positions_from_old_matrix(old_circle_positions, new_topic_similarity_matrix )
+        #new_circle_positions = get_circle_positions(topic_similarity_matrix)
         single_corpus_data['new_circle_positions'] = new_circle_positions
 
         print('------- falta calcular el nuevo topic orderingX')                 
@@ -423,11 +387,47 @@ class TestView(FlaskView):
         #prepare and run html
         #html = prepared_html_in_flask(data = [PreparedDataObtained],  topic_order = topic_order,  type_vis = 1,  new_circle_positions = new_circle_positions)
         print('obtuvo un nuevo html')
+        
+
+
+
+
+        #Return results to the visualization
+
+        print('voy a retornar nueva lista de documentos')
+        new_dict = dict()
+        new_dict['relevantDocumentsDict_fromPython'] =js.dumps( single_corpus_data['relevantDocumentsDict'])
+
+        data = [single_corpus_data['PreparedDataObtained']]
+        data_json_format = []
+        for elem in data:
+            elem = js.dumps(elem, cls=NumPyEncoder)
+            data_json_format.append(elem)
+    
+        new_dict['PreparedDataObtained_fromPython'] = js.loads(data_json_format[0])
+
+
+        #The following line is necessary to delete inf and nan values that javascript JSON.parse cant process
+        new_dict['PreparedDataObtained_fromPython']['tinfo'] = pd.DataFrame(new_dict['PreparedDataObtained_fromPython']['tinfo']).replace([np.inf, -np.inf, np.nan], 0).to_dict()
+
+        
+
+
         end = time.time()
-        print("Tiempo en realizar el topic splitting", end - start)
-        #return render_template_string(html)
-        return Response(js.dumps( single_corpus_data),  mimetype='application/json')
-        '''
+        print("Tiempo en realizar el topic splitting - Final Sending data", end - start)
+
+        with open('new_dict_topic_splitting.pickle', 'wb') as handle:
+            pickle.dump(new_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+                # Load data (deserialize)
+    
+        with open('new_dict_topic_splitting.pickle', 'rb') as handle:
+            new_dict = pickle.load(handle)
+
+
+        return new_dict
+
+       
 
     
 
@@ -444,6 +444,7 @@ class TestView(FlaskView):
 
         index_topic_name_1 = json_file['index_topic_name_1']
         index_topic_name_2 = json_file['index_topic_name_2']
+
         #replace nuevos valores
         #single_corpus_data['tinfo_collection'] = json_file['lamData_new']    
         single_corpus_data['relevantDocumentsDict'] = json_file['relevantDocumentsDict_new']
