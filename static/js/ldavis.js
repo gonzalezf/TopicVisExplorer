@@ -923,7 +923,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         //https://flaviocopes.com/how-to-clone-javascript-object/
         //https://lodash.com/docs/4.17.15#cloneDeep
         function save_state_data(){
-            //before merging, save the current state (in case we want to reverse these changes)
+            //before merging/ splitting, save the current state (in case we want to reverse these changes)
 
             var current_state_dict = {};
 
@@ -937,7 +937,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             current_state_dict.name_topics_circles = _.cloneDeep(name_topics_circles);
             current_state_dict.current_topic_id = _.cloneDeep(vis_state.topic);
             old_topic_model_states.push(current_state_dict);
-            console.log("en el merge acabo de guardar este estado", current_state_dict);
+            console.log("en el merge/splitting acabo de guardar este estado", current_state_dict);
             console.log("en la pila tengo esto",old_topic_model_states);
         }
         
@@ -2452,7 +2452,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             });
 
             $("#apply_topic_splitting").click(function() {
-
+                save_state_data()
                 splitting_topics_scenario_1()
             });
 
