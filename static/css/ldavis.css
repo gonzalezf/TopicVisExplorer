@@ -625,3 +625,15 @@ tbody{
 .modal_full_screen .modal-body_full_screen {
   overflow-y: auto;
 }
+
+.custom-style{
+    
+  font-size:25px;
+  color:#FF0084;
+  border:2px solid#FF0084;
+  
+  -webkitbox-shadow:inset 0px 0.1em 0.1em rgba(0,0,0,0.3);
+  -moz-box-shadow:inset 0px 0.1em 0.1em rgba(0,0,0,0.3);
+  box-shadow:inset 0px 0.1em 0.1em rgba(0,0,0,0.3);
+}
+

@@ -1760,20 +1760,43 @@ var LDAvis = function(to_select, data_or_file_name) {
                    },
                    {
                        field: 'Term',
-                       title: 'Create New subtopics',
+                       title: 'Subtopic A',
                        align: 'center',
                        valign: 'middle',
                        clickToSelect: false,
                        formatter : function(value,row,index) { //ojo, value es la contribucion al topico, row es toda la fila de la matrix relevant documents dict y el index, el index                                
-                   
-                       return '<div class="sliderCool" id="inputSlider_'+index+'"></div>';
+                        //console.log( ' una vez', value,row, index);
+                        return '<input type="radio" name="radio_'+splitting_topic+'_'+index+'" id="'+splitting_topic+'_'+value+'_TopicA" class="radio_button_topic_splitting" />';
 
-                       }
 
-                     }
+                        }                      
+                     },
+                     {
+                        field: 'Term',
+                        title: 'Subtopic B',
+                        align: 'center',
+                        valign: 'middle',
+                        clickToSelect: false,
+                        formatter : function(value,row,index) { //ojo, value es la contribucion al topico, row es toda la fila de la matrix relevant documents dict y el index, el index                                
+                    
+                         return '<input type="radio"  name="radio_'+splitting_topic+'_'+index+'" id="'+splitting_topic+'_'+value+'_TopicB" class="radio_button_topic_splitting" />';
 
-                   
-                   
+                         }                      
+                      },
+                      {
+                        field: 'Term',
+                        title: 'None',
+                        align: 'center',
+                        valign: 'middle',
+                        clickToSelect: false,
+                        formatter : function(value,row,index) { //ojo, value es la contribucion al topico, row es toda la fila de la matrix relevant documents dict y el index, el index                                
+                    
+                         return '<input type="radio" name="radio_'+splitting_topic+'_'+index+'"  id="'+splitting_topic+'_'+value+'_TopicNone" class="radio_button_topic_splitting" />';
+ 
+
+ 
+                         }                      
+                      }                               
                ],
                data: list_terms_for_topic_splitting
                //data: relevantDocumentsDict.slice(0,40)
@@ -2444,6 +2467,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
                 $('#topic_to_split_name').html(name_topics_circles[topicID + vis_state.topic]);                    
                 $('#SplitTopicModal').modal();
+
+
                 //updateRelevantDocumentsSplitting(splitting_topic-1, relevantDocumentsDict);
                 updateRelevantDocumentsTopicSplitting(splitting_topic-1, relevantDocumentsDict, 1);                
                 //createBarPlot("#KeywordsPanel_TopicSplitting", dat3, barFreqsIDTopicSplitting,"bar-totals-TopicSplitting", "terms-TopicSplitting", 1, "xaxis-TopicSplitting", R) //esto crea el bar plot por primera vez. 
@@ -3953,6 +3978,59 @@ var LDAvis = function(to_select, data_or_file_name) {
         }
 
 
+
+            //slider topic splitting
+        $('#tableRelevantDocumentsClass_TopicSplitting').on('post-body.bs.table', function (e) {
+            /*This add a slider too all the table*/
+            //$(".checkradios").checkradios();
+           console.log('se ejecuto la funcion post body bs');
+            $('.radio_button_topic_splitting').click(function () {
+                if ($(this).is(':checked')) {
+                        //update the values in the dictionary                
+                        if(slider_topic_splitting_values[splitting_topic] == undefined ){
+                            slider_topic_splitting_values[splitting_topic] = {};
+                            
+                        }
+
+                        var current_id_radio_button = this.id;
+                        var current_topic = current_id_radio_button.split("_")[0];
+                        var current_term = current_id_radio_button.split("_")[1];
+                        var current_class = current_id_radio_button.split("_")[2];
+
+                        
+                        //var current_term =  list_terms_for_topic_splitting[current_index].Term;
+                        slider_topic_splitting_values[splitting_topic][current_term] = current_class;
+
+                    }
+
+            });
+            console.log('asi vamoos', slider_topic_splitting_values);    
+            
+            if(slider_topic_splitting_values[splitting_topic] !== undefined ){
+
+                //console.log('tenemos estoo', slider_topic_splitting_values[splitting_topic]);
+                for (const [key, value] of Object.entries(slider_topic_splitting_values[splitting_topic])) {
+                    if(document.getElementById(String(splitting_topic+'_'+key+'_'+value))!= undefined){
+                        //console.log('searching for this id', splitting_topic+'_'+key+'_'+value);
+                        document.getElementById(String(splitting_topic+'_'+key+'_'+value)).checked =true;
+                        console.log('estoy aqui', String(splitting_topic+'_'+key+'_'+value));
+
+                    }
+                    else{
+                        console.log('que wea, xk esto esta no definidooo', splitting_topic+'_'+key+'_'+value);
+                    }
+
+    
+                }
+
+
+            }
+
+            
+        });
+
+
+
         function updateRelevantDocumentsTopicSplitting(topic_id, relevantDocumentsDict, model){
             
             var column_text_name = get_name_text_column_on_relevant_documents(relevantDocumentsDict)
@@ -3998,66 +4076,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
 
             
-
-            //slider topic splitting
-            $('#tableRelevantDocumentsClass_TopicSplitting').on('post-body.bs.table', function (e) {
-                /*This add a slider too all the table*/
-                
-                $(".sliderCool").slider({
-                    //class: 'prueba_slider_class',
-                    min:0, 
-                    max:100, 
-                    step: 1, 
-                    precision:0, 
-                    value:50,
-                    //ticks: [0,25, 50, 75, 100],
-                    //ticks_labels: ['0', '25', '50','75', '100'],
-                    //ticks_snap_bounds: 25,
-                    rangeHighlights: [
-                        { "start": 0, "end": 50, "class": "category1" },
-                        { "start": 51, "end": 100, "class": "category2" }
-                    ]
-                });
-
-                $(".sliderCool").on("change", function(event){ //ojo, esto quizqas va a fallar con el nuevo cambio 
-                    
-                    //update the values in the dictionary
-                    
-                    //console.log('este es el evento actual', event);
-                    
-                    if(slider_topic_splitting_values[splitting_topic] == undefined ){
-                        slider_topic_splitting_values[splitting_topic] = {};
-                        //slider_topic_splitting_values[splitting_topic][event.currentTarget.id] = event.value.newValue;
-                        
-                    }
-                    //var current_index = key.split("_")[1];
-                    var current_index = event.currentTarget.id.split("_")[1];
-                    var current_value = event.value.newValue
-                    var current_term = list_terms_for_topic_splitting[current_index].Term;
-                    slider_topic_splitting_values[splitting_topic][current_term] = current_value;
-                    //console.log('values ', current_index, current_value, current_term, list_terms_for_topic_splitting);
-                });
-
-                //update values regarding to dictionary
-                
-                if(slider_topic_splitting_values[splitting_topic] !== undefined ){
-                    //arreglar estooo
-                    console.log("ojo, esta es la lista de terminos aqui para hacer el update!", list_terms_for_topic_splitting);
-                    for(var i=0; i<list_terms_for_topic_splitting.length;i++){
-                        var current_term = list_terms_for_topic_splitting[i].Term;
-                        if(slider_topic_splitting_values[splitting_topic][current_term] !== undefined){
-                            var stored_value_for_this_term = slider_topic_splitting_values[splitting_topic][current_term];
-                            $("#inputSlider_"+String(i)).slider('setValue', stored_value_for_this_term);
-
-                        }
-                    }
-
-
-                }
-                
-                        
-                
-              });
 
             $(".search-input").attr("placeholder", "Search on documents").val("").focus().blur();
            
