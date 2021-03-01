@@ -307,7 +307,7 @@ var LDAvis = function(to_select, data_or_file_name) {
     
                         // truncate to the top R tokens:
                         var top_terms = dat2.slice(0, number_top_keywords_name);
-                        console.log('cuales son los nombres de esto', top_terms, 'number top keywords', number_top_keywords_name, 'dat2', dat2);
+                        //console.log('cuales son los nombres de esto', top_terms, 'number top keywords', number_top_keywords_name, 'dat2', dat2);
                         
                         var name_string = '';
     
@@ -937,8 +937,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             current_state_dict.name_topics_circles = _.cloneDeep(name_topics_circles);
             current_state_dict.current_topic_id = _.cloneDeep(vis_state.topic);
             old_topic_model_states.push(current_state_dict);
-            console.log("en el merge/splitting acabo de guardar este estado", current_state_dict);
-            console.log("en la pila tengo esto",old_topic_model_states);
+            //console.log("en el merge/splitting acabo de guardar este estado", current_state_dict);
+            //console.log("en la pila tengo esto",old_topic_model_states);
         }
         
         function splitting_topics_scenario_1(){
@@ -948,13 +948,14 @@ var LDAvis = function(to_select, data_or_file_name) {
             var topic_id = splitting_topic-1;
 
             for (const [key, value] of Object.entries(slider_topic_splitting_values[splitting_topic])) {
-                console.log('que tenemos aquiiii', key, value);                    
+                //console.log('que tenemos aquiiii', key, value);                    
 
             }
 
             var postDataTopicSplitting = {
                 new_keywords_seeds: slider_topic_splitting_values[splitting_topic],
                 old_circle_positions: new_circle_positions,
+                topic_id: vis_state.topic
                 
                 
             };
@@ -969,17 +970,24 @@ var LDAvis = function(to_select, data_or_file_name) {
                 data: JSON.stringify(postDataTopicSplitting),
                 success: function(data) {
                                 
-                    new_dict_topic_splitting = data
+                    new_dict_topic_splitting = data                    
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) { 
                     alert("Status: " + textStatus); alert("Error: " + errorThrown); 
                 }, 
                 contentType: "application/json"             
             });
-           
-            //console.log('esto es lo q ', new_dict_topic_splitting);
-            //console.log('esta wea gunciona o noo', JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython']));
-           
+            
+            console.log('esta es la wea que estoy leyendoo', new_dict_topic_splitting);
+        
+            console.log('ANTESSSestas son mis nuevas new circle positions', new_circle_positions);
+
+            new_circle_positions = JSON.parse(new_dict_topic_splitting['new_circle_positions']); 
+            console.log('DESPUEEES estas son mis nuevas new circle positions', new_circle_positions);
+
+            console.log('esto es lo q ', new_dict_topic_splitting);
+            console.log('esta wea gunciona o noo', JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython']));
+            console.log('this is the data we received', new_dict_topic_splitting);
             //1. Update relevantDocumentsDict
             relevantDocumentsDict = JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython']);
 
@@ -1315,7 +1323,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             
 
             // bind mdsData to the points in the left panel:
-            
+            console.log('en el createmdsplot tenemos esto', new_positions)
             var new_positions = new_circle_positions[lambda_lambda_topic_similarity]
             
             function getCol(matrix, col){
@@ -3983,7 +3991,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         $('#tableRelevantDocumentsClass_TopicSplitting').on('post-body.bs.table', function (e) {
             /*This add a slider too all the table*/
             //$(".checkradios").checkradios();
-           console.log('se ejecuto la funcion post body bs');
+           //console.log('se ejecuto la funcion post body bs');
             $('.radio_button_topic_splitting').click(function () {
                 if ($(this).is(':checked')) {
                         //update the values in the dictionary                
@@ -4004,7 +4012,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     }
 
             });
-            console.log('asi vamoos', slider_topic_splitting_values);    
             
             if(slider_topic_splitting_values[splitting_topic] !== undefined ){
 
@@ -4015,18 +4022,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                         document.getElementById(String(splitting_topic+'_'+key+'_'+value)).checked =true;
                         console.log('estoy aqui', String(splitting_topic+'_'+key+'_'+value));
 
-                    }
-                    else{
-                        console.log('que wea, xk esto esta no definidooo', splitting_topic+'_'+key+'_'+value);
-                    }
-
-    
+                    }                       
                 }
-
-
-            }
-
-            
+            }            
         });
 
 

@@ -285,15 +285,16 @@ class TestView(FlaskView):
     def get_new_lda_model(self):
         global single_corpus_data   
         json_file = request.get_json()
+
+
         old_circle_positions = json_file['old_circle_positions']
+        topic_id = json_file['topic_id'] #tHE FIRST TOPIC IS ID=1, not 0!
+        new_keywords_seeds = json_file['new_keywords_seeds']
 
-        print("ESTO FUE LO Q SE RECIBIOOO", old_circle_positions)
+        '''
 
-
-    
-        
         start = time.time()
-        
+
         print('estoy en la funcion para hacer el splitting')
 
         #1.= Get old seeds from the topics that it shouldnt change
@@ -302,33 +303,43 @@ class TestView(FlaskView):
         corpus = single_corpus_data['corpus']
 
 
-        
-        last_lda_model_dict = dict()
-        for topic_id in range(lda_model.num_topics):
-            current_list = [id2word[w]for w,p in lda_model.get_topic_terms(topic_id, topn=10)]
-            for elem in current_list:
-                last_lda_model_dict[elem] = topic_id
+        new_number_topics = lda_model.num_topics+1
 
-        
+
+
+
+        #last_lda_model_dict = dict()
+        #for topic_id in range(lda_model.num_topics):
+            #current_list = [id2word[w]for w,p in lda_model.get_topic_terms(topic_id, topn=10)]
+            #for elem in current_list:
+            #last_lda_model_dict[elem] = topic_id
+
+
         last_lda_model_dict_all_terms = dict()
         for topic_id in range(lda_model.num_topics):
-            current_list = [id2word[w]for w,p in lda_model.get_topic_terms(topic_id, topn=4)]
+            current_list = [id2word[w]for w,p in lda_model.get_topic_terms(topic_id, topn=8)]
             last_lda_model_dict_all_terms[topic_id] = current_list
 
-        print('Estas son las semillas actualeees', last_lda_model_dict)
-        #2 Add new seeds
+        print('Estas son las semillas actualeees', last_lda_model_dict_all_terms)
+
+        #create new lda model
+
+        # identify the new seeds given from the user 
+        new_seeds_topic_a = [k for k,v in new_keywords_seeds.items() if v == 'TopicA']
+        new_seeds_topic_b = [k for k,v in new_keywords_seeds.items() if v == 'TopicB']
+
+        # replace the new seeds in the initial topic (topic_id-1) and lets create a new topic
+        last_lda_model_dict_all_terms[topic_id-1] = new_seeds_topic_a
+        last_lda_model_dict_all_terms[lda_model.num_topics] = new_seeds_topic_b
 
 
+        eta = create_eta(last_lda_model_dict_all_terms, id2word, ntopics = new_number_topics)
+        new_guided_lda_model = create_new_guided_lda_model(eta, id2word, corpus, new_number_topics)
 
-        #2 Add new seeds
 
-        #print('estas son las semillas o no', json_file['new_keywords_seeds'])
+        #print('esto fue lo q se genero', new_guided_lda_model)
 
-        #3 Create eta
-        eta = create_eta(last_lda_model_dict, id2word, ntopics = lda_model.num_topics)
-        new_guided_lda_model = create_new_guided_lda_model(eta, id2word, corpus, lda_model.num_topics)
 
-        print('esto fue lo q se genero', new_guided_lda_model)
         #update the LDA model
         lda_model = new_guided_lda_model 
         print('Creando nuevos archivos para actualizar la visualizacion')
@@ -363,16 +374,26 @@ class TestView(FlaskView):
         relevance_lambda = 0.6
         print('Calculando topic similarity metrix')
 
-
-
-
         new_topic_similarity_matrix = newClass.calculate_topic_similarity_on_single_corpus(word_embedding_model, lda_model, corpus, id2word, matrix_documents_topic_contribution,topn_terms, topk_documents, relevance_lambda)
         single_corpus_data['topic_similarity_matrix'] = new_topic_similarity_matrix
         print('Topic similarity matrix has been calculated')
 
+
+        old_circle_positions = json_file['old_circle_positions']
+
+
+        #On procrustes, the matrixes cant be of different shape, therefore it is necessary to add a new row in each key.
+        # there is going to be a new topic, therefore, the last position of this new topic is the position of the current topic that we need to split
+        for omega in old_circle_positions.keys():
+            old_circle_positions[omega].append(old_circle_positions[omega][topic_id-1])
+
+
         print('Calculating new circle positions with procrustes')
 
         new_circle_positions = get_circle_positions_from_old_matrix(old_circle_positions, new_topic_similarity_matrix )
+        print('json new circle,. estas son las keys', json.loads(new_circle_positions).keys())
+        print('primer arreglo', json.loads(new_circle_positions)['0.0'])
+
         #new_circle_positions = get_circle_positions(topic_similarity_matrix)
         single_corpus_data['new_circle_positions'] = new_circle_positions
 
@@ -387,7 +408,7 @@ class TestView(FlaskView):
         #prepare and run html
         #html = prepared_html_in_flask(data = [PreparedDataObtained],  topic_order = topic_order,  type_vis = 1,  new_circle_positions = new_circle_positions)
         print('obtuvo un nuevo html')
-        
+
 
 
 
@@ -396,6 +417,8 @@ class TestView(FlaskView):
 
         print('voy a retornar nueva lista de documentos')
         new_dict = dict()
+
+        new_dict['new_circle_positions'] = single_corpus_data['new_circle_positions'] 
         new_dict['relevantDocumentsDict_fromPython'] =js.dumps( single_corpus_data['relevantDocumentsDict'])
 
         data = [single_corpus_data['PreparedDataObtained']]
@@ -403,28 +426,29 @@ class TestView(FlaskView):
         for elem in data:
             elem = js.dumps(elem, cls=NumPyEncoder)
             data_json_format.append(elem)
-    
+
         new_dict['PreparedDataObtained_fromPython'] = js.loads(data_json_format[0])
 
 
         #The following line is necessary to delete inf and nan values that javascript JSON.parse cant process
         new_dict['PreparedDataObtained_fromPython']['tinfo'] = pd.DataFrame(new_dict['PreparedDataObtained_fromPython']['tinfo']).replace([np.inf, -np.inf, np.nan], 0).to_dict()
 
-        
+
 
 
         end = time.time()
         print("Tiempo en realizar el topic splitting - Final Sending data", end - start)
-
+                
         with open('new_dict_topic_splitting.pickle', 'wb') as handle:
             pickle.dump(new_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
                 # Load data (deserialize)
-    
+        '''
         with open('new_dict_topic_splitting.pickle', 'rb') as handle:
             new_dict = pickle.load(handle)
 
 
+        print('CTMMMM FUNCIONAAAAAAAAAAAA')
         return new_dict
 
        
