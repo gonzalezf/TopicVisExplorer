@@ -9,7 +9,8 @@ def create_eta(priors, etadict, ntopics):
         keyindex = [index for index,term in etadict.items() if term==word] # look up the word in the dictionary
         if (len(keyindex)>0): # if it's in the dictionary
             eta[topic,keyindex[0]] = 1e7  # put a large number in there
-    eta = np.divide(eta, eta.sum(axis=0)) # normalize so that the probabilities sum to 1 over all topics
+    #eta = np.divide(eta, eta.sum(axis=0)) # normalize so that the probabilities sum to 1 over all topics
+    print('eta fue creadoooo!! yayy')
     return eta
 
 

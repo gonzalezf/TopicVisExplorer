@@ -936,7 +936,11 @@ var LDAvis = function(to_select, data_or_file_name) {
             current_state_dict.new_circle_positions = _.cloneDeep(new_circle_positions);
             current_state_dict.name_topics_circles = _.cloneDeep(name_topics_circles);
             current_state_dict.current_topic_id = _.cloneDeep(vis_state.topic);
+            //radio input infromation for topic splitting
+            current_state_dict.slider_topic_splitting_values = _.cloneDeep(slider_topic_splitting_values);
+
             old_topic_model_states.push(current_state_dict);
+
             //console.log("en el merge/splitting acabo de guardar este estado", current_state_dict);
             //console.log("en la pila tengo esto",old_topic_model_states);
         }
@@ -1006,8 +1010,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
 
-            topic_on(document.getElementById(topicID+vis_state.topic))
-
+            topic_on(document.getElementById(topicID+vis_state.topic));
+            slider_topic_splitting_values = {};
         }
 
         function merging_topics_scenario_1(topic_name_1, topic_name_2){
@@ -1537,7 +1541,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         function arrangeCircles() {
             var move = 1;
             var iterations = 0;
-            while(move>0 && iterations < 100) {
+            while(move>0 && iterations < 5000) {
               move = 0;
               
               iterations+=1;              
@@ -1723,48 +1727,12 @@ var LDAvis = function(to_select, data_or_file_name) {
        }
        
        function createCentralPanelTopicSplitting(){
-            var centralPanelRow = document.createElement('div');
-            centralPanelRow.setAttribute("id", "CentralPanelTopicSplittingRow")
-            centralPanelRow.setAttribute("class", "RowDiv")
-            document.getElementById('CentralPanelTopicSplitting').appendChild(centralPanelRow);
-
-            
-            var RelevantKeywordsTopicSplitting = document.createElement("div");
-            RelevantKeywordsTopicSplitting.setAttribute("id", "RelevantKeywordsTopicSplitting")
-            RelevantKeywordsTopicSplitting.setAttribute("class", "ColumnDiv")
-            centralPanelRow.appendChild(RelevantKeywordsTopicSplitting) 
-
-            var SlidersTopicSplitting = document.createElement("div");
-            SlidersTopicSplitting.setAttribute("id", "SlidersTopicSplitting")
-            SlidersTopicSplitting.setAttribute("class", "ColumnDiv")
-            centralPanelRow.appendChild(SlidersTopicSplitting) 
-
-            /*
-            var testlabel= document.createElement("span"); 
-            testlabel.innerText = "Topic: ";
-            RelevantKeywordsTopicSplitting.appendChild(testlabel); 
-            console.log("esta funcion debiese estar ok");
-            */
-
            $('#CentralPanelTopicSplittingRow').bootstrapTable("destroy");
            $('#CentralPanelTopicSplittingRow').bootstrapTable({
-               toggle:true,
-               //height:420,
-               //pagination: true,
-               //showRefresh: true,
-               sorting: true,
-               //pageList: [10, 25, 50, 100],
-               //pageList: [10],
-               checkboxHeader: false,           
-               //multipleSelectRow: true,         
-               //showRefresh: true, Hacer que esto funcione! ver :  https://examples.bootstrap-table.com/#view-source
-               //showExport:true,
-               //showColumns: true,
                columns:[
                    {
                        field: 'Term',
                        title: 'Terms',
-                       sortable:'true'
                    },
                    {
                        field: 'Term',
@@ -1772,11 +1740,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                        align: 'center',
                        valign: 'middle',
                        clickToSelect: false,
-                       formatter : function(value,row,index) { //ojo, value es la contribucion al topico, row es toda la fila de la matrix relevant documents dict y el index, el index                                
-                        //console.log( ' una vez', value,row, index);
+                       formatter : function(value,row,index) {                    
                         return '<input type="radio" name="radio_'+splitting_topic+'_'+index+'" id="'+splitting_topic+'_'+value+'_TopicA" class="radio_button_topic_splitting" />';
-
-
                         }                      
                      },
                      {
@@ -1785,8 +1750,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         align: 'center',
                         valign: 'middle',
                         clickToSelect: false,
-                        formatter : function(value,row,index) { //ojo, value es la contribucion al topico, row es toda la fila de la matrix relevant documents dict y el index, el index                                
-                    
+                        formatter : function(value,row,index) {                                              
                          return '<input type="radio"  name="radio_'+splitting_topic+'_'+index+'" id="'+splitting_topic+'_'+value+'_TopicB" class="radio_button_topic_splitting" />';
 
                          }                      
@@ -1797,21 +1761,62 @@ var LDAvis = function(to_select, data_or_file_name) {
                         align: 'center',
                         valign: 'middle',
                         clickToSelect: false,
-                        formatter : function(value,row,index) { //ojo, value es la contribucion al topico, row es toda la fila de la matrix relevant documents dict y el index, el index                                
+                        formatter : function(value,row,index) {                            
                     
-                         return '<input type="radio" name="radio_'+splitting_topic+'_'+index+'"  id="'+splitting_topic+'_'+value+'_TopicNone" class="radio_button_topic_splitting" />';
- 
-
- 
+                         return '<input type="radio" name="radio_'+splitting_topic+'_'+index+'"  id="'+splitting_topic+'_'+value+'_TopicNone" class="radio_button_topic_splitting" checked/>'; 
                          }                      
                       }                               
                ],
                data: list_terms_for_topic_splitting
-               //data: relevantDocumentsDict.slice(0,40)
            });
 
 
        }
+
+
+
+        $('#CentralPanelTopicSplittingRow').on('post-body.bs.table', function (e) {
+            //highlight relevant keywords. it is not ready. but it is not urgent
+            /*
+            var trs = $('#CentralPanelTopicSplittingRow').find('tbody tr').children();
+
+            var book = $('#DocumentsPanel_TopicSplitting');
+            var original_book = _.cloneDeep(book);
+            //console.log('a veeer, estos son los trs', trs);
+            for (var i = 0; i < trs.length; i++) {
+                $(trs[i]).mouseover(function(e) {
+                    var current_row_topic_splitting_modal = $(e.currentTarget).closest('table').find('th').eq($(e.currentTarget).index()).data();
+                    var index = $(this).closest('tr').index();
+                    var current_term = list_terms_for_topic_splitting[index].Term;
+                    
+                    console.log(list_terms_for_topic_splitting[index].Term);
+
+                    // probemos volver bold estas palabras
+                    console.log('this is  the book', book);
+                    var lookFor = current_term;
+                    //book.html(book.html().replace(lookFor, '<strong>'+ lookFor +'</strong>'));
+                    book.html(book.html().replace(lookFor, String(lookFor).bold().bold()));
+
+
+
+                });
+                $(trs[i]).mouseout(function(e) {
+                    console.log('doing mouse up');
+                    book = _.cloneDeep(original_book);
+
+
+
+                });                     
+            };*/
+
+
+            
+        });
+
+
+
+
+
 
 
        
@@ -2290,6 +2295,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                     new_circle_positions = last_state_dict.new_circle_positions;
                     name_topics_circles = last_state_dict.name_topics_circles;
                     vis_state.topic = last_state_dict.current_topic_id;
+                    slider_topic_splitting_values = last_state_dict.slider_topic_splitting_values;
+
 
 
                     //quitar del arreglo de topicos a no mostrar. En un split hay que crear la condicion para saber de que arreglo sacar el ultimo topico baneado
@@ -3987,16 +3994,21 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
 
+
+
             //slider topic splitting
         $('#tableRelevantDocumentsClass_TopicSplitting').on('post-body.bs.table', function (e) {
             /*This add a slider too all the table*/
             //$(".checkradios").checkradios();
            //console.log('se ejecuto la funcion post body bs');
+
+
             $('.radio_button_topic_splitting').click(function () {
                 if ($(this).is(':checked')) {
                         //update the values in the dictionary                
                         if(slider_topic_splitting_values[splitting_topic] == undefined ){
                             slider_topic_splitting_values[splitting_topic] = {};
+                            
                             
                         }
 
@@ -4020,12 +4032,14 @@ var LDAvis = function(to_select, data_or_file_name) {
                     if(document.getElementById(String(splitting_topic+'_'+key+'_'+value))!= undefined){
                         //console.log('searching for this id', splitting_topic+'_'+key+'_'+value);
                         document.getElementById(String(splitting_topic+'_'+key+'_'+value)).checked =true;
-                        console.log('estoy aqui', String(splitting_topic+'_'+key+'_'+value));
+                        //console.log('estoy aqui', String(splitting_topic+'_'+key+'_'+value));
 
                     }                       
                 }
             }            
         });
+        //Show how the relevant keywords are being used in the most relevant documents. 
+        //Maybe, also, we should increase the bold of the keyword in the left panel too. 
 
 
 

@@ -7,7 +7,9 @@ import numpy as np
 import sklearn
 import os
 import pandas as pd
-import pickle
+import pickle  #Descomentar segun la version de python
+#import pickle5 as pickle
+
 import json as js
 import time
 
@@ -214,7 +216,7 @@ class TopicVisExplorer:
                 print("Error. Data it is incomplete. It is necessary to get", key)
         if(save):    
             with open(route_file, 'wb') as handle:
-                pickle.dump(single_corpus_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                pickle.dump(single_corpus_data, handle, protocol=4) #protocol 4 is compatible with python 3.6+
                 print("Single corpus data saved sucessfully")
 
     def save_multi_corpora_data(self, route_file): #hay que indicar a si corresponde al single corpus o al multicorpora
@@ -275,8 +277,8 @@ class TestView(FlaskView):
     def get_documents_data_singlecorpus(self):
 
         global single_corpus_data   
-        #return Response(js.dumps( single_corpus_data['relevantDocumentsDict']),  mimetype='application/json')
-        return Response(js.dumps( random.sample(single_corpus_data['relevantDocumentsDict'],2000)),  mimetype='application/json')
+        return Response(js.dumps( single_corpus_data['relevantDocumentsDict']),  mimetype='application/json')
+        #return Response(js.dumps( random.sample(single_corpus_data['relevantDocumentsDict'],2000)),  mimetype='application/json')
 
 
     #Split topic
@@ -291,7 +293,7 @@ class TestView(FlaskView):
         topic_id = json_file['topic_id'] #tHE FIRST TOPIC IS ID=1, not 0!
         new_keywords_seeds = json_file['new_keywords_seeds']
 
-        '''
+        #'''
 
         start = time.time()
 
@@ -443,7 +445,7 @@ class TestView(FlaskView):
             pickle.dump(new_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
                 # Load data (deserialize)
-        '''
+        #'''
         with open('new_dict_topic_splitting.pickle', 'rb') as handle:
             new_dict = pickle.load(handle)
 
