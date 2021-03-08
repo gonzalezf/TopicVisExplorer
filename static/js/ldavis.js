@@ -9,6 +9,7 @@ var merged_topic_to_delete = [];
 var name_merged_topic_to_delete = [];
 var old_topic_model_states = []; //here we are going to save previous topic models. This should be a array of dictionaries
 
+var current_relevant_documents_topic_splitting;
 
 var list_terms_for_topic_splitting = [];
 var slider_topic_splitting_values = {};
@@ -945,6 +946,75 @@ var LDAvis = function(to_select, data_or_file_name) {
             //console.log("en la pila tengo esto",old_topic_model_states);
         }
         
+        function splitting_topics_document_based_scenario_1(){
+
+
+            console.log('estoy en la funcion splitting topics scenario 1');
+            var topic_id = splitting_topic-1;
+
+            for (const [key, value] of Object.entries(slider_topic_splitting_values[splitting_topic])) {
+                //console.log('que tenemos aquiiii', key, value);                    
+
+            }
+
+            var postDataTopicSplitting = {
+                new_keywords_seeds: slider_topic_splitting_values[splitting_topic],
+                old_circle_positions: new_circle_positions,
+                topic_id: vis_state.topic
+                
+                
+            };
+
+            //4.- Create new new_position circle arrray
+            console.log('Se mando estos datos en este arreglo', postDataTopicSplitting);
+            var new_dict_topic_splitting; 
+            $.ajax({
+                type: 'POST',
+                url: '/Topic_Splitting_Document_Based',
+                async: false,
+                data: JSON.stringify(postDataTopicSplitting),
+                success: function(data) {
+                                
+                    new_dict_topic_splitting = data                    
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) { 
+                    alert("Status: " + textStatus); alert("Error: " + errorThrown); 
+                }, 
+                contentType: "application/json"             
+            });
+            
+            console.log('esta es la wea que estoy leyendoo', new_dict_topic_splitting);
+        
+            console.log('ANTESSSestas son mis nuevas new circle positions', new_circle_positions);
+
+            new_circle_positions = JSON.parse(new_dict_topic_splitting['new_circle_positions']); 
+            console.log('DESPUEEES estas son mis nuevas new circle positions', new_circle_positions);
+
+            console.log('esto es lo q ', new_dict_topic_splitting);
+            console.log('esta wea gunciona o noo', JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython']));
+            console.log('this is the data we received', new_dict_topic_splitting);
+            //1. Update relevantDocumentsDict
+            relevantDocumentsDict = JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython']);
+
+            //2.-Updarte variables for keyboard panel       
+            //visualize(new_dict_topic_splitting['PreparedDataObtained_fromPython'])
+            updateTopicNamesCircles(new_dict_topic_splitting['PreparedDataObtained_fromPython']);
+            console.log( 'ahora debi haber actualizado los datoooos')
+
+
+            //d3.selectAll('#svgMdsPlot').remove();
+            //d3.selectAll('#divider_central_panel').remove();
+
+            createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current); //update central panel
+
+            //createBarPlot("#BarPlotPanelDiv", dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", R) //esto crea el bar plot por primera vez. 
+
+
+
+            topic_on(document.getElementById(topicID+vis_state.topic));
+            slider_topic_splitting_values = {};
+        }
+
         function splitting_topics_scenario_1(){
 
 
@@ -2488,12 +2558,13 @@ var LDAvis = function(to_select, data_or_file_name) {
                 updateRelevantDocumentsTopicSplitting(splitting_topic-1, relevantDocumentsDict, 1);                
                 //createBarPlot("#KeywordsPanel_TopicSplitting", dat3, barFreqsIDTopicSplitting,"bar-totals-TopicSplitting", "terms-TopicSplitting", 1, "xaxis-TopicSplitting", R) //esto crea el bar plot por primera vez. 
                 createBarPlotTopicSplitting("#KeywordsPanel_TopicSplitting", dat3, barFreqsIDTopicSplitting,"bar-totals_TopicSplitting", "TopicSplitting", 1, "xaxis-TopicSplitting", 20); //hay que modificar la altura aqui en funcion del alto de las barras
-                createCentralPanelTopicSplitting();
+                //createCentralPanelTopicSplitting();
             });
 
             $("#apply_topic_splitting").click(function() {
                 save_state_data()
-                splitting_topics_scenario_1()
+                //splitting_topics_scenario_1()
+                splitting_topics_document_based_scenario_1()
             });
 
 
@@ -3995,13 +4066,12 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
 
-
+        var test;
             //slider topic splitting
         $('#tableRelevantDocumentsClass_TopicSplitting').on('post-body.bs.table', function (e) {
             /*This add a slider too all the table*/
             //$(".checkradios").checkradios();
            //console.log('se ejecuto la funcion post body bs');
-
 
             $('.radio_button_topic_splitting').click(function () {
                 if ($(this).is(':checked')) {
@@ -4011,31 +4081,42 @@ var LDAvis = function(to_select, data_or_file_name) {
                             
                             
                         }
-
+                        console.log('que hay en esta fila', this);
                         var current_id_radio_button = this.id;
                         var current_topic = current_id_radio_button.split("_")[0];
-                        var current_term = current_id_radio_button.split("_")[1];
+                        var current_index = current_id_radio_button.split("_")[1];
                         var current_class = current_id_radio_button.split("_")[2];
 
-                        
-                        //var current_term =  list_terms_for_topic_splitting[current_index].Term;
-                        slider_topic_splitting_values[splitting_topic][current_term] = current_class;
+
+                        var current_row = current_relevant_documents_topic_splitting[current_index];
+
+                        if(slider_topic_splitting_values[splitting_topic][current_class] == undefined){
+                            slider_topic_splitting_values[splitting_topic][current_class] = []
+                        }
+
+                        slider_topic_splitting_values[splitting_topic][current_class].push(current_row);
+                        console.log('asi va estoo', slider_topic_splitting_values);
+
+
 
                     }
 
             });
             
             if(slider_topic_splitting_values[splitting_topic] !== undefined ){
+                var array_current_relevant_documents_topic_splitting = Object.values(current_relevant_documents_topic_splitting);
+                for (const [key, value] of Object.entries(slider_topic_splitting_values[splitting_topic] )) {
+                    for (var i = 0; i < slider_topic_splitting_values[splitting_topic][key].length; i++) {
+                        var index = array_current_relevant_documents_topic_splitting.findIndex( s => s == slider_topic_splitting_values[splitting_topic][key][i] );
+                        if(document.getElementById(String(splitting_topic+'_'+index+'_'+key))!= undefined){
+                            document.getElementById(String(splitting_topic+'_'+index+'_'+key)).checked =true;
 
-                //console.log('tenemos estoo', slider_topic_splitting_values[splitting_topic]);
-                for (const [key, value] of Object.entries(slider_topic_splitting_values[splitting_topic])) {
-                    if(document.getElementById(String(splitting_topic+'_'+key+'_'+value))!= undefined){
-                        //console.log('searching for this id', splitting_topic+'_'+key+'_'+value);
-                        document.getElementById(String(splitting_topic+'_'+key+'_'+value)).checked =true;
-                        //console.log('estoy aqui', String(splitting_topic+'_'+key+'_'+value));
+    
+                        } 
 
-                    }                       
-                }
+                    }
+                }               
+
             }            
         });
         //Show how the relevant keywords are being used in the most relevant documents. 
@@ -4051,7 +4132,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 return row_2[String(topic_id)]-row_1[String(topic_id)];
             });
 
-            
+            current_relevant_documents_topic_splitting = relevantDocumentsDict; // the documents are sorted according to the contribution to the specific topic 
+
             if(model == 1){
                 $('#tableRelevantDocumentsClass_TopicSplitting').bootstrapTable("destroy");
                 $('#tableRelevantDocumentsClass_TopicSplitting').bootstrapTable({
@@ -4061,6 +4143,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     //showRefresh: true,
                     search: true,
                     sorting: true,
+                    uniqueId: true,
                     //pageList: [10, 25, 50, 100],
                     pageList: [10],
                     checkboxHeader: false,           
@@ -4080,10 +4163,43 @@ var LDAvis = function(to_select, data_or_file_name) {
                             title: 'Document',
                             sortable:'true'
                         },
+                        {
+                            field: 'Term',
+                            title: 'Subtopic A',
+                            align: 'center',
+                            valign: 'middle',
+                            clickToSelect: false,
+                            formatter : function(value,row,index) {       
+                                //console.log('este es un value', value, row, index);             
+                             return '<input type="radio" name="radio_'+splitting_topic+'_'+index+'" id="'+splitting_topic+'_'+index+'_TopicA" class="radio_button_topic_splitting" />';
+                             }                      
+                          },
+                          {
+                             field: 'Term',
+                             title: 'Subtopic B',
+                             align: 'center',
+                             valign: 'middle',
+                             clickToSelect: false,
+                             formatter : function(value,row,index) {                                              
+                              return '<input type="radio"  name="radio_'+splitting_topic+'_'+index+'" id="'+splitting_topic+'_'+index+'_TopicB" class="radio_button_topic_splitting" />';
+     
+                              }                      
+                           },
+                           {
+                             field: 'Term',
+                             title: 'None',
+                             align: 'center',
+                             valign: 'middle',
+                             clickToSelect: false,
+                             formatter : function(value,row,index) {                            
+                         
+                              return '<input type="radio" name="radio_'+splitting_topic+'_'+index+'"  id="'+splitting_topic+'_'+index+'_TopicNone" class="radio_button_topic_splitting" checked/>'; 
+                              }                      
+                           }                               
                       
                         
                     ],
-                    data: relevantDocumentsDict
+                    data: relevantDocumentsDict.slice(0,20) // We dont need to show to the user a huge number of documents
                 });
             }
 
