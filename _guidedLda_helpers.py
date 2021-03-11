@@ -2,7 +2,7 @@
 import numpy as np
 import gensim
 
-def create_eta(priors, etadict, ntopics):
+def create_eta_old(priors, etadict, ntopics):
     print('Creando eta')
     eta = np.full(shape=(ntopics, len(etadict)), fill_value=1) # create a (ntopics, nterms) matrix and fill with 1
     for word, topic in priors.items(): # for each word in the list of priors
@@ -12,6 +12,19 @@ def create_eta(priors, etadict, ntopics):
     #eta = np.divide(eta, eta.sum(axis=0)) # normalize so that the probabilities sum to 1 over all topics
     print('eta fue creadoooo!! yayy')
     return eta
+
+def create_eta(priors, etadict, ntopics):
+    eta = np.full(shape=(ntopics, len(etadict)), fill_value=1) # create a (ntopics, nterms) matrix and fill with 1
+    for topic_id, list_words in priors.items():
+        for word in list_words:
+            if word in id2word.token2id:
+                keyindex = id2word.token2id[word]
+                print(' yay inf!', word,keyindex)
+                #print(sys.float_info.max )
+                eta[topic_id,keyindex]  = 922337203# put a large number in there
+    #eta = np.divide(eta, eta.sum(axis=0)) # normalize so that the probabilities sum to 1 over all topics
+    return eta
+
 
 
 

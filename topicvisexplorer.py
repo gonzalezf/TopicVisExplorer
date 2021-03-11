@@ -319,7 +319,7 @@ class TestView(FlaskView):
 
         last_lda_model_dict_all_terms = dict()
         for topic_id in range(lda_model.num_topics):
-            current_list = [id2word[w]for w,p in lda_model.get_topic_terms(topic_id, topn=8)]
+            current_list = [id2word[w]for w,p in lda_model.get_topic_terms(topic_id, topn=10)]
             last_lda_model_dict_all_terms[topic_id] = current_list
 
         print('Estas son las semillas actualeees', last_lda_model_dict_all_terms)
@@ -352,6 +352,8 @@ class TestView(FlaskView):
         print("A NEW PREPARED DATA HA SIDO CREADO -0 Topics splitting!!")
         temp = prepare(**single_corpus_data['data_dict'])            
         single_corpus_data['PreparedDataObtained'] =  temp.to_dict()
+
+        
         print('Obteniendo nuevos documentos relevantes')
         matrix_documents_topic_contribution, _ = lda_model.inference(corpus)
         matrix_documents_topic_contribution /= matrix_documents_topic_contribution.sum(axis=1)[:, None]
@@ -464,7 +466,10 @@ class TestView(FlaskView):
 
             old_circle_positions = json_file['old_circle_positions']
             topic_id = json_file['topic_id'] #tHE FIRST TOPIC IS ID=1, not 0!
-            new_keywords_seeds = json_file['new_keywords_seeds']
+            new_document_seeds = json_file['new_document_seeds']
+
+            with open('json_file_topic_splitting_test.json', 'w') as current_file:
+                js.dump(json_file, current_file)
 
             print('esto fue lo enviado desde el usuario para el splitting document based', json_file)
 
@@ -707,8 +712,17 @@ class TestView(FlaskView):
         print("se ha calculado con optimization numer 1s")
 
         end = time.time()
+        print('voy a guardar modelo para probar topic splitting')
+
+
+
+        with open('models_output/testing_spliting.pkl', 'wb') as handle:
+            pickle.dump(single_corpus_data, handle, protocol=4) #protocol 4 is compatible with python 3.6+
+            print("Single corpus data saved sucessfully")
+
+
+        print('modelo guardado para probar splitting')
         print("calculo de nuevas posiciones ", end - start)
-        
         return new_circle_positions
 
     

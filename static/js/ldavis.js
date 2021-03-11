@@ -958,7 +958,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
 
             var postDataTopicSplitting = {
-                new_keywords_seeds: slider_topic_splitting_values[splitting_topic],
+                new_document_seeds: slider_topic_splitting_values[splitting_topic],
                 old_circle_positions: new_circle_positions,
                 topic_id: vis_state.topic
                 
@@ -2564,6 +2564,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             $("#apply_topic_splitting").click(function() {
                 save_state_data()
                 //splitting_topics_scenario_1()
+            
                 splitting_topics_document_based_scenario_1()
             });
 
@@ -4199,7 +4200,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                       
                         
                     ],
-                    data: relevantDocumentsDict.slice(0,20) // We dont need to show to the user a huge number of documents
+                    data: relevantDocumentsDict // We dont need to show to the user a huge number of documents
                 });
             }
 
