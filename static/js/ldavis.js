@@ -970,7 +970,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             var new_dict_topic_splitting; 
             $.ajax({
                 type: 'POST',
-                url: '/Topic_Splitting_Document_Based',
+                url: 'Topic_Splitting_Document_Based',
                 async: false,
                 data: JSON.stringify(postDataTopicSplitting),
                 success: function(data) {
@@ -1020,6 +1020,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             console.log('estoy en la funcion splitting topics scenario 1');
             var topic_id = splitting_topic-1;
+            slider_topic_splitting_values[splitting_topic] = {'testing': 'a'};
 
             for (const [key, value] of Object.entries(slider_topic_splitting_values[splitting_topic])) {
                 //console.log('que tenemos aquiiii', key, value);                    
@@ -1039,7 +1040,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             var new_dict_topic_splitting; 
             $.ajax({
                 type: 'POST',
-                url: '/getLdaModel',
+                url: '/getLdaModel2', 
                 async: false,
                 data: JSON.stringify(postDataTopicSplitting),
                 success: function(data) {
@@ -2563,9 +2564,10 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             $("#apply_topic_splitting").click(function() {
                 save_state_data()
-                //splitting_topics_scenario_1()
+                console.log('voy a hacer topic splitting yaay ctmm!! ')
+                splitting_topics_scenario_1()
             
-                splitting_topics_document_based_scenario_1()
+                //splitting_topics_document_based_scenario_1()
             });
 
 

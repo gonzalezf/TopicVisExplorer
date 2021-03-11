@@ -285,6 +285,7 @@ class TestView(FlaskView):
 
     @route('/getLdaModel2',  methods=['GET', 'POST'])
     def get_new_lda_model(self):
+        print('applying lda gensim with eta for topic splitting')
         global single_corpus_data   
         json_file = request.get_json()
 
@@ -305,7 +306,8 @@ class TestView(FlaskView):
         corpus = single_corpus_data['corpus']
 
 
-        new_number_topics = lda_model.num_topics+1
+        #new_number_topics = lda_model.num_topics+1
+        new_number_topics = lda_model.num_topics
 
 
 
@@ -327,12 +329,12 @@ class TestView(FlaskView):
         #create new lda model
 
         # identify the new seeds given from the user 
-        new_seeds_topic_a = [k for k,v in new_keywords_seeds.items() if v == 'TopicA']
-        new_seeds_topic_b = [k for k,v in new_keywords_seeds.items() if v == 'TopicB']
+        #new_seeds_topic_a = [k for k,v in new_keywords_seeds.items() if v == 'TopicA']
+        #new_seeds_topic_b = [k for k,v in new_keywords_seeds.items() if v == 'TopicB']
 
         # replace the new seeds in the initial topic (topic_id-1) and lets create a new topic
-        last_lda_model_dict_all_terms[topic_id-1] = new_seeds_topic_a
-        last_lda_model_dict_all_terms[lda_model.num_topics] = new_seeds_topic_b
+        #last_lda_model_dict_all_terms[topic_id-1] = new_seeds_topic_a
+        #last_lda_model_dict_all_terms[lda_model.num_topics] = new_seeds_topic_b
 
 
         eta = create_eta(last_lda_model_dict_all_terms, id2word, ntopics = new_number_topics)
@@ -452,7 +454,7 @@ class TestView(FlaskView):
             new_dict = pickle.load(handle)
 
 
-        print('FUNCIONAAAAAAAAAAAA')
+        print('FUNCIONAAAAAAAAAAAA con el etaaa ejalee')
         return new_dict
 
        
