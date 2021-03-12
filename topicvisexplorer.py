@@ -283,8 +283,8 @@ class TestView(FlaskView):
 
     #Split topic
 
-    @route('/getLdaModel2',  methods=['GET', 'POST'])
-    def get_new_lda_model(self):
+    @route('/gensim_eta_new_lda',  methods=['GET', 'POST'])
+    def gensim_eta_new_lda(self):
         print('applying lda gensim with eta for topic splitting')
         global single_corpus_data   
         json_file = request.get_json()
@@ -390,8 +390,10 @@ class TestView(FlaskView):
 
         #On procrustes, the matrixes cant be of different shape, therefore it is necessary to add a new row in each key.
         # there is going to be a new topic, therefore, the last position of this new topic is the position of the current topic that we need to split
-        for omega in old_circle_positions.keys():
-            old_circle_positions[omega].append(old_circle_positions[omega][topic_id-1])
+        
+        #luego hay q descomentar esto        
+        #for omega in old_circle_positions.keys():
+            #old_circle_positions[omega].append(old_circle_positions[omega][topic_id-1])
 
 
         print('Calculating new circle positions with procrustes')

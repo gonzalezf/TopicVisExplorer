@@ -970,7 +970,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             var new_dict_topic_splitting; 
             $.ajax({
                 type: 'POST',
-                url: 'Topic_Splitting_Document_Based',
+                url: '/Topic_Splitting_Document_Based',
                 async: false,
                 data: JSON.stringify(postDataTopicSplitting),
                 success: function(data) {
@@ -1040,7 +1040,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             var new_dict_topic_splitting; 
             $.ajax({
                 type: 'POST',
-                url: '/getLdaModel2', 
+                url: '/gensim_eta_new_lda', 
                 async: false,
                 data: JSON.stringify(postDataTopicSplitting),
                 success: function(data) {
