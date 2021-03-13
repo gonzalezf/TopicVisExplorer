@@ -1,7 +1,6 @@
 
 import numpy as np
 import gensim
-from gensim  import LdaMulticore
 def create_eta_old(priors, etadict, ntopics):
     print('Creando eta')
     eta = np.full(shape=(ntopics, len(etadict)), fill_value=1) # create a (ntopics, nterms) matrix and fill with 1

@@ -53,7 +53,9 @@
 
 
 <!-- Split modals-->
-<div class="modal fade modal_full_screen" id="SplitTopicModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<!--<div class="modal fade modal_full_screen" id="SplitTopicModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">-->
+<div class="modal fade " id="SplitTopicModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+
   <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog_full_screen" role="document" style='height: 80%'>
     <div class="modal-content model-content_full_screen" style='height: 80%'>
       <div class="modal-header">
@@ -62,15 +64,19 @@
           <!--<span aria-hidden="true">&times;</span>-->
         </button>
       </div>
-      <div class="modal-body modal-body_full_screen" style='max-height: calc(100% - 120px); overflow-y: scroll'>
+      <!--<div class="modal-body modal-body_full_screen" style='max-height: calc(100% - 120px); overflow-y: scroll'>-->
+      <div class="modal-body " style=' overflow-y: scroll'>
+
         <!--<input type='text' name='somename' data-provide='slider' data-slider-ticks='[1, 2, 3]' data-slider-min='1' data-slider-max='3' data-slider-step='1' data-slider-value='3' >-->
-        You are going to split the current selected topic: <span id="topic_to_split_name"></span>.  
-        
+        You are going to split the current selected topic: <span id="topic_to_split_name"></span>.  Please, for each new topic select the most relevant documents associated to them.
 
         <!--<div id="input"></div>      -->
         <div class="row" > <!--All the visualization must be placed in this row-->
-          <div class="col-4 border-right"  id="KeywordsPanel_TopicSplitting"> <!--Here the user is goign to be able to change the distribution of the most relevant keywords-->
+        <!--
+
+          <div class="col-4 border-right"  id="KeywordsPanel_TopicSplitting">
           </div>
+        -->
           <!--
           <div class="col-4"  id="CentralPanelTopicSplitting" >
             <table id="CentralPanelTopicSplittingRow"  >     
@@ -78,7 +84,7 @@
           </div>   
           -->
 
-          <div class="col-8"  id="DocumentsPanel_TopicSplitting" >
+          <div class="col-12"  id="DocumentsPanel_TopicSplitting" >
             <table id="tableRelevantDocumentsClass_TopicSplitting"  > <!-- class= "overflow-hidden table table-hover header-fixed"-->
               <thead>
               <tr>                          

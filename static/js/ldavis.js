@@ -984,7 +984,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             });
             
             console.log('esta es la wea que estoy leyendoo', new_dict_topic_splitting);
-        
+            
+            /*
             console.log('ANTESSSestas son mis nuevas new circle positions', new_circle_positions);
 
             new_circle_positions = JSON.parse(new_dict_topic_splitting['new_circle_positions']); 
@@ -1013,6 +1014,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             topic_on(document.getElementById(topicID+vis_state.topic));
             slider_topic_splitting_values = {};
+            */
         }
 
         function splitting_topics_scenario_1(){
@@ -2565,9 +2567,9 @@ var LDAvis = function(to_select, data_or_file_name) {
             $("#apply_topic_splitting").click(function() {
                 save_state_data()
                 console.log('voy a hacer topic splitting yaay ctmm!! ')
-                splitting_topics_scenario_1()
+                //splitting_topics_scenario_1()
             
-                //splitting_topics_document_based_scenario_1()
+                splitting_topics_document_based_scenario_1()
             });
 
 
