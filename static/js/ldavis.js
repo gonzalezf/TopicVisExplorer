@@ -8,7 +8,7 @@ var global_lamData;
 var merged_topic_to_delete = [];
 var name_merged_topic_to_delete = [];
 var old_topic_model_states = []; //here we are going to save previous topic models. This should be a array of dictionaries
-
+var global_new_dict_testing; 
 var current_relevant_documents_topic_splitting;
 
 var list_terms_for_topic_splitting = [];
@@ -982,10 +982,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                 }, 
                 contentType: "application/json"             
             });
-            
+            global_new_dict_testing = new_dict_topic_splitting;
+
             console.log('esta es la wea que estoy leyendoo', new_dict_topic_splitting);
+            console.log('Yay para probar ahora tengo esta variable', global_new_dict_testing);
             
-            /*
             console.log('ANTESSSestas son mis nuevas new circle positions', new_circle_positions);
 
             new_circle_positions = JSON.parse(new_dict_topic_splitting['new_circle_positions']); 
@@ -993,7 +994,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             console.log('esto es lo q ', new_dict_topic_splitting);
             console.log('esta wea gunciona o noo', JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython']));
-            console.log('this is the data we received', new_dict_topic_splitting);
             //1. Update relevantDocumentsDict
             relevantDocumentsDict = JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython']);
 
@@ -1014,7 +1014,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             topic_on(document.getElementById(topicID+vis_state.topic));
             slider_topic_splitting_values = {};
-            */
+            
         }
 
         function splitting_topics_scenario_1(){

@@ -22,12 +22,12 @@ from _prepare import prepare, js_PCoA, PreparedData, _pcoa
 from _topic_similarity_matrix import *
 from _get_new_circle_positions import *
 from _guidedLda_helpers import *
-
+from _topic_splitting_helpers import *
 from os import path, walk
 from gensim.models.keyedvectors import KeyedVectors
 from scipy.spatial import procrustes
 
-
+from random import sample
 from utils import get_id, write_ipynb_local_js, NumPyEncoder
 from _prepare import PreparedData
 
@@ -463,20 +463,211 @@ class TestView(FlaskView):
 
     
     @route('/Topic_Splitting_Document_Based',  methods=['GET', 'POST'])
-    def get_new_lda_model(self):
+    def get_new_sub_topics(self):
+            print('Calculando nuevos dos subtopicos')
+            start = time.time()
             global single_corpus_data   
             json_file = request.get_json()
-
-
+            #get data from user
             old_circle_positions = json_file['old_circle_positions']
             topic_id = json_file['topic_id'] #tHE FIRST TOPIC IS ID=1, not 0!
-            new_document_seeds = json_file['new_document_seeds']
+            new_document_seeds_TopicA = json_file['new_document_seeds']['TopicA']
+            new_document_seeds_TopicB = json_file['new_document_seeds']['TopicB']
+
+            word_embedding_model = single_corpus_data['word_embedding_model']
+
 
             with open('json_file_topic_splitting_test.json', 'w') as current_file:
                 js.dump(json_file, current_file)
 
-            print('esto fue lo enviado desde el usuario para el splitting document based', json_file)
-            return 'yay. Json fue guardadooo'
+            #print('esto fue lo enviado desde el usuario para el splitting document based', json_file)
+            print('Json RECIBIDO')
+            PreparedData_dict_with_more_info = single_corpus_data['tinfo_collection']
+            current_number_topics = single_corpus_data['lda_model'].num_topics
+
+            list_terms_relevance = PreparedData_dict_with_more_info.loc[PreparedData_dict_with_more_info['Category'] == 'Topic'+str(topic_id)].sort_values(by='relevance', ascending=False)['Term'].tolist()
+            list_relevant_documents = random.sample(single_corpus_data['relevantDocumentsDict'],1000)
+            list_relevant_documents = pd.DataFrame(list_relevant_documents).sort_values(int(topic_id)-1, ascending=False).reset_index()
+            #the idea is do this only ONCE! and tenerlo precalculado para el user study
+            print('cleaning sample fo text')
+            list_relevant_documents[name_tokenizacion] = list_relevant_documents[name_column_text].apply(lambda x: text_cleaner(x))
+            list_relevant_documents = list_relevant_documents.to_dict('records')
+            print('cleaning documents seeds topic a')
+
+            new_document_seeds_TopicA = pd.DataFrame(new_document_seeds_TopicA).reset_index()
+            new_document_seeds_TopicA[name_tokenizacion] = new_document_seeds_TopicA[name_column_text].apply(lambda x: text_cleaner(x))
+            new_document_seeds_TopicA = new_document_seeds_TopicA.to_dict('records')
+            print('cleaning documents seeds topic B')
+
+            new_document_seeds_TopicB = pd.DataFrame(new_document_seeds_TopicB).reset_index()
+            new_document_seeds_TopicB[name_tokenizacion] = new_document_seeds_TopicB[name_column_text].apply(lambda x: text_cleaner(x))
+            new_document_seeds_TopicB = new_document_seeds_TopicB.to_dict('records')
+            print('getting new subtopics')
+
+            results  = get_new_subtopics(list_terms_relevance, list_relevant_documents, topic_id, name_tokenizacion,name_column_text, new_document_seeds_TopicA, new_document_seeds_TopicB, word_embedding_model)
+            model_topic_A, model_topic_B, most_relevant_documents_topic, freq_topic_A, freq_topic_B = results
+            #  CREAR PICKLEEE!!! CON ESTA DATAAA!!!
+            with open('models_output/testing_spliting_models_topic_A_B.pkl', 'wb') as handle:
+                pickle.dump(results, handle, protocol=4) #protocol 4 is compatible with python 3.6+
+                print("Results for topic splitting has been saved")
+            print('Geeting new term-topic distributions')
+            # Get new term-topic distributions in the new subtopics
+            #get new distribution of terms, topic A
+            corpus_topic_A, dictionary_topic_A = model_topic_A
+            data_model_A = extract_data_without_topic_model(corpus_topic_A, dictionary_topic_A)
+
+            corpus_topic_B, dictionary_topic_B = model_topic_B
+            data_model_B = extract_data_without_topic_model(corpus_topic_B, dictionary_topic_B)
+            #Get most relevant documents
+            print('Getting most relevant documents')
+            new_dict = dict()
+            #set columns of the new subtopics to NaN values
+            df = pd.DataFrame(single_corpus_data['relevantDocumentsDict'])
+
+            df[int(topic_id-1)]= 0.0
+            df[current_number_topics]= 0.0
+
+            for row in most_relevant_documents_topic:
+                contribution_to_topic_a = row[0]/(row[0]+row[1])
+                contribution_to_topic_b = row[1]/(row[0]+row[1])
+                previous_contribution = row[2]
+                indexs = df.index[df['texto_completo'] == row[-1]].tolist()
+                if len(indexs)<1:
+                    print('Error, text not found')
+                #set final contribution to topic a, is contribution to topic_a multiply by the previous contribuiton
+                df.loc[indexs,int(topic_id-1)] = contribution_to_topic_a*previous_contribution
+                df.loc[indexs,current_number_topics] = contribution_to_topic_b*previous_contribution
+                    
+                
+            #order columns
+            intList=sorted([i for i in df.columns.values if type(i) is int])
+            strList=sorted([i for i in df.columns.values if type(i) is str])
+            new_order = intList+strList
+            df = df[new_order]
+            single_corpus_data['relevantDocumentsDict'] = df.to_dict('records')
+
+            new_dict['relevantDocumentsDict_fromPython'] =json.dumps( single_corpus_data['relevantDocumentsDict'])
+
+            #Get prepared data
+            print('Getting new prepared data')
+            temp = single_corpus_data['PreparedDataObtained']
+
+            #update MdsDat
+            #add temporal coordinates. We are going to change these later with the new topic similarity metric.
+            temp['mdsDat']['x'].append(temp['mdsDat']['x'][topic_id-1])
+            temp['mdsDat']['y'].append(temp['mdsDat']['y'][topic_id-1])
+            temp['mdsDat']['topics'].append(len(temp['mdsDat']['topics'])+1)
+            temp['mdsDat']['cluster'].append(temp['mdsDat']['cluster'][topic_id-1])
+            #update the frequency of the topic
+            old_frequency = temp['mdsDat']['Freq'][topic_id-1]
+            temp['mdsDat']['Freq'][topic_id-1] = old_frequency*freq_topic_A
+            temp['mdsDat']['Freq'].append(old_frequency*freq_topic_B)
+            #Update topic.order
+            temp['topic.order'].append(len(temp['topic.order'])+1)
+
+            temp_tinfo_df = pd.DataFrame(temp[ 'tinfo'])
+            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].sort_values(by=['Freq'], ascending=False)
+            temp_tinfo_df = pd.DataFrame(temp[ 'tinfo'])
+            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)] = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].apply(lambda row: change_frequency_on_prepared_data(row, data_model_A), axis=1)
+            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].sort_values(by=['Freq'], ascending=False)
+
+            #copy values for the new subtopic b
+            temp2 = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)]
+            temp2.Category = 'Topic'+str(current_number_topics+1) 
+            temp_tinfo_df = temp_tinfo_df.append(temp2, ignore_index=True)
+
+            #update those values with the current terms probability
+            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_topics+1)] = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_topics+1)].apply(lambda row: change_frequency_on_prepared_data(row, data_model_B), axis=1)
+            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_topics+1)].sort_values(by=['Freq'], ascending=False)
+
+            #save the new tinfo
+            temp_tinfo_df.reset_index(drop=True, inplace=True)
+            temp[ 'tinfo']  = temp_tinfo_df.to_dict(orient='list')
+
+            single_corpus_data['PreparedDataObtained'] = temp
+
+            print('New number of topics')
+            single_corpus_data['lda_model'].num_topics = single_corpus_data['lda_model'].num_topics+1
+            single_corpus_data['lda_model'].num_topics
+           #Get new topic similarity matrix
+            print('Getting new topic similarity matrix')
+            newClass = TopicVisExplorer("name") #dejar esta en el codigo final
+            word_embedding_model = single_corpus_data['word_embedding_model']
+            topn_terms = 20
+            topk_documents = 20
+            relevance_lambda = 0.6
+            print('Calculando topic similarity metrix')
+
+
+            lda_model = single_corpus_data['lda_model']
+            corpus = single_corpus_data['corpus']
+            id2word = single_corpus_data['id2word']
+            matrix_documents_topic_contribution = pd.DataFrame(single_corpus_data['relevantDocumentsDict'])
+
+
+            new_topic_similarity_matrix = newClass.calculate_topic_similarity_on_single_corpus(word_embedding_model, lda_model, corpus, id2word, matrix_documents_topic_contribution,topn_terms, topk_documents, relevance_lambda)
+            single_corpus_data['topic_similarity_matrix'] = new_topic_similarity_matrix
+            print('Topic similarity matrix has been calculated')
+
+
+
+            old_circle_positions = json_file['old_circle_positions']
+    
+            for omega in old_circle_positions.keys():
+                old_circle_positions[omega].append(old_circle_positions[omega][topic_id-1])
+
+
+            print('Calculating new circle positions with procrustes')
+
+            new_circle_positions = get_circle_positions_from_old_matrix(old_circle_positions, new_topic_similarity_matrix )
+            print('json new circle,. estas son las keys', json.loads(new_circle_positions).keys())
+            print('primer arreglo', json.loads(new_circle_positions)['0.0'])
+
+            single_corpus_data['new_circle_positions'] = new_circle_positions
+
+            print('------- falta calcular el nuevo topic orderingX')                 
+            topic_order =  single_corpus_data['topic.order']
+
+
+            #visualizar neuvos resultados
+
+            PreparedDataObtained = single_corpus_data['PreparedDataObtained'] 
+
+            #Return results in a dictionary
+
+
+            new_dict['new_circle_positions'] = single_corpus_data['new_circle_positions'] 
+
+            data = [single_corpus_data['PreparedDataObtained']]
+            data_json_format = []
+            for elem in data:
+                elem = js.dumps(elem, cls=NumPyEncoder)
+                data_json_format.append(elem)
+
+            new_dict['PreparedDataObtained_fromPython'] = js.loads(data_json_format[0])
+
+
+            #The following line is necessary to delete inf and nan values that javascript JSON.parse cant process
+            new_dict['PreparedDataObtained_fromPython']['tinfo'] = pd.DataFrame(new_dict['PreparedDataObtained_fromPython']['tinfo']).replace([np.inf, -np.inf, np.nan], 0).to_dict()
+
+
+            end = time.time()
+            print("Tiempo en realizar el topic splitting - Final Sending data", end - start)
+                    
+            with open('new_dict_topic_splitting.pickle', 'wb') as handle:
+                pickle.dump(new_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+            with open('new_dict_topic_splitting.pickle', 'rb') as handle:
+                new_dict = pickle.load(handle)
+
+
+            print('FUNCIONAAAAAAAAAAAA con el etaaa ejalee')
+            return new_dict
+
+
+
+
 
 
 
