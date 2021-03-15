@@ -464,10 +464,12 @@ class TestView(FlaskView):
     
     @route('/Topic_Splitting_Document_Based',  methods=['GET', 'POST'])
     def get_new_sub_topics(self):
+            
             print('Calculando nuevos dos subtopicos')
             start = time.time()
             global single_corpus_data   
             json_file = request.get_json()
+            '''
             #get data from user
             old_circle_positions = json_file['old_circle_positions']
             topic_id = json_file['topic_id'] #tHE FIRST TOPIC IS ID=1, not 0!
@@ -657,7 +659,7 @@ class TestView(FlaskView):
             with open('new_dict_topic_splitting.pickle', 'wb') as handle:
                 pickle.dump(new_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-
+            '''
             with open('new_dict_topic_splitting.pickle', 'rb') as handle:
                 new_dict = pickle.load(handle)
 

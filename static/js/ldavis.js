@@ -30,7 +30,7 @@ var LDAvis = function(to_select, data_or_file_name) {
     // Set up a few 'global' variables to hold the data:
     var K, // number of topics
         mdsData, // (x,y) locations and topic proportions
-        mdsData3, // topic proportions for all terms in the viz
+        //mdsData3, // topic proportions for all terms in the viz
         lamData, // all terms that are among the top-R most relevant for all topics, lambda values
         lambda = {
             old: 0.6,
@@ -240,6 +240,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         // a huge matrix with 3 columns: Term, Topic, Freq, where Freq is all non-zero probabilities of topics given terms
         // for the terms that appear in the barcharts for this data
+        /*
         mdsData3 = [];
         for (var i = 0; i < data['token.table'].Term.length; i++) {
             var obj = {};
@@ -249,6 +250,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             mdsData3.push(obj);
         }
         console.log('fin mdsDATA3');
+
+        */
 
         
         // large data for the widths of bars in bar-charts. 6 columns: Term, logprob, loglift, Freq, Total, Category
@@ -279,7 +282,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
         //console.log(data);
-        //console.log('estos datos a mirar , se debieron actualizar ojala mdsData', mdsData,'mdsdata3 ',  mdsData3, 'lamdata', lamData,'r',R,'k',K,data);
+        console.log('estos datos a mirar , se debieron actualizar ojala mdsData', mdsData, 'lamdata', lamData,'r',R,'k',K,data);
 
         //assign name to array
         d3.select("#name_topics")
@@ -322,7 +325,6 @@ var LDAvis = function(to_select, data_or_file_name) {
     
                         return (topicID + d.topics);
                     });
-
     }
     
 
@@ -350,6 +352,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         // a huge matrix with 3 columns: Term, Topic, Freq, where Freq is all non-zero probabilities of topics given terms
         // for the terms that appear in the barcharts for this data
+        /*
         mdsData3 = [];
         for (var i = 0; i < data['token.table'].Term.length; i++) {
             var obj = {};
@@ -358,6 +361,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
             mdsData3.push(obj);
         }
+        */
 
         
         // large data for the widths of bars in bar-charts. 6 columns: Term, logprob, loglift, Freq, Total, Category
@@ -985,22 +989,22 @@ var LDAvis = function(to_select, data_or_file_name) {
             global_new_dict_testing = new_dict_topic_splitting;
 
             console.log('esta es la wea que estoy leyendoo', new_dict_topic_splitting);
-            console.log('Yay para probar ahora tengo esta variable', global_new_dict_testing);
+            //console.log('Yay para probar ahora tengo esta variable', global_new_dict_testing);
             
-            console.log('ANTESSSestas son mis nuevas new circle positions', new_circle_positions);
+            //console.log('ANTESSSestas son mis nuevas new circle positions', new_circle_positions);
 
             new_circle_positions = JSON.parse(new_dict_topic_splitting['new_circle_positions']); 
-            console.log('DESPUEEES estas son mis nuevas new circle positions', new_circle_positions);
+            //console.log('DESPUEEES estas son mis nuevas new circle positions', new_circle_positions);
 
-            console.log('esto es lo q ', new_dict_topic_splitting);
-            console.log('esta wea gunciona o noo', JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython']));
+            //console.log('esto es lo q ', new_dict_topic_splitting);
+            //console.log('esta wea gunciona o noo', JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython']));
             //1. Update relevantDocumentsDict
             relevantDocumentsDict = JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython']);
 
             //2.-Updarte variables for keyboard panel       
             //visualize(new_dict_topic_splitting['PreparedDataObtained_fromPython'])
             updateTopicNamesCircles(new_dict_topic_splitting['PreparedDataObtained_fromPython']);
-            console.log( 'ahora debi haber actualizado los datoooos')
+            //console.log( 'ahora debi haber actualizado los datoooos')
 
 
             //d3.selectAll('#svgMdsPlot').remove();
@@ -1009,12 +1013,9 @@ var LDAvis = function(to_select, data_or_file_name) {
             createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current); //update central panel
 
             //createBarPlot("#BarPlotPanelDiv", dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", R) //esto crea el bar plot por primera vez. 
-
-
-
             topic_on(document.getElementById(topicID+vis_state.topic));
             slider_topic_splitting_values = {};
-            
+                                
         }
 
         function splitting_topics_scenario_1(){
@@ -1400,7 +1401,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             
 
             // bind mdsData to the points in the left panel:
-            console.log('en el createmdsplot tenemos esto', new_positions)
+            console.log('en el createmdsplot tenemos esto', mdsData)
             var new_positions = new_circle_positions[lambda_lambda_topic_similarity]
             
             function getCol(matrix, col){
