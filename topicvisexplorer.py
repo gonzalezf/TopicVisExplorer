@@ -470,6 +470,7 @@ class TestView(FlaskView):
             global single_corpus_data   
             json_file = request.get_json()
             #get data from user
+     
             old_circle_positions = json_file['old_circle_positions']
             topic_id = json_file['topic_id'] #tHE FIRST TOPIC IS ID=1, not 0!
             new_document_seeds_TopicA = json_file['new_document_seeds']['TopicA']
@@ -487,7 +488,7 @@ class TestView(FlaskView):
             current_number_topics = single_corpus_data['lda_model'].num_topics
 
             list_terms_relevance = PreparedData_dict_with_more_info.loc[PreparedData_dict_with_more_info['Category'] == 'Topic'+str(topic_id)].sort_values(by='relevance', ascending=False)['Term'].tolist()
-            list_relevant_documents = random.sample(single_corpus_data['relevantDocumentsDict'],20000)
+            list_relevant_documents = random.sample(single_corpus_data['relevantDocumentsDict'],10000)
             list_relevant_documents = pd.DataFrame(list_relevant_documents).sort_values(int(topic_id)-1, ascending=False).reset_index()
             #the idea is do this only ONCE! and tenerlo precalculado para el user study
             print('cleaning sample fo text')
@@ -516,9 +517,32 @@ class TestView(FlaskView):
             #get new distribution of terms, topic A
             corpus_topic_A, dictionary_topic_A = model_topic_A
             data_model_A = extract_data_without_topic_model(corpus_topic_A, dictionary_topic_A)
+            print('actualizando el modelo A')
+
+            df_temp = pd.DataFrame(data_model_A)
+            print(len(df_temp))
+            #df[df['vocab'] in list_terms_relevance]
+            df_temp = df_temp[df_temp['vocab'].isin(list_terms_relevance)]
+            total_frequency = df_temp['term_frequency'].sum()
+            df_temp.apply(lambda row: update_topic_term_dists(row, total_frequency), axis=1)
+            print(len(df_temp))
+            data_model_A = df_temp.to_dict()
+
 
             corpus_topic_B, dictionary_topic_B = model_topic_B
             data_model_B = extract_data_without_topic_model(corpus_topic_B, dictionary_topic_B)
+
+            df_temp = pd.DataFrame(data_model_B)
+            print(len(df_temp))
+            #df[df['vocab'] in list_terms_relevance]
+            df_temp = df_temp[df_temp['vocab'].isin(list_terms_relevance)]
+            total_frequency = df_temp['term_frequency'].sum()
+            df_temp.apply(lambda row: update_topic_term_dists(row, total_frequency), axis=1)
+            print(len(df_temp))
+            data_model_B = df_temp.to_dict()
+
+
+
             #Get most relevant documents
             print('Getting most relevant documents')
             new_dict = dict()
@@ -529,15 +553,22 @@ class TestView(FlaskView):
             df[current_number_topics]= 0.0
 
             for row in most_relevant_documents_topic:
-                contribution_to_topic_a = row[0]/(row[0]+row[1])
-                contribution_to_topic_b = row[1]/(row[0]+row[1])
-                previous_contribution = row[2]
+                #contribution_to_topic_a = row[0]/(row[0]+row[1])
+                #contribution_to_topic_b = row[1]/(row[0]+row[1])
+                contribution_to_topic_a = row[0]
+                contribution_to_topic_b = row[1]
+                #previous_contribution = row[2]
                 indexs = df.index[df['texto_completo'] == row[-1]].tolist()
                 if len(indexs)<1:
                     print('Error, text not found')
                 #set final contribution to topic a, is contribution to topic_a multiply by the previous contribuiton
-                df.loc[indexs,int(topic_id-1)] = contribution_to_topic_a*previous_contribution
-                df.loc[indexs,current_number_topics] = contribution_to_topic_b*previous_contribution
+
+
+                
+                #df.loc[indexs,int(topic_id-1)] = contribution_to_topic_a*previous_contribution
+                #df.loc[indexs,current_number_topics] = contribution_to_topic_b*previous_contribution
+                df.loc[indexs,int(topic_id-1)] = contribution_to_topic_a
+                df.loc[indexs,current_number_topics] = contribution_to_topic_b
                     
                 
             #order columns
@@ -660,12 +691,12 @@ class TestView(FlaskView):
                     
             with open('new_dict_topic_splitting.pickle', 'wb') as handle:
                 pickle.dump(new_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-            
+           
+            '''
             with open('new_dict_topic_splitting.pickle', 'rb') as handle:
                 new_dict = pickle.load(handle)
 
-            print('FUNCIONAAAAAAAAAAAA con el etaaa ejalee con logligt y logprob')
+            print('FUNCIONAAAAAAAAAAAA con el etaaa ejalee con logligt y logprob - checkear documents')
             return new_dict
 
 

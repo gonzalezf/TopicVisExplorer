@@ -128,7 +128,7 @@ def getDocumentVector(text, wordembedding ,  list_terms_relevance):
                 #print("WARNING, Word not found:", word)    
 
     return document_vector
-            
+
 
 def get_initial_document_vector_by_class(list_terms_relevance, topic_id, name_tokenizacion,documents_class_A, documents_class_B, wordembedding):
     relevantDocumentsvector_class_A = 0.0
@@ -170,17 +170,25 @@ def create_two_list_of_documents(list_terms_relevance, list_relevant_documents, 
         current_contribution = row[int(topic_id)-1]
         current_text = row[name_tokenizacion]
         current_document_vector = getDocumentVector(current_text, wordembedding, list_terms_relevance).reshape(-1, 1)
-        similarity_vectorA_currentvector =  1 - spatial.distance.cosine(vector_A, current_document_vector)
-        similarity_vectorB_currentvector =  1 - spatial.distance.cosine(vector_B, current_document_vector)
+        #similarity_vectorA_currentvector =  1 - spatial.distance.cosine(vector_A, current_document_vector)
+        #similarity_vectorB_currentvector =  1 - spatial.distance.cosine(vector_B, current_document_vector)
+        similarity_vectorA_currentvector = np.arccos(spatial.distance.cosine(vector_A, current_document_vector)-1) / np.pi
+        similarity_vectorB_currentvector = np.arccos(spatial.distance.cosine(vector_B, current_document_vector)-1) / np.pi
         
         #I need this information to get the matrix of most relevant documents according to the similarity score
-        most_relevant_documents_topic.add((similarity_vectorA_currentvector,similarity_vectorB_currentvector,  current_contribution, row[name_column_text]))
+        
+        #most_relevant_documents_topic.add((similarity_vectorA_currentvector,similarity_vectorB_currentvector,  current_contribution, row[name_column_text]))
             
         if similarity_vectorA_currentvector>= similarity_vectorB_currentvector:
             #append element to documentsA
             documents_A.append((current_contribution, row[name_tokenizacion]))
+            most_relevant_documents_topic.add((similarity_vectorA_currentvector,0,  current_contribution, row[name_column_text]))
+
         else:
             documents_B.append((current_contribution, row[name_tokenizacion]))
+            most_relevant_documents_topic.add((0,similarity_vectorB_currentvector,  current_contribution, row[name_column_text])) #QUIZAS LO CORRECTO Es que en vez de 0, sea 1-similarity_vectorB_currentvector
+
+
     print('Documentos en A', len(documents_A))
     print('Documentos en B', len(documents_B))
 
@@ -190,20 +198,27 @@ def create_two_list_of_documents(list_terms_relevance, list_relevant_documents, 
         current_text = row[name_tokenizacion]
         #print('agregando este texto', current_text)
         current_document_vector = getDocumentVector(current_text, wordembedding, list_terms_relevance).reshape(-1, 1)
-        similarity_vectorA_currentvector =  1 - spatial.distance.cosine(vector_A, current_document_vector)
-        similarity_vectorB_currentvector =  1 - spatial.distance.cosine(vector_B, current_document_vector)
+        #angular distance: https://www.wikiwand.com/en/Cosine_similarity
+        #https://math.stackexchange.com/questions/3241174/scale-cosine-similarity-between-vectors-to-range-0-1
+
+        similarity_vectorA_currentvector = np.arccos(spatial.distance.cosine(vector_A, current_document_vector)-1) / np.pi
+        #similarity_vectorB_currentvector = np.arccos(spatial.distance.cosine(vector_B, current_document_vector)-1) / np.pi
+        #similarity_vectorA_currentvector =  1 - spatial.distance.cosine(vector_A, current_document_vector)
+        #similarity_vectorB_currentvector =  1 - spatial.distance.cosine(vector_B, current_document_vector)
         
-        most_relevant_documents_topic.add((similarity_vectorA_currentvector, similarity_vectorB_currentvector, current_contribution, row[name_column_text]))
+        most_relevant_documents_topic.add((similarity_vectorA_currentvector, 0, current_contribution, row[name_column_text]))
     
     for row in new_document_seeds_TopicB:
         current_contribution = row[str(int(topic_id)-1)]
         current_text = row[name_tokenizacion]
         #print('agregando este texto', current_text)
         current_document_vector = getDocumentVector(current_text, wordembedding, list_terms_relevance).reshape(-1, 1)
-        similarity_vectorA_currentvector =  1 - spatial.distance.cosine(vector_A, current_document_vector)
-        similarity_vectorB_currentvector =  1 - spatial.distance.cosine(vector_B, current_document_vector)
+        #similarity_vectorA_currentvector =  1 - spatial.distance.cosine(vector_A, current_document_vector)
+        #similarity_vectorB_currentvector =  1 - spatial.distance.cosine(vector_B, current_document_vector)
+        #similarity_vectorA_currentvector = np.arccos(spatial.distance.cosine(vector_A, current_document_vector)-1) / np.pi
+        similarity_vectorB_currentvector = np.arccos(spatial.distance.cosine(vector_B, current_document_vector)-1) / np.pi
         
-        most_relevant_documents_topic.add((similarity_vectorA_currentvector, similarity_vectorB_currentvector, current_contribution, row[name_column_text]))
+        most_relevant_documents_topic.add((0, similarity_vectorB_currentvector, current_contribution, row[name_column_text]))
     
                 
     
@@ -273,6 +288,11 @@ def get_new_subtopics(list_terms_relevance, list_relevant_documents, topic_id, n
     
     return(getCorpusDictionaryfromSentences(final_list_A), getCorpusDictionaryfromSentences(final_list_B), most_relevant_documents_topic, freq_topic_A, freq_topic_B)
 
+def update_topic_term_dists(row, total_frequency):
+    row['topic_term_dists'] = row['term_frequency']/total_frequency
+    return row
+
+    
 def extract_data_without_topic_model(corpus, dictionary):
 
 
@@ -304,14 +324,19 @@ def extract_data_without_topic_model(corpus, dictionary):
 def change_frequency_on_prepared_data(row, new_subtopic_df, total_sum_frequency_corpus):
     current_term = row['Term']
     current_total = row['Total']
+    new_subtopic_df = pd.DataFrame(new_subtopic_df)
+    current_total_new_subtopic_df = new_subtopic_df['term_frequency'].sum()
     if current_term in list(new_subtopic_df['vocab']) and current_total>0:
         new_subtopic_df = pd.DataFrame(new_subtopic_df)
         old_freq = row['Freq']
         new_prob = float(new_subtopic_df.loc[new_subtopic_df['vocab'] == current_term]['topic_term_dists'])
+        current_frequency = float(new_subtopic_df.loc[new_subtopic_df['vocab'] == current_term]['term_frequency'])
 
         row['Freq'] = new_prob*row['Total']
         row['logprob'] = np.log(new_prob)
-        row['loglift'] = np.log(new_prob/(current_total/total_sum_frequency_corpus))                 
+        #row['loglift'] = np.log(new_prob/(current_total/total_sum_frequency_corpus))     
+        row['loglift'] = np.log(new_prob/(current_frequency/current_total_new_subtopic_df))                 
+
     else:
         row['Freq'] = 0    
         row['logprob'] = 0

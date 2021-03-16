@@ -221,14 +221,14 @@ var LDAvis = function(to_select, data_or_file_name) {
         
         // set the number of topics to global variable K:
         ////console.log("este data yo recibi", data)
-        console.log('estoy en la funcion update topic names circles')
+        //console.log('estoy en la funcion update topic names circles')
         K = data['mdsDat'].x.length;
 
         // R is the number of top relevant (or salient) words whose bars we display
         var R = Math.min(data['R'], 20);
 
         // a (K x 5) matrix with columns x, y, topics, Freq, cluster (where x and y are locations for left panel)
-        console.log('Before MDS ', mdsData);
+        //console.log('Before MDS ', mdsData);
 
         mdsData = [];
         for (var i = 0; i < K; i++) {
@@ -239,14 +239,14 @@ var LDAvis = function(to_select, data_or_file_name) {
             mdsData.push(obj);
         }
         
-        console.log('Step 1: mds data updated', mdsData);
+        //console.log('Step 1: mds data updated', mdsData);
 
 
-        console.log('step 3,  lamdata BEFORE', lamData);
+        //console.log('step 3,  lamdata BEFORE', lamData);
         var length_tinfo =   Object.keys(data['tinfo']['Term']).length;
 
       
-        console.log('este es el largo', length_tinfo);
+        //console.log('este es el largo', length_tinfo);
         lamData = [];
         for (var i = 0; i <  length_tinfo ; i++) { // data['tinfo'].Term.length
             var obj = {};
@@ -263,10 +263,10 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
 
-        console.log('step 3, updated lamdata', lamData);
+        //console.log('step 3, updated lamdata', lamData);
 
         var dat3 = lamData.slice(0, R);
-        console.log('step 4, updated dat3', dat3);
+        //console.log('step 4, updated dat3', dat3);
 
 
     
@@ -985,20 +985,22 @@ var LDAvis = function(to_select, data_or_file_name) {
             new_circle_positions = JSON.parse(new_dict_topic_splitting['new_circle_positions']); 
            
             //1. Update relevantDocumentsDict
+            console.log('estos eran los documentos antes', relevantDocumentsDict);
             relevantDocumentsDict = JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython'].replace(/\bNaN\b/g, "null"));
+            console.log('estos eran los documentos despues', relevantDocumentsDict);
 
             //2.-Updarte variables for keyboard panel       
             //visualize(new_dict_topic_splitting['PreparedDataObtained_fromPython'])
-            see_most_relevant_keywords(vis_state.topic)
+            see_most_relevant_keywords(12)
 
 
             updateTopicNamesCircles(new_dict_topic_splitting['PreparedDataObtained_fromPython']);
 
-            see_most_relevant_keywords(vis_state.topic)
+            see_most_relevant_keywords(12)
 
             createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current); //update central panel
 
-            //topic_on(document.getElementById(topicID+vis_state.topic));
+            topic_on(document.getElementById(topicID+vis_state.topic));
             slider_topic_splitting_values = {};
                                 
         }
@@ -1386,7 +1388,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             
 
             // bind mdsData to the points in the left panel:
-            console.log('en el createmdsplot tenemos esto', mdsData)
+            //console.log('en el createmdsplot tenemos esto', mdsData)
             var new_positions = new_circle_positions[lambda_lambda_topic_similarity]
             
             function getCol(matrix, col){
@@ -3899,7 +3901,11 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
         function to_percentage(number){
-            return (number*100).toFixed(1) + '%'
+            var result =  (number*100).toFixed(1);
+            if(result>100){
+                console.log('que weaaa este es el number', number, 'y este es el result', result);
+            }
+            return (number*100).toFixed(1) + '%';
 
         }
 
@@ -4072,7 +4078,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             // sort by relevance:
             dat2.sort(fancysort("relevance"));
-            console.log('estos son los terminos ordenadoooos', dat2);
+            console.log('estos son los terminos ordenadoooos para topic id' , topic_id, dat2.slice(0,30));
                         
         }
     
