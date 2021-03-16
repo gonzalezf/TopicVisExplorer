@@ -164,7 +164,7 @@ def create_two_list_of_documents(list_terms_relevance, list_relevant_documents, 
 
     list_relevant_documents = pd.DataFrame(list_relevant_documents).sort_values(int(topic_id)-1, ascending=False).reset_index()
     #print('vectores crreadoos', vector_A, vector_B)
-    for index, row in list_relevant_documents.head(100).iterrows():
+    for index, row in list_relevant_documents.head(20000).iterrows():
         if index%100 == 0:
             print(index)
         current_contribution = row[int(topic_id)-1]
@@ -301,16 +301,21 @@ def extract_data_without_topic_model(corpus, dictionary):
     return {'topic_term_dists': topic_term_dists, 'vocab': vocab, 'term_frequency': term_freqs}
 
 
-def change_frequency_on_prepared_data(row, new_subtopic_df):
+def change_frequency_on_prepared_data(row, new_subtopic_df, total_sum_frequency_corpus):
     current_term = row['Term']
-    if current_term in list(new_subtopic_df['vocab']):
+    current_total = row['Total']
+    if current_term in list(new_subtopic_df['vocab']) and current_total>0:
         new_subtopic_df = pd.DataFrame(new_subtopic_df)
         old_freq = row['Freq']
         new_prob = float(new_subtopic_df.loc[new_subtopic_df['vocab'] == current_term]['topic_term_dists'])
-        current_total = row['Total']
+
         row['Freq'] = new_prob*row['Total']
+        row['logprob'] = np.log(new_prob)
+        row['loglift'] = np.log(new_prob/(current_total/total_sum_frequency_corpus))                 
     else:
         row['Freq'] = 0    
+        row['logprob'] = 0
+        row['loglift'] = 0  
     return row
     
 

@@ -464,12 +464,11 @@ class TestView(FlaskView):
     
     @route('/Topic_Splitting_Document_Based',  methods=['GET', 'POST'])
     def get_new_sub_topics(self):
-            
+
             print('Calculando nuevos dos subtopicos')
             start = time.time()
             global single_corpus_data   
             json_file = request.get_json()
-            '''
             #get data from user
             old_circle_positions = json_file['old_circle_positions']
             topic_id = json_file['topic_id'] #tHE FIRST TOPIC IS ID=1, not 0!
@@ -488,7 +487,7 @@ class TestView(FlaskView):
             current_number_topics = single_corpus_data['lda_model'].num_topics
 
             list_terms_relevance = PreparedData_dict_with_more_info.loc[PreparedData_dict_with_more_info['Category'] == 'Topic'+str(topic_id)].sort_values(by='relevance', ascending=False)['Term'].tolist()
-            list_relevant_documents = random.sample(single_corpus_data['relevantDocumentsDict'],1000)
+            list_relevant_documents = random.sample(single_corpus_data['relevantDocumentsDict'],20000)
             list_relevant_documents = pd.DataFrame(list_relevant_documents).sort_values(int(topic_id)-1, ascending=False).reset_index()
             #the idea is do this only ONCE! and tenerlo precalculado para el user study
             print('cleaning sample fo text')
@@ -570,7 +569,8 @@ class TestView(FlaskView):
             temp_tinfo_df = pd.DataFrame(temp[ 'tinfo'])
             temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].sort_values(by=['Freq'], ascending=False)
             temp_tinfo_df = pd.DataFrame(temp[ 'tinfo'])
-            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)] = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].apply(lambda row: change_frequency_on_prepared_data(row, data_model_A), axis=1)
+            total_sum_frequency_corpus_topic_A = sum(temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].sort_values(by=['Freq'])['Total'])
+            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)] = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].apply(lambda row: change_frequency_on_prepared_data(row, data_model_A, total_sum_frequency_corpus_topic_A), axis=1)
             temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].sort_values(by=['Freq'], ascending=False)
 
             #copy values for the new subtopic b
@@ -579,7 +579,9 @@ class TestView(FlaskView):
             temp_tinfo_df = temp_tinfo_df.append(temp2, ignore_index=True)
 
             #update those values with the current terms probability
-            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_topics+1)] = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_topics+1)].apply(lambda row: change_frequency_on_prepared_data(row, data_model_B), axis=1)
+            total_sum_frequency_corpus_topic_B = sum(temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].sort_values(by=['Freq'])['Total'])
+
+            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_topics+1)] = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_topics+1)].apply(lambda row: change_frequency_on_prepared_data(row, data_model_B,total_sum_frequency_corpus_topic_B), axis=1)
             temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_topics+1)].sort_values(by=['Freq'], ascending=False)
 
             #save the new tinfo
@@ -659,12 +661,11 @@ class TestView(FlaskView):
             with open('new_dict_topic_splitting.pickle', 'wb') as handle:
                 pickle.dump(new_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-            '''
+            
             with open('new_dict_topic_splitting.pickle', 'rb') as handle:
                 new_dict = pickle.load(handle)
 
-
-            print('FUNCIONAAAAAAAAAAAA con el etaaa ejalee')
+            print('FUNCIONAAAAAAAAAAAA con el etaaa ejalee con logligt y logprob')
             return new_dict
 
 

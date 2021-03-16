@@ -221,13 +221,15 @@ var LDAvis = function(to_select, data_or_file_name) {
         
         // set the number of topics to global variable K:
         ////console.log("este data yo recibi", data)
-        
+        console.log('estoy en la funcion update topic names circles')
         K = data['mdsDat'].x.length;
 
         // R is the number of top relevant (or salient) words whose bars we display
         var R = Math.min(data['R'], 20);
 
         // a (K x 5) matrix with columns x, y, topics, Freq, cluster (where x and y are locations for left panel)
+        console.log('Before MDS ', mdsData);
+
         mdsData = [];
         for (var i = 0; i < K; i++) {
             var obj = {};
@@ -236,55 +238,46 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
             mdsData.push(obj);
         }
-        console.log('fin mdsDATA');
-
-        // a huge matrix with 3 columns: Term, Topic, Freq, where Freq is all non-zero probabilities of topics given terms
-        // for the terms that appear in the barcharts for this data
-        /*
-        mdsData3 = [];
-        for (var i = 0; i < data['token.table'].Term.length; i++) {
-            var obj = {};
-            for (var key in data['token.table']) {
-                obj[key] = data['token.table'][key][i];
-            }
-            mdsData3.push(obj);
-        }
-        console.log('fin mdsDATA3');
-
-        */
-
         
-        // large data for the widths of bars in bar-charts. 6 columns: Term, logprob, loglift, Freq, Total, Category
-        // Contains all possible terms for topics in (1, 2, ..., k) and lambda in the user-supplied grid of lambda values
-        // which defaults to (0, 0.01, 0.02, ..., 0.99, 1).
-
-        data['tinfo'].Term = Object.values( data['tinfo'].Term);
+        console.log('Step 1: mds data updated', mdsData);
 
 
+        console.log('step 3,  lamdata BEFORE', lamData);
+        var length_tinfo =   Object.keys(data['tinfo']['Term']).length;
 
-
+      
+        console.log('este es el largo', length_tinfo);
         lamData = [];
-        for (var i = 0; i <  data['tinfo'].Term.length ; i++) {
+        for (var i = 0; i <  length_tinfo ; i++) { // data['tinfo'].Term.length
             var obj = {};
             for (var key in data['tinfo']) {
                 obj[key] = data['tinfo'][key][i];
             }
+
+            if(obj['Freq']==0){
+                obj['loglift'] = -Infinity;
+                obj['logprob'] = -Infinity;
+            }
             lamData.push(obj);
-            //console.log('i', i);
         }
-        console.log('fin LAMDATA', lamData);
+
+
+
+        console.log('step 3, updated lamdata', lamData);
 
         var dat3 = lamData.slice(0, R);
-        console.log('esto es dat3', dat3);
+        console.log('step 4, updated dat3', dat3);
 
 
     
 
 
         //console.log(data);
-        console.log('estos datos a mirar , se debieron actualizar ojala mdsData', mdsData, 'lamdata', lamData,'r',R,'k',K,data);
+        //console.log('estos datos a mirar , se debieron actualizar ojala lamdata', lamData,'r',R,'k',K);
 
         //assign name to array
+
+        
         d3.select("#name_topics")
                     .data(mdsData)
                     .enter()
@@ -324,10 +317,10 @@ var LDAvis = function(to_select, data_or_file_name) {
                         name_topics_circles[topicID + d.topics] = name_string 
     
                         return (topicID + d.topics);
-                    });
+                    });    
     }
-    
 
+    
   
 
     function visualize(data) {
@@ -953,8 +946,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         function splitting_topics_document_based_scenario_1(){
 
 
-            console.log('estoy en la funcion splitting topics scenario 1');
-            var topic_id = splitting_topic-1;
+            //console.log('estoy en la funcion splitting topics scenario 1');
 
             for (const [key, value] of Object.entries(slider_topic_splitting_values[splitting_topic])) {
                 //console.log('que tenemos aquiiii', key, value);                    
@@ -970,7 +962,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             };
 
             //4.- Create new new_position circle arrray
-            console.log('Se mando estos datos en este arreglo', postDataTopicSplitting);
+            //console.log('Se mando estos datos en este arreglo', postDataTopicSplitting);
             var new_dict_topic_splitting; 
             $.ajax({
                 type: 'POST',
@@ -988,32 +980,25 @@ var LDAvis = function(to_select, data_or_file_name) {
             });
             global_new_dict_testing = new_dict_topic_splitting;
 
-            console.log('esta es la wea que estoy leyendoo', new_dict_topic_splitting);
-            //console.log('Yay para probar ahora tengo esta variable', global_new_dict_testing);
-            
-            //console.log('ANTESSSestas son mis nuevas new circle positions', new_circle_positions);
+
 
             new_circle_positions = JSON.parse(new_dict_topic_splitting['new_circle_positions']); 
-            //console.log('DESPUEEES estas son mis nuevas new circle positions', new_circle_positions);
-
-            //console.log('esto es lo q ', new_dict_topic_splitting);
-            //console.log('esta wea gunciona o noo', JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython']));
+           
             //1. Update relevantDocumentsDict
-            relevantDocumentsDict = JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython']);
+            relevantDocumentsDict = JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython'].replace(/\bNaN\b/g, "null"));
 
             //2.-Updarte variables for keyboard panel       
             //visualize(new_dict_topic_splitting['PreparedDataObtained_fromPython'])
+            see_most_relevant_keywords(vis_state.topic)
+
+
             updateTopicNamesCircles(new_dict_topic_splitting['PreparedDataObtained_fromPython']);
-            //console.log( 'ahora debi haber actualizado los datoooos')
 
-
-            //d3.selectAll('#svgMdsPlot').remove();
-            //d3.selectAll('#divider_central_panel').remove();
+            see_most_relevant_keywords(vis_state.topic)
 
             createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current); //update central panel
 
-            //createBarPlot("#BarPlotPanelDiv", dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", R) //esto crea el bar plot por primera vez. 
-            topic_on(document.getElementById(topicID+vis_state.topic));
+            //topic_on(document.getElementById(topicID+vis_state.topic));
             slider_topic_splitting_values = {};
                                 
         }
@@ -2567,7 +2552,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             $("#apply_topic_splitting").click(function() {
                 save_state_data()
-                console.log('voy a hacer topic splitting yaay ctmm!! ')
+                //console.log('voy a hacer topic splitting yaay ctmm!! ')
                 //splitting_topics_scenario_1()
             
                 splitting_topics_document_based_scenario_1()
@@ -4069,6 +4054,29 @@ var LDAvis = function(to_select, data_or_file_name) {
             }];            
         }
 
+        function see_most_relevant_keywords(topic_id){
+            var dat2 = lamData.filter(function(e) {
+                return e.Category == "Topic"+topic_id;
+            });
+            
+
+            // define relevance:
+            for (var i = 0; i < dat2.length; i++) {
+                dat2[i].relevance = lambda.current * dat2[i].logprob +
+                    (1 - lambda.current) * dat2[i].loglift;
+
+                if(isNaN(dat2[i].relevance)){
+                    dat2[i].relevance  = -Infinity;
+                }
+            }
+
+            // sort by relevance:
+            dat2.sort(fancysort("relevance"));
+            console.log('estos son los terminos ordenadoooos', dat2);
+                        
+        }
+    
+
 
 
 
@@ -4087,7 +4095,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                             
                             
                         }
-                        console.log('que hay en esta fila', this);
+                        //console.log('que hay en esta fila', this);
                         var current_id_radio_button = this.id;
                         var current_topic = current_id_radio_button.split("_")[0];
                         var current_index = current_id_radio_button.split("_")[1];
@@ -4101,7 +4109,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         }
 
                         slider_topic_splitting_values[splitting_topic][current_class].push(current_row);
-                        console.log('asi va estoo', slider_topic_splitting_values);
+                        //console.log('asi va estoo', slider_topic_splitting_values);
 
 
 
