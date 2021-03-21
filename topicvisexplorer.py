@@ -488,7 +488,7 @@ class TestView(FlaskView):
             current_number_topics = single_corpus_data['lda_model'].num_topics
 
             list_terms_relevance = PreparedData_dict_with_more_info.loc[PreparedData_dict_with_more_info['Category'] == 'Topic'+str(topic_id)].sort_values(by='relevance', ascending=False)['Term'].tolist()
-            list_relevant_documents = random.sample(single_corpus_data['relevantDocumentsDict'],10000)
+            list_relevant_documents = random.sample(single_corpus_data['relevantDocumentsDict'],10)
             list_relevant_documents = pd.DataFrame(list_relevant_documents).sort_values(int(topic_id)-1, ascending=False).reset_index()
             #the idea is do this only ONCE! and tenerlo precalculado para el user study
             print('cleaning sample fo text')
@@ -517,29 +517,19 @@ class TestView(FlaskView):
             #get new distribution of terms, topic A
             corpus_topic_A, dictionary_topic_A = model_topic_A
             data_model_A = extract_data_without_topic_model(corpus_topic_A, dictionary_topic_A)
-            print('actualizando el modelo A')
-
-            df_temp = pd.DataFrame(data_model_A)
-            print(len(df_temp))
-            #df[df['vocab'] in list_terms_relevance]
-            df_temp = df_temp[df_temp['vocab'].isin(list_terms_relevance)]
-            total_frequency = df_temp['term_frequency'].sum()
-            df_temp.apply(lambda row: update_topic_term_dists(row, total_frequency), axis=1)
-            print(len(df_temp))
-            data_model_A = df_temp.to_dict()
 
 
             corpus_topic_B, dictionary_topic_B = model_topic_B
             data_model_B = extract_data_without_topic_model(corpus_topic_B, dictionary_topic_B)
-
-            df_temp = pd.DataFrame(data_model_B)
-            print(len(df_temp))
-            #df[df['vocab'] in list_terms_relevance]
+            print('actualizando el modelo A and B')
+            #filtrar por terminos que si aparezcan en lists terms relevance
+            df_temp = pd.DataFrame(data_model_A)
             df_temp = df_temp[df_temp['vocab'].isin(list_terms_relevance)]
-            total_frequency = df_temp['term_frequency'].sum()
-            df_temp.apply(lambda row: update_topic_term_dists(row, total_frequency), axis=1)
-            print(len(df_temp))
+            data_model_A = df_temp.to_dict()
+            df_temp = pd.DataFrame(data_model_B)
+            df_temp = df_temp[df_temp['vocab'].isin(list_terms_relevance)]
             data_model_B = df_temp.to_dict()
+
 
 
 
@@ -600,20 +590,39 @@ class TestView(FlaskView):
             temp_tinfo_df = pd.DataFrame(temp[ 'tinfo'])
             temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].sort_values(by=['Freq'], ascending=False)
             temp_tinfo_df = pd.DataFrame(temp[ 'tinfo'])
-            total_sum_frequency_corpus_topic_A = sum(temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].sort_values(by=['Freq'])['Total'])
-            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)] = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].apply(lambda row: change_frequency_on_prepared_data(row, data_model_A, total_sum_frequency_corpus_topic_A), axis=1)
-            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].sort_values(by=['Freq'], ascending=False)
+
+            data_model_A_df = pd.DataFrame(data_model_A)
+            data_model_B_df = pd.DataFrame(data_model_B)
+            total_sum_frequency_corpus = data_model_A_df['term_frequency'].sum()+data_model_B_df['term_frequency'].sum()
+            list_terms_A = list(data_model_A_df['vocab'])
+            list_terms_B = list(data_model_B_df['vocab'])
+
+            
+            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)] = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].apply(lambda row:  update_current_freq_and_total_freq_on_prepared_data(row, data_model_A_df,data_model_B_df, list_terms_A, list_terms_B,total_sum_frequency_corpus), axis=1)
+
+            #temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].sort_values(by=['Freq'], ascending=False)
 
             #copy values for the new subtopic b
             temp2 = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)]
             temp2.Category = 'Topic'+str(current_number_topics+1) 
             temp_tinfo_df = temp_tinfo_df.append(temp2, ignore_index=True)
 
-            #update those values with the current terms probability
-            total_sum_frequency_corpus_topic_B = sum(temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].sort_values(by=['Freq'])['Total'])
+            #update those values with the current terms probability\
+            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_topics+1)] = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_topics+1)].apply(lambda row:  update_current_freq_and_total_freq_on_prepared_data(row, data_model_B_df,data_model_A_df, list_terms_B, list_terms_A,total_sum_frequency_corpus), axis=1)
 
-            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_topics+1)] = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_topics+1)].apply(lambda row: change_frequency_on_prepared_data(row, data_model_B,total_sum_frequency_corpus_topic_B), axis=1)
-            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_topics+1)].sort_values(by=['Freq'], ascending=False)
+            
+            #total_sum_frequency_corpus_topic_A = sum(temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].sort_values(by=['Freq'])['Total'])
+            #temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)] = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].apply(lambda row: change_frequency_on_prepared_data(row, data_model_A, total_sum_frequency_corpus_topic_A), axis=1)
+            #temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].sort_values(by=['Freq'], ascending=False)
+
+            #copy values for the new subtopic b
+
+
+            #update those values with the current terms probability
+            #total_sum_frequency_corpus_topic_B = sum(temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].sort_values(by=['Freq'])['Total'])
+
+            #temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_topics+1)] = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_topics+1)].apply(lambda row: change_frequency_on_prepared_data(row, data_model_B,total_sum_frequency_corpus_topic_B), axis=1)
+            #temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_topics+1)].sort_values(by=['Freq'], ascending=False)
 
             #save the new tinfo
             temp_tinfo_df.reset_index(drop=True, inplace=True)
@@ -692,7 +701,7 @@ class TestView(FlaskView):
             with open('new_dict_topic_splitting.pickle', 'wb') as handle:
                 pickle.dump(new_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
            
-            '''
+            
             with open('new_dict_topic_splitting.pickle', 'rb') as handle:
                 new_dict = pickle.load(handle)
 

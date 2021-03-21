@@ -344,4 +344,26 @@ def change_frequency_on_prepared_data(row, new_subtopic_df, total_sum_frequency_
     return row
     
 
-    
+
+#Ojo, la frecuencia a actualizar sera del primer parametro q se le pase a la funcion, el q uno llava data model a
+#en algun momento ahbra que intercambiar, data model a debe ser data model b. 
+def update_current_freq_and_total_freq_on_prepared_data(row, data_model_A_df, data_model_B_df, list_terms_A, list_terms_B, total_sum_frequency_corpus):
+    current_term = row['Term']
+    if(current_term in list_terms_A):
+        term_frequency_A = float(data_model_A_df.loc[data_model_A_df['vocab']==current_term]['term_frequency'])
+    else:
+        term_frequency_A = 0
+    if(current_term in list_terms_B):
+        term_frequency_B = float(data_model_B_df.loc[data_model_B_df['vocab']==current_term]['term_frequency'])
+    else:
+        term_frequency_B = 0
+    row['Total'] = term_frequency_A+term_frequency_B
+    row['Freq'] = term_frequency_A
+    if(current_term in list_terms_A):
+        new_prob = float(data_model_A_df.loc[data_model_A_df['vocab'] == current_term]['topic_term_dists'])
+        row['logprob'] = np.log(new_prob)
+        row['loglift'] = np.log(new_prob/((term_frequency_A+term_frequency_B)/total_sum_frequency_corpus))
+    else:
+        row['logprob'] = 0
+        row['loglift'] = 0 #auqnue la verdad en evz de cero, creo que el valor debiese ser - inf
+    return row
