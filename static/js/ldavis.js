@@ -8,11 +8,12 @@ var global_lamData;
 var merged_topic_to_delete = [];
 var name_merged_topic_to_delete = [];
 var old_topic_model_states = []; //here we are going to save previous topic models. This should be a array of dictionaries
-var global_new_dict_testing; 
 var current_relevant_documents_topic_splitting;
-
+var global_topic_splitting_data;
 var list_terms_for_topic_splitting = [];
 var slider_topic_splitting_values = {};
+var testing_var; 
+var testing_mdsData;
 var LDAvis = function(to_select, data_or_file_name) {
 
     // This section sets up the logic for event handling
@@ -956,10 +957,12 @@ var LDAvis = function(to_select, data_or_file_name) {
             var postDataTopicSplitting = {
                 new_document_seeds: slider_topic_splitting_values[splitting_topic],
                 old_circle_positions: new_circle_positions,
-                topic_id: vis_state.topic
+                topic_id: vis_state.topic,
+                current_number_of_topics: Object.values(new_circle_positions['0.0']).length
                 
                 
             };
+            console.log('este es el numero de topicos actual que envio', postDataTopicSplitting);
 
             //4.- Create new new_position circle arrray
             //console.log('Se mando estos datos en este arreglo', postDataTopicSplitting);
@@ -978,10 +981,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 }, 
                 contentType: "application/json"             
             });
-            global_new_dict_testing = new_dict_topic_splitting;
 
 
-
+            global_topic_splitting_data = new_dict_topic_splitting;
             new_circle_positions = JSON.parse(new_dict_topic_splitting['new_circle_positions']); 
            
             //1. Update relevantDocumentsDict
@@ -989,19 +991,15 @@ var LDAvis = function(to_select, data_or_file_name) {
             relevantDocumentsDict = JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython'].replace(/\bNaN\b/g, "null"));
             console.log('estos eran los documentos despues', relevantDocumentsDict);
 
-            //2.-Updarte variables for keyboard panel       
-            //visualize(new_dict_topic_splitting['PreparedDataObtained_fromPython'])
-            see_most_relevant_keywords(12)
-
-
+            //update lambdata with the new informsation
             updateTopicNamesCircles(new_dict_topic_splitting['PreparedDataObtained_fromPython']);
 
-            see_most_relevant_keywords(12)
+            //see_most_relevant_keywords(12)
 
             createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current); //update central panel
 
             topic_on(document.getElementById(topicID+vis_state.topic));
-            slider_topic_splitting_values = {};
+            slider_topic_splitting_values[splitting_topic] = {};
                                 
         }
 
@@ -1239,7 +1237,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             
             
-            
+            testing_mdsData = mdsData;
+
             //if  previous mdsplot exists, remove it
             d3.selectAll('#svgMdsPlot').remove();
             d3.selectAll('#divider_central_panel').remove();
@@ -1450,7 +1449,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                     
                 })
                 .attr("cx", function(d) {
-                    
+                    console.log('este es el id', d.topics-1);
+                    console.log('estas son las posiciones', new_positions);
+                    testing_var = new_positions;
                     return (xScale(+new_positions[d.topics-1][0])); 
 
 
