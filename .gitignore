@@ -21,6 +21,10 @@
 #ignore pkl
 *.pkl
 
+
+#ignore data for topic splitting optimization
+data_for_optimization/
+
 #ignore model outputs
 models_output/
 
