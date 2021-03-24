@@ -21,7 +21,6 @@ from _display import *
 from _prepare import prepare, js_PCoA, PreparedData, _pcoa
 from _topic_similarity_matrix import *
 from _get_new_circle_positions import *
-from _guidedLda_helpers import *
 from _topic_splitting_helpers import *
 from os import path, walk
 from gensim.models.keyedvectors import KeyedVectors
@@ -290,14 +289,12 @@ class TestView(FlaskView):
     #Split topic
     @route('/Topic_Splitting_Document_Based',  methods=['GET', 'POST'])
     def get_new_sub_topics(self):
-
             print('Calculando nuevos dos subtopicos')
             start = time.time()
             global single_corpus_data   
             json_file = request.get_json()
             
-            #get data from user
-     
+            #get data from user     
             old_circle_positions = json_file['old_circle_positions']
             current_number_of_topics = json_file['current_number_of_topics']
             topic_id = json_file['topic_id'] #tHE FIRST TOPIC IS ID=1, not 0!
@@ -371,20 +368,13 @@ class TestView(FlaskView):
             df[current_number_of_topics]= 0.0
 
             for row in most_relevant_documents_topic:
-                #contribution_to_topic_a = row[0]/(row[0]+row[1])
-                #contribution_to_topic_b = row[1]/(row[0]+row[1])
+
                 contribution_to_topic_a = row[0]
                 contribution_to_topic_b = row[1]
-                #previous_contribution = row[2]
                 indexs = df.index[df['texto_completo'] == row[-1]].tolist()
                 if len(indexs)<1:
                     print('Error, text not found')
                 #set final contribution to topic a, is contribution to topic_a multiply by the previous contribuiton
-
-
-                
-                #df.loc[indexs,int(topic_id-1)] = contribution_to_topic_a*previous_contribution
-                #df.loc[indexs,current_number_of_topics] = contribution_to_topic_b*previous_contribution
                 df.loc[indexs,int(topic_id-1)] = contribution_to_topic_a
                 df.loc[indexs,current_number_of_topics] = contribution_to_topic_b
                     
@@ -428,7 +418,6 @@ class TestView(FlaskView):
             
             temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)] = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].apply(lambda row:  update_current_freq_and_total_freq_on_prepared_data(row, data_model_A_df,data_model_B_df, list_terms_A, list_terms_B,total_sum_frequency_corpus), axis=1)
 
-            #temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].sort_values(by=['Freq'], ascending=False)
 
             #copy values for the new subtopic b
             temp2 = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)]
@@ -443,13 +432,10 @@ class TestView(FlaskView):
             temp_tinfo_df.reset_index(drop=True, inplace=True)
             temp[ 'tinfo']  = temp_tinfo_df.to_dict(orient='list')
 
-            #single_corpus_data['PreparedDataObtained'] = temp
+
 
             print('New number of topics')
 
-            #single_corpus_data['lda_model'].num_topics = single_corpus_data['lda_model'].num_topics+1
-            #single_corpus_data['lda_model'].num_topics
-            
             #Get new topic similarity matrix
             print('Getting new topic similarity matrix')
             newClass = TopicVisExplorer("name") #dejar esta en el codigo final

@@ -1003,75 +1003,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                                 
         }
 
-        function splitting_topics_scenario_1(){
-
-
-            console.log('estoy en la funcion splitting topics scenario 1');
-            var topic_id = splitting_topic-1;
-            slider_topic_splitting_values[splitting_topic] = {'testing': 'a'};
-
-            for (const [key, value] of Object.entries(slider_topic_splitting_values[splitting_topic])) {
-                //console.log('que tenemos aquiiii', key, value);                    
-
-            }
-
-            var postDataTopicSplitting = {
-                new_keywords_seeds: slider_topic_splitting_values[splitting_topic],
-                old_circle_positions: new_circle_positions,
-                topic_id: vis_state.topic
-                
-                
-            };
-
-            //4.- Create new new_position circle arrray
-            console.log('Se mando estos datos en este arreglo', postDataTopicSplitting);
-            var new_dict_topic_splitting; 
-            $.ajax({
-                type: 'POST',
-                url: '/gensim_eta_new_lda', 
-                async: false,
-                data: JSON.stringify(postDataTopicSplitting),
-                success: function(data) {
-                                
-                    new_dict_topic_splitting = data                    
-                },
-                error: function(XMLHttpRequest, textStatus, errorThrown) { 
-                    alert("Status: " + textStatus); alert("Error: " + errorThrown); 
-                }, 
-                contentType: "application/json"             
-            });
-            
-            console.log('esta es la wea que estoy leyendoo', new_dict_topic_splitting);
-        
-            console.log('ANTESSSestas son mis nuevas new circle positions', new_circle_positions);
-
-            new_circle_positions = JSON.parse(new_dict_topic_splitting['new_circle_positions']); 
-            console.log('DESPUEEES estas son mis nuevas new circle positions', new_circle_positions);
-
-            console.log('esto es lo q ', new_dict_topic_splitting);
-            console.log('esta wea gunciona o noo', JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython']));
-            console.log('this is the data we received', new_dict_topic_splitting);
-            //1. Update relevantDocumentsDict
-            relevantDocumentsDict = JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython']);
-
-            //2.-Updarte variables for keyboard panel       
-            //visualize(new_dict_topic_splitting['PreparedDataObtained_fromPython'])
-            updateTopicNamesCircles(new_dict_topic_splitting['PreparedDataObtained_fromPython']);
-            console.log( 'ahora debi haber actualizado los datoooos')
-
-
-            //d3.selectAll('#svgMdsPlot').remove();
-            //d3.selectAll('#divider_central_panel').remove();
-
-            createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current); //update central panel
-
-            //createBarPlot("#BarPlotPanelDiv", dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", R) //esto crea el bar plot por primera vez. 
-
-
-
-            topic_on(document.getElementById(topicID+vis_state.topic));
-            slider_topic_splitting_values = {};
-        }
+      
 
         function merging_topics_scenario_1(topic_name_1, topic_name_2){
                     
@@ -1224,11 +1156,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
             createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current); //update central panel
-            topic_on(document.getElementById(topicID+vis_state.topic));
-
-            
-            
-         
+            topic_on(document.getElementById(topicID+vis_state.topic));         
         }
 
 
@@ -1270,10 +1198,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             var mdsheight = user_height-margin.top-margin.bottom;
             var mdswidth = user_width-margin.left-margin.right;
             var mdsarea = mdsheight * mdswidth;
-
-
-
-
 
             // Create a group for the mds plot Bubbles visualization
             d3.selectAll('#'+leftPanelID).remove();
@@ -1504,44 +1428,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             // text to indicate topic
             
-
-
-        //We dont need the exactly position of the circles. Therefore we could remove the cross that indicates the center oft he circle
-        /*
-        points.append("text")
-        .attr("class", "circles_center")
-        .attr("width", function(d) {
-            
-            return (2*Math.sqrt((mdsData[d.topics-1].Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI))
-        })
-        .attr("x", function(d) {
-            
-            return (xScale(new_positions[d.topics-1][0]));
-
-        })
-        .attr("y", function(d) {
-            
-            return (yScale(new_positions[d.topics-1][1]));
-        })
-        .attr("id", function(d) {        
-            return ("circles_center-"+topicID + d.topics);
-        })
-        .attr("stroke", "black")
-        .attr("alignment-baseline", "middle")
-        .attr("text-anchor", "middle")        
-        .style("stroke-opacity", .2)
-        .attr("opacity", 1) //.style("text-anchor", "middle")            
-        .style("font-size", "10px")                //.style("fontWeight", 50)
-        .style('fill', '#AC53F0')
-        .text(function(d) {
-            
-            
-            return "+";
-            
-        });
-        */
-
-
 
         points.append("text")
         .attr("class", "txt")
@@ -1777,15 +1663,7 @@ var LDAvis = function(to_select, data_or_file_name) {
            const  div_2 = document.getElementById('RelevantDocumentsTableDiv_2');
            div_2.insertAdjacentHTML('afterbegin', '<table  id="tableRelevantDocumentsClass_Model2" class="table table-hover"> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table>');
 
-           
-           
            visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.min_value_filtering, vis_state.max_value_filtering)
-
-
-         
-
-
-
        }
        
        function createCentralPanelTopicSplitting(){
@@ -1869,10 +1747,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
                 });                     
-            };*/
-
-
-            
+            };*/            
         });
 
 
@@ -2176,7 +2051,6 @@ var LDAvis = function(to_select, data_or_file_name) {
         function init_forms(topicID, lambdaID) {
             
 
-
             //div que contiene todo el panel izquierdo
             if(type_vis == 2){
                 var svgRightPanel = d3.select("#DocumentsPanel").append("div");
@@ -2232,9 +2106,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     
                     
                 });
-
-
-
                 
                 //add relevance slider into the right panel. 
                 var inputDivRightPanel_zero = document.createElement("div");
@@ -2327,10 +2198,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             var reverse = document.createElement("button");
             reverse.setAttribute("id", topicReverse);
 
-            
-            
-
-
+                    
             reverse.setAttribute("class", "btn btn-primary btnTopic");
             reverse.innerHTML = "Undo";
             //reverse.setAttribute("disabled", true);
@@ -2418,10 +2286,7 @@ var LDAvis = function(to_select, data_or_file_name) {
            merge.innerHTML = "Merge";
            topicButtonsDiv.appendChild(merge);
 
-           
-           
-
-
+        
 
            d3.select("#apply_topic_merging") //el usuario desea continuar con el mergin
                 .on("click", function() {
@@ -2462,9 +2327,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                    }
                    
                });
-
-
-
 
            var split = document.createElement("button");
            split.setAttribute("id", topicSplit);
@@ -2533,10 +2395,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     
                 })
 
-
-            
-
-
             //colocar #apply_merging.  "aqui esta el antiguo codigo para el merge"
 
             d3.select("#"+topicSplit)
@@ -2545,43 +2403,18 @@ var LDAvis = function(to_select, data_or_file_name) {
                 $('#topic_to_split_name').html(name_topics_circles[topicID + vis_state.topic]);                    
                 $('#SplitTopicModal').modal();
 
-
-                //updateRelevantDocumentsSplitting(splitting_topic-1, relevantDocumentsDict);
                 updateRelevantDocumentsTopicSplitting(splitting_topic-1, relevantDocumentsDict, 1);                
-                //createBarPlot("#KeywordsPanel_TopicSplitting", dat3, barFreqsIDTopicSplitting,"bar-totals-TopicSplitting", "terms-TopicSplitting", 1, "xaxis-TopicSplitting", R) //esto crea el bar plot por primera vez. 
                 createBarPlotTopicSplitting("#KeywordsPanel_TopicSplitting", dat3, barFreqsIDTopicSplitting,"bar-totals_TopicSplitting", "TopicSplitting", 1, "xaxis-TopicSplitting", 20); //hay que modificar la altura aqui en funcion del alto de las barras
-                //createCentralPanelTopicSplitting();
             });
 
             $("#apply_topic_splitting").click(function() {
                 save_state_data()
-                //console.log('voy a hacer topic splitting yaay ctmm!! ')
-                //splitting_topics_scenario_1()
-            
+
                 splitting_topics_document_based_scenario_1()
             });
 
 
-            //slider_topic_splitting_values ojo! the slider here starts from 1 , not from 0. 
-            d3.select("#split_topics_button")
-            .on("click", function(){
-                
-                //split topics button
-                /*
-                name_topics_circles[document.getElementById("idTopic").innerText] = document.getElementById("renameTopicId").value
-                $('#topic_name_selected_1').html(name_topics_circles[document.getElementById("idTopic").innerText]); 
-                //visualize the new name
-                createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
-                topic_on(document.getElementById(topicID+vis_state.topic))
-                */
-
-                //1.- Get the value of the slider
-
-
-            })
-            
-            
-
+    
             var inputDiv_zero = document.createElement("div");
             inputDiv_zero.setAttribute("id", "BarPlotDiv_zero"); //inputDiv_zero.setAttribute("class", "border_box my-1");
             document.getElementById(BarPlotPanelDivId).appendChild(inputDiv_zero)  //document.getElementById(visID).appendChild(inputDiv); //creo que esto debiera estar unido al svg mejor
