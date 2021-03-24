@@ -304,10 +304,10 @@ class TestView(FlaskView):
             word_embedding_model = single_corpus_data['word_embedding_model']
 
             print('este es el numero actual de topicos antes de hacer splitting', current_number_of_topics)
-            '''
+            
             with open('json_file_topic_splitting_test.json', 'w') as current_file:
                 js.dump(json_file, current_file)
-            '''
+            
             #print('esto fue lo enviado desde el usuario para el splitting document based', json_file)
             print('Json RECIBIDO')
             PreparedData_dict_with_more_info = single_corpus_data['tinfo_collection']
