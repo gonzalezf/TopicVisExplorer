@@ -2207,8 +2207,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             help.setAttribute("id", 'help_button');
 
                     
-            help.setAttribute("class", "btn btn-primary btnTopic");
-            help.innerHTML = "?";
+            help.setAttribute("class", "btn btn-info btnTopic");
+            help.innerHTML = "<i class='fas fa-1x fa-info-circle'></i>";
 
 
 

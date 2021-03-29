@@ -359,7 +359,13 @@ if(type_vis == 2){
       <script>
         if(type_vis === 1){
           
-          var html = '<div id="DocumentsPanel_scenario_1"> <table  id="tableRelevantDocumentsClass_Model1" class= "table table-hover header-fixed"> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Document</th> </tr> </thead> </table></div>';
+          var html = '<div id="DocumentsPanel_first_scenario"> <table  id="tableRelevantDocumentsClass_Model1" </table></div>';
+          
+          //old code
+          //var html = '<div id="DocumentsPanel_scenario_1">  <table  id="tableRelevantDocumentsClass_Model1" class= "table table-hover header-fixed"> </table> </div>';
+          //var html = '<div id="DocumentsPanel_scenario_1"> <table  id="tableRelevantDocumentsClass_Model1" class= "table table-hover header-fixed"> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Document</th> </tr> </thead> </table></div>';
+
+
           //add button fab
           //For the user study, the button to download data is disabled
           //html+='<div class="btn-group-fab" role="group" aria-label="FAB Menu"> <div> <button type="button" class="btn btn-main btn-primary has-tooltip" data-placement="left" title="Download data"> <i class="fa fa-download"></i> </button><button type="button" class="btn btn-sub btn-danger has-tooltip" data-placement="left" title="Download xlsx" id="export_to_csv"> <i class="fa fa-file-excel"></i> </button> <button type="button" class="btn btn-sub btn-warning has-tooltip" data-placement="left" title="Download CSV file"> <i class="fas fa-file-csv"></i> </button> </div> </div>'
