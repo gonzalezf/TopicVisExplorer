@@ -2203,13 +2203,76 @@ var LDAvis = function(to_select, data_or_file_name) {
             reverse.innerHTML = "Undo";
             //reverse.setAttribute("disabled", true);
 
-            topicButtonsDiv.appendChild(reverse);
+            var help = document.createElement("button");
+            help.setAttribute("id", 'help_button');
 
+                    
+            help.setAttribute("class", "btn btn-primary btnTopic");
+            help.innerHTML = "?";
+
+
+
+            topicButtonsDiv.appendChild(help);
+            topicButtonsDiv.appendChild(reverse);
             
             d3.select("#"+topicReverse)
                 .on("click", function() {
                     $('#ReverseModel').modal(); 
                 });
+
+            d3.select("#help_button")
+                .on("click", function() {
+                    introJs().setOptions({
+                        steps: [{
+                          intro: 'Hello! This tutorial will guide you in the usage of this interface.'
+                        },
+                        {
+                          title: 'Global view of topics',
+                          element: document.querySelector('#CentralPanel'),
+                          intro: "The central panel presents a global view of the topics and aims to answer questions <b style='color: #1f77b4;'> How prevalent each topic is? </b>, and <b style='color: #1f77b4;'>How do topics relate to each other? </b>"
+                        },
+                        {
+                          element: document.querySelector('#svgMdsPlot'),
+                          title: 'How prevalent is each topic?', 
+                          intro: "Each topic is represented as a circle. The area of the circle  indicates how frequent it is (marginal topic distribution)"
+                        },
+                        {
+                            element: document.querySelector('#svgMdsPlot'),
+                            title: 'How do topics related to each other? ', 
+                            intro: "Similar topics appear closer, while distinct topics appear more distant between each other"
+                        },
+                        {
+                          element: document.querySelector('#TopicSimilarityMetricPanel'),
+                          title: 'Inter-topic comparison', 
+                          intro: "This slider allows to adjust the similarity between topics. A higher <b style='color: #1f77b4;'> omega score </b> implies higher importance to the most relevant keywords, but lower importance to the most relevant documents in the topic similarity calculation"
+                        },
+                        {
+                            element: document.querySelector('#DocumentsPanel'),
+                            title: 'What is the meaning of each topic?', 
+                            intro: "In order to identify the meaning of each topic. This panel provides the most relevant documents associated with the currently selected topic"
+                        },
+                        {
+                          element: document.querySelector('#barplot_1'),
+                          title: 'Most relevant keywords', 
+                          intro: "Here you can see the  most relevant keywords associated with the currently selected topic."
+                        },
+                        {
+                            element: document.querySelector('#relevanceSliderDiv'),
+                            title: 'Most relevant keywords', 
+                            intro: "This slider allows to adjust the order of the most relevant keywords. A higher value assigns higher importance to the frequency of the term, but less to its uniqueness"
+                        },
+                        {
+                            element: document.querySelector('#topic_buttons_div'),
+                            title: 'Rename-Split-Merge topics', 
+                            intro: "Buttons from this panel allow to edit topics: rename, joint two topics, split a topic into two subtopics "
+                        }
+                        
+                    
+                    
+                      ]
+                      }).start();
+                });
+    
 
             d3.select("#apply_reverse_topic_model") //el usuario desea continuar con el mergin
                 .on("click", function() {

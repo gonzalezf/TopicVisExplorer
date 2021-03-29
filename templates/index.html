@@ -1,4 +1,28 @@
 <!--START OF MODALS -->
+
+<!-- Help modal-->
+<div class="modal fade" id="help_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Help</h5>
+        <!--<button type="button" class="close" data-dismiss="modal" aria-label="Close">-->
+          <!--<span aria-hidden="true">&times;</span>-->
+        </button>
+      </div>
+      <div class="modal-body">
+        <a onclick="jsFunction();">Start interactive tutorial</a>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary"  data-dismiss="modal" >Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
 <!-- Modal rename topic (Model 1)-->
 <div class="modal fade" id="renameTopic" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
@@ -47,6 +71,8 @@
     </div>
   </div>
 </div>
+
+
 
 
 
@@ -323,14 +349,13 @@ if(type_vis == 2){
 </script>
 
 
-
 <div class="container-fluid">
   <div class="row" style="height: 100%"> <!--All the visualization must be placed in this row-->
-    <div class="col-4 border-right"  id="BarPlotPanel" >  <!--LDAvisContainer-->
+    <div class="col-4 border-right"  id="BarPlotPanel"   id="CentralPanel">  <!--LDAvisContainer-->
     </div>
-    <div class="col-4 border-right "   id="CentralPanel"> <!-- "-->
+    <div class="col-4 border-right "  id="CentralPanel"> <!-- "-->
     </div>
-    <div class="col-4" id="DocumentsPanel">
+    <div class="col-4" id="DocumentsPanel"  >
       <script>
         if(type_vis === 1){
           
@@ -394,4 +419,14 @@ if(type_vis == 2){
 
 <script src="static/js/bootstrap-table.long.js"></script>
 
+<script>
+
+function introductionToTopicVisExplorer(){
+    
+
+}
+
+
+
+</script>
 
