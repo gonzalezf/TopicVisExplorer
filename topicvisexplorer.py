@@ -305,17 +305,23 @@ class TestView(FlaskView):
 
             print('este es el numero actual de topicos antes de hacer splitting', current_number_of_topics)
             
-            with open('json_file_topic_splitting_test.json', 'w') as current_file:
-                js.dump(json_file, current_file)
+            
+            #with open('json_file_topic_splitting_test.json', 'w') as current_file:
+                #js.dump(json_file, current_file)
             
             #print('esto fue lo enviado desde el usuario para el splitting document based', json_file)
             print('Json RECIBIDO')
             PreparedData_dict_with_more_info = single_corpus_data['tinfo_collection']
 
             list_terms_relevance = PreparedData_dict_with_more_info.loc[PreparedData_dict_with_more_info['Category'] == 'Topic'+str(topic_id)].sort_values(by='relevance', ascending=False)['Term'].tolist()
-            list_relevant_documents = random.sample(single_corpus_data['relevantDocumentsDict'],10)
+            list_relevant_documents = random.sample(single_corpus_data['relevantDocumentsDict'],200)
             list_relevant_documents = pd.DataFrame(list_relevant_documents).sort_values(int(topic_id)-1, ascending=False).reset_index()
             #the idea is do this only ONCE! and tenerlo precalculado para el user study
+
+            end = time.time()
+            print("Topic splitting - Getting data", end - start)
+            start = time.time()
+
             print('cleaning sample fo text')
             list_relevant_documents[name_tokenizacion] = list_relevant_documents[name_column_text].apply(lambda x: text_cleaner(x))
             list_relevant_documents = list_relevant_documents.to_dict('records')
@@ -329,14 +335,22 @@ class TestView(FlaskView):
             new_document_seeds_TopicB = pd.DataFrame(new_document_seeds_TopicB).reset_index()
             new_document_seeds_TopicB[name_tokenizacion] = new_document_seeds_TopicB[name_column_text].apply(lambda x: text_cleaner(x))
             new_document_seeds_TopicB = new_document_seeds_TopicB.to_dict('records')
-            print('getting new subtopics')
-
+            end = time.time()
+            print("Topic splitting - Cleaning text", end - start)
+  
+            start = time.time()
             results  = get_new_subtopics(list_terms_relevance, list_relevant_documents, topic_id, name_tokenizacion,name_column_text, new_document_seeds_TopicA, new_document_seeds_TopicB, word_embedding_model)
             model_topic_A, model_topic_B, most_relevant_documents_topic, freq_topic_A, freq_topic_B = results
+            end = time.time()
+            print("Topic splitting - Getting new subtopics", end - start)
+            start = time.time()
+
             #  CREAR PICKLEEE!!! CON ESTA DATAAA!!!
-            with open('models_output/testing_spliting_models_topic_A_B.pkl', 'wb') as handle:
-                pickle.dump(results, handle, protocol=4) #protocol 4 is compatible with python 3.6+
-                print("Results for topic splitting has been saved")
+            #with open('models_output/testing_spliting_models_topic_A_B.pkl', 'wb') as handle:
+                #pickle.dump(results, handle, protocol=4) #protocol 4 is compatible with python 3.6+
+                #print("Results for topic splitting has been saved")
+            
+            
             print('Geeting new term-topic distributions')
             # Get new term-topic distributions in the new subtopics
             #get new distribution of terms, topic A
@@ -355,7 +369,9 @@ class TestView(FlaskView):
             df_temp = df_temp[df_temp['vocab'].isin(list_terms_relevance)]
             data_model_B = df_temp.to_dict()
 
-
+            end = time.time()
+            print("Topic splitting - Getting new topic term distributions", end - start)
+            start = time.time()
 
 
             #Get most relevant documents
@@ -368,7 +384,6 @@ class TestView(FlaskView):
             df[current_number_of_topics]= 0.0
 
             for row in most_relevant_documents_topic:
-
                 contribution_to_topic_a = row[0]
                 contribution_to_topic_b = row[1]
                 indexs = df.index[df['texto_completo'] == row[-1]].tolist()
@@ -387,6 +402,10 @@ class TestView(FlaskView):
             single_corpus_data['relevantDocumentsDict'] = df.to_dict('records')
 
             new_dict['relevantDocumentsDict_fromPython'] =json.dumps( single_corpus_data['relevantDocumentsDict'])
+
+            end = time.time()
+            print("Topic splitting - Getting new topic relevant documents ", end - start)
+            start = time.time()
 
             #Get prepared data
             print('Getting new prepared data')
@@ -433,8 +452,10 @@ class TestView(FlaskView):
             temp[ 'tinfo']  = temp_tinfo_df.to_dict(orient='list')
 
 
+            end = time.time()
+            print("Topic splitting - Getting new prepared data  ", end - start)
+            start = time.time()
 
-            print('New number of topics')
 
             #Get new topic similarity matrix
             print('Getting new topic similarity matrix')
@@ -444,7 +465,6 @@ class TestView(FlaskView):
             topk_documents = 20
             relevance_lambda = 0.6
             print('Calculando topic similarity metrix')
-
 
             lda_model = single_corpus_data['lda_model']
             corpus = single_corpus_data['corpus']
@@ -471,6 +491,9 @@ class TestView(FlaskView):
             print('primer arreglo', json.loads(new_circle_positions)['0.0'])
 
             single_corpus_data['new_circle_positions'] = new_circle_positions
+            end = time.time()
+            print("Topic splitting - Getting topic similarity metric  ", end - start)
+            start = time.time()
 
             print('------- falta calcular el nuevo topic orderingX')                 
             topic_order =  single_corpus_data['topic.order']
@@ -499,17 +522,18 @@ class TestView(FlaskView):
 
 
             end = time.time()
-            print("Tiempo en realizar el topic splitting - Final Sending data", end - start)
+            print("Tiempo en realizar el topic splitting - others", end - start)
                     
+            '''    
             with open('new_dict_topic_splitting.pickle', 'wb') as handle:
                 pickle.dump(new_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
            
             
             with open('new_dict_topic_splitting.pickle', 'rb') as handle:
                 new_dict = pickle.load(handle)
-
-            print('FUNCIONAAAAAAAAAAAA con el etaaa ejalee con logligt y logprob - checkear documents')
+            '''
             return new_dict
+
 
 
     #Merge topic

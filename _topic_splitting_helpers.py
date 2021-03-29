@@ -151,9 +151,55 @@ def get_initial_document_vector_by_class(list_terms_relevance, topic_id, name_to
 
     return(relevantDocumentsvector_class_A, relevantDocumentsvector_class_B, list_documents_A, list_documents_B)
 
+def fill_lists_documents_a_b(row, topic_id, wordembedding, list_terms_relevance, vector_A, vector_B, documents_A, documents_B, most_relevant_documents_topic):
+
+    current_contribution = row[int(topic_id)-1]
+    current_text = row[name_tokenizacion]
+    current_document_vector = getDocumentVector(current_text, wordembedding, list_terms_relevance).reshape(-1, 1)
+    similarity_vectorA_currentvector = np.arccos(spatial.distance.cosine(vector_A, current_document_vector)-1) / np.pi
+    similarity_vectorB_currentvector = np.arccos(spatial.distance.cosine(vector_B, current_document_vector)-1) / np.pi
+
+    #I need this information to get the matrix of most relevant documents according to the similarity score
+
+    #most_relevant_documents_topic.add((similarity_vectorA_currentvector,similarity_vectorB_currentvector,  current_contribution, row[name_column_text]))
+
+    if similarity_vectorA_currentvector>= similarity_vectorB_currentvector:
+        #append element to documentsA
+        documents_A.append((current_contribution, row[name_tokenizacion]))
+        most_relevant_documents_topic.add((similarity_vectorA_currentvector,0,  current_contribution, row[name_column_text]))
+
+    else:
+        documents_B.append((current_contribution, row[name_tokenizacion]))
+        most_relevant_documents_topic.add((0,similarity_vectorB_currentvector,  current_contribution, row[name_column_text])) #QUIZAS LO CORRECTO Es que en vez de 0, sea 1-similarity_vectorB_currentvector
 
 
 def create_two_list_of_documents(list_terms_relevance, list_relevant_documents, topic_id, name_tokenizacion,name_column_text, new_document_seeds_TopicA, new_document_seeds_TopicB, wordembedding):
+    documents_A = []
+    documents_B = []
+    most_relevant_documents_topic = set()
+    new_document_seeds_TopicA_df = pd.DataFrame(new_document_seeds_TopicA)
+    new_document_seeds_TopicB_df = pd.DataFrame(new_document_seeds_TopicB)
+    
+    vector_A, vector_B, seeds_documents_A, seeds_documents_B = get_initial_document_vector_by_class(list_terms_relevance, topic_id, name_tokenizacion,new_document_seeds_TopicA, new_document_seeds_TopicB, wordembedding)
+    vector_A = vector_A.reshape(-1, 1)
+    vector_B = vector_B.reshape(-1, 1)
+
+
+    list_relevant_documents = pd.DataFrame(list_relevant_documents).sort_values(int(topic_id)-1, ascending=False).reset_index()
+    
+    #print(' que es esta wea',list_relevant_documents.head())    
+    list_relevant_documents.apply(lambda row:  fill_lists_documents_a_b(row, topic_id, wordembedding, list_terms_relevance,vector_A, vector_B, documents_A, documents_B, most_relevant_documents_topic), axis=1)
+    new_document_seeds_TopicA_df.apply(lambda row:  fill_lists_documents_a_b(row,topic_id, wordembedding, list_terms_relevance,vector_A, vector_B, documents_A, documents_B, most_relevant_documents_topic), axis=1)
+    new_document_seeds_TopicB_df.apply(lambda row:  fill_lists_documents_a_b(row, topic_id,wordembedding, list_terms_relevance,vector_A, vector_B, documents_A, documents_B, most_relevant_documents_topic), axis=1)
+    
+    
+    print('Documentos en A temp ', len(documents_A))
+    print('Documentos en B temp ', len(documents_B))
+    
+        
+    return (seeds_documents_A, seeds_documents_B, documents_A, documents_B, most_relevant_documents_topic)
+
+def create_two_list_of_documents_old(list_terms_relevance, list_relevant_documents, topic_id, name_tokenizacion,name_column_text, new_document_seeds_TopicA, new_document_seeds_TopicB, wordembedding):
     vector_A, vector_B, seeds_documents_A, seeds_documents_B = get_initial_document_vector_by_class(list_terms_relevance, topic_id, name_tokenizacion,new_document_seeds_TopicA, new_document_seeds_TopicB, wordembedding)
 
     vector_A = vector_A.reshape(-1, 1)
