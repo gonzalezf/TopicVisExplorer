@@ -4126,7 +4126,7 @@ var LDAvis = function(to_select, data_or_file_name) {
            
         }
 
-
+        
 
 
         function updateRelevantDocuments(topic_id, relevantDocumentsDict, model){
@@ -4201,6 +4201,12 @@ var LDAvis = function(to_select, data_or_file_name) {
             var final_color_b = c1_b+((r_actual-r_min)/(r_max-r_min))*(c2_b-c1_b)
             
             return [final_color_r,final_color_g,final_color_b]
+        }
+
+        // minor fixes
+        if(type_vis == 1){
+            document.getElementById("DocumentsPanel").style.height="80%";
+            console.log('largo de DocumentsPanel changed')
         }
         
 
