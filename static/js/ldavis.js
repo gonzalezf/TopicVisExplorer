@@ -958,9 +958,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 new_document_seeds: slider_topic_splitting_values[splitting_topic],
                 old_circle_positions: new_circle_positions,
                 topic_id: vis_state.topic,
-                current_number_of_topics: Object.values(new_circle_positions['0.0']).length
-                
-                
+                current_number_of_topics: Object.values(new_circle_positions['0.0']).length,
+                //mdsData: mdsData, 
+                //lamData: lamData                
             };
             console.log('este es el numero de topicos actual que envio', postDataTopicSplitting);
 
@@ -992,7 +992,9 @@ var LDAvis = function(to_select, data_or_file_name) {
             console.log('estos eran los documentos despues', relevantDocumentsDict);
 
             //update lambdata with the new informsation
+            console.log('ojo este es el mds data antes de actualizar en topic splitting,', mdsData)
             updateTopicNamesCircles(new_dict_topic_splitting['PreparedDataObtained_fromPython']);
+            console.log('ojo este es el mds data despues de actualizar en topic splitting,', mdsData)
 
             //see_most_relevant_keywords(12)
 
@@ -2317,6 +2319,18 @@ var LDAvis = function(to_select, data_or_file_name) {
                     
                     console.log("debiese haberse actualizado todo");
                     console.log("post reverse esto es lo q queda en la pila", old_topic_model_states);
+                    $.ajax({
+                        type: 'POST',
+                        url: '/undo_merge_splitting',
+                        async: false,
+                        success: function(data) {
+                                        
+                            console.log('esto fue lo recibido en el undoooo', data)
+                        },
+        
+                     });
+                     console.log('a esta altura tendria q haber realizado el undo merge splitting. etse es el mds data', mdsData)
+
                     /*
 
                     if(old_topic_model_states.length!=0){
@@ -2479,6 +2493,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             $("#apply_topic_splitting").click(function() {
                 save_state_data()
 
+    
                 splitting_topics_document_based_scenario_1()
             });
 

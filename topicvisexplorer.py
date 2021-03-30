@@ -29,11 +29,13 @@ from scipy.spatial import procrustes
 from random import sample
 from utils import get_id, write_ipynb_local_js, NumPyEncoder
 from _prepare import PreparedData
+from copy import deepcopy
+
 
 
 single_corpus_data = {}
 multi_corpora_data = {}
-
+previous_single_corpus_data = []
 class TopicVisExplorer:
 
     app = None
@@ -247,7 +249,8 @@ class TopicVisExplorer:
 
         with open(route_file, 'rb') as handle:
             global single_corpus_data
-            single_corpus_data = pickle.load(handle)            
+            single_corpus_data = pickle.load(handle)    
+
             print("Data loaded sucessfully")
 
     def load_multi_corpora_data(self, route_file):
@@ -287,11 +290,32 @@ class TestView(FlaskView):
 
 
     #Split topic
+
+    @route('/undo_merge_splitting',  methods=['POST'])
+    def undo_merge_splitting(self):
+        print('doing el undo merge splitting operation ')
+        global single_corpus_data
+        global previous_single_corpus_data
+        single_corpus_data = previous_single_corpus_data.pop()
+
+
+        return 'se ha quiitado el ultimo single corpus data del arreglo'
+        
     @route('/Topic_Splitting_Document_Based',  methods=['GET', 'POST'])
     def get_new_sub_topics(self):
             print('Calculando nuevos dos subtopicos')
+            #save single corpus data
             start = time.time()
-            global single_corpus_data   
+            
+            global single_corpus_data
+            global previous_single_corpus_data
+
+            previous_single_corpus_data.append(deepcopy(single_corpus_data))
+            print("**************************************************************************************")
+            print('Topic order INICIAL - TOPIC SPLITTING',single_corpus_data['PreparedDataObtained']['topic.order'])
+            print("**************************************************************************************")
+
+
             json_file = request.get_json()
             
             #get data from user     
@@ -306,8 +330,8 @@ class TestView(FlaskView):
             print('este es el numero actual de topicos antes de hacer splitting', current_number_of_topics)
             
             
-            #with open('json_file_topic_splitting_test.json', 'w') as current_file:
-                #js.dump(json_file, current_file)
+            with open('json_file_topic_splitting_test.json', 'w') as current_file:
+                js.dump(json_file, current_file)
             
             #print('esto fue lo enviado desde el usuario para el splitting document based', json_file)
             print('Json RECIBIDO')
@@ -450,6 +474,7 @@ class TestView(FlaskView):
             #save the new tinfo
             temp_tinfo_df.reset_index(drop=True, inplace=True)
             temp[ 'tinfo']  = temp_tinfo_df.to_dict(orient='list')
+            single_corpus_data['PreparedDataObtained'] = temp 
 
 
             end = time.time()
@@ -487,8 +512,8 @@ class TestView(FlaskView):
             print('Calculating new circle positions with procrustes')
 
             new_circle_positions = get_circle_positions_from_old_matrix(old_circle_positions, new_topic_similarity_matrix )
-            print('json new circle,. estas son las keys', json.loads(new_circle_positions).keys())
-            print('primer arreglo', json.loads(new_circle_positions)['0.0'])
+            #print('json new circle,. estas son las keys', json.loads(new_circle_positions).keys())
+            #print('primer arreglo', json.loads(new_circle_positions)['0.0'])
 
             single_corpus_data['new_circle_positions'] = new_circle_positions
             end = time.time()
@@ -501,7 +526,7 @@ class TestView(FlaskView):
 
             #visualizar neuvos resultados
 
-            PreparedDataObtained = single_corpus_data['PreparedDataObtained'] 
+            #PreparedDataObtained = single_corpus_data['PreparedDataObtained'] 
 
             #Return results in a dictionary
 
@@ -524,14 +549,19 @@ class TestView(FlaskView):
             end = time.time()
             print("Tiempo en realizar el topic splitting - others", end - start)
                     
-            '''    
+                
             with open('new_dict_topic_splitting.pickle', 'wb') as handle:
-                pickle.dump(new_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                pickle.dump(new_dict, handle, protocol=4)
            
-            
+            '''
             with open('new_dict_topic_splitting.pickle', 'rb') as handle:
                 new_dict = pickle.load(handle)
             '''
+
+            #print('--------En el topic splitting este es el mds data. Hay que revisar si el error viene de python o de javascript', temp['mdsDat'])
+            print("**************************************************************************************")
+            print('Topic order FINAL - TOPIC SPLITTING',single_corpus_data['PreparedDataObtained']['topic.order'])
+            print("**************************************************************************************")
             return new_dict
 
 
@@ -540,7 +570,10 @@ class TestView(FlaskView):
     @route('/get_new_topic_vector',  methods=['GET', 'POST'])
     def get_new_topic_vector(self):
         start = time.time()
-        global single_corpus_data   
+        global single_corpus_data
+        global previous_single_corpus_data
+        previous_single_corpus_data.append(deepcopy(single_corpus_data))
+        
         json_file = request.get_json()
 
 
@@ -611,16 +644,17 @@ class TestView(FlaskView):
         print("se ha calculado con optimization numer 1s")
 
         end = time.time()
-        print('voy a guardar modelo para probar topic splitting')
 
 
 
-        with open('models_output/testing_spliting.pkl', 'wb') as handle:
-            pickle.dump(single_corpus_data, handle, protocol=4) #protocol 4 is compatible with python 3.6+
-            print("Single corpus data saved sucessfully")
+        #with open('models_output/testing_spliting.pkl', 'wb') as handle:
+            #pickle.dump(single_corpus_data, handle, protocol=4) #protocol 4 is compatible with python 3.6+
+            #print("Single corpus data saved sucessfully")
 
 
         print('modelo guardado para probar splitting')
+
+
         print("calculo de nuevas posiciones ", end - start)
         return new_circle_positions
 
