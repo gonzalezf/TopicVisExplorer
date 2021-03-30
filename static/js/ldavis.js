@@ -2247,7 +2247,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                           intro: "This slider allows to adjust the similarity between topics. A higher <b style='color: #1f77b4;'> omega score </b> implies higher importance to the most relevant keywords, but lower importance to the most relevant documents in the topic similarity calculation"
                         },
                         {
-                            element: document.querySelector('#DocumentsPanel'),
+                            element: document.querySelector('#DocumentsPanel_first_scenario'),
                             title: 'What is the meaning of each topic?', 
                             intro: "In order to identify the meaning of each topic. This panel provides the most relevant documents associated with the currently selected topic"
                         },
@@ -2265,7 +2265,13 @@ var LDAvis = function(to_select, data_or_file_name) {
                             element: document.querySelector('#topic_buttons_div'),
                             title: 'Rename-Split-Merge topics', 
                             intro: "Buttons from this panel allow to edit topics: rename, joint two topics, split a topic into two subtopics "
+                        },
+                        {
+                            element: document.querySelector('#help_button'),
+                            title: 'Ask for help!', 
+                            intro: "Remember that you always can start the interactive tutorial here!"
                         }
+                        
                         
                     
                     
