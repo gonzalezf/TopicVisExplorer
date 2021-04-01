@@ -2226,27 +2226,27 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .on("click", function() {
                     introJs().setOptions({
                         steps: [{
-                          intro: 'Hello! This tutorial will guide you in the usage of this interface.'
+                          intro: 'Hello! This tutorial will guide you in the usage of this topic modeling visualization tool.'
                         },
                         {
                           title: 'Global view of topics',
                           element: document.querySelector('#CentralPanel'),
-                          intro: "The central panel presents a global view of the topics and aims to answer questions <b style='color: #1f77b4;'> How prevalent each topic is? </b>, and <b style='color: #1f77b4;'>How do topics relate to each other? </b>"
+                          intro: "The central panel presents a global view of the topics and aims to answer questions <b style='color: #1f77b4;'> How prevalent each topic is?</b>, and <b style='color: #1f77b4;'>How do topics relate to each other? </b>"
                         },
                         {
                           element: document.querySelector('#svgMdsPlot'),
-                          title: 'How prevalent is each topic?', 
-                          intro: "Each topic is represented as a circle. The area of the circle  indicates how frequent it is (marginal topic distribution)"
+                          title: 'How prevalent each topic is?', 
+                          intro: "Each topic is represented as a circle. The area of the circle  indicates how frequent it is regarding its marginal topic distribution"
                         },
                         {
                             element: document.querySelector('#svgMdsPlot'),
-                            title: 'How do topics related to each other? ', 
+                            title: 'How do topics relate to each other? ', 
                             intro: "Similar topics appear closer, while distinct topics appear more distant between each other"
                         },
                         {
                           element: document.querySelector('#TopicSimilarityMetricPanel'),
                           title: 'Inter-topic comparison', 
-                          intro: "This slider allows to adjust the similarity between topics. A higher <b style='color: #1f77b4;'> omega score </b> implies higher importance to the most relevant keywords, but lower importance to the most relevant documents in the topic similarity calculation"
+                          intro: "This slider allows adjusting the similarity between topics. A higher omega score implies higher importance to the most relevant keywords, but a lower significance to the most relevant documents in the topic similarity calculation"
                         },
                         {
                             element: document.querySelector('#DocumentsPanel_first_scenario'),
@@ -2261,17 +2261,17 @@ var LDAvis = function(to_select, data_or_file_name) {
                         {
                             element: document.querySelector('#relevanceSliderDiv'),
                             title: 'Most relevant keywords', 
-                            intro: "This slider allows to adjust the order of the most relevant keywords. A higher value assigns higher importance to the frequency of the term, but less to its uniqueness"
+                            intro: "This slider allows adjusting the order of the most relevant keywords. A higher value assigns higher importance to the frequency of the term, but less importance to its uniqueness"
                         },
                         {
                             element: document.querySelector('#topic_buttons_div'),
                             title: 'Rename-Split-Merge topics', 
-                            intro: "Buttons from this panel allow to edit topics: rename, joint two topics, split a topic into two subtopics "
+                            intro: "Buttons from this panel allow to edit topics: rename, joint two topics, split a topic into two subtopics"
                         },
                         {
                             element: document.querySelector('#help_button'),
                             title: 'Ask for help!', 
-                            intro: "Remember that you always can start the interactive tutorial here!"
+                            intro: "Remember that you can always start the interactive tutorial here!"
                         }
                         
                         
