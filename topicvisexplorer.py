@@ -118,10 +118,10 @@ class TopicVisExplorer:
 
         #get most relevant keywords sorted by relevance     
         #in merging, we should update this list
-        tinfo_collection_1 = pd.DataFrame.from_dict(single_corpus_data['PreparedDataObtained']['tinfo'])
+        tinfo_collection_1 = pd.DataFrame.from_dict(multi_corpora_data['PreparedDataObtained_collection_1']['tinfo'])
         tinfo_collection_1['relevance'] = relevance_lambda * tinfo_collection_1['logprob']+ (1.00-relevance_lambda)*tinfo_collection_1['loglift']
 
-        tinfo_collection_2 = pd.DataFrame.from_dict(single_corpus_data['PreparedDataObtained']['tinfo'])
+        tinfo_collection_2 = pd.DataFrame.from_dict(multi_corpora_data['PreparedDataObtained_collection_2']['tinfo'])
         tinfo_collection_2['relevance'] = relevance_lambda * tinfo_collection_2['logprob']+ (1.00-relevance_lambda)*tinfo_collection_2['loglift']
 
         # We need the topkeywords and toprelevantdocuments  vectors here!!!
