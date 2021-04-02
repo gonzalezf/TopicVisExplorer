@@ -942,6 +942,14 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             //console.log("en el merge/splitting acabo de guardar este estado", current_state_dict);
             //console.log("en la pila tengo esto",old_topic_model_states);
+            if(old_topic_model_states.length>0){
+                document.getElementById(topicReverse).disabled = false;
+
+            }
+            else{
+                document.getElementById(topicReverse).disabled = true;
+
+            }
         }
         
         function splitting_topics_document_based_scenario_1(){
@@ -1189,7 +1197,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         
 
 
-            var margin = { top: 30, right: 30, bottom: 30, left: 30 } // ocupar estos margenes
+            var margin = { top: 45, right: 45, bottom: 45, left: 45 } // ocupar estos margenes
 
             //get width, height according to client's window
             var bounds = d3.selectAll('#svgMdsPlot').node().getBoundingClientRect();
@@ -1197,8 +1205,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             var user_width = bounds.width; 
             var user_height = bounds.height;
             
-            var mdsheight = user_height-margin.top-margin.bottom;
-            var mdswidth = user_width-margin.left-margin.right;
+            var mdsheight = (user_height-margin.top-margin.bottom);
+            var mdswidth = (user_width-margin.left-margin.right);
             var mdsarea = mdsheight * mdswidth;
 
             // Create a group for the mds plot Bubbles visualization
@@ -1345,20 +1353,20 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             if (xdiff > ydiff) {
                 var xScale = d3.scaleLinear()
-                        .range([0, mdswidth])
+                        .range([0, mdswidth*0.95])
                         .domain([xrange[0] - xpad * xdiff, xrange[1] + xpad * xdiff]);
 
                 var yScale = d3.scaleLinear()
-                        .range([mdsheight, 0])
+                        .range([mdsheight*0.95, 0])
                         .domain([yrange[0] - 0.5*(xdiff - ydiff) - ypad*xdiff, yrange[1] + 0.5*(xdiff - ydiff) + ypad*xdiff]);
             } else {
 
 
                 var xScale = d3.scaleLinear()
-                        .range([0, mdswidth])
+                        .range([0, mdswidth*0.95])
                         .domain([xrange[0] - 0.5*(ydiff - xdiff) - xpad*ydiff, xrange[1] + 0.5*(ydiff - xdiff) + xpad*ydiff]);
                 var yScale = d3.scaleLinear()
-                        .range([mdsheight, 0])
+                        .range([mdsheight*0.95, 0])
                         .domain([yrange[0] - ypad * ydiff, yrange[1] + ypad * ydiff]);
             }
 
@@ -1375,8 +1383,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                     
                 })
                 .attr("cx", function(d) {
-                    console.log('este es el id', d.topics-1);
-                    console.log('estas son las posiciones', new_positions);
+                    //console.log('este es el id', d.topics-1);
+                    //console.log('estas son las posiciones', new_positions);
                     testing_var = new_positions;
                     return (xScale(+new_positions[d.topics-1][0])); 
 
@@ -2219,9 +2227,11 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             d3.select("#"+topicReverse)
                 .on("click", function() {
+                    console.log(' este es el largo que tengo en esto', old_topic_model_states.length)
                     $('#ReverseModel').modal(); 
                 });
 
+            
             d3.select("#help_button")
                 .on("click", function() {
                     introJs().setOptions({
@@ -2284,11 +2294,11 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             d3.select("#apply_reverse_topic_model") //el usuario desea continuar con el mergin
                 .on("click", function() {
-                    console.log("que bacan, voy a revertir los cambios!!!");
-                    console.log("PRE reverse esto es lo q queda en la pila", old_topic_model_states);
+                    //console.log("que bacan, voy a revertir los cambios!!!");
+                    //console.log("PRE reverse esto es lo q queda en la pila", old_topic_model_states);
 
                     var last_state_dict = old_topic_model_states.pop();
-                    console.log("este es mi last state dict", last_state_dict)
+                    //console.log("este es mi last state dict", last_state_dict)
 
                     relevantDocumentsDict = last_state_dict.relevantDocumentsDict;
                     lamData = last_state_dict.lamData;
@@ -2349,6 +2359,14 @@ var LDAvis = function(to_select, data_or_file_name) {
                     }
                     console.log("este es el length",old_topic_model_states.length);
                     */
+                   if(old_topic_model_states.length>0){
+                    document.getElementById(topicReverse).disabled = false;
+    
+                    }
+                    else{
+                        document.getElementById(topicReverse).disabled = true;
+        
+                    }
 
             });
     
@@ -3962,9 +3980,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             return column_text_name                                      
         }
 
-    
-
-        
 
         //https://www.jqueryscript.net/form/shift-select-multiple-checkboxes.html
 
@@ -4000,10 +4015,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                         
         }
     
-
-
-
-
         var test;
             //slider topic splitting
         $('#tableRelevantDocumentsClass_TopicSplitting').on('post-body.bs.table', function (e) {
@@ -4227,8 +4238,16 @@ var LDAvis = function(to_select, data_or_file_name) {
         // minor fixes
         if(type_vis == 1){
             document.getElementById("DocumentsPanel").style.height="80%";
-            console.log('largo de DocumentsPanel changed')
         }
+        if(old_topic_model_states.length>0){
+            document.getElementById(topicReverse).disabled = false;
+
+            }
+            else{
+                document.getElementById(topicReverse).disabled = true;
+
+        }
+
         
 
 
