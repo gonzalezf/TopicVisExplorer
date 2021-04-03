@@ -75,9 +75,13 @@ rect.bordered {
 
   /*Sankey diagram*/
   .node rect {
-    cursor: move;
+    cursor: pointer; /*move*/
     fill-opacity: .9;
     shape-rendering: crispEdges;
+  }
+
+  .dot {
+    cursor: pointer;
   }
   
   .node text {

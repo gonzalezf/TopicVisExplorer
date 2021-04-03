@@ -727,6 +727,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 })
                 .on("mouseover", function(d) {
                     topic_on_sankey(d, min_target_node_value );
+                    //d3.select(this).style("cursor", "pointer"); 
+
 
                 })
                 .on("mouseout", function(d) {
@@ -841,7 +843,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("x", 6 + sankey.nodeWidth())
                 .attr("text-anchor", "start");
         
-        // the function for moving the nodes
+            // the function for moving the nodes
         
             /*
             function dragmove(d) {
@@ -858,7 +860,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 topic_on_sankey(real_last_clicked_sankey_model_2, min_target_node_value) //topic on first topic of second model
                 }        
                 
-                */
+            */
             if(last_clicked_model_2!=-1){
                 d3.select("#"+last_clicked_model_2).style("fill",color2_1)
             }
@@ -4338,6 +4340,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         }
 
         // minor fixes
+        //This is the special configuration needed for the user study
         if(type_vis == 1){
             document.getElementById("DocumentsPanel").style.height="80%";
         }
@@ -4353,10 +4356,28 @@ var LDAvis = function(to_select, data_or_file_name) {
             else{
                 document.getElementById(topicReverse).disabled = true;
 
-        }
+        } 
+        if(type_vis==2){
+            //delete buttons that users wont use in the user study
+            d3.select("#"+topicReverse).remove()
+            d3.select("#"+topicSplit).remove()
+            d3.select("#"+topicSplit+"rightPanel").remove()
+            d3.select("#"+topicMerge).remove()
+            d3.select("#"+topicMerge+"rightPanel").remove()
+            //show full text of topic name on the left panel
+            //topic_name_div
+            document.getElementById("topic_name_div").style.width="75%";
+            document.getElementById("topic_name_div_right_panel").style.width="75%";            
+            document.getElementById("topic_buttons_div").style.width="25%";
+            document.getElementById("topic_buttons_div_right_panel").style.width="25%";
 
-        
-
+            if( Object.keys(matrix_sankey).length == 1){ // it means we are using the metric baseline
+                //we need to remove the omega slider, in this case
+                         
+                d3.select("#TopicSimilarityMetricPanel").remove()
+       
+            }                   
+        }    
 
     }
     
