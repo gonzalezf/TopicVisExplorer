@@ -372,11 +372,14 @@ if(type_vis == 2){
           document.write(html)
 
         }
-        if(type_vis === 2)
-        //console.log("estoy aqui leyendo ijiji")
-        //document.write('<button class="button" id="export_to_csv">Export data</button>')
-        var html ='<div class="btn-group-fab" role="group" aria-label="FAB Menu"> <div> <button type="button" class="btn btn-main btn-primary has-tooltip" data-placement="left" id="export_to_csv" title="Download data"> <i class="fa fa-download"></i> </button><button type="button" class="btn btn-sub btn-danger has-tooltip" data-placement="left" title="Download xlsx" id="export_to_csv"> <i class="fa fa-file-excel"></i> </button> <button type="button" class="btn btn-sub btn-warning has-tooltip" data-placement="left" title="Download CSV file"> <i class="fas fa-file-csv"></i> </button> </div> </div>'
-        document.write(html)
+        if(type_vis === 2){
+          //console.log("estoy aqui leyendo ijiji")
+          //document.write('<button class="button" id="export_to_csv">Export data</button>')
+          //var html ='<div class="btn-group-fab" role="group" aria-label="FAB Menu"> <div> <button type="button" class="btn btn-main btn-primary has-tooltip" data-placement="left" id="export_to_csv" title="Download data"> <i class="fa fa-download"></i> </button><button type="button" class="btn btn-sub btn-danger has-tooltip" data-placement="left" title="Download xlsx" id="export_to_csv"> <i class="fa fa-file-excel"></i> </button> <button type="button" class="btn btn-sub btn-warning has-tooltip" data-placement="left" title="Download CSV file"> <i class="fas fa-file-csv"></i> </button> </div> </div>'          
+          var html = '';
+        }
+
+        document.write(html) // ojo, esta linea no deberia estar, x eso q se escribe dos veces el DocumentsPanel_first_scenario, pero si lo saco ahora, comienzan a fallar cosas en el scenario 1
 
       </script>
     </div>

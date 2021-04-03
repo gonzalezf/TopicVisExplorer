@@ -14,6 +14,19 @@ var list_terms_for_topic_splitting = [];
 var slider_topic_splitting_values = {};
 var testing_var; 
 var testing_mdsData;
+
+var scenario_2_is_baseline_metric;
+if(type_vis== 2){
+    if( Object.keys(matrix_sankey).length == 1){
+        scenario_2_is_baseline_metric = true;
+    
+    }
+    else{
+        scenario_2_is_baseline_metric = false;
+    }
+}
+
+
 var LDAvis = function(to_select, data_or_file_name) {
 
     // This section sets up the logic for event handling
@@ -796,7 +809,26 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("font-weight", "bold")
                 .attr("text-anchor", "end")
                 .attr("transform", null)
-                .text(function(d){return name_topics_sankey[topicID + d.node] ;}) //.text(function(d) { return d.name; })
+                .text(function(d){
+                    if(d.node>=min_target_node_value){ //model 2
+                        
+                        var Freq = jsonData_2.mdsDat.Freq[d.node-min_target_node_value]    
+                        var freq_current_topic = Math.round(Freq * 10) / 10  
+                        
+                        
+
+                  
+                    }
+                    else{
+                        var Freq = jsonData.mdsDat.Freq[d.node]                       
+                        var freq_current_topic = Math.round(Freq * 10) / 10  
+                    }
+
+
+
+                    return "("+freq_current_topic+"%) "+ name_topics_sankey[topicID + d.node] ;}
+                    //return name_topics_sankey[topicID + d.node] ;}                                                
+                ) //.text(function(d) { return d.name; })
                 .filter(function(d) { return d.x < user_width_sankey / 2; })
                 .attr("x", 6 + sankey.nodeWidth())
                 .attr("text-anchor", "start");
@@ -2234,61 +2266,179 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             d3.select("#help_button")
                 .on("click", function() {
-                    introJs().setOptions({
-                        steps: [{
-                          intro: 'Hello! This tutorial will guide you in the usage of this topic modeling visualization tool.'
-                        },
-                        {
-                          title: 'Global view of topics',
-                          element: document.querySelector('#CentralPanel'),
-                          intro: "The central panel presents a global view of the topics and aims to answer questions <b style='color: #1f77b4;'> How prevalent each topic is?</b>, and <b style='color: #1f77b4;'>How do topics relate to each other? </b>"
-                        },
-                        {
-                          element: document.querySelector('#svgMdsPlot'),
-                          title: 'How prevalent each topic is?', 
-                          intro: "Each topic is represented as a circle. The area of the circle  indicates how frequent it is regarding its marginal topic distribution"
-                        },
-                        {
-                            element: document.querySelector('#svgMdsPlot'),
-                            title: 'How do topics relate to each other? ', 
-                            intro: "Similar topics appear closer, while distinct topics appear more distant between each other"
-                        },
-                        {
-                          element: document.querySelector('#TopicSimilarityMetricPanel'),
-                          title: 'Inter-topic comparison', 
-                          intro: "This slider allows adjusting the similarity between topics. A higher omega score implies higher importance to the most relevant keywords, but a lower significance to the most relevant documents in the topic similarity calculation"
-                        },
-                        {
-                            element: document.querySelector('#DocumentsPanel_first_scenario'),
-                            title: 'What is the meaning of each topic?', 
-                            intro: "In order to identify the meaning of each topic. This panel provides the most relevant documents associated with the currently selected topic"
-                        },
-                        {
-                          element: document.querySelector('#barplot_1'),
-                          title: 'Most relevant keywords', 
-                          intro: "Here you can see the  most relevant keywords associated with the currently selected topic."
-                        },
-                        {
-                            element: document.querySelector('#relevanceSliderDiv'),
-                            title: 'Most relevant keywords', 
-                            intro: "This slider allows adjusting the order of the most relevant keywords. A higher value assigns higher importance to the frequency of the term, but less importance to its uniqueness"
-                        },
-                        {
-                            element: document.querySelector('#topic_buttons_div'),
-                            title: 'Rename-Split-Merge topics', 
-                            intro: "Buttons from this panel allow to edit topics: rename, joint two topics, split a topic into two subtopics"
-                        },
-                        {
-                            element: document.querySelector('#help_button'),
-                            title: 'Ask for help!', 
-                            intro: "Remember that you can always start the interactive tutorial here!"
+                    if(type_vis==1){
+                        introJs().setOptions({
+                            steps: [{
+                              intro: 'Hello! This tutorial will guide you in the usage of this topic modeling visualization tool.'
+                            },
+                            {
+                              title: 'Global view of topics',
+                              element: document.querySelector('#CentralPanel'),
+                              intro: "The central panel presents a global view of the topics and aims to answer questions <b style='color: #1f77b4;'> How prevalent each topic is?</b>, and <b style='color: #1f77b4;'>How do topics relate to each other? </b>"
+                            },
+                            {
+                              element: document.querySelector('#svgMdsPlot'),
+                              title: 'How prevalent each topic is?', 
+                              intro: "Each topic is represented as a circle. The area of the circle  indicates how frequent it is regarding its marginal topic distribution"
+                            },
+                            {
+                                element: document.querySelector('#svgMdsPlot'),
+                                title: 'How do topics relate to each other? ', 
+                                intro: "Similar topics appear closer, while distinct topics appear more distant between each other"
+                            },
+                            {
+                              element: document.querySelector('#TopicSimilarityMetricPanel'),
+                              title: 'Inter-topic comparison', 
+                              intro: "This slider allows adjusting the similarity between topics. A higher omega score implies higher importance to the most relevant keywords, but a lower significance to the most relevant documents in the topic similarity calculation"
+                            },
+                            {
+                                element: document.querySelector('#DocumentsPanel_first_scenario'),
+                                title: 'What is the meaning of each topic?', 
+                                intro: "In order to identify the meaning of each topic. This panel provides the most relevant documents associated with the currently selected topic"
+                            },
+                            {
+                              element: document.querySelector('#barplot_1'),
+                              title: 'Most relevant keywords', 
+                              intro: "Here you can see the  most relevant keywords associated with the currently selected topic."
+                            },
+                            {
+                                element: document.querySelector('#relevanceSliderDiv'),
+                                title: 'Most relevant keywords', 
+                                intro: "This slider allows adjusting the order of the most relevant keywords. A higher value assigns higher importance to the term's frequency but less priority to its uniqueness."
+                            },
+                            {
+                                element: document.querySelector('#topic_buttons_div'),
+                                title: 'Rename-Split-Merge topics', 
+                                intro: "Buttons from this panel allow to edit topics: rename, joint two topics, split a topic into two subtopics"
+                            },
+                            {
+                                element: document.querySelector('#help_button'),
+                                title: 'Ask for help!', 
+                                intro: "Remember that you can always start the interactive tutorial here!"
+                            }
+
+
+
+
+                          ]
+                          }).start();
+                    }
+                    else{ // scenario 2
+                        if(scenario_2_is_baseline_metric == false){
+                            introJs().setOptions({
+                                steps: [
+                                {
+                                  intro: 'Hello! This tutorial will guide you in the usage of this topic modeling visualization tool.'
+                                },
+                                {
+                                  title: 'Global view of topics',
+                                  element: document.querySelector('#CentralPanel'),
+                                  intro: "The central panel presents a global view of the topics and aims to answer <b style='color: #1f77b4;'>How topics relate to each other? </b>"
+                                },
+                                {
+                                  element: document.querySelector('#svg_sankey'),
+                                  title: 'How topics relate to each other?', 
+                                  intro: "Each topic is represented as a box. Its color indicates to which dataset the topic belongs. "
+                                },
+                                {
+                                    element: document.querySelector('#svg_sankey'),
+                                    title: 'How  topics relate to each other? ', 
+                                    intro: "The link between topics indicates their similarity. A higher similarity is represented with a wider link."
+                                },
+                                {
+                                    element: document.querySelector('#TopicSimilarityMetricPanelFiltering'),
+                                    title: 'Filtering links', 
+                                    intro: "You can modify this slider to visualize only links between topics with a similarity score between a range of values."
+                                  },
+                                  {
+                                    element: document.querySelectorAll('.bootstrap-table')[0],
+                                    title: 'What is the meaning of each topic?', 
+                                    intro: "In order to identify the meaning of each topic. This panel provides the most relevant documents associated with the currently selected topic"
+                                },                                
+                                {
+                                  element: document.querySelector('#TopicSimilarityMetricPanel'),
+                                  title: 'Inter-topic comparison', 
+                                  intro: "This slider allows adjusting the similarity between topics. A higher omega score implies higher importance to the most relevant keywords, but a lower significance to the most relevant documents in the topic similarity calculation."
+                                },
+                                {
+                                  element: document.querySelector('#BarPlotDiv_zero'),
+                                  title: 'Most relevant keywords', 
+                                  intro: "Here you can see the most relevant keywords associated with the currently selected topic."
+                                },
+                                {
+                                    element: document.querySelector('#relevanceSliderDiv'),
+                                    title: 'Most relevant keywords', 
+                                    intro: "This slider allows adjusting the order of the most relevant keywords. A higher value assigns higher importance to the term's frequency but less priority to its uniqueness."
+                                },
+                                {
+                                    element: document.querySelector('#LDAvisContainer-topic-edit'),
+                                    title: 'Rename topics', 
+                                    intro: "You can use this button to rename a topic"
+                                },
+                                {
+                                    element: document.querySelector('#help_button'),
+                                    title: 'Ask for help!', 
+                                    intro: "Finally, remember that you can always start the interactive tutorial here!"
+                                }                                                                        
+    
+                              ]
+                              }).start();
                         }
-                        
-                        
-                    
-                    
-                      ]
-                      }).start();
+                        else{ // scenario 2, metric baseline. 
+                            introJs().setOptions({
+                                steps: [{
+                                  intro: 'Hello! This tutorial will guide you in the usage of this topic modeling visualization tool.'
+                                },
+                                {
+                                  title: 'Global view of topics',
+                                  element: document.querySelector('#CentralPanel'),
+                                  intro: "The central panel presents a global view of the topics and aims to answer <b style='color: #1f77b4;'>How topics relate to each other? </b>"
+                                },
+                                {
+                                  element: document.querySelector('#svg_sankey'),
+                                  title: 'How topics relate to each other?', 
+                                  intro: "Each topic is represented as a box. Its color indicates to which dataset the topic belongs. "
+                                },
+                                {
+                                    element: document.querySelector('#svg_sankey'),
+                                    title: 'How  topics relate to each other? ', 
+                                    intro: "The link between topics indicates their similarity. A higher similarity is represented with a wider link."
+                                },
+                                {
+                                    element: document.querySelector('#TopicSimilarityMetricPanelFiltering'),
+                                    title: 'Filtering links', 
+                                    intro: "You can modify this slider to visualize only links between topics with a similarity score between a range of values."
+                                  },                            
+                                  {
+                                    element: document.querySelectorAll('.bootstrap-table')[0],
+                                    title: 'What is the meaning of each topic?', 
+                                    intro: "In order to identify the meaning of each topic. This panel provides the most relevant documents associated with the currently selected topic"
+                                },    
+                                {
+                                  element: document.querySelector('#BarPlotDiv_zero'),
+                                  title: 'Most relevant keywords', 
+                                  intro: "Here you can see the most relevant keywords associated with the currently selected topic."
+                                },
+                                {
+                                    element: document.querySelector('#relevanceSliderDiv'),
+                                    title: 'Most relevant keywords', 
+                                    intro: "This slider allows adjusting the order of the most relevant keywords. A higher value assigns higher importance to the term's frequency but less priority to its uniqueness."
+                                },
+                                {
+                                    element: document.querySelector('#LDAvisContainer-topic-edit'),
+                                    title: 'Rename topics', 
+                                    intro: "You can use this button to rename a topic"
+                                },
+                                {
+                                    element: document.querySelector('#help_button'),
+                                    title: 'Ask for help!', 
+                                    intro: "Finally, remember that you can always start the interactive tutorial here!"
+                                }                                                                        
+                              ]
+                              }).start();
+                        }
+                       
+                    }
                 });
     
 
@@ -4266,12 +4416,13 @@ var LDAvis = function(to_select, data_or_file_name) {
             document.getElementById("topic_name_div_right_panel").style.width="75%";            
             document.getElementById("topic_buttons_div").style.width="25%";
             document.getElementById("topic_buttons_div_right_panel").style.width="25%";
+            //document.getElementsByClassName('bootstrap-table ').style.height='80%';
+            
 
-            if( Object.keys(matrix_sankey).length == 1){ // it means we are using the metric baseline
-                //we need to remove the omega slider, in this case
-                         
-                d3.select("#TopicSimilarityMetricPanel").remove()
-       
+
+            if( scenario_2_is_baseline_metric == true ) { // it means we are using the metric baseline
+                //we need to remove the omega slider, in this case                         
+                d3.select("#TopicSimilarityMetricPanel").remove()       
             }                   
         }    
         
