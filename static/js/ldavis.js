@@ -4236,8 +4236,14 @@ var LDAvis = function(to_select, data_or_file_name) {
         }
 
         // minor fixes
+        //This is the special configuration needed for the user study
         if(type_vis == 1){
             document.getElementById("DocumentsPanel").style.height="80%";
+        }
+        if(type_vis == 2){
+            document.getElementById(topicMerge).disabled = true;
+            document.getElementById(topicSplit).disabled = true;
+            document.getElementById(topicReverse).disabled = true;
         }
         if(old_topic_model_states.length>0){
             document.getElementById(topicReverse).disabled = false;
@@ -4246,8 +4252,28 @@ var LDAvis = function(to_select, data_or_file_name) {
             else{
                 document.getElementById(topicReverse).disabled = true;
 
-        }
+        } 
+        if(type_vis==2){
+            //delete buttons that users wont use in the user study
+            d3.select("#"+topicReverse).remove()
+            d3.select("#"+topicSplit).remove()
+            d3.select("#"+topicSplit+"rightPanel").remove()
+            d3.select("#"+topicMerge).remove()
+            d3.select("#"+topicMerge+"rightPanel").remove()
+            //show full text of topic name on the left panel
+            //topic_name_div
+            document.getElementById("topic_name_div").style.width="75%";
+            document.getElementById("topic_name_div_right_panel").style.width="75%";            
+            document.getElementById("topic_buttons_div").style.width="25%";
+            document.getElementById("topic_buttons_div_right_panel").style.width="25%";
 
+            if( Object.keys(matrix_sankey).length == 1){ // it means we are using the metric baseline
+                //we need to remove the omega slider, in this case
+                         
+                d3.select("#TopicSimilarityMetricPanel").remove()
+       
+            }                   
+        }    
         
 
 

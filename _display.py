@@ -162,7 +162,12 @@ def prepared_data_to_html(data, topic_order,   type_vis, new_circle_positions=No
     #transformar matrix en un diccionario
     if type_vis == 2:
         matrix_dict = {"nodes":[], "links":[]}
-        matrix_s = matrix_sankey[0.80]
+        print('este es el type', type(matrix_sankey))
+        if(type(matrix_sankey) is dict):
+            matrix_s = matrix_sankey[0.80]
+        else:
+            matrix_s = matrix_sankey
+
         for i in range(matrix_s.shape[0]):#matrix_s.shape[0]
             matrix_dict["nodes"].append({"node":i, "name":"model1-"+str(i)})
             for j in range(matrix_s.shape[1]): #matrix_s.shape[1]
@@ -173,7 +178,6 @@ def prepared_data_to_html(data, topic_order,   type_vis, new_circle_positions=No
             matrix_dict["nodes"].append({"node":matrix_s.shape[0]+j, "name":"model2-"+str(j)})
         
         ##para cada valor posible de lambda
-<<<<<<< HEAD
         if(type(matrix_sankey) is dict):
             dict_matrix_dict = dict()
             for lambda_ in range(0, 101):
@@ -185,15 +189,14 @@ def prepared_data_to_html(data, topic_order,   type_vis, new_circle_positions=No
                     for j in range(matrix_s.shape[1]): #matrix_s.shape[1]
                             matrix_dict["links"].append({"source":i,"target":(matrix_s.shape[0]+j), "value":matrix_s[i][j]}) #matrix[i][j]
                         
-
                 for j in range(matrix_s.shape[1]): #matrix_s.shape[1]
                     matrix_dict["nodes"].append({"node":matrix_s.shape[0]+j, "name":"model2-"+str(j)})
                 dict_matrix_dict[lambda_]=matrix_dict
             dict_matrix_json = json.dumps(dict_matrix_dict)
         else:
             dict_matrix_dict = dict()
-            for lambda_ in range(0, 101):
-                lambda_ = lambda_/100
+            for lambda_ in range(0, 1):
+                lambda_ = 0.8#lambda_/100
                 matrix_dict = {"nodes":[], "links":[]}
                 matrix_s = matrix_sankey
                 for i in range(matrix_s.shape[0]):#matrix_s.shape[0]
@@ -201,24 +204,13 @@ def prepared_data_to_html(data, topic_order,   type_vis, new_circle_positions=No
                     for j in range(matrix_s.shape[1]): #matrix_s.shape[1]
                             matrix_dict["links"].append({"source":i,"target":(matrix_s.shape[0]+j), "value":matrix_s[i][j]}) #matrix[i][j]
                         
-=======
-        dict_matrix_dict = dict()
-        for lambda_ in range(0, 101):
-            lambda_ = lambda_/100
-            matrix_dict = {"nodes":[], "links":[]}
-            matrix_s = matrix_sankey[lambda_]
-            for i in range(matrix_s.shape[0]):#matrix_s.shape[0]
-                matrix_dict["nodes"].append({"node":i, "name":"model1-"+str(i)})
-                for j in range(matrix_s.shape[1]): #matrix_s.shape[1]
-                        matrix_dict["links"].append({"source":i,"target":(matrix_s.shape[0]+j), "value":matrix_s[i][j]}) #matrix[i][j]
-                    
->>>>>>> parent of 0821417 (allow visualize metric baseline)
 
-            for j in range(matrix_s.shape[1]): #matrix_s.shape[1]
-                matrix_dict["nodes"].append({"node":matrix_s.shape[0]+j, "name":"model2-"+str(j)})
-            dict_matrix_dict[lambda_]=matrix_dict
-        dict_matrix_json = json.dumps(dict_matrix_dict)
-        
+                for j in range(matrix_s.shape[1]): #matrix_s.shape[1]
+                    matrix_dict["nodes"].append({"node":matrix_s.shape[0]+j, "name":"model2-"+str(j)})
+                dict_matrix_dict[lambda_]=matrix_dict
+            dict_matrix_json = json.dumps(dict_matrix_dict)
+            print('final dict key', dict_matrix_dict.keys())
+            
 
         #matrix_json = json.dumps(matrix_dict)
         
