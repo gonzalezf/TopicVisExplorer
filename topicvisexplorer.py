@@ -241,7 +241,7 @@ class TopicVisExplorer:
                 print("Error. Data it is incomplete. It is necessary to get", key)
         if(save):    
             with open(route_file, 'wb') as handle:
-                pickle.dump(multi_corpora_data, handle, protocol=4)
+                pickle.dump(multi_corpora_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
                 print("Multi corpora data saved sucessfully")
 
 
