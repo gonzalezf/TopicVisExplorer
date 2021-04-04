@@ -14,7 +14,7 @@ var list_terms_for_topic_splitting = [];
 var slider_topic_splitting_values = {};
 var testing_var; 
 var testing_mdsData;
-
+var is_human_in_the_loop;
 var scenario_2_is_baseline_metric;
 if(type_vis== 2){
     if( Object.keys(matrix_sankey).length == 1){
@@ -344,10 +344,10 @@ var LDAvis = function(to_select, data_or_file_name) {
   
 
     function visualize(data) {
-
+        console.log('esto es data dentro de la funcion visualize', data);
         // set the number of topics to global variable K:
         ////console.log("este data yo recibi", data)
-        
+        is_human_in_the_loop = data['human_in_the_loop'];
         K = data['mdsDat'].x.length;
 
         // R is the number of top relevant (or salient) words whose bars we display
@@ -4404,6 +4404,12 @@ var LDAvis = function(to_select, data_or_file_name) {
         //This is the special configuration needed for the user study
         if(type_vis == 1){
             document.getElementById("DocumentsPanel").style.height="80%";
+            console.log('q aparece aqui', is_human_in_the_loop, typeof is_human_in_the_loop)
+            if(is_human_in_the_loop == false){
+                d3.select("#"+topicReverse).remove()
+                d3.select("#"+topicSplit).remove()
+                d3.select("#"+topicMerge).remove()
+            }
         }
         if(type_vis == 2){
             document.getElementById(topicMerge).disabled = true;

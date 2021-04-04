@@ -258,11 +258,12 @@ class TopicVisExplorer:
                 print("Multi corpora data saved sucessfully")
 
 
-    def load_single_corpus_data(self, route_file):
+    def load_single_corpus_data(self, route_file, human_in_the_loop=True):
 
         with open(route_file, 'rb') as handle:
             global single_corpus_data
-            single_corpus_data = pickle.load(handle)    
+            single_corpus_data = pickle.load(handle)   
+            single_corpus_data['human_in_the_loop'] = human_in_the_loop 
 
             print("Data loaded sucessfully")
 
@@ -697,9 +698,7 @@ class TestView(FlaskView):
         new_circle_positions = single_corpus_data['new_circle_positions'] 
         topic_order =  single_corpus_data['topic.order']
         topic_similarity_matrix = single_corpus_data['topic_similarity_matrix']         
-
-
-
+        PreparedDataObtained['human_in_the_loop'] = single_corpus_data['human_in_the_loop']
 
         #prepare and run html
         html = prepared_html_in_flask(data = [PreparedDataObtained],  topic_order = topic_order,  type_vis = 1,  new_circle_positions = new_circle_positions)

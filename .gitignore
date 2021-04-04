@@ -25,6 +25,15 @@
 #ignore data for topic splitting optimization
 data_for_optimization/
 
+#ignore list of topic models
+lists_of_topic_models/
+
+#ignore dictories that maybe I should delete
+old_maybe_borrar/
+
+#ignore airline tweets
+Airline_tweets/
+
 #ignore model outputs
 models_output/
 
