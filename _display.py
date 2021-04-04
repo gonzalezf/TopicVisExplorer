@@ -165,6 +165,7 @@ def prepared_data_to_html(data, topic_order,   type_vis, new_circle_positions=No
         print('este es el type', type(matrix_sankey))
         if(type(matrix_sankey) is dict):
             matrix_s = matrix_sankey[0.80]
+            
         else:
             matrix_s = matrix_sankey
 

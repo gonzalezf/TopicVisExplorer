@@ -41,6 +41,12 @@ var LDAvis = function(to_select, data_or_file_name) {
             term: ""
         };
 
+
+    //for the user study. The omega value will be random
+    if(type_vis==2){
+        vis_state.lambda_lambda_topic_similarity = Math.random().toFixed(2) // Omega random , chosen randomly for the user study        
+
+    }
     // Set up a few 'global' variables to hold the data:
     var K, // number of topics
         mdsData, // (x,y) locations and topic proportions
@@ -667,7 +673,16 @@ var LDAvis = function(to_select, data_or_file_name) {
             var margin = {top: 10, right: 10, bottom: 10, left: 10};
             
             var formatNumber = d3.format(",.2f"),    // two decimal places
-                format = function(d) { return "similarity: "+formatNumber(d);},
+                format = function(d) { 
+                    if(scenario_2_is_baseline_metric == true){
+                        return "distance: "+formatNumber(d);
+
+                    }else{
+                        return "similarity: "+formatNumber(d);
+
+                    }
+                
+                },
                 color = d3.scaleOrdinal(d3.schemeAccent);
             
 
@@ -2351,7 +2366,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                                     intro: "You can modify this slider to visualize only links between topics with a similarity score between a range of values."
                                   },
                                   {
-                                    element: document.querySelectorAll('.bootstrap-table')[0],
+                                    element: document.querySelector('#RelevantDocumentsTableDiv'), //document.querySelectorAll('.bootstrap-table')[0],
                                     title: 'What is the meaning of each topic?', 
                                     intro: "In order to identify the meaning of each topic. This panel provides the most relevant documents associated with the currently selected topic"
                                 },                                
@@ -2402,15 +2417,15 @@ var LDAvis = function(to_select, data_or_file_name) {
                                 {
                                     element: document.querySelector('#svg_sankey'),
                                     title: 'How  topics relate to each other? ', 
-                                    intro: "The link between topics indicates their similarity. A higher similarity is represented with a wider link."
+                                    intro: "The link between topics indicates the similarity between topics. Topics that are more similar have lower distance scores. A higher similarity is represented with a narrower link."
                                 },
                                 {
                                     element: document.querySelector('#TopicSimilarityMetricPanelFiltering'),
                                     title: 'Filtering links', 
-                                    intro: "You can modify this slider to visualize only links between topics with a similarity score between a range of values."
+                                    intro: "You can modify this slider to visualize only links between topics with a distance/similarity  score between a range of values."
                                   },                            
                                   {
-                                    element: document.querySelectorAll('.bootstrap-table')[0],
+                                    element: document.querySelector('#RelevantDocumentsTableDiv'), //document.querySelectorAll('.bootstrap-table')[0],
                                     title: 'What is the meaning of each topic?', 
                                     intro: "In order to identify the meaning of each topic. This panel provides the most relevant documents associated with the currently selected topic"
                                 },    

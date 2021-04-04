@@ -20,6 +20,8 @@ from flask_classful import FlaskView,route
 from _display import *
 from _prepare import prepare, js_PCoA, PreparedData, _pcoa
 from _topic_similarity_matrix import *
+from _topic_similarity_matrix_metric_baseline import *
+
 from _get_new_circle_positions import *
 from _topic_splitting_helpers import *
 from os import path, walk
@@ -90,7 +92,7 @@ class TopicVisExplorer:
 
         return get_dict_topic_similarity_matrix(word_embedding_model, lda_model,matrix_documents_topic_contribution,lda_model,matrix_documents_topic_contribution, topn_terms, single_corpus_data['PreparedDataObtained'], single_corpus_data['PreparedDataObtained'], topk_documents, relevance_lambda, tinfo_collection_1, tinfo_collection_1,topkeywords_vectors_dict_1,topkeywords_vectors_dict_1, relevantdocuments_vectors_dict_1, relevantdocuments_vectors_dict_1)
 
-
+    
     def calculate_topic_similarity_on_multi_corpora(self, word_embedding_model, lda_model_1, lda_model_2, corpus_1,corpus_2,  id2word_1,id2word_2, matrix_documents_topic_contribution_1, matrix_documents_topic_contribution_2, topn_terms, topk_documents, relevance_lambda ):        
 
 
@@ -142,6 +144,17 @@ class TopicVisExplorer:
         return get_dict_topic_similarity_matrix(word_embedding_model, lda_model_1,matrix_documents_topic_contribution_1,lda_model_2,matrix_documents_topic_contribution_2, topn_terms, multi_corpora_data['PreparedDataObtained_collection_1'], multi_corpora_data['PreparedDataObtained_collection_2'], topk_documents, relevance_lambda, tinfo_collection_1, tinfo_collection_2,topkeywords_vectors_dict_1, topkeywords_vectors_dict_2, relevantdocuments_vectors_dict_1, relevantdocuments_vectors_dict_2)
 
 
+    def calculate_topic_similarity_on_multi_corpora_metric_baseline(self, word_embedding_model, lda_model_1, lda_model_2, corpus_1,corpus_2,  id2word_1,id2word_2, relevance_lambda = 0.6, topn_terms=20):            
+        # get prepared data of lda_model_1, and lda_model_2
+        data_dict_1 = gensim_helpers.prepare(lda_model_1, corpus_1,id2word_1) 
+        prepared_data_topic_1 = prepare(**data_dict_1)            
+        #PreparedDataObtained_1_dict = PreparedDataObtained_1.to_dict()
+        # get prepared data of lda_model_1, and lda_model_2
+        data_dict_2 = gensim_helpers.prepare(lda_model_2, corpus_2,id2word_2) 
+        prepared_data_topic_2 = prepare(**data_dict_2)            
+        #PreparedDataObtained_2_dict = PreparedDataObtained_2.to_dict()
+
+        return  generar_matrix_baseline_metric(word_embedding_model,   prepared_data_topic_1, prepared_data_topic_2, relevance_lambda, topn_terms)
     
     def prepare_single_corpus(self, lda_model, corpus, id2word, matrix_documents_topic_contribution, topic_similarity_matrix):
         
