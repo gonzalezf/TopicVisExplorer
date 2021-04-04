@@ -1000,6 +1000,8 @@ var LDAvis = function(to_select, data_or_file_name) {
         }
         
         function splitting_topics_document_based_scenario_1(){
+            $("#loadMe").modal();
+
 
 
             //console.log('estoy en la funcion splitting topics scenario 1');
@@ -1057,13 +1059,18 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             topic_on(document.getElementById(topicID+vis_state.topic));
             slider_topic_splitting_values[splitting_topic] = {};
+            $("#loadMe").modal('hide');
+
                                 
         }
 
       
 
         function merging_topics_scenario_1(topic_name_1, topic_name_2){
-                    
+            console.log(' aqui estoy en el mergin');
+            $("#loadMe").modal();
+
+    
             //get index topic from name    
             var current_index = 0;
             for (var [key, value] of Object.entries(name_topics_circles)) {
@@ -1181,7 +1188,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 type: 'POST',
                 url: '/get_new_topic_vector',
                 async: false,
-                data: JSON.stringify(postData),
+                data: JSON.stringify(postData),                
                 success: function(data) {
                                 
                     new_circle_positions = data
@@ -1214,6 +1221,10 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current); //update central panel
             topic_on(document.getElementById(topicID+vis_state.topic));         
+            $("#loadMe").modal('hide');
+            console.log(' fin del merging, debi haberloc errado');
+
+
         }
 
 
