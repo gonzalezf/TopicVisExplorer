@@ -21,6 +21,8 @@
 #ignore pkl
 *.pkl
 
+#ignore data folder
+data/ 
 
 #ignore data for topic splitting optimization
 data_for_optimization/
