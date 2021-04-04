@@ -39,8 +39,6 @@ Airline_tweets/
 #ignore model outputs
 models_output/
 
-#ignore jupyter notebooks
-*.ipynb
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
