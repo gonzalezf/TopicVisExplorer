@@ -34,6 +34,8 @@ from _prepare import PreparedData
 from copy import deepcopy
 
 
+scenarios = {
+}
 
 single_corpus_data = {}
 multi_corpora_data = {}
@@ -258,20 +260,16 @@ class TopicVisExplorer:
                 print("Multi corpora data saved sucessfully")
 
 
-    def load_single_corpus_data(self, route_file, human_in_the_loop=True):
+    def load_corpus_data(self, route_file, scenario_name, multi=False):#human_in_the_loop=True):
 
         with open(route_file, 'rb') as handle:
-            global single_corpus_data
-            single_corpus_data = pickle.load(handle)   
-            single_corpus_data['human_in_the_loop'] = human_in_the_loop 
+            global scenarios
+            scenarios[scenario_name] = pickle.load(handle)
+            scenarios[scenario_name]["multi"] = multi
+            #single_corpus_data['human_in_the_loop'] = human_in_the_loop 
 
             print("Data loaded sucessfully")
 
-    def load_multi_corpora_data(self, route_file):
-        with open(route_file, 'rb') as handle:
-            global multi_corpora_data
-            multi_corpora_data = pickle.load(handle)            
-            print("Data loaded sucessfully")
 
         
 
@@ -693,11 +691,14 @@ class TestView(FlaskView):
 
 
     @route('/singlecorpus')
-    def single_corpus(self):           
+    def single_corpus(self,  methods=['GET']):           
         print('Estoy en la funcion single corpuuuus') 
         #load data
-        global single_corpus_data        
-
+        global scenarios
+        global single_corpus_data
+        single_corpus_data = scenarios[request.args.get("scenario")]       
+        
+        assert  single_corpus_data["multi"] == False, "Scenario not for single corpus"
 
 
         lda_model = single_corpus_data['lda_model']
@@ -709,8 +710,7 @@ class TestView(FlaskView):
         new_circle_positions = single_corpus_data['new_circle_positions'] 
         topic_order =  single_corpus_data['topic.order']
         topic_similarity_matrix = single_corpus_data['topic_similarity_matrix']         
-        PreparedDataObtained['human_in_the_loop'] = single_corpus_data['human_in_the_loop']
-
+        PreparedDataObtained['human_in_the_loop'] = False if request.args.get("hitl") == "false" else True 
         #prepare and run html
         html = prepared_html_in_flask(data = [PreparedDataObtained],  topic_order = topic_order,  type_vis = 1,  new_circle_positions = new_circle_positions)
         return render_template_string(html)
@@ -718,7 +718,11 @@ class TestView(FlaskView):
     @route('/multicorpora')
     def multi_corpora(self):            
         #load data
-        global multi_corpora_data        
+        global scenarios
+        global multi_corpora_data
+        multi_corpora_data = scenarios[request.args.get("scenario")]
+        assert  multi_corpora_data["multi"] == True, "Scenario not for multicorpora comparison"
+
         lda_model_1 = multi_corpora_data['lda_model_1']
         lda_model_2 = multi_corpora_data['lda_model_2']
         corpus_1 = multi_corpora_data['corpus_1']
@@ -735,7 +739,7 @@ class TestView(FlaskView):
                                                                                         
         html = prepared_html_in_flask(data = [PreparedDataObtained_collection_1],topic_order =  topic_order_collection_1, type_vis = 2, matrix_sankey = topic_similarity_matrix, data_2 = [PreparedDataObtained_collection_2], topic_order_2 = topic_order_collection_2)
         return render_template_string(html)
-    
+
 
 
         
