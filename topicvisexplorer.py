@@ -579,6 +579,17 @@ class TestView(FlaskView):
             return new_dict
 
 
+    #save user study data. Create a pickle. Export to google drive
+    @route('/export_user_study_data',  methods=['GET', 'POST'])
+    def export_user_study_data(self):
+        json_file = request.get_json()
+        with open('user_study_results/user_study_data.pkl', 'wb') as handle:
+            pickle.dump(json_file, handle, protocol=4) #protocol 4 is compatible with python 3.6+
+            print("Single corpus data saved sucessfully")
+
+
+
+        return 'exito!! user study saved'
 
     #Merge topic
     @route('/get_new_topic_vector',  methods=['GET', 'POST'])

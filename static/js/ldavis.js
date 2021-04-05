@@ -2278,8 +2278,15 @@ var LDAvis = function(to_select, data_or_file_name) {
             help.setAttribute("class", "btn btn-info btnTopic");
             help.innerHTML = "<i class='fas fa-1x fa-info-circle'></i>";
 
+            var save_data_user_study_button = document.createElement("button");
+            save_data_user_study_button.setAttribute("id", 'save_data_user_study_button');
+
+                    
+            save_data_user_study_button.setAttribute("class", "btn btn-info btnTopic");
+            save_data_user_study_button.innerHTML = "<i class='fas fa-1x fa-file-export'></i>";
 
 
+            topicButtonsDiv.appendChild(save_data_user_study_button);
             topicButtonsDiv.appendChild(help);
             topicButtonsDiv.appendChild(reverse);
             
@@ -2288,8 +2295,63 @@ var LDAvis = function(to_select, data_or_file_name) {
                     console.log(' este es el largo que tengo en esto', old_topic_model_states.length)
                     $('#ReverseModel').modal(); 
                 });
-
             
+            //quizas guardar un json en vez de un pickle
+            d3.select('#save_data_user_study_button')
+                .on('click', function(){
+                    if(type_vis == 1){
+                        var user_study_data = {
+                            topic_id: vis_state.topic,
+                            mdsDat: mdsData,
+                            name_topics_circles: name_topics_circles,
+                            relevantDocumentsDict_new: relevantDocumentsDict,
+                            lamData_new: lamData,
+                            omega_value: vis_state.lambda_lambda_topic_similarity,
+                            circle_positions: new_circle_positions,   
+                            relevance_value: vis_state.lambda     
+                        };
+                    }else{ // scenario 2                            //lambda_lambda_topic_similarity.current
+
+                        var user_study_data = {
+                            topic_id: vis_state.topic,
+                            mdsDat: mdsData,
+                            name_topics_sankey: name_topics_sankey,
+                            relevantDocumentsDict_new: relevantDocumentsDict,
+                            lamData_new: lamData,
+                            omega_value: vis_state.lambda_lambda_topic_similarity,
+                            relevance_value: vis_state.lambda,
+                            min_filtering:  vis_state.min_value_filtering, 
+                            max_filtering: vis_state.max_value_filtering
+                        };
+                    }
+
+
+                    console.log('User study data from Javascript', user_study_data);
+        
+                    var result; 
+                    $.ajax({
+                        type: 'POST',
+                        url: '/export_user_study_data',
+                        async: false,
+                        data: JSON.stringify(user_study_data),
+                        success: function(data) {
+                                        
+                            result = data;
+                            console.log('esto fue lo q recibi after exporting data with python', result);  
+                            $('#export_results_user_study_successfully').modal(); 
+
+                                              
+                        },
+                        error: function(XMLHttpRequest, textStatus, errorThrown) { 
+                            alert("Status: " + textStatus); alert("Error: " + errorThrown); 
+                        }, 
+                        contentType: "application/json"             
+                    });
+        
+                
+                });
+
+
             d3.select("#help_button")
                 .on("click", function() {
                     if(type_vis==1){
