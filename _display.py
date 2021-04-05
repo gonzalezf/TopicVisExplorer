@@ -3,7 +3,7 @@
 # It was adapted for pyLDAvis by Ben Mabey
 import warnings
 import random
-import json
+import json 
 import jinja2
 import re
 import urls
@@ -12,8 +12,10 @@ from utils import get_id, write_ipynb_local_js, NumPyEncoder
 from _prepare import PreparedData
 from jinja2 import Template
 from flask import render_template
-
-
+import random
+from jinja2 import Template, escape
+from flask import Markup
+from flask import json as json_flask
 __all__ = ["prepared_data_to_html", "display",
            "show", "save_html", "save_json",
            "enable_notebook", "disable_notebook","prepared_html_in_flask"]
@@ -82,7 +84,7 @@ TEMPLATE_DICT = {"simple": SIMPLE_HTML,
                  "general": GENERAL_HTML}
 
 
-def prepared_data_to_html(data, relevantDocumentsDict, topic_order,   type_vis, new_circle_positions=None,matrix_sankey=None,  data_2=None, relevantDocumentsDict_2 = None, topic_order_2 = None, d3_url=None, ldavis_url=None, ldavis_css_url=None,
+def prepared_data_to_html(data, topic_order,   type_vis, new_circle_positions=None,matrix_sankey=None,  data_2=None,  topic_order_2 = None, d3_url=None, ldavis_url=None, ldavis_css_url=None,
                           template_type="general", visid=None, use_http=False):
 
     """Output HTML with embedded visualization
@@ -149,15 +151,24 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order,   type_vis, 
     
     
     data_json_format = []
+    #print("este es el formato de data",data)
+    #print("este es el elemento", data)
     for elem in data:
-        elem = elem.to_json()
+        #elem = elem.to_json() esto lo borre
+        elem = json.dumps(elem, cls=NumPyEncoder)
         data_json_format.append(elem)
     
 
     #transformar matrix en un diccionario
     if type_vis == 2:
         matrix_dict = {"nodes":[], "links":[]}
-        matrix_s = matrix_sankey[0.80]
+        print('este es el type', type(matrix_sankey))
+        if(type(matrix_sankey) is dict):
+            matrix_s = matrix_sankey[0.80]
+            
+        else:
+            matrix_s = matrix_sankey
+
         for i in range(matrix_s.shape[0]):#matrix_s.shape[0]
             matrix_dict["nodes"].append({"node":i, "name":"model1-"+str(i)})
             for j in range(matrix_s.shape[1]): #matrix_s.shape[1]
@@ -168,22 +179,39 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order,   type_vis, 
             matrix_dict["nodes"].append({"node":matrix_s.shape[0]+j, "name":"model2-"+str(j)})
         
         ##para cada valor posible de lambda
-        dict_matrix_dict = dict()
-        for lambda_ in range(0, 101):
-            lambda_ = lambda_/100
-            matrix_dict = {"nodes":[], "links":[]}
-            matrix_s = matrix_sankey[lambda_]
-            for i in range(matrix_s.shape[0]):#matrix_s.shape[0]
-                matrix_dict["nodes"].append({"node":i, "name":"model1-"+str(i)})
+        if(type(matrix_sankey) is dict):
+            dict_matrix_dict = dict()
+            for lambda_ in range(0, 101):
+                lambda_ = lambda_/100
+                matrix_dict = {"nodes":[], "links":[]}
+                matrix_s = matrix_sankey[lambda_]
+                for i in range(matrix_s.shape[0]):#matrix_s.shape[0]
+                    matrix_dict["nodes"].append({"node":i, "name":"model1-"+str(i)})
+                    for j in range(matrix_s.shape[1]): #matrix_s.shape[1]
+                            matrix_dict["links"].append({"source":i,"target":(matrix_s.shape[0]+j), "value":matrix_s[i][j]}) #matrix[i][j]
+                        
                 for j in range(matrix_s.shape[1]): #matrix_s.shape[1]
-                        matrix_dict["links"].append({"source":i,"target":(matrix_s.shape[0]+j), "value":matrix_s[i][j]}) #matrix[i][j]
-                    
+                    matrix_dict["nodes"].append({"node":matrix_s.shape[0]+j, "name":"model2-"+str(j)})
+                dict_matrix_dict[lambda_]=matrix_dict
+            dict_matrix_json = json.dumps(dict_matrix_dict)
+        else:
+            dict_matrix_dict = dict()
+            for lambda_ in range(0, 1):
+                lambda_ = 0.8#lambda_/100
+                matrix_dict = {"nodes":[], "links":[]}
+                matrix_s = matrix_sankey
+                for i in range(matrix_s.shape[0]):#matrix_s.shape[0]
+                    matrix_dict["nodes"].append({"node":i, "name":"model1-"+str(i)})
+                    for j in range(matrix_s.shape[1]): #matrix_s.shape[1]
+                            matrix_dict["links"].append({"source":i,"target":(matrix_s.shape[0]+j), "value":matrix_s[i][j]}) #matrix[i][j]
+                        
 
-            for j in range(matrix_s.shape[1]): #matrix_s.shape[1]
-                matrix_dict["nodes"].append({"node":matrix_s.shape[0]+j, "name":"model2-"+str(j)})
-            dict_matrix_dict[lambda_]=matrix_dict
-        dict_matrix_json = json.dumps(dict_matrix_dict)
-        
+                for j in range(matrix_s.shape[1]): #matrix_s.shape[1]
+                    matrix_dict["nodes"].append({"node":matrix_s.shape[0]+j, "name":"model2-"+str(j)})
+                dict_matrix_dict[lambda_]=matrix_dict
+            dict_matrix_json = json.dumps(dict_matrix_dict)
+            print('final dict key', dict_matrix_dict.keys())
+            
 
         #matrix_json = json.dumps(matrix_dict)
         
@@ -191,7 +219,8 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order,   type_vis, 
 
         data_json_format_2 = []
         for elem in data_2:
-            elem = elem.to_json()
+            #elem = elem.to_json()
+            elem = json.dumps(elem, cls=NumPyEncoder)
             data_json_format_2.append(elem)
 
     
@@ -200,11 +229,14 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order,   type_vis, 
         dict_matrix_dict = dict()
         dict_matrix_json = json.dumps(dict_matrix_dict)
         data_json_format_2=[None]
+    
+
+    
+
+    
 
     return template.render(visid=json.dumps(visid),
-                           new_circle_positions = new_circle_positions, 
-                           relevantDocumentsDict = relevantDocumentsDict, #esto debiese ser un arreglo
-                           relevantDocumentsDict_2 = relevantDocumentsDict_2, #esto debiese ser un arreglo
+                           new_circle_positions = new_circle_positions,                            
                            topic_order = topic_order,
                            topic_order_2 = topic_order_2,#matrix_heatmap = matrix,#categories_row = categories_row,
                            visid_raw=visid,
@@ -215,7 +247,7 @@ def prepared_data_to_html(data, relevantDocumentsDict, topic_order,   type_vis, 
                            ldavis_css_url=ldavis_css_url,
                            matrix_sankey=dict_matrix_json,#matrix_json, #matrix_sankey[0.0].tolist(), 
                            #matrix_sankey_2 = dict_matrix_json,
-                           type_vis = type_vis #2: two topic modeling outputs, 1:one topic modeling output
+                           type_vis = type_vis#2: two topic modeling outputs, 1:one topic modeling output,                                               
                            )
 
 
@@ -263,20 +295,22 @@ def display(data, local=False, **kwargs):
 
     return HTML(prepared_data_to_html(data, **kwargs))
 
-def prepared_html_in_flask(data, relevantDocumentsDict, topic_order,type_vis,new_circle_positions = None, matrix_sankey=None, data_2 = None, relevantDocumentsDict_2 = None, topic_order_2 = None, **kwargs):
+def prepared_html_in_flask(data, topic_order,type_vis,new_circle_positions = None, matrix_sankey=None, data_2 = None, topic_order_2 = None, **kwargs):
     #kwargs['ldavis_url'] = '/LDAvis.js'
     #kwargs['d3_url'] = '/d3.js'
     #kwargs['ldavis_css_url'] = '/LDAvis.css'
     
-    #kwargs['ldavis_url'] = '/static/js/LDAvis.js'
-    #kwargs['d3_url'] = 'static/js/d3.v5.min.js'
-    #kwargs['ldavis_css_url'] = 'static/css/LDAvis.css'
+    #uncomment these lines on debugging testing
+    kwargs['ldavis_url'] = '/static/js/LDAvis.js'
+    kwargs['d3_url'] = 'static/js/d3.v5.min.js'
+    kwargs['ldavis_css_url'] = 'static/css/LDAvis.css'
+    
+    #uncomment when it is necessary to upload to heroku
+    #kwargs['ldavis_url'] = 'https://topicvisexplorer.herokuapp.com/static/js/ldavis.js'
+    #kwargs['d3_url'] = 'https://topicvisexplorer.herokuapp.com/static/js/d3.v5.min.js'
+    #kwargs['ldavis_css_url'] = 'https://topicvisexplorer.herokuapp.com/static/css/ldavis.css'
 
-    kwargs['ldavis_url'] = 'https://topicvisexplorer.herokuapp.com/static/js/ldavis.js'
-    kwargs['d3_url'] = 'https://topicvisexplorer.herokuapp.com/static/js/d3.v5.min.js'
-    kwargs['ldavis_css_url'] = 'https://topicvisexplorer.herokuapp.com/static/css/ldavis.css'
-
-    html = prepared_data_to_html(data = data, relevantDocumentsDict = relevantDocumentsDict,topic_order = topic_order,type_vis = type_vis,new_circle_positions= new_circle_positions,  matrix_sankey = matrix_sankey, data_2 =  data_2, relevantDocumentsDict_2 = relevantDocumentsDict_2, topic_order_2 = topic_order_2,   **kwargs)
+    html = prepared_data_to_html(data = data, topic_order = topic_order,type_vis = type_vis,new_circle_positions= new_circle_positions,  matrix_sankey = matrix_sankey, data_2 =  data_2,  topic_order_2 = topic_order_2,  **kwargs)
     
     return html
     

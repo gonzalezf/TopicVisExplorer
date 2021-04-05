@@ -2,6 +2,44 @@
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
 
+##Ignore old jupyter notebooks
+.Old Notebooks/
+
+###Local ignores###
+
+.git/
+.vscode/
+.ipynb_checkpoints/
+
+# Ignore word embeddings
+*.vec
+*.model
+
+#ignore csv files
+*.csv
+
+#ignore pkl
+*.pkl
+
+#ignore data folder
+data/ 
+
+#ignore data for topic splitting optimization
+data_for_optimization/
+
+#ignore list of topic models
+lists_of_topic_models/
+
+#ignore dictories that maybe I should delete
+old_maybe_borrar/
+
+#ignore airline tweets
+Airline_tweets/
+
+#ignore model outputs
+models_output/
+
+
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -114,13 +152,6 @@ celerybeat.pid
 env/
 venv/
 ENV/
-#ignore word embeddings
-*.vec
-#ignore data big file folder
-data_big_file
-jupyters/english_europe_tweets_20190411.csv_matrix_document_topic_distribution.csv
-jupyters/english_northamerica_tweets_20190411.csv_matrix_document_topic_distribution.csv
-
 env.bak/
 venv.bak/
 pythonenv*

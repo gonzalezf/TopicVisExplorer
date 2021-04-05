@@ -218,7 +218,8 @@ def _job_chunks(l, n_jobs):
 
 def _find_relevance(log_ttd, log_lift, R, lambda_):
     relevance = lambda_ * log_ttd + (1 - lambda_) * log_lift
-    return relevance.T.apply(lambda s: s.sort_values(ascending=False).index).head(R)
+    return relevance.T.apply(lambda s: s.sort_values(ascending=False).index)
+    #return relevance.T.apply(lambda s: s.sort_values(ascending=False).index).head(R)
 
 
 def _find_relevance_chunks(log_ttd, log_lift, R, lambda_seq):
@@ -244,7 +245,7 @@ def _topic_info(topic_term_dists, topic_proportion, term_frequency, term_topic_f
         'Total': term_frequency,
         'Category': 'Default'})
     default_term_info = default_term_info.sort_values(
-        by='saliency', ascending=False).head(R).drop('saliency', 1)
+        by='saliency', ascending=False).drop('saliency', 1) #by='saliency', ascending=False).head(R).drop('saliency', 1)
     # Rounding Freq and Total to integer values to match LDAvis code:
     default_term_info['Freq'] = np.floor(default_term_info['Freq'])
     default_term_info['Total'] = np.floor(default_term_info['Total'])
@@ -301,8 +302,8 @@ def _token_table(topic_info, term_topic_freq, vocab, term_frequency):
 #Editar esto para hacer el merge
 def prepare(topic_term_dists, doc_topic_dists, doc_lengths, vocab, term_frequency,
             R=30, lambda_step=0.01, mds=js_PCoA, n_jobs=-1,
-            plot_opts={'xlab': 'PC1', 'ylab': 'PC2'}, sort_topics=True):
-    
+            plot_opts={'xlab': 'PC1', 'ylab': 'PC2'}, sort_topics=False):
+    print("Using Prepared Data script - sort_topics", sort_topics)
     """Transforms the topic model distributions and related corpus data into
     the data structures needed for the visualization.
 
@@ -394,7 +395,7 @@ def prepare(topic_term_dists, doc_topic_dists, doc_lengths, vocab, term_frequenc
     doc_lengths = _series_with_name(doc_lengths, 'doc_length')
     vocab = _series_with_name(vocab, 'vocab')
     _input_validate(topic_term_dists, doc_topic_dists, doc_lengths, vocab, term_frequency)
-    R = min(R, len(vocab))
+    R = len(vocab)
 
     topic_freq = (doc_topic_dists.T * doc_lengths).T.sum()
     # topic_freq       = np.dot(doc_topic_dists.T, doc_lengths)

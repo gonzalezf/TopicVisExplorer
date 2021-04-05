@@ -1,4 +1,28 @@
 <!--START OF MODALS -->
+
+<!-- Help modal-->
+<div class="modal fade" id="help_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Help</h5>
+        <!--<button type="button" class="close" data-dismiss="modal" aria-label="Close">-->
+          <!--<span aria-hidden="true">&times;</span>-->
+        </button>
+      </div>
+      <div class="modal-body">
+        <a onclick="jsFunction();">Start interactive tutorial</a>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary"  data-dismiss="modal" >Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
 <!-- Modal rename topic (Model 1)-->
 <div class="modal fade" id="renameTopic" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
@@ -48,52 +72,65 @@
   </div>
 </div>
 
-<!-- Split modals-->
 
-<div class="modal fade" id="SplitModal_1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog"  role="document" >
-    <div class="modal-content" id="modal_dialog_SplitModal_1">
+
+
+
+
+
+<!-- Split modals-->
+<!--<div class="modal fade modal_full_screen" id="SplitTopicModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">-->
+<div class="modal fade " id="SplitTopicModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog_full_screen" role="document" style='height: 80%'>
+    <div class="modal-content model-content_full_screen" style='height: 80%'>
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLabel">Topic Splitting</h5>
+        <!--<button type="button" class="close" data-dismiss="modal" aria-label="Close">-->
+          <!--<span aria-hidden="true">&times;</span>-->
+        </button>
       </div>
-      <div class="modal-body">
-        You are going to split the current selected topic (<span class="splitting_topic_1"></span>).  
-        <button id="add_cart">Add to card</button>
-        <ul id="output"></ul>        
+      <!--<div class="modal-body modal-body_full_screen" style='max-height: calc(100% - 120px); overflow-y: scroll'>-->
+      <div class="modal-body " style=' overflow-y: scroll'>
 
-      <form action="/action_page.php">
-        <label for="quantity">Number of subtopics:</label>
-        <input type="number" id="splitting_number_subtopics"  min="2" max="5", value="2"  onchange="myFunction()"> <!--myFunction should adapt the number of columns from the platform-->
-      </form>
-      <table  class="tableRelevantDocumentsClass_Split table table-hover" >
-        <thead>
-        <tr>
+        <!--<input type='text' name='somename' data-provide='slider' data-slider-ticks='[1, 2, 3]' data-slider-min='1' data-slider-max='3' data-slider-step='1' data-slider-value='3' >-->
+        You are going to split the current selected topic: <span id="topic_to_split_name"></span>.  Please, for each new topic select the most relevant documents associated to them.
+
+        <!--<div id="input"></div>      -->
+        <div class="row" > <!--All the visualization must be placed in this row-->
+        <!--
+
+          <div class="col-4 border-right"  id="KeywordsPanel_TopicSplitting">
+          </div>
+        -->
           <!--
-            <th class="text-center" data-field="topic_perc_contrib" scope="col">Contribution</th>
-            <th class="text-center" data-field="text" scope="col">Tweet</th>
-            <th class="text-center">Uncategorized</th>
-            -->
-            <!--Create number of columns regarding the number of sub topics-->
-            <script>
-            for (const x of Array(parseInt(document.getElementById('splitting_number_subtopics').value)).keys()) {
-              document.write('<th class="text-center" data-field="other" scope="col">Sub-topic</th>');
+          <div class="col-4"  id="CentralPanelTopicSplitting" >
+            <table id="CentralPanelTopicSplittingRow"  >     
+            </table>         
+          </div>   
+          -->
 
-              
-            }              
-            </script>
-        </tr>
-        </thead>
-
-    </table>    
-  
+          <div class="col-12"  id="DocumentsPanel_TopicSplitting" >
+            <table id="tableRelevantDocumentsClass_TopicSplitting"  > <!-- class= "overflow-hidden table table-hover header-fixed"-->
+              <thead>
+              <tr>                          
+                <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Document</th>
+              </tr>
+              </thead>    
+            </table>         
+          </div>    
+        </div>
+    
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" id="cancel_merging" data-dismiss="modal">Cancel</button>
-        <button type="button" id="continue_merging" data-dismiss="modal" class="btn btn-primary">Continue</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" id="apply_topic_splitting" class="btn btn-primary"data-dismiss="modal" >Split topic</button>
+
       </div>
     </div>
   </div>
 </div>
+
 
 
 
@@ -153,19 +190,128 @@
 </div>
 
 
+
+<div class="modal fade" id="MergeModal_new_design" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Topic Merging</h5>
+      </div>
+      <div class="modal-body">
+        <span hidden="hidden" class="merging_topic_1"></span>
+        From the list, select the topic with which you want to merge the selected topic: <span id="merging_topic_1_name"></span>
+       <!--Choose the topicgoing to merge the current selected topic (<span class="merging_topic_1"></span>) with another one.  Do you want to continue?-->
+       <form id="selectTopicMergeForm">
+        <select id="selectTopicMerge">
+        </select>
+      </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="cancel_merging" data-dismiss="modal">Cancel</button>
+        <button type="button" id="apply_topic_merging"  data-dismiss="modal" class="btn btn-primary">Confirm Merge</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--Modal to reverse changes (merging and splitting)-->
+<div class="modal fade" id="ReverseModel" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Undo changes</h5>
+      </div>
+      <div class="modal-body">
+        This action will reverse the last topic merging/topic splitting operation. Are you sure do you want to continue?
+      </div>
+      <div class="modal-footer">
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="cancel_merging" data-dismiss="modal">Cancel</button>
+          <button type="button" id="apply_reverse_topic_model"  data-dismiss="modal" class="btn btn-primary">Continue</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="loaddssdsdMe" tabindex="-1" role="dialog" aria-labelledby="loadMeLabel">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <div class="modal-body text-center">
+        <div class="loader"></div>
+        <div clas="loader-txt">
+          <p>Check out this slick bootstrap spinner modal. <br><br><small>We are addicted to Bootstrap... #love</small></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Split modals-->
+<!--<div class="modal fade modal_full_screen" id="SplitTopicModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">-->
+  <div class="modal fade " id="loadMe" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-dialog_full_screen" role="document" >
+      <div class="modal-content model-content_full_screen" >
+        <div class="modal-body">
+          <div class="text-center">
+            <div class="spinner-border  text-primary" role="status">
+              <span class="sr-only">Loading...</span>
+            </div>
+            <p>We are calculating the best result for you  <br> 
+              This operation usually takes around one minute to complete. Please, wait. </p>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade " id="export_results_user_study_successfully" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-dialog_full_screen" role="document" >
+      <div class="modal-content model-content_full_screen" >
+        <div class="modal-body">
+          <div class="text-center">
+            <p>Thank you! Your results have been saved  </p>
+
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div class="modal-footer">
+            <button type="button" id="apply_reverse_topic_model"  data-dismiss="modal" class="btn btn-primary">Ok</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  
+
+
 <!--END OF MODALS -->
 
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 
+
 <!-- ADD JQUERY-->
 
 <script src="static/js/jquery.min.js"></script>  
-<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<!--<script src="https://code.jquery.com/jquery-1.12.4.js"></script>-->
+<!--<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>-->
 
 <!-- ADD JS-->
+
+
+
 
 <script src="static/js/popper.min.js"></script>
 <script src="static/js/bootstrap.min.js" ></script>
@@ -173,9 +319,17 @@
 <script src="static/js/d3.v5.min.js"></script>
 <script src="static/js/sankey.js"></script>
 
+<!--To create spreedsheets and  save it-->
+<script src="static/js/xlsx.full.min.js"></script>
+<script src="static/js/FileSaver.js"></script>
 
 
 
+
+<!--Fontawesome-->
+<link href="/static/fontawesome/css/fontawesome.css" rel="stylesheet">
+<link href="/static/fontawesome/css/brands.css" rel="stylesheet">
+<link href="/static/fontawesome/css/solid.css" rel="stylesheet">
 
 <!--ADD CSS-->
 <link rel="stylesheet" href="static/css/bootstrap-table.min.css">
@@ -189,64 +343,103 @@
 <script src="static/js/nouislider.js"></script>
 
 <!-- Plotly-->
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script> <!---what, ocupo plotly? revisar-->
 
+<!--for deep copy in JS-->
+<script src="static/js/lodash.js"></script>  
+
+<!--Splitting operation. Allow multiple check box-->
+<!--<script src="/static/shift-select-multiple-checkboxes/jquery.checkbox-shift-selector.js"></script>-->
+
+<!--Splitting operation. Input slider column-->
+<!--https://www.jqueryscript.net/form/Highly-Customizable-Range-Slider-Plugin-For-Bootstrap-Bootstrap-Slider.html-->
+<!--https://github.com/seiyria/bootstrap-slider-->
+
+<link href="/static/bootstrap-slider/dist/css/bootstrap-slider.css" rel="stylesheet">
+<script src="/static/bootstrap-slider/dist/bootstrap-slider.js"></script>
+
+<!--
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/11.0.2/bootstrap-slider.js" integrity="sha512-tCkLWlSXiiMsUaDl5+8bqwpGXXh0zZsgzX6pB9IQCZH+8iwXRYfcCpdxl/owoM6U4ap7QZDW4kw7djQUiQ4G2A==" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/11.0.2/css/bootstrap-slider.css" integrity="sha512-SZgE3m1he0aEF3tIxxnz/3mXu/u/wlMNxQSnE0Cni9j/O8Gs+TjM9tm1NX34nRQ7GiLwUEzwuE3Wv2FLz2667w==" crossorigin="anonymous" />
+-->
+
+
+
+<!--cross symbol for scenario 1 circles-->
+<!--
+<script src="https://d3js.org/d3-path.v2.min.js"></script>
+<script src="https://d3js.org/d3-shape.v2.min.js"></script>
+-->
+
+<script src="/static/jquery-checkradios-master/js/jquery.checkradios.min.js"></script>
+<link rel="stylesheet" href="/static/jquery-checkradios-master/css/jquery.checkradios.min.css"/>
+
+<!-- Intro .js tour mode -->
+
+<script src="/static/intro-js/intro.min.js"></script>
+<link rel="stylesheet" href="/static/intro-js/introjs.min.css"/>
 
 
 <div id={{ visid }}></div>
 
+
+
+
 <script type="text/javascript">
+
 var {{ visid_raw }}_data = {{ vis_json }};
-var relevantDocumentsDict = {{relevantDocumentsDict|safe}};
-var type_vis = {{type_vis}}
-var topic_order = {{topic_order}}
-var jsonData = {{vis_json}}
+var type_vis = {{type_vis}};
+var topic_order = {{topic_order}};
+var jsonData = {{vis_json}};
 
-
-
-
-//console.log("AFTER MERGE, ESTE ES EL JSON DATA QUE LLEGA", jsonData)
 
 if(type_vis == 1){
   var new_circle_positions = {{new_circle_positions}} 
-
 }
-if(type_vis == 2){
-  
 
-  var matrix_sankey = {{matrix_sankey}}
+
+if(type_vis == 2){  
+  var matrix_sankey = {{matrix_sankey}};  
+  var jsonData_2 = {{vis_json_2|safe}};
+  var topic_order_2 = {{topic_order_2}};
   
-  var relevantDocumentsDict_2 = {{relevantDocumentsDict_2|safe}}
-  var jsonData_2 = {{vis_json_2|safe}}
-  var topic_order_2 = {{topic_order_2}}
 }
 
 
 </script>
 
 
-
 <div class="container-fluid">
-  
-
   <div class="row" style="height: 100%"> <!--All the visualization must be placed in this row-->
-
-    <div class="col-4 border-right"  id="BarPlotPanel" >  <!--LDAvisContainer-->
+    <div class="col-4 border-right"  id="BarPlotPanel"   id="CentralPanel">  <!--LDAvisContainer-->
     </div>
-    
-
-    <div class="col-4 border-right "   id="CentralPanel"> <!-- "-->
-
+    <div class="col-4 border-right "  id="CentralPanel"> <!-- "-->
     </div>
-
-
-    <div class="col-4" id="DocumentsPanel">
+    <div class="col-4" id="DocumentsPanel"  >
       <script>
-        if(type_vis == 1){
-          var html = '<div id="DocumentsPanel_scenario_1"> <table  id="tableRelevantDocumentsClass_Model1" class= "table table-hover header-fixed"> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Document</th> </tr> </thead> </table></div>';
+        if(type_vis === 1){
+          
+          var html = '<div id="DocumentsPanel_first_scenario"> <table  id="tableRelevantDocumentsClass_Model1" </table></div>';
+          
+          //old code
+          //var html = '<div id="DocumentsPanel_scenario_1">  <table  id="tableRelevantDocumentsClass_Model1" class= "table table-hover header-fixed"> </table> </div>';
+          //var html = '<div id="DocumentsPanel_scenario_1"> <table  id="tableRelevantDocumentsClass_Model1" class= "table table-hover header-fixed"> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Document</th> </tr> </thead> </table></div>';
+
+
+          //add button fab
+          //For the user study, the button to download data is disabled
+          //html+='<div class="btn-group-fab" role="group" aria-label="FAB Menu"> <div> <button type="button" class="btn btn-main btn-primary has-tooltip" data-placement="left" title="Download data"> <i class="fa fa-download"></i> </button><button type="button" class="btn btn-sub btn-danger has-tooltip" data-placement="left" title="Download xlsx" id="export_to_csv"> <i class="fa fa-file-excel"></i> </button> <button type="button" class="btn btn-sub btn-warning has-tooltip" data-placement="left" title="Download CSV file"> <i class="fas fa-file-csv"></i> </button> </div> </div>'
           document.write(html)
 
         }
+        if(type_vis === 2){
+          //console.log("estoy aqui leyendo ijiji")
+          //document.write('<button class="button" id="export_to_csv">Export data</button>')
+          //var html ='<div class="btn-group-fab" role="group" aria-label="FAB Menu"> <div> <button type="button" class="btn btn-main btn-primary has-tooltip" data-placement="left" id="export_to_csv" title="Download data"> <i class="fa fa-download"></i> </button><button type="button" class="btn btn-sub btn-danger has-tooltip" data-placement="left" title="Download xlsx" id="export_to_csv"> <i class="fa fa-file-excel"></i> </button> <button type="button" class="btn btn-sub btn-warning has-tooltip" data-placement="left" title="Download CSV file"> <i class="fas fa-file-csv"></i> </button> </div> </div>'          
+          var html = '';
+        }
+
+        document.write(html) // ojo, esta linea no deberia estar, x eso q se escribe dos veces el DocumentsPanel_first_scenario, pero si lo saco ahora, comienzan a fallar cosas en el scenario 1
 
       </script>
     </div>
@@ -293,9 +486,16 @@ if(type_vis == 2){
   }
 </script>
 
+<script src="static/js/bootstrap-table.long.js"></script>
+
+<script>
+
+function introductionToTopicVisExplorer(){
+    
+
+}
 
 
 
-
-<script src="static/js/bootstrap-table.min.js"></script>
+</script>
 
