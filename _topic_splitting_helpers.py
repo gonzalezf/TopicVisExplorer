@@ -28,7 +28,6 @@ import gensim, spacy, logging, warnings
 import gensim.corpora as corpora
 from gensim.utils import lemmatize, simple_preprocess
 from gensim.models import CoherenceModel
-import matplotlib.pyplot as plt
 from gensim.models import LdaMulticore
 
 import unidecode
