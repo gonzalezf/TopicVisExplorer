@@ -84,6 +84,7 @@ class TopicVisExplorer:
         tinfo_collection_1['relevance'] = relevance_lambda * tinfo_collection_1['logprob']+ (1.00-relevance_lambda)*tinfo_collection_1['loglift']
 
         # We need the topkeywords and toprelevantdocuments  vectors here!!!
+        print('FELIPE: ESTA MAL ESTA WEA', pd.DataFrame(matrix_documents_topic_contribution).columns)
         topkeywords_vectors_dict_1, relevantdocuments_vectors_dict_1 = get_topkeywords_relevantdocuments_vectors(word_embedding_model, lda_model,pd.DataFrame(single_corpus_data['relevantDocumentsDict']),  topn_terms, tinfo_collection_1, topk_documents)
 
         #save data
@@ -425,9 +426,10 @@ class TestView(FlaskView):
             new_dict = dict()
             #set columns of the new subtopics to NaN values
             df = pd.DataFrame(single_corpus_data['relevantDocumentsDict'])
+            print(' REVISANDO SPLITTING ANTES DE HACER 0 LA FRECUENCIA', df.columns)
 
-            df[int(topic_id-1)]= 0.0
-            df[current_number_of_topics]= 0.0
+            df[str(int(topic_id-1))]= 0.0
+            df[str(current_number_of_topics)]= 0.0
 
             for row in most_relevant_documents_topic:
                 contribution_to_topic_a = row[0]
@@ -436,8 +438,8 @@ class TestView(FlaskView):
                 if len(indexs)<1:
                     print('Error, text not found')
                 #set final contribution to topic a, is contribution to topic_a multiply by the previous contribuiton
-                df.loc[indexs,int(topic_id-1)] = contribution_to_topic_a
-                df.loc[indexs,current_number_of_topics] = contribution_to_topic_b
+                df.loc[indexs,str(int(topic_id-1))] = contribution_to_topic_a
+                df.loc[indexs,str(current_number_of_topics)] = contribution_to_topic_b
                     
                 
             #order columns
@@ -518,7 +520,7 @@ class TestView(FlaskView):
             id2word = single_corpus_data['id2word']
             matrix_documents_topic_contribution = pd.DataFrame(single_corpus_data['relevantDocumentsDict'])
 
-
+            print(' REVISANDO SPLITTING final', pd.DataFrame(matrix_documents_topic_contribution).columns)
             new_topic_similarity_matrix = newClass.calculate_topic_similarity_on_single_corpus_for_topic_splitting(current_number_of_topics, word_embedding_model, lda_model, corpus, id2word, matrix_documents_topic_contribution,topn_terms, topk_documents, relevance_lambda)
             single_corpus_data['topic_similarity_matrix'] = new_topic_similarity_matrix
             print('Topic similarity matrix has been calculated')
