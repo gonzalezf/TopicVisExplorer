@@ -256,7 +256,7 @@ class TopicVisExplorer:
                 print("Error. Data it is incomplete. It is necessary to get", key)
         if(save):    
             with open(route_file, 'wb') as handle:
-                pickle.dump(multi_corpora_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                pickle.dump(multi_corpora_data, handle, protocol=4)
                 print("Multi corpora data saved sucessfully")
 
 
@@ -351,7 +351,14 @@ class TestView(FlaskView):
 
             list_terms_relevance = PreparedData_dict_with_more_info.loc[PreparedData_dict_with_more_info['Category'] == 'Topic'+str(topic_id)].sort_values(by='relevance', ascending=False)['Term'].tolist()
             list_relevant_documents = random.sample(single_corpus_data['relevantDocumentsDict'],200)
-            list_relevant_documents = pd.DataFrame(list_relevant_documents).sort_values(int(topic_id)-1, ascending=False).reset_index()
+            print("BUSCANDO EL ERROR -------------------------------")
+            print('Columnas', pd.DataFrame(list_relevant_documents).columns)
+            print('id buscando ', int(topic_id)-1)
+            print('fiiiiiiiiiiiin del error')
+            df = pd.DataFrame(list_relevant_documents)
+            df.columns = df.columns.map(str)
+
+            list_relevant_documents = df.sort_values(str(int(topic_id)-1), ascending=False).reset_index()
             #the idea is do this only ONCE! and tenerlo precalculado para el user study
 
             end = time.time()
@@ -375,6 +382,9 @@ class TestView(FlaskView):
             print("Topic splitting - Cleaning text", end - start)
   
             start = time.time()
+
+            print("OPTIMUS split  111",pd.DataFrame(list_relevant_documents).columns)
+
             results  = get_new_subtopics(list_terms_relevance, list_relevant_documents, topic_id, name_tokenizacion,name_column_text, new_document_seeds_TopicA, new_document_seeds_TopicB, word_embedding_model)
             model_topic_A, model_topic_B, most_relevant_documents_topic, freq_topic_A, freq_topic_B = results
             end = time.time()
@@ -574,6 +584,8 @@ class TestView(FlaskView):
             print("**************************************************************************************")
             print('Topic order FINAL - TOPIC SPLITTING',single_corpus_data['PreparedDataObtained']['topic.order'])
             print("**************************************************************************************")
+            print("OPTIMUS split  22",pd.DataFrame(list_relevant_documents).columns )
+
             return new_dict
 
 
@@ -650,6 +662,7 @@ class TestView(FlaskView):
         #old methods
         #new_topic_similarity_matrix =  get_dict_topic_similarity_matrix(word_embedding_model, lda_model,matrix_documents_topic_contribution,lda_model,matrix_documents_topic_contribution, topn_terms, single_corpus_data['PreparedDataObtained'], single_corpus_data['PreparedDataObtained'], topk_documents, relevance_lambda, tinfo_collection_1, tinfo_collection_1,topkeywords_vectors_dict_1,topkeywords_vectors_dict_1, relevantdocuments_vectors_dict_1, relevantdocuments_vectors_dict_1)
 
+        print("OPTIMUS merge 111 ",pd.DataFrame(single_corpus_data['relevantDocumentsDict']).columns )
         #optimized method
         new_topic_similarity_matrix =  get_dict_topic_similarity_matrix_by_topic_ids(single_corpus_data['topic_similarity_matrix'], index_topic_name_1, index_topic_name_2, word_embedding_model, lda_model,matrix_documents_topic_contribution,lda_model,matrix_documents_topic_contribution, topn_terms, single_corpus_data['PreparedDataObtained'], single_corpus_data['PreparedDataObtained'], topk_documents, relevance_lambda, tinfo_collection_1, tinfo_collection_1,topkeywords_vectors_dict_1,topkeywords_vectors_dict_1, relevantdocuments_vectors_dict_1, relevantdocuments_vectors_dict_1)
         single_corpus_data['topic_similarity_matrix'] = new_topic_similarity_matrix
@@ -679,6 +692,8 @@ class TestView(FlaskView):
 
 
         print("calculo de nuevas posiciones ", end - start)
+        print("OPTIMUS merge 222",pd.DataFrame(single_corpus_data['relevantDocumentsDict']).columns )
+
         return new_circle_positions
 
     

@@ -184,7 +184,7 @@ def create_two_list_of_documents(list_terms_relevance, list_relevant_documents, 
     vector_B = vector_B.reshape(-1, 1)
 
 
-    list_relevant_documents = pd.DataFrame(list_relevant_documents).sort_values(int(topic_id)-1, ascending=False).reset_index()
+    list_relevant_documents = pd.DataFrame(list_relevant_documents).sort_values(str(int(topic_id)-1), ascending=False).reset_index()
     
     #print(' que es esta wea',list_relevant_documents.head())    
     list_relevant_documents.apply(lambda row:  fill_lists_documents_a_b(row, topic_id, wordembedding, list_terms_relevance,vector_A, vector_B, documents_A, documents_B, most_relevant_documents_topic), axis=1)
@@ -270,32 +270,10 @@ def create_two_list_of_documents_old(list_terms_relevance, list_relevant_documen
     return (seeds_documents_A, seeds_documents_B, documents_A, documents_B, most_relevant_documents_topic)
 
         
-    def getLdaModelfromSentences(sentences):
-        print('lda started')
-        #data_words = list(sent_to_words(sentences))
-        #data_ready = process_words(sentences)  # processed Text Data!
-        # Create Dictionary
-        id2word = corpora.Dictionary(sentences)
-
-        # Create Corpus: Term Document Frequency
-        corpus = [id2word.doc2bow(text) for text in sentences]
-        # Build LDA model
-        print('building model')
-        lda_model = LdaMulticore(corpus=corpus,
-                                id2word=id2word,
-                                num_topics=1, 
-                                random_state=100,
-                                chunksize=10,
-                                passes=10,
-                                alpha='symmetric',
-                                iterations=100,
-                                per_word_topics=True)
-        print('termine de calcular el modelo')
-    return (lda_model, corpus, id2word)
+    
 
 
 def getCorpusDictionaryfromSentences(sentences):
-    print('lda started')
     #data_words = list(sent_to_words(sentences))
     #data_ready = process_words(sentences)  # processed Text Data!
     # Create Dictionary
