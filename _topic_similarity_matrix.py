@@ -12,6 +12,8 @@ from nltk.corpus import stopwords
 from gensim.utils import lemmatize, simple_preprocess
 import time
 
+from pandarallel import pandarallel
+pandarallel.initialize()
 '''My own tokenizer '''
 def remove_stopwords(texts):
     return [[word for word in simple_preprocess(str(doc)) if word not in stop_words] for doc in texts]
@@ -67,7 +69,7 @@ def get_dicts_relevant_keywords_documents(lda_model,df_relevant_documents, n_ter
                 "term":row['Term'],
                 "relevance":row['relevance']
             })
-        PreparedData_dict_with_more_info.loc[PreparedData_dict_with_more_info['Category'] == 'Topic'+str(topic_id+1)].sort_values(by='relevance', ascending=False)[['Term','relevance']][:n_terms].apply(save_relevant_keywords_in_dict, axis=1)    
+        PreparedData_dict_with_more_info.loc[PreparedData_dict_with_more_info['Category'] == 'Topic'+str(topic_id+1)].sort_values(by='relevance', ascending=False)[['Term','relevance']][:n_terms].parallel_apply(save_relevant_keywords_in_dict, axis=1)    
     return topKeywordsDict
 
 def get_dicts_relevant_keywords_documents_by_topic_id(topic_id, lda_model,df_relevant_documents, n_terms, PreparedData_dict_with_more_info):    
@@ -78,7 +80,7 @@ def get_dicts_relevant_keywords_documents_by_topic_id(topic_id, lda_model,df_rel
             "term":row['Term'],
             "relevance":row['relevance']
         })
-    PreparedData_dict_with_more_info.loc[PreparedData_dict_with_more_info['Category'] == 'Topic'+str(topic_id+1)].sort_values(by='relevance', ascending=False)[['Term','relevance']][:n_terms].apply(save_relevant_keywords_in_dict, axis=1)    
+    PreparedData_dict_with_more_info.loc[PreparedData_dict_with_more_info['Category'] == 'Topic'+str(topic_id+1)].sort_values(by='relevance', ascending=False)[['Term','relevance']][:n_terms].parallel_apply(save_relevant_keywords_in_dict, axis=1)    
     return topKeywordsDict
 
 

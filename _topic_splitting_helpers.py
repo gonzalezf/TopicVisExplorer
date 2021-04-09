@@ -37,6 +37,8 @@ import gensim_helpers
 import spacy
 import re, numpy as np, pandas as pd
 
+from pandarallel import pandarallel
+pandarallel.initialize()
 #libraries to tokenize text
 from string import punctuation
 from string import digits
@@ -187,9 +189,9 @@ def create_two_list_of_documents(list_terms_relevance, list_relevant_documents, 
     list_relevant_documents = pd.DataFrame(list_relevant_documents).sort_values(str(int(topic_id)-1), ascending=False).reset_index()
     
     #print(' que es esta wea',list_relevant_documents.head())    
-    list_relevant_documents.apply(lambda row:  fill_lists_documents_a_b(row, topic_id, wordembedding, list_terms_relevance,vector_A, vector_B, documents_A, documents_B, most_relevant_documents_topic), axis=1)
-    new_document_seeds_TopicA_df.apply(lambda row:  fill_lists_documents_a_b(row,topic_id, wordembedding, list_terms_relevance,vector_A, vector_B, documents_A, documents_B, most_relevant_documents_topic), axis=1)
-    new_document_seeds_TopicB_df.apply(lambda row:  fill_lists_documents_a_b(row, topic_id,wordembedding, list_terms_relevance,vector_A, vector_B, documents_A, documents_B, most_relevant_documents_topic), axis=1)
+    list_relevant_documents.parallel_apply(lambda row:  fill_lists_documents_a_b(row, topic_id, wordembedding, list_terms_relevance,vector_A, vector_B, documents_A, documents_B, most_relevant_documents_topic), axis=1)
+    new_document_seeds_TopicA_df.parallel_apply(lambda row:  fill_lists_documents_a_b(row,topic_id, wordembedding, list_terms_relevance,vector_A, vector_B, documents_A, documents_B, most_relevant_documents_topic), axis=1)
+    new_document_seeds_TopicB_df.parallel_apply(lambda row:  fill_lists_documents_a_b(row, topic_id,wordembedding, list_terms_relevance,vector_A, vector_B, documents_A, documents_B, most_relevant_documents_topic), axis=1)
     
     
     print('Documentos en A temp ', len(documents_A))

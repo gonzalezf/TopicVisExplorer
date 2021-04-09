@@ -33,6 +33,8 @@ from utils import get_id, write_ipynb_local_js, NumPyEncoder
 from _prepare import PreparedData
 from copy import deepcopy
 
+from pandarallel import pandarallel
+pandarallel.initialize()
 
 scenarios = {
 }
@@ -376,17 +378,17 @@ class TestView(FlaskView):
             start = time.time()
 
             print('cleaning sample fo text')
-            list_relevant_documents[name_tokenizacion] = list_relevant_documents[name_column_text].apply(lambda x: text_cleaner(x))
+            list_relevant_documents[name_tokenizacion] = list_relevant_documents[name_column_text].parallel_apply(lambda x: text_cleaner(x))
             list_relevant_documents = list_relevant_documents.to_dict('records')
             print('cleaning documents seeds topic a')
 
             new_document_seeds_TopicA = pd.DataFrame(new_document_seeds_TopicA).reset_index()
-            new_document_seeds_TopicA[name_tokenizacion] = new_document_seeds_TopicA[name_column_text].apply(lambda x: text_cleaner(x))
+            new_document_seeds_TopicA[name_tokenizacion] = new_document_seeds_TopicA[name_column_text].parallel_apply(lambda x: text_cleaner(x))
             new_document_seeds_TopicA = new_document_seeds_TopicA.to_dict('records')
             print('cleaning documents seeds topic B')
 
             new_document_seeds_TopicB = pd.DataFrame(new_document_seeds_TopicB).reset_index()
-            new_document_seeds_TopicB[name_tokenizacion] = new_document_seeds_TopicB[name_column_text].apply(lambda x: text_cleaner(x))
+            new_document_seeds_TopicB[name_tokenizacion] = new_document_seeds_TopicB[name_column_text].parallel_apply(lambda x: text_cleaner(x))
             new_document_seeds_TopicB = new_document_seeds_TopicB.to_dict('records')
             end = time.time()
             print("Topic splitting - Cleaning text", end - start)
@@ -495,7 +497,7 @@ class TestView(FlaskView):
             list_terms_B = list(data_model_B_df['vocab'])
 
             
-            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)] = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].apply(lambda row:  update_current_freq_and_total_freq_on_prepared_data(row, data_model_A_df,data_model_B_df, list_terms_A, list_terms_B,total_sum_frequency_corpus), axis=1)
+            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)] = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].parallel_apply(lambda row:  update_current_freq_and_total_freq_on_prepared_data(row, data_model_A_df,data_model_B_df, list_terms_A, list_terms_B,total_sum_frequency_corpus), axis=1)
 
 
             #copy values for the new subtopic b
@@ -504,7 +506,7 @@ class TestView(FlaskView):
             temp_tinfo_df = temp_tinfo_df.append(temp2, ignore_index=True)
 
             #update those values with the current terms probability\
-            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_of_topics+1)] = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_of_topics+1)].apply(lambda row:  update_current_freq_and_total_freq_on_prepared_data(row, data_model_B_df,data_model_A_df, list_terms_B, list_terms_A,total_sum_frequency_corpus), axis=1)
+            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_of_topics+1)] = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_of_topics+1)].parallel_apply(lambda row:  update_current_freq_and_total_freq_on_prepared_data(row, data_model_B_df,data_model_A_df, list_terms_B, list_terms_A,total_sum_frequency_corpus), axis=1)
 
         
             #save the new tinfo
