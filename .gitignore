@@ -5,6 +5,10 @@
 ##Ignore old jupyter notebooks
 .Old Notebooks/
 
+### ignore user study results
+user_study_results/
+
+
 ###Local ignores###
 
 .git/
