@@ -327,18 +327,14 @@ class TestView(FlaskView):
     @route('/Topic_Splitting_Document_Based',  methods=['GET', 'POST'])
     def get_new_sub_topics(self):
             print('Calculando nuevos dos subtopicos')
-            #save single corpus data
+
             start = time.time()
             
             global single_corpus_data
             global previous_single_corpus_data
 
             previous_single_corpus_data.append(deepcopy(single_corpus_data))
-            print("**************************************************************************************")
-            print('Topic order INICIAL - TOPIC SPLITTING - KEYSSS',single_corpus_data.keys())
-            print('Topic order INICIAL - TOPIC SPLITTING',single_corpus_data['PreparedDataObtained']['topic.order'])
-            print("**************************************************************************************")
-
+    
 
             json_file = request.get_json()
             
@@ -351,22 +347,12 @@ class TestView(FlaskView):
 
             word_embedding_model = single_corpus_data['word_embedding_model']
 
-            print('este es el numero actual de topicos antes de hacer splitting', current_number_of_topics)
-            
-            
-            with open('json_file_topic_splitting_test.json', 'w') as current_file:
-                js.dump(json_file, current_file)
-            
-            #print('esto fue lo enviado desde el usuario para el splitting document based', json_file)
-            print('Json RECIBIDO')
+
             PreparedData_dict_with_more_info = single_corpus_data['tinfo_collection']
 
             list_terms_relevance = PreparedData_dict_with_more_info.loc[PreparedData_dict_with_more_info['Category'] == 'Topic'+str(topic_id)].sort_values(by='relevance', ascending=False)['Term'].tolist()
             list_relevant_documents = random.sample(single_corpus_data['relevantDocumentsDict'],200)
-            print("BUSCANDO EL ERROR -------------------------------")
-            print('Columnas', pd.DataFrame(list_relevant_documents).columns)
-            print('id buscando ', int(topic_id)-1)
-            print('fiiiiiiiiiiiin del error')
+            
             df = pd.DataFrame(list_relevant_documents)
             df.columns = df.columns.map(str)
 
@@ -377,15 +363,13 @@ class TestView(FlaskView):
             print("Topic splitting - Getting data", end - start)
             start = time.time()
 
-            print('cleaning sample fo text')
             list_relevant_documents[name_tokenizacion] = list_relevant_documents[name_column_text].parallel_apply(lambda x: text_cleaner(x))
             list_relevant_documents = list_relevant_documents.to_dict('records')
-            print('cleaning documents seeds topic a')
 
             new_document_seeds_TopicA = pd.DataFrame(new_document_seeds_TopicA).reset_index()
             new_document_seeds_TopicA[name_tokenizacion] = new_document_seeds_TopicA[name_column_text].parallel_apply(lambda x: text_cleaner(x))
             new_document_seeds_TopicA = new_document_seeds_TopicA.to_dict('records')
-            print('cleaning documents seeds topic B')
+
 
             new_document_seeds_TopicB = pd.DataFrame(new_document_seeds_TopicB).reset_index()
             new_document_seeds_TopicB[name_tokenizacion] = new_document_seeds_TopicB[name_column_text].parallel_apply(lambda x: text_cleaner(x))
@@ -395,21 +379,14 @@ class TestView(FlaskView):
   
             start = time.time()
 
-            print("OPTIMUS split  111",pd.DataFrame(list_relevant_documents).columns)
-
             results  = get_new_subtopics(list_terms_relevance, list_relevant_documents, topic_id, name_tokenizacion,name_column_text, new_document_seeds_TopicA, new_document_seeds_TopicB, word_embedding_model)
             model_topic_A, model_topic_B, most_relevant_documents_topic, freq_topic_A, freq_topic_B = results
             end = time.time()
+
             print("Topic splitting - Getting new subtopics", end - start)
             start = time.time()
 
-            #  CREAR PICKLEEE!!! CON ESTA DATAAA!!!
-            #with open('models_output/testing_spliting_models_topic_A_B.pkl', 'wb') as handle:
-                #pickle.dump(results, handle, protocol=4) #protocol 4 is compatible with python 3.6+
-                #print("Results for topic splitting has been saved")
             
-            
-            print('Geeting new term-topic distributions')
             # Get new term-topic distributions in the new subtopics
             #get new distribution of terms, topic A
             corpus_topic_A, dictionary_topic_A = model_topic_A
@@ -418,7 +395,7 @@ class TestView(FlaskView):
 
             corpus_topic_B, dictionary_topic_B = model_topic_B
             data_model_B = extract_data_without_topic_model(corpus_topic_B, dictionary_topic_B)
-            print('actualizando el modelo A and B')
+
             #filtrar por terminos que si aparezcan en lists terms relevance
             df_temp = pd.DataFrame(data_model_A)
             df_temp = df_temp[df_temp['vocab'].isin(list_terms_relevance)]
@@ -433,11 +410,10 @@ class TestView(FlaskView):
 
 
             #Get most relevant documents
-            print('Getting most relevant documents')
             new_dict = dict()
             #set columns of the new subtopics to NaN values
             df = pd.DataFrame(single_corpus_data['relevantDocumentsDict'])
-            print(' REVISANDO SPLITTING ANTES DE HACER 0 LA FRECUENCIA AVEEER', df.columns)
+
             df.columns = df.columns.map(str)
 
             df[str(int(topic_id-1))]= 0.0
@@ -455,13 +431,12 @@ class TestView(FlaskView):
                     
                 
             #order columns
-            print('AQUI TEMPORAL COLUMN', df.columns)
+
             intList=sorted([i for i in df.columns.values if type(i) is int])
             strList=sorted([i for i in df.columns.values if type(i) is str])
             new_order = intList+strList
             df = df[new_order]
             single_corpus_data['relevantDocumentsDict'] = df.to_dict('records')
-            print('AQUI TEMPORAL COLUMN 222', df.columns)
 
             new_dict['relevantDocumentsDict_fromPython'] =json.dumps( single_corpus_data['relevantDocumentsDict'])
 
@@ -514,30 +489,27 @@ class TestView(FlaskView):
             temp[ 'tinfo']  = temp_tinfo_df.to_dict(orient='list')
             single_corpus_data['PreparedDataObtained'] = temp 
 
-
             end = time.time()
             print("Topic splitting - Getting new prepared data  ", end - start)
             start = time.time()
 
 
             #Get new topic similarity matrix
-            print('Getting new topic similarity matrix')
             newClass = TopicVisExplorer("name") #dejar esta en el codigo final
             word_embedding_model = single_corpus_data['word_embedding_model']
             topn_terms = 20
             topk_documents = 20
             relevance_lambda = 0.6
-            print('Calculando topic similarity metrix')
+            #print('Calculando topic similarity metrix')
 
             lda_model = single_corpus_data['lda_model']
             corpus = single_corpus_data['corpus']
             id2word = single_corpus_data['id2word']
             matrix_documents_topic_contribution = pd.DataFrame(single_corpus_data['relevantDocumentsDict'])
 
-            print(' REVISANDO SPLITTING final', pd.DataFrame(matrix_documents_topic_contribution).columns)
             new_topic_similarity_matrix = newClass.calculate_topic_similarity_on_single_corpus_for_topic_splitting(current_number_of_topics, word_embedding_model, lda_model, corpus, id2word, matrix_documents_topic_contribution,topn_terms, topk_documents, relevance_lambda)
             single_corpus_data['topic_similarity_matrix'] = new_topic_similarity_matrix
-            print('Topic similarity matrix has been calculated')
+            #print('Topic similarity matrix has been calculated')
 
 
 
@@ -547,7 +519,7 @@ class TestView(FlaskView):
                 old_circle_positions[omega].append(old_circle_positions[omega][topic_id-1])
 
 
-            print('Calculating new circle positions with procrustes')
+            #print('Calculating new circle positions with procrustes')
 
             new_circle_positions = get_circle_positions_from_old_matrix(old_circle_positions, new_topic_similarity_matrix )
             #print('json new circle,. estas son las keys', json.loads(new_circle_positions).keys())
@@ -558,14 +530,12 @@ class TestView(FlaskView):
             print("Topic splitting - Getting topic similarity metric  ", end - start)
             start = time.time()
 
-            print('------- falta calcular el nuevo topic orderingX')                 
+            #print('------- falta calcular el nuevo topic orderingX')                 
             topic_order =  single_corpus_data['topic.order']
 
 
             #visualizar neuvos resultados
-
             #PreparedDataObtained = single_corpus_data['PreparedDataObtained'] 
-
             #Return results in a dictionary
 
 
@@ -586,22 +556,7 @@ class TestView(FlaskView):
 
             end = time.time()
             print("Tiempo en realizar el topic splitting - others", end - start)
-                    
-                
-            with open('new_dict_topic_splitting.pickle', 'wb') as handle:
-                pickle.dump(new_dict, handle, protocol=4)
-           
-            '''
-            with open('new_dict_topic_splitting.pickle', 'rb') as handle:
-                new_dict = pickle.load(handle)
-            '''
-
-            #print('--------En el topic splitting este es el mds data. Hay que revisar si el error viene de python o de javascript', temp['mdsDat'])
-            print("**************************************************************************************")
-            print('Topic order FINAL - TOPIC SPLITTING',single_corpus_data['PreparedDataObtained']['topic.order'])
-            print("**************************************************************************************")
-            print("OPTIMUS split  22",pd.DataFrame(list_relevant_documents).columns )
-
+                                    
             return new_dict
 
 
