@@ -333,6 +333,7 @@ class TestView(FlaskView):
 
             previous_single_corpus_data.append(deepcopy(single_corpus_data))
             print("**************************************************************************************")
+            print('Topic order INICIAL - TOPIC SPLITTING - KEYSSS',single_corpus_data.keys())
             print('Topic order INICIAL - TOPIC SPLITTING',single_corpus_data['PreparedDataObtained']['topic.order'])
             print("**************************************************************************************")
 
@@ -434,7 +435,8 @@ class TestView(FlaskView):
             new_dict = dict()
             #set columns of the new subtopics to NaN values
             df = pd.DataFrame(single_corpus_data['relevantDocumentsDict'])
-            print(' REVISANDO SPLITTING ANTES DE HACER 0 LA FRECUENCIA', df.columns)
+            print(' REVISANDO SPLITTING ANTES DE HACER 0 LA FRECUENCIA AVEEER', df.columns)
+            df.columns = df.columns.map(str)
 
             df[str(int(topic_id-1))]= 0.0
             df[str(current_number_of_topics)]= 0.0
@@ -451,11 +453,13 @@ class TestView(FlaskView):
                     
                 
             #order columns
+            print('AQUI TEMPORAL COLUMN', df.columns)
             intList=sorted([i for i in df.columns.values if type(i) is int])
             strList=sorted([i for i in df.columns.values if type(i) is str])
             new_order = intList+strList
             df = df[new_order]
             single_corpus_data['relevantDocumentsDict'] = df.to_dict('records')
+            print('AQUI TEMPORAL COLUMN 222', df.columns)
 
             new_dict['relevantDocumentsDict_fromPython'] =json.dumps( single_corpus_data['relevantDocumentsDict'])
 
