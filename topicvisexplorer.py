@@ -49,7 +49,7 @@ class TopicVisExplorer:
         TestView.register(self.app, route_base = '/')
     
     def run(self):
-        self.app.run(debug=False)
+        self.app.run(debug=False, host="0.0.0.0")
     
 
 
