@@ -51,7 +51,7 @@ class TopicVisExplorer:
         TestView.register(self.app, route_base = '/')
     
     def run(self):
-        self.app.run(debug=False, host="0.0.0.0")
+        self.app.run(debug=False, host="0.0.0.0", port=80)
     
     def load_scenarios(self, scenarios_dict):
         global scenarios
@@ -686,7 +686,7 @@ class TestView(FlaskView):
         print('Estoy en la funcion single corpuuuus') 
         #load data
         global single_corpus_data
-        single_corpus_data = self.load_corpus_data(request.args.get("scenario"))   
+        single_corpus_data = self.load_corpus_data(request.args.get("scenario", 'single_demo'))   
         
         assert  single_corpus_data["multi"] == False, "Scenario not for single corpus"
 
@@ -709,7 +709,7 @@ class TestView(FlaskView):
     def multi_corpora(self):            
         #load data
         global multi_corpora_data
-        multi_corpora_data = self.load_corpus_data(request.args.get("scenario"))
+        multi_corpora_data = self.load_corpus_data(request.args.get("scenario", 'multi_demo'))
         assert  multi_corpora_data["multi"] == True, "Scenario not for multicorpora comparison"
 
         lda_model_1 = multi_corpora_data['lda_model_1']
