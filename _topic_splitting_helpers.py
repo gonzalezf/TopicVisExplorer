@@ -129,11 +129,33 @@ def getDocumentVector(text, wordembedding ,  list_terms_relevance):
                 #print("WARNING, Word not found:", word)    
 
     return document_vector
-
+'''
+The next function doesnt work properly. 
+def fill_list_documents(row, relevantDocumentsvector_class,  list_documents, list_terms_relevance, topic_id, name_tokenizacion, wordembedding):
+        print('EJECUTANDO MAAAAAAAAAAAAAAAP')
+        print(' esta es la relevantDocumentsvector_class', relevantDocumentsvector_class)
+        print(' esta es list_documents ', list_documents)
+        print(' esta es la row', row)
+        current_text = row[name_tokenizacion]
+        current_contribution = row[str(int(topic_id) -1)]
+        current_document_vector = getDocumentVector(current_text, wordembedding,  list_terms_relevance)    
+        print('current contribyu', current_contribution)
+        relevantDocumentsvector_class+= current_contribution*current_document_vector
+        list_documents.append((current_contribution, current_text))
+        return row
+'''
 
 def get_initial_document_vector_by_class(list_terms_relevance, topic_id, name_tokenizacion,documents_class_A, documents_class_B, wordembedding):
     relevantDocumentsvector_class_A = 0.0
     list_documents_A = []
+    print(' get initial documents vector, que type es esto', type(documents_class_A))
+
+
+    #doing = list(map(lambda x: fill_list_documents(x, relevantDocumentsvector_class_A, list_documents_A, list_terms_relevance, topic_id,name_tokenizacion,  wordembedding ), documents_class_A))
+    #del doing
+
+    #print(' TERMINADO EL MAP, LEN DE DOCUMENT CLASS', len(documents_class_A))
+    
     for row in documents_class_A:
         current_text = row[name_tokenizacion]
         current_contribution = row[str(int(topic_id) -1)]
@@ -163,7 +185,6 @@ def fill_lists_documents_a_b(row, topic_id, wordembedding, list_terms_relevance,
     #I need this information to get the matrix of most relevant documents according to the similarity score
 
     #most_relevant_documents_topic.add((similarity_vectorA_currentvector,similarity_vectorB_currentvector,  current_contribution, row[name_column_text]))
-    print(' este es el len de documents a', len(documents_A))
     if similarity_vectorA_currentvector>= similarity_vectorB_currentvector:
         #append element to documentsA
         documents_A.append((current_contribution, row[name_tokenizacion]))

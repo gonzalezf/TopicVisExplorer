@@ -350,7 +350,8 @@ class TestView(FlaskView):
             PreparedData_dict_with_more_info = single_corpus_data['tinfo_collection']
 
             list_terms_relevance = PreparedData_dict_with_more_info.loc[PreparedData_dict_with_more_info['Category'] == 'Topic'+str(topic_id)].sort_values(by='relevance', ascending=False)['Term'].tolist()
-            list_relevant_documents = random.sample(single_corpus_data['relevantDocumentsDict'],200)
+            #deactivate this sample when there is a user study
+            list_relevant_documents = random.sample(single_corpus_data['relevantDocumentsDict'], 200)
             
             df = pd.DataFrame(list_relevant_documents)
             df.columns = df.columns.map(str)
@@ -360,8 +361,8 @@ class TestView(FlaskView):
 
             end = time.time()
             print("Topic splitting - Getting data", end - start)
-            print(' new_document_seeds_TopicA',new_document_seeds_TopicA )
-            print(' new_document_seeds_TopicB',new_document_seeds_TopicB )
+            #print(' new_document_seeds_TopicA',new_document_seeds_TopicA )
+            #print(' new_document_seeds_TopicB',new_document_seeds_TopicB )
 
             start = time.time()
 
@@ -381,8 +382,7 @@ class TestView(FlaskView):
   
             start = time.time()
 
-            results  = get_new_subtopics(list_terms_relevance, list_relevant_documents, topic_id, name_tokenizacion,name_column_text, new_document_seeds_TopicA, new_document_seeds_TopicB, word_embedding_model)
-            model_topic_A, model_topic_B, most_relevant_documents_topic, freq_topic_A, freq_topic_B = results
+            model_topic_A, model_topic_B, most_relevant_documents_topic, freq_topic_A, freq_topic_B = get_new_subtopics(list_terms_relevance, list_relevant_documents, topic_id, name_tokenizacion,name_column_text, new_document_seeds_TopicA, new_document_seeds_TopicB, word_embedding_model)
             end = time.time()
 
             print("Topic splitting - Getting new subtopics vectors", end - start)
@@ -422,6 +422,7 @@ class TestView(FlaskView):
             df[str(current_number_of_topics)]= 0.0
             print(' que wea es estoooo', type(most_relevant_documents_topic))
             print(' que wea es estoooo most_relevant_documents_topic: ', type(most_relevant_documents_topic))
+            print(' este es el len', len(most_relevant_documents_topic))
 
             for row in most_relevant_documents_topic:
                 contribution_to_topic_a = row[0]
