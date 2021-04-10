@@ -156,10 +156,6 @@ def get_topkeywords_relevantdocuments_vectors(wordembedding, lda_model,matrix_do
     for topic_id in range(num_topics):
         relevantDocumentsvector = 0.0
         j = 0
-        print('//////////////////////////////////////////')
-        print('COLUMNS, ', matrix_documents_topic_contribution.columns)
-        print('SEARCHING', str(topic_id))
-        print('//////////////////////////////////////////')
         for index, item in matrix_documents_topic_contribution.sort_values(by=[str(topic_id)], ascending=False)[0:topkdocuments].iterrows():
             j+=1                                    
             relevantDocumentsvector+= float(item[str(topic_id)])*getDocumentVector(item[matrix_documents_topic_contribution.columns[-1]], wordembedding, topic_id, PreparedData_dict_with_more_info)             

@@ -88,7 +88,6 @@ class TopicVisExplorer:
         tinfo_collection_1['relevance'] = relevance_lambda * tinfo_collection_1['logprob']+ (1.00-relevance_lambda)*tinfo_collection_1['loglift']
 
         # We need the topkeywords and toprelevantdocuments  vectors here!!!
-        print('FELIPE: ESTA MAL ESTA WEA', pd.DataFrame(matrix_documents_topic_contribution).columns)
         topkeywords_vectors_dict_1, relevantdocuments_vectors_dict_1 = get_topkeywords_relevantdocuments_vectors(word_embedding_model, lda_model,pd.DataFrame(single_corpus_data['relevantDocumentsDict']),  topn_terms, tinfo_collection_1, topk_documents)
 
         #save data
@@ -361,6 +360,9 @@ class TestView(FlaskView):
 
             end = time.time()
             print("Topic splitting - Getting data", end - start)
+            print(' new_document_seeds_TopicA',new_document_seeds_TopicA )
+            print(' new_document_seeds_TopicB',new_document_seeds_TopicB )
+
             start = time.time()
 
             list_relevant_documents[name_tokenizacion] = list_relevant_documents[name_column_text].parallel_apply(lambda x: text_cleaner(x))
@@ -383,7 +385,7 @@ class TestView(FlaskView):
             model_topic_A, model_topic_B, most_relevant_documents_topic, freq_topic_A, freq_topic_B = results
             end = time.time()
 
-            print("Topic splitting - Getting new subtopics", end - start)
+            print("Topic splitting - Getting new subtopics vectors", end - start)
             start = time.time()
 
             
@@ -418,6 +420,8 @@ class TestView(FlaskView):
 
             df[str(int(topic_id-1))]= 0.0
             df[str(current_number_of_topics)]= 0.0
+            print(' que wea es estoooo', type(most_relevant_documents_topic))
+            print(' que wea es estoooo most_relevant_documents_topic: ', type(most_relevant_documents_topic))
 
             for row in most_relevant_documents_topic:
                 contribution_to_topic_a = row[0]

@@ -163,7 +163,7 @@ def fill_lists_documents_a_b(row, topic_id, wordembedding, list_terms_relevance,
     #I need this information to get the matrix of most relevant documents according to the similarity score
 
     #most_relevant_documents_topic.add((similarity_vectorA_currentvector,similarity_vectorB_currentvector,  current_contribution, row[name_column_text]))
-
+    print(' este es el len de documents a', len(documents_A))
     if similarity_vectorA_currentvector>= similarity_vectorB_currentvector:
         #append element to documentsA
         documents_A.append((current_contribution, row[name_tokenizacion]))
@@ -189,9 +189,10 @@ def create_two_list_of_documents(list_terms_relevance, list_relevant_documents, 
     list_relevant_documents = pd.DataFrame(list_relevant_documents).sort_values(str(int(topic_id)-1), ascending=False).reset_index()
     
     #print(' que es esta wea',list_relevant_documents.head())    
-    list_relevant_documents.parallel_apply(lambda row:  fill_lists_documents_a_b(row, topic_id, wordembedding, list_terms_relevance,vector_A, vector_B, documents_A, documents_B, most_relevant_documents_topic), axis=1)
-    new_document_seeds_TopicA_df.parallel_apply(lambda row:  fill_lists_documents_a_b(row,topic_id, wordembedding, list_terms_relevance,vector_A, vector_B, documents_A, documents_B, most_relevant_documents_topic), axis=1)
-    new_document_seeds_TopicB_df.parallel_apply(lambda row:  fill_lists_documents_a_b(row, topic_id,wordembedding, list_terms_relevance,vector_A, vector_B, documents_A, documents_B, most_relevant_documents_topic), axis=1)
+    #Do not change the functions to parallel
+    list_relevant_documents.apply(lambda row:  fill_lists_documents_a_b(row, topic_id, wordembedding, list_terms_relevance,vector_A, vector_B, documents_A, documents_B, most_relevant_documents_topic), axis=1)
+    new_document_seeds_TopicA_df.apply(lambda row:  fill_lists_documents_a_b(row,topic_id, wordembedding, list_terms_relevance,vector_A, vector_B, documents_A, documents_B, most_relevant_documents_topic), axis=1)
+    new_document_seeds_TopicB_df.apply(lambda row:  fill_lists_documents_a_b(row, topic_id,wordembedding, list_terms_relevance,vector_A, vector_B, documents_A, documents_B, most_relevant_documents_topic), axis=1)
     
     
     print('Documentos en A temp ', len(documents_A))
@@ -200,79 +201,6 @@ def create_two_list_of_documents(list_terms_relevance, list_relevant_documents, 
         
     return (seeds_documents_A, seeds_documents_B, documents_A, documents_B, most_relevant_documents_topic)
 
-def create_two_list_of_documents_old(list_terms_relevance, list_relevant_documents, topic_id, name_tokenizacion,name_column_text, new_document_seeds_TopicA, new_document_seeds_TopicB, wordembedding):
-    vector_A, vector_B, seeds_documents_A, seeds_documents_B = get_initial_document_vector_by_class(list_terms_relevance, topic_id, name_tokenizacion,new_document_seeds_TopicA, new_document_seeds_TopicB, wordembedding)
-
-    vector_A = vector_A.reshape(-1, 1)
-    vector_B = vector_B.reshape(-1, 1)
-    documents_A = []
-    documents_B = []
-    most_relevant_documents_topic = set()
-
-    list_relevant_documents = pd.DataFrame(list_relevant_documents).sort_values(int(topic_id)-1, ascending=False).reset_index()
-    #print('vectores crreadoos', vector_A, vector_B)
-    for index, row in list_relevant_documents.head(20000).iterrows():
-        if index%100 == 0:
-            print(index)
-        current_contribution = row[int(topic_id)-1]
-        current_text = row[name_tokenizacion]
-        current_document_vector = getDocumentVector(current_text, wordembedding, list_terms_relevance).reshape(-1, 1)
-        #similarity_vectorA_currentvector =  1 - spatial.distance.cosine(vector_A, current_document_vector)
-        #similarity_vectorB_currentvector =  1 - spatial.distance.cosine(vector_B, current_document_vector)
-        similarity_vectorA_currentvector = np.arccos(spatial.distance.cosine(vector_A, current_document_vector)-1) / np.pi
-        similarity_vectorB_currentvector = np.arccos(spatial.distance.cosine(vector_B, current_document_vector)-1) / np.pi
-        
-        #I need this information to get the matrix of most relevant documents according to the similarity score
-        
-        #most_relevant_documents_topic.add((similarity_vectorA_currentvector,similarity_vectorB_currentvector,  current_contribution, row[name_column_text]))
-            
-        if similarity_vectorA_currentvector>= similarity_vectorB_currentvector:
-            #append element to documentsA
-            documents_A.append((current_contribution, row[name_tokenizacion]))
-            most_relevant_documents_topic.add((similarity_vectorA_currentvector,0,  current_contribution, row[name_column_text]))
-
-        else:
-            documents_B.append((current_contribution, row[name_tokenizacion]))
-            most_relevant_documents_topic.add((0,similarity_vectorB_currentvector,  current_contribution, row[name_column_text])) #QUIZAS LO CORRECTO Es que en vez de 0, sea 1-similarity_vectorB_currentvector
-
-
-    print('Documentos en A', len(documents_A))
-    print('Documentos en B', len(documents_B))
-
-    #In the set of most relevant documents, we also need to calculate the similarity between the topic vector and the documents as seeds
-    for row in new_document_seeds_TopicA:
-        current_contribution = row[str(int(topic_id)-1)]
-        current_text = row[name_tokenizacion]
-        #print('agregando este texto', current_text)
-        current_document_vector = getDocumentVector(current_text, wordembedding, list_terms_relevance).reshape(-1, 1)
-        #angular distance: https://www.wikiwand.com/en/Cosine_similarity
-        #https://math.stackexchange.com/questions/3241174/scale-cosine-similarity-between-vectors-to-range-0-1
-
-        similarity_vectorA_currentvector = np.arccos(spatial.distance.cosine(vector_A, current_document_vector)-1) / np.pi
-        #similarity_vectorB_currentvector = np.arccos(spatial.distance.cosine(vector_B, current_document_vector)-1) / np.pi
-        #similarity_vectorA_currentvector =  1 - spatial.distance.cosine(vector_A, current_document_vector)
-        #similarity_vectorB_currentvector =  1 - spatial.distance.cosine(vector_B, current_document_vector)
-        
-        most_relevant_documents_topic.add((similarity_vectorA_currentvector, 0, current_contribution, row[name_column_text]))
-    
-    for row in new_document_seeds_TopicB:
-        current_contribution = row[str(int(topic_id)-1)]
-        current_text = row[name_tokenizacion]
-        #print('agregando este texto', current_text)
-        current_document_vector = getDocumentVector(current_text, wordembedding, list_terms_relevance).reshape(-1, 1)
-        #similarity_vectorA_currentvector =  1 - spatial.distance.cosine(vector_A, current_document_vector)
-        #similarity_vectorB_currentvector =  1 - spatial.distance.cosine(vector_B, current_document_vector)
-        #similarity_vectorA_currentvector = np.arccos(spatial.distance.cosine(vector_A, current_document_vector)-1) / np.pi
-        similarity_vectorB_currentvector = np.arccos(spatial.distance.cosine(vector_B, current_document_vector)-1) / np.pi
-        
-        most_relevant_documents_topic.add((0, similarity_vectorB_currentvector, current_contribution, row[name_column_text]))
-    
-                
-    
-    return (seeds_documents_A, seeds_documents_B, documents_A, documents_B, most_relevant_documents_topic)
-
-        
-    
 
 
 def getCorpusDictionaryfromSentences(sentences):
@@ -295,8 +223,8 @@ def get_new_subtopics(list_terms_relevance, list_relevant_documents, topic_id, n
     seeds_documents_A, seeds_documents_B, documents_A, documents_B, most_relevant_documents_topic = create_two_list_of_documents(list_terms_relevance, list_relevant_documents, topic_id, name_tokenizacion,name_column_text, new_document_seeds_TopicA, new_document_seeds_TopicB, wordembedding)
     print('seeds documents a', len(seeds_documents_A))
     print('seeds documents b', len(seeds_documents_B))
-    print('seeds documents a', len(documents_A))
-    print('seeds documents a', len(documents_B))
+    print('documents a', len(documents_A))
+    print('documents b', len(documents_B))
     
     for contribution, text in seeds_documents_A:
         final_list_A.extend([text]*int(contribution*100))
