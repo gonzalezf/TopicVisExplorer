@@ -28,6 +28,7 @@ function save_users_actions_across_time(action, timestamp){
 }
 
 
+
 save_users_actions_across_time('session_start', new Date());
 
 
@@ -1006,7 +1007,10 @@ var LDAvis = function(to_select, data_or_file_name) {
         }
         
         function splitting_topics_document_based_scenario_1(){
-            $("#loadMe").modal();
+            $('#loadMe').modal({
+                backdrop: 'static',
+                keyboard: false
+            })
 
             var postDataTopicSplitting = {
                 new_document_seeds: slider_topic_splitting_values[splitting_topic],
@@ -1024,40 +1028,40 @@ var LDAvis = function(to_select, data_or_file_name) {
             $.ajax({
                 type: 'POST',
                 url: '/Topic_Splitting_Document_Based',
-                async: false,
+                async: true,
                 data: JSON.stringify(postDataTopicSplitting),
                 success: function(data) {
                                 
-                    new_dict_topic_splitting = data                    
+                    new_dict_topic_splitting = data;
+                    global_topic_splitting_data = new_dict_topic_splitting;
+                    new_circle_positions = JSON.parse(new_dict_topic_splitting['new_circle_positions']); 
+                   
+                    //1. Update relevantDocumentsDict
+                    console.log('estos eran los documentos antes', relevantDocumentsDict);
+                    relevantDocumentsDict = JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython'].replace(/\bNaN\b/g, "null"));
+                    console.log('estos eran los documentos despues', relevantDocumentsDict);
+        
+                    //update lambdata with the new informsation
+                    console.log('ojo este es el mds data antes de actualizar en topic splitting,', mdsData)
+                    updateTopicNamesCircles(new_dict_topic_splitting['PreparedDataObtained_fromPython']);
+                    console.log('ojo este es el mds data despues de actualizar en topic splitting,', mdsData)
+        
+                    //see_most_relevant_keywords(12)
+        
+                    createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current); //update central panel
+        
+                    topic_on(document.getElementById(topicID+vis_state.topic));
+                    slider_topic_splitting_values[splitting_topic] = {};
+                    $("#loadMe").modal('hide');
+                    
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) { 
                     alert("Status: " + textStatus); alert("Error: " + errorThrown); 
+                    $("#loadMe").modal('hide');
+
                 }, 
                 contentType: "application/json"             
             });
-
-
-            global_topic_splitting_data = new_dict_topic_splitting;
-            new_circle_positions = JSON.parse(new_dict_topic_splitting['new_circle_positions']); 
-           
-            //1. Update relevantDocumentsDict
-            console.log('estos eran los documentos antes', relevantDocumentsDict);
-            relevantDocumentsDict = JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython'].replace(/\bNaN\b/g, "null"));
-            console.log('estos eran los documentos despues', relevantDocumentsDict);
-
-            //update lambdata with the new informsation
-            console.log('ojo este es el mds data antes de actualizar en topic splitting,', mdsData)
-            updateTopicNamesCircles(new_dict_topic_splitting['PreparedDataObtained_fromPython']);
-            console.log('ojo este es el mds data despues de actualizar en topic splitting,', mdsData)
-
-            //see_most_relevant_keywords(12)
-
-            createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current); //update central panel
-
-            topic_on(document.getElementById(topicID+vis_state.topic));
-            slider_topic_splitting_values[splitting_topic] = {};
-            $("#loadMe").modal('hide');
-
                                 
         }
 
@@ -1065,7 +1069,10 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         function merging_topics_scenario_1(topic_name_1, topic_name_2){
             console.log(' aqui estoy en el mergin');
-            $("#loadMe").modal();
+            $('#loadMe').modal({
+                backdrop: 'static',
+                keyboard: false
+            })
 
     
             //get index topic from name    
@@ -1184,43 +1191,38 @@ var LDAvis = function(to_select, data_or_file_name) {
             $.ajax({
                 type: 'POST',
                 url: '/get_new_topic_vector',
-                async: false,
+                async: true,
                 data: JSON.stringify(postData),                
                 success: function(data) {
                                 
-                    new_circle_positions = data
+                    new_circle_positions = data;
+                                        //5.- get new topic name
+                    //console.log("AQUIII QUEREMOS BANEAR UNA ID!!!!")
+                    
+                    var new_merged_topic_name = name_topics_circles[topicID + (index_topic_name_1+1)].trim()+' - '+ name_topics_circles[topicID + (index_topic_name_2+1)].trim();
+                    name_topics_circles[topicID + (index_topic_name_1+1)] = new_merged_topic_name;
+                    name_topics_circles[topicID + (index_topic_name_2+1)] = new_merged_topic_name+"-delete";
+                    merged_topic_to_delete.push(index_topic_name_2+1);
+                    name_merged_topic_to_delete.push(new_merged_topic_name+"-delete");
+                        
+                    d3.selectAll('#svgMdsPlot').remove();
+                    d3.selectAll('#divider_central_panel').remove();
+                    document.getElementById("renameTopicId").value = name_topics_circles[topicID + vis_state.topic];
+                    $('#idTopic').html(topicID + vis_state.topic);
+                    createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current); //update central panel
+                    topic_on(document.getElementById(topicID+vis_state.topic));         
+                    $("#loadMe").modal('hide');
+
                 },
+                error: function(XMLHttpRequest, textStatus, errorThrown) { 
+                    alert("Status: " + textStatus); alert("Error: " + errorThrown); 
+                    $("#loadMe").modal('hide');
+
+                }, 
                 contentType: "application/json",
                 dataType: 'json'
 
              });
-
-
-            //5.- get new topic name
-            //console.log("AQUIII QUEREMOS BANEAR UNA ID!!!!")
-
-            
-            var new_merged_topic_name = name_topics_circles[topicID + (index_topic_name_1+1)].trim()+' - '+ name_topics_circles[topicID + (index_topic_name_2+1)].trim();
-            name_topics_circles[topicID + (index_topic_name_1+1)] = new_merged_topic_name;
-            name_topics_circles[topicID + (index_topic_name_2+1)] = new_merged_topic_name+"-delete";
-            merged_topic_to_delete.push(index_topic_name_2+1);
-            name_merged_topic_to_delete.push(new_merged_topic_name+"-delete");
-            
-            
-
-            d3.selectAll('#svgMdsPlot').remove();
-            d3.selectAll('#divider_central_panel').remove();
-
-            document.getElementById("renameTopicId").value = name_topics_circles[topicID + vis_state.topic];
-            $('#idTopic').html(topicID + vis_state.topic);
-
-
-
-            createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current); //update central panel
-            topic_on(document.getElementById(topicID+vis_state.topic));         
-            $("#loadMe").modal('hide');
-            console.log(' fin del merging, debi haberloc errado');
-
 
         }
 
@@ -1894,7 +1896,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             var svg = d3.select(to_select).append("svg") //BarPlotPanelDiv
             .attr("width", "100%")
-            .attr("height", "32%");
+            .attr("height", "35%");
             
 
             var bounds_barplot = svg.node().getBoundingClientRect();
@@ -2297,8 +2299,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             d3.select("#help_button")
                 .on("click", function() {
                     save_users_actions_across_time('help_button', new Date());
-
-                    console.log(' asi va esto', users_actions_across_time);
 
                     if(type_vis==1){
                         if(is_human_in_the_loop == true){ // users can use topic splitting/ topic merging
@@ -4571,10 +4571,10 @@ var LDAvis = function(to_select, data_or_file_name) {
             d3.select("#"+topicMerge+"rightPanel").remove()
             //show full text of topic name on the left panel
             //topic_name_div
-            document.getElementById("topic_name_div").style.width="75%";
-            document.getElementById("topic_name_div_right_panel").style.width="75%";            
-            document.getElementById("topic_buttons_div").style.width="25%";
-            document.getElementById("topic_buttons_div_right_panel").style.width="25%";
+            document.getElementById("topic_name_div").style.width="65%";
+            document.getElementById("topic_name_div_right_panel").style.width="65%";            
+            document.getElementById("topic_buttons_div").style.width="35%";
+            document.getElementById("topic_buttons_div_right_panel").style.width="35%";
             //document.getElementsByClassName('bootstrap-table ').style.height='80%';
             
 
