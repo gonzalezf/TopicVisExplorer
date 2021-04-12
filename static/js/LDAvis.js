@@ -26,7 +26,23 @@ function save_users_actions_across_time(action, timestamp){
 }
 
 
+function get_new_omega(old_omega){
+    var values_omega_temp = [0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.80, 0.90];
+    var new_omega = (1.0-old_omega).toFixed(2);
+    if(old_omega == 1.00 || old_omega == 0.00){
+        new_omega = Number(new_omega).toFixed(1);
+    }
+    else if ( values_omega_temp.includes(Number(new_omega)) ){
+        //console.log('la raja')
+        new_omega = Number(new_omega).toFixed(1);
 
+    }
+    else{
+        new_omega = Number(new_omega).toFixed(2);
+
+    }
+    return new_omega;
+}
 save_users_actions_across_time('session_start', new Date());
 
 
@@ -1016,7 +1032,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         
                     //see_most_relevant_keywords(12)
         
-                    createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current); //update central panel
+                    createMdsPlot(1, mdsData, get_new_omega(lambda_lambda_topic_similarity.current)); //update central panel
         
                     topic_on(document.getElementById(topicID+vis_state.topic));
                     slider_topic_splitting_values[splitting_topic] = {};
@@ -1177,7 +1193,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     d3.selectAll('#divider_central_panel').remove();
                     document.getElementById("renameTopicId").value = name_topics_circles[topicID + vis_state.topic];
                     $('#idTopic').html(topicID + vis_state.topic);
-                    createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current); //update central panel
+                    createMdsPlot(1, mdsData, get_new_omega(lambda_lambda_topic_similarity.current)); //update central panel
                     topic_on(document.getElementById(topicID+vis_state.topic));         
                     $("#loadMe").modal('hide');
 
@@ -1587,7 +1603,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
 
-            createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)        
+            createMdsPlot(1, mdsData, get_new_omega(lambda_lambda_topic_similarity.current))        
             createBarPlot("#BarPlotPanelDiv", dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", R) //esto crea el bar plot por primera vez. 
             d3.selectAll('#tableRelevantDocumentsClass_Model1').attr("transform", "translate("  +0 + "," +0+ ")")
 
@@ -1603,7 +1619,7 @@ var LDAvis = function(to_select, data_or_file_name) {
        if(type_vis === 2){
         
   
-            get_name_node_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.lambda_topic_similarity)
+            get_name_node_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.lambda_topic_similarity)
            
             // Add barplot into the left panel 
             createBarPlot("#BarPlotDiv_zero", dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", number_terms_sankey) //esto crea el bar plot por primera vez.             
@@ -1627,7 +1643,7 @@ var LDAvis = function(to_select, data_or_file_name) {
            const  div_2 = document.getElementById('RelevantDocumentsTableDiv_2');
            div_2.insertAdjacentHTML('afterbegin', '<table  id="tableRelevantDocumentsClass_Model2" class="table table-hover"> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table>');
 
-           visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.min_value_filtering, vis_state.max_value_filtering)
+           visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
        }
        
 
@@ -2308,7 +2324,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         
         
         
-                    createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current); //update central panel
+                    createMdsPlot(1, mdsData, get_new_omega(lambda_lambda_topic_similarity.current)); //update central panel
                     topic_on(document.getElementById(topicID+vis_state.topic));
         
                     
@@ -2384,7 +2400,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                        $('.merging_topic_1').html(merging_topic_1); //this is one topic wish I would like to merge
                        //populate el dropdown, topics should be sorted according to the distance to the current topic
                        $('#selectTopicMerge').empty();
-                       var topics_name_sorted_by_distance = get_topics_sorted_by_distance(mdsData, lambda_lambda_topic_similarity.current, merging_topic_1)
+                       var topics_name_sorted_by_distance = get_topics_sorted_by_distance(mdsData, get_new_omega(lambda_lambda_topic_similarity.current), merging_topic_1)
                        $.each(topics_name_sorted_by_distance, function(i, p) {
                            //add the array with the topics sorted according to the distance to the current topic
                            if(i!=0 && ( !(name_merged_topic_to_delete.includes(topics_name_sorted_by_distance[i])))){ //el primer elemento no se ocupa, ya que es el mismo topico con el q se quiere unir. ESTO NO OCURRE ASI EN EL SCENARIO 2. Ojo, tambien chequeamos que ese elemento no haya que borrarse
@@ -2440,7 +2456,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     $('#topic_name_selected_1').html(name_topics_circles[document.getElementById("idTopic").innerText]); 
 
                     //visualize the new name
-                    createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
+                    createMdsPlot(1, mdsData, get_new_omega(lambda_lambda_topic_similarity.current))
 
 
                     topic_on(document.getElementById(topicID+vis_state.topic))
@@ -2458,7 +2474,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     name_topics_sankey[document.getElementById("idTopic").innerText] = document.getElementById("renameTopicId").value
                     
                     //visualize the new name
-                    visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.min_value_filtering, vis_state.max_value_filtering)
+                    visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
                     $('#topic_name_selected_1').html(name_topics_sankey[document.getElementById("idTopic").innerText])                    
 
 
@@ -2474,7 +2490,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     //cambiar el nombre del topico segun lo especifique el usuario
                     name_topics_sankey[document.getElementById("idTopic2").innerText] = document.getElementById("renameTopicId2").value
                     
-                    visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.min_value_filtering, vis_state.max_value_filtering)
+                    visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
                     $('#topic_name_selected_2').html(name_topics_sankey[document.getElementById("idTopic2").innerText])                    
                     //visualizar el nuevo nombre
                     
@@ -2605,7 +2621,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                 var min_similarity_score = Infinity
                 var max_similarity_score = -Infinity
-                matrix_sankey[lambda_lambda_topic_similarity.current].links.filter(function(el){
+                matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)].links.filter(function(el){
                     if(el.value < min_similarity_score){
                         min_similarity_score = el.value
                     }
@@ -2670,7 +2686,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     document.getElementById("LabelFilteringTopicSimilarity").innerHTML = "Filtering = [<span id='slider-value-lower'>"+values[0]+"</span>, <span id='slider-value-upper'>"+values[1]+"</span>]";
                     vis_state.max_value_filtering = values[1],
                     vis_state.min_value_filtering = values[0],
-                    visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.min_value_filtering, vis_state.max_value_filtering)
+                    visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
 
 
                 });
@@ -2756,22 +2772,19 @@ var LDAvis = function(to_select, data_or_file_name) {
                 document.getElementById("lambdaInputLambdaTopicSimilarity" + "-value").innerHTML = " <span id='" + "lambdaInputLambdaTopicSimilarity" + "-value'>" + vis_state.lambda_lambda_topic_similarity + "</span>";
                 document.getElementById("lambdaInputLambdaTopicSimilarity").value = vis_state.lambda_lambda_topic_similarity;
 
-
-                
-                if( lambda_lambda_topic_similarity.current == 0){
-                    lambda_lambda_topic_similarity.current = Number(0).toFixed(1) //we need to do this, because javascript converts 0.0 to 0 by default. 
-                }
-                if ( lambda_lambda_topic_similarity.current == 1){
-                    
-                    lambda_lambda_topic_similarity.current = Number(1).toFixed(1)
-                    
-                }
+        
+               
 
                 if(type_vis == 2){
-                    visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.min_value_filtering, vis_state.max_value_filtering)
+
+                    //mostramos 1 - omega, para que cuandos ea 0 signifique que damos mas importancia a las keywords, y 1 cuando le damos mas importancia a los docs
+                    //console.log('sera asi ', matrix_sankey[(1.0-lambda_lambda_topic_similarity.current).toFixed(2)]);
+                    //console.log('value', (1.0-lambda_lambda_topic_similarity.current).toFixed(2));
+                    //console.log('omega', new_omega);
+                    visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
                 }
                 if(type_vis == 1){
-                    createMdsPlot(1, mdsData, lambda_lambda_topic_similarity.current)
+                    createMdsPlot(1, mdsData, get_new_omega(lambda_lambda_topic_similarity.current))
                     topic_on(document.getElementById(topicID+vis_state.topic))
                 }
 
@@ -2796,7 +2809,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 document.getElementById("lambdaInputTopicSimilarityFiltering").value = vis_state.lambda_topic_similarity;
                 
                 
-                visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.min_value_filtering, vis_state.max_value_filtering)
+                visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
                 
             });
 
