@@ -67,7 +67,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             lambda: 0.6,
             min_value_filtering:-1.0,
             max_value_filtering: 1.0,
-            lambda_lambda_topic_similarity:0.8, //que tanta info tiene vector top keywords y que tanta info tiene vector top relevant documents
+            lambda_lambda_topic_similarity:0.2, //que tanta info tiene vector top keywords y que tanta info tiene vector top relevant documents
             lambda_topic_similarity:-1.0, //este filtra las lineas (el ancho que de similitud). If this value is very low, it is going to show all the paths. 
             topic: 1,
             term: ""
@@ -1995,6 +1995,10 @@ var LDAvis = function(to_select, data_or_file_name) {
             //quizas guardar un json en vez de un pickle
             d3.select('#save_data_user_study_button')
                 .on('click', function(){
+                    $('#saving_results').modal({
+                        backdrop: 'static',
+                        keyboard: false
+                    })
 
                     //the session is over
                     save_users_actions_across_time('session_end', new Date());
@@ -2036,17 +2040,21 @@ var LDAvis = function(to_select, data_or_file_name) {
                     $.ajax({
                         type: 'POST',
                         url: '/export_user_study_data',
-                        async: false,
+                        async: true,
                         data: JSON.stringify(user_study_data),
                         success: function(data) {
                                         
                             result = data;
                             console.log('esto fue lo q recibi after exporting data with python', result);  
+                            $("#saving_results").modal('hide');
+
                             $('#export_results_user_study_successfully').modal(); 
 
                                               
                         },
                         error: function(XMLHttpRequest, textStatus, errorThrown) { 
+                            $("#saving_results").modal('hide');
+
                             alert("Status: " + textStatus); alert("Error: " + errorThrown); 
                         }, 
                         contentType: "application/json"             
@@ -2055,6 +2063,29 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
                 });
 
+            //elements of tutorial. Thus we dont need to write it everytime again and again
+            function fix_tutorial_identification_elements(id_element, json){
+                json["element"] = document.querySelector(id_element)
+                return json
+            }
+            //element: document.querySelector('#svgMdsPlot'),
+            var tutorial_steps = {}
+            
+            tutorial_steps['start_tutorial'] = {intro: 'Hello! This tutorial will guide you in the usage of this topic modeling visualization tool.'};
+            tutorial_steps['scenario_1_global_view_of_topics'] = { title: 'Global view of topics', element: document.querySelector('#CentralPanel'), intro: "The central panel presents a global view of the topics and aims to answer questions <b style='color: #1f77b4;'> How prevalent each topic is?</b>, and <b style='color: #1f77b4;'>How do topics relate to each other? </b>" };                
+            tutorial_steps['documents_panel'] = { element: document.querySelector('#DocumentsPanel_first_scenario'), title: 'What is the meaning of each topic?', intro: "In order to identify the meaning of each topic. This panel provides the most relevant documents associated with the currently selected topic" };
+            tutorial_steps['scenario_1_hil_buttons'] = { element: document.querySelector('#topic_buttons_div'), title: 'Rename-Split-Merge topics', intro: "Buttons from this panel allow to edit topics: rename, joint two topics, split a topic into two subtopics"};
+            tutorial_steps['help_button'] = { element: document.querySelector('#help_button'), title: 'Ask for help!', intro: "Remember that you can always start the interactive tutorial here!" };
+
+
+            tutorial_steps['export_user_study_data'] = { element: document.querySelector('#save_data_user_study_button'), title: 'Export your results', intro: "After finishing all your tasks, you must export your results clicking this button." };
+
+            //without element attribute
+            tutorial_steps['scenario_1_topic_frequency'] = { title: 'How prevalent each topic is?', intro: "Each topic is represented as a circle. The area of the circle  indicates how frequent it is regarding its marginal topic distribution" };
+            tutorial_steps['scenario_1_topic_similarity'] = { title: 'How do topics relate to each other? ', intro: "Similar topics appear closer, while distinct topics appear more distant between each other" };
+            tutorial_steps['description_omega_slider'] = {title: 'Inter-topic comparison', intro: "This slider allows adjusting the similarity between topics. A higher omega score implies higher importance to the most relevant keywords, but a lower significance to the most relevant documents in the topic similarity calculation" };
+            tutorial_steps['relevance_slider_most_relevant_keywords'] = {  title: 'Most relevant keywords', intro: "This slider allows adjusting the order of the most relevant keywords. A higher value assigns higher importance to the term's frequency but less priority to its uniqueness." };
+            tutorial_steps['most_relevant_keywords'] = { element: document.querySelector('#barplot_1'), title: 'Most relevant keywords', intro: "Here you can see the  most relevant keywords associated with the currently selected topic." };
 
             d3.select("#help_button")
                 .on("click", function() {
@@ -2063,55 +2094,19 @@ var LDAvis = function(to_select, data_or_file_name) {
                     if(type_vis==1){
                         if(is_human_in_the_loop == true){ // users can use topic splitting/ topic merging
                             introJs().setOptions({
-                                steps: [{
-                                  intro: 'Hello! This tutorial will guide you in the usage of this topic modeling visualization tool.'
-                                },
-                                {
-                                  title: 'Global view of topics',
-                                  element: document.querySelector('#CentralPanel'),
-                                  intro: "The central panel presents a global view of the topics and aims to answer questions <b style='color: #1f77b4;'> How prevalent each topic is?</b>, and <b style='color: #1f77b4;'>How do topics relate to each other? </b>"
-                                },
-                                {
-                                  element: document.querySelector('#svgMdsPlot'),
-                                  title: 'How prevalent each topic is?', 
-                                  intro: "Each topic is represented as a circle. The area of the circle  indicates how frequent it is regarding its marginal topic distribution"
-                                },
-                                {
-                                    element: document.querySelector('#svgMdsPlot'),
-                                    title: 'How do topics relate to each other? ', 
-                                    intro: "Similar topics appear closer, while distinct topics appear more distant between each other"
-                                },
-                                {
-                                  element: document.querySelector('#TopicSimilarityMetricPanel'),
-                                  title: 'Inter-topic comparison', 
-                                  intro: "This slider allows adjusting the similarity between topics. A higher omega score implies higher importance to the most relevant keywords, but a lower significance to the most relevant documents in the topic similarity calculation"
-                                },
-                                {
-                                    element: document.querySelector('#DocumentsPanel_first_scenario'),
-                                    title: 'What is the meaning of each topic?', 
-                                    intro: "In order to identify the meaning of each topic. This panel provides the most relevant documents associated with the currently selected topic"
-                                },
-                                {
-                                  element: document.querySelector('#barplot_1'),
-                                  title: 'Most relevant keywords', 
-                                  intro: "Here you can see the  most relevant keywords associated with the currently selected topic."
-                                },
-                                {
-                                    element: document.querySelector('#relevanceSliderDiv'),
-                                    title: 'Most relevant keywords', 
-                                    intro: "This slider allows adjusting the order of the most relevant keywords. A higher value assigns higher importance to the term's frequency but less priority to its uniqueness."
-                                },
-                                {
-                                    element: document.querySelector('#topic_buttons_div'),
-                                    title: 'Rename-Split-Merge topics', 
-                                    intro: "Buttons from this panel allow to edit topics: rename, joint two topics, split a topic into two subtopics"
-                                },
-                                {
-                                    element: document.querySelector('#help_button'),
-                                    title: 'Ask for help!', 
-                                    intro: "Remember that you can always start the interactive tutorial here!"
-                                }
-    
+                                steps: [
+                                    tutorial_steps['start_tutorial'],
+                                    tutorial_steps['scenario_1_global_view_of_topics'],
+                                    fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_frequency']),
+                                    fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_similarity']),
+                                    fix_tutorial_identification_elements("#TopicSimilarityMetricPanel", tutorial_steps['description_omega_slider']),
+                                    tutorial_steps['documents_panel'],
+                                    fix_tutorial_identification_elements("#barplot_1", tutorial_steps['most_relevant_keywords']),
+                                    fix_tutorial_identification_elements("#relevanceSliderDiv", tutorial_steps['relevance_slider_most_relevant_keywords']),
+                                    tutorial_steps['scenario_1_hil_buttons'], // this is only for scenario 1 , hil
+                                    tutorial_steps['export_user_study_data'],
+                                    tutorial_steps['help_button']
+
                               ]
                               }).start();
                         }
