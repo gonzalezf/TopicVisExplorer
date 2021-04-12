@@ -94,7 +94,9 @@
       <div class="modal-body " style=' overflow-y: scroll'>
 
         <!--<input type='text' name='somename' data-provide='slider' data-slider-ticks='[1, 2, 3]' data-slider-min='1' data-slider-max='3' data-slider-step='1' data-slider-value='3' >-->
-        You are going to split the current selected topic: <span id="topic_to_split_name"></span>.  Please, for each new topic select the most relevant documents associated to them.
+        You are going to split the current selected topic: <b> <span id="topic_to_split_name"></span></b>.  <br><br> To split a  topic,  you must select the most relevant documents associated to the new subtopics. You may choose as many documents you wish. Also, you can select 
+        more documents selecting different pages at the bottom of this window. 
+
 
         <!--<div id="input"></div>      -->
         <div class="row" > <!--All the visualization must be placed in this row-->
@@ -252,6 +254,20 @@
   </div>
 </div>
 
+<!-- Modal -->
+<div class="modal fade" id="loaddssdsdMe" tabindex="-1" role="dialog" aria-labelledby="loadMeLabel">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <div class="modal-body text-center">
+        <div class="loader"></div>
+        <div clas="loader-txt">
+          <p>Check out this slick bootstrap spinner modal. <br><br><small>We are addicted to Bootstrap... #love</small></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Split modals-->
 <!--<div class="modal fade modal_full_screen" id="SplitTopicModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">-->
   <div class="modal fade " id="loadMe" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -293,6 +309,29 @@
   </div>
 
   
+  <div class="modal fade " id="error_splitting" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-dialog_full_screen" role="document" >
+      <div class="modal-content model-content_full_screen" >
+        <div class="modal-body">
+          <div class="text-center">
+            <p><b>ERROR: </b>You must provide documents for both new subtopics  </p>
+
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div class="modal-footer">
+            <button type="button" id="apply_reverse_topic_model"  data-dismiss="modal" class="btn btn-primary">Ok</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  
+
 
 
 <!--END OF MODALS -->
@@ -393,6 +432,7 @@
 
   gtag('config', 'G-JST99DG8LH');
 </script>
+
 
 
 <div id={{ visid }}></div>

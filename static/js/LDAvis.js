@@ -750,18 +750,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         real_last_clicked_sankey_model_1 = d
                     }
                     
-                })
-                .on("mouseover", function(d) {
-                    topic_on_sankey(d, min_target_node_value );
-
-                })
-                .on("mouseout", function(d) {
-                    topic_on_sankey(real_last_clicked_sankey_model_1, min_target_node_value)
-                    topic_on_sankey(real_last_clicked_sankey_model_2, min_target_node_value)
-                });
-                
-
-                
+                })                                                
         
             // add the rectangles for the nodes
             node.append("rect")
@@ -1001,15 +990,6 @@ var LDAvis = function(to_select, data_or_file_name) {
         
         function splitting_topics_document_based_scenario_1(){
             $("#loadMe").modal();
-
-
-
-            //console.log('estoy en la funcion splitting topics scenario 1');
-
-            for (const [key, value] of Object.entries(slider_topic_splitting_values[splitting_topic])) {
-                //console.log('que tenemos aquiiii', key, value);                    
-
-            }
 
             var postDataTopicSplitting = {
                 new_document_seeds: slider_topic_splitting_values[splitting_topic],
@@ -1478,17 +1458,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     
                     topic_on(this);                
                 })
-                .on("mouseover", function(d) {
-                    var old_topic = topicID + vis_state.topic;
-                    if (vis_state.topic > 0 && old_topic != this.id) {
-                        topic_off(document.getElementById(old_topic));
-                    }
-                    topic_on(this);
-                })             
-                .on("mouseout", function(d) {
-                    if (vis_state.topic != d.topics) topic_off(this);
-                    if (vis_state.topic > 0) topic_on(document.getElementById(topicID + vis_state.topic));
-                })
                 .append("title")
                     .text(function(d) { 
                         //console.log("este es el nombre del topico, ", name_topics_circles[topicID + d.topics] )
@@ -1734,54 +1703,6 @@ var LDAvis = function(to_select, data_or_file_name) {
            visualize_sankey(matrix_sankey[lambda_lambda_topic_similarity.current], vis_state.min_value_filtering, vis_state.max_value_filtering)
        }
        
-       function createCentralPanelTopicSplitting(){
-           $('#CentralPanelTopicSplittingRow').bootstrapTable("destroy");
-           $('#CentralPanelTopicSplittingRow').bootstrapTable({
-               columns:[
-                   {
-                       field: 'Term',
-                       title: 'Terms',
-                   },
-                   {
-                       field: 'Term',
-                       title: 'Subtopic A',
-                       align: 'center',
-                       valign: 'middle',
-                       clickToSelect: false,
-                       formatter : function(value,row,index) {                    
-                        return '<input type="radio" name="radio_'+splitting_topic+'_'+index+'" id="'+splitting_topic+'_'+value+'_TopicA" class="radio_button_topic_splitting" />';
-                        }                      
-                     },
-                     {
-                        field: 'Term',
-                        title: 'Subtopic B',
-                        align: 'center',
-                        valign: 'middle',
-                        clickToSelect: false,
-                        formatter : function(value,row,index) {                                              
-                         return '<input type="radio"  name="radio_'+splitting_topic+'_'+index+'" id="'+splitting_topic+'_'+value+'_TopicB" class="radio_button_topic_splitting" />';
-
-                         }                      
-                      },
-                      {
-                        field: 'Term',
-                        title: 'None',
-                        align: 'center',
-                        valign: 'middle',
-                        clickToSelect: false,
-                        formatter : function(value,row,index) {                            
-                    
-                         return '<input type="radio" name="radio_'+splitting_topic+'_'+index+'"  id="'+splitting_topic+'_'+value+'_TopicNone" class="radio_button_topic_splitting" checked/>'; 
-                         }                      
-                      }                               
-               ],
-               data: list_terms_for_topic_splitting
-           });
-
-
-       }
-
-
 
         $('#CentralPanelTopicSplittingRow').on('post-body.bs.table', function (e) {
             //highlight relevant keywords. it is not ready. but it is not urgent
@@ -1804,15 +1725,10 @@ var LDAvis = function(to_select, data_or_file_name) {
                     var lookFor = current_term;
                     //book.html(book.html().replace(lookFor, '<strong>'+ lookFor +'</strong>'));
                     book.html(book.html().replace(lookFor, String(lookFor).bold().bold()));
-
-
-
                 });
                 $(trs[i]).mouseout(function(e) {
                     console.log('doing mouse up');
                     book = _.cloneDeep(original_book);
-
-
 
                 });                     
             };*/            
@@ -1917,7 +1833,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             .attr("y", function(d) {
                 return y_splitting(d.Term) + 12;
             })
-            .attr("cursor", "pointer")
             .attr("id", function(d) {
                 return (termID + d.Term);
             })
@@ -2086,7 +2001,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("y", function(d) {
                     return y(d.Term) + 12;
                 })
-                .attr("cursor", "pointer")
                 .attr("id", function(d) {
                     return (termID + d.Term);
                 })
@@ -2797,14 +2711,28 @@ var LDAvis = function(to_select, data_or_file_name) {
                 $('#SplitTopicModal').modal();
 
                 updateRelevantDocumentsTopicSplitting(splitting_topic-1, relevantDocumentsDict, 1);                
-                createBarPlotTopicSplitting("#KeywordsPanel_TopicSplitting", dat3, barFreqsIDTopicSplitting,"bar-totals_TopicSplitting", "TopicSplitting", 1, "xaxis-TopicSplitting", 20); //hay que modificar la altura aqui en funcion del alto de las barras
+                //createBarPlotTopicSplitting("#KeywordsPanel_TopicSplitting", dat3, barFreqsIDTopicSplitting,"bar-totals_TopicSplitting", "TopicSplitting", 1, "xaxis-TopicSplitting", 20); //hay que modificar la altura aqui en funcion del alto de las barras
             });
 
             $("#apply_topic_splitting").click(function() {
-                save_state_data()
+                if(typeof slider_topic_splitting_values[splitting_topic] != "undefined"){
+                    if((typeof slider_topic_splitting_values[splitting_topic]['TopicA'] == "undefined") || (typeof slider_topic_splitting_values[splitting_topic]['TopicB'] == "undefined")){
 
-    
-                splitting_topics_document_based_scenario_1()
+                        $('#error_splitting').modal()
+
+                    }
+                    else{
+                        console.log('yay. we are going to do topic splitting')
+                        //console.log(' Documents en a', slider_topic_splitting_values[splitting_topic]['TopicA'])
+                        //console.log(' Documents en b', slider_topic_splitting_values[splitting_topic]['TopicB'])
+
+                        //save_state_data()
+                        //splitting_topics_document_based_scenario_1()
+                    }                
+                }
+                else{
+                    $('#error_splitting').modal()
+                }
             });
 
 
@@ -3182,7 +3110,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("y", function(d) {
                         return y(d.Term) + 12 + barheight + margin.bottom + 2 * rMax;
                     })
-                    .attr("cursor", "pointer")
                     .style("text-anchor", "end")
                     .attr("id", function(d) {
                         return (termID + d.Term);
@@ -3453,7 +3380,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("y", function(d) {
                         return y(d.Term) + 12 + barheight + margin.bottom + 2 * rMax;
                     })
-                    .attr("cursor", "pointer")
                     .style("text-anchor", "end")
                     .attr("id", function(d) {
                         return (termID + d.Term);
@@ -4285,6 +4211,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             }];            
         }
 
+        /*
         function see_most_relevant_keywords(topic_id){
             var dat2 = lamData.filter(function(e) {
                 return e.Category == "Topic"+topic_id;
@@ -4306,8 +4233,14 @@ var LDAvis = function(to_select, data_or_file_name) {
             console.log('estos son los terminos ordenadoooos para topic id' , topic_id, dat2.slice(0,30));
                         
         }
-    
-        var test;
+        */
+
+        function arrayRemove(arr, value) { 
+            return arr.filter(function(ele){ 
+                return ele != value; 
+            });
+        }
+
             //slider topic splitting
         $('#tableRelevantDocumentsClass_TopicSplitting').on('post-body.bs.table', function (e) {
             /*This add a slider too all the table*/
@@ -4322,14 +4255,25 @@ var LDAvis = function(to_select, data_or_file_name) {
                             
                             
                         }
+                        //The element is removed from other places
+
+
                         //console.log('que hay en esta fila', this);
                         var current_id_radio_button = this.id;
                         var current_topic = current_id_radio_button.split("_")[0];
                         var current_index = current_id_radio_button.split("_")[1];
                         var current_class = current_id_radio_button.split("_")[2];
 
-
                         var current_row = current_relevant_documents_topic_splitting[current_index];
+
+
+                        if(typeof slider_topic_splitting_values[splitting_topic]['TopicA'] != "undefined"){
+                            slider_topic_splitting_values[splitting_topic]['TopicA'] = arrayRemove(slider_topic_splitting_values[splitting_topic]['TopicA'], current_row);
+                        }
+                        if(typeof slider_topic_splitting_values[splitting_topic]['TopicB'] != "undefined"){
+                            slider_topic_splitting_values[splitting_topic]['TopicB'] = arrayRemove(slider_topic_splitting_values[splitting_topic]['TopicB'], current_row)
+                        }
+
 
                         if(slider_topic_splitting_values[splitting_topic][current_class] == undefined){
                             slider_topic_splitting_values[splitting_topic][current_class] = []
@@ -4337,6 +4281,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                         slider_topic_splitting_values[splitting_topic][current_class].push(current_row);
                         //console.log('asi va estoo', slider_topic_splitting_values);
+
 
 
 
@@ -4357,6 +4302,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                     }
                 }               
+            console.log('asi va estoo aqui', slider_topic_splitting_values);
 
             }            
         });
@@ -4406,7 +4352,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         },
                         {
                             field: 'Term',
-                            title: 'Subtopic A',
+                            title: 'New subtopic A',
                             align: 'center',
                             valign: 'middle',
                             clickToSelect: false,
@@ -4417,7 +4363,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                           },
                           {
                              field: 'Term',
-                             title: 'Subtopic B',
+                             title: 'New subtopic B',
                              align: 'center',
                              valign: 'middle',
                              clickToSelect: false,
@@ -4428,7 +4374,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                            },
                            {
                              field: 'Term',
-                             title: 'None',
+                             title: 'Neither',
                              align: 'center',
                              valign: 'middle',
                              clickToSelect: false,
@@ -4519,6 +4465,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         
         }
+        
         function get_RGB_by_relevance(c1_r,c1_g,c1_b, c2_r, c2_g, c2_b, r_min, r_max, r_actual){
             var final_color_r = c1_r+((r_actual-r_min)/(r_max-r_min))*(c2_r-c1_r)
             var final_color_g = c1_g+((r_actual-r_min)/(r_max-r_min))*(c2_g-c1_g)
@@ -4531,7 +4478,6 @@ var LDAvis = function(to_select, data_or_file_name) {
         //This is the special configuration needed for the user study
         if(type_vis == 1){
             document.getElementById("DocumentsPanel").style.height="80%";
-            console.log('q aparece aqui', is_human_in_the_loop, typeof is_human_in_the_loop)
             if(is_human_in_the_loop == false){
                 d3.select("#"+topicReverse).remove()
                 d3.select("#"+topicSplit).remove()
