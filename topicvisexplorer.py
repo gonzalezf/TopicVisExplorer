@@ -568,8 +568,14 @@ class TestView(FlaskView):
     #save user study data. Create a pickle. Export to google drive
     @route('/export_user_study_data',  methods=['GET', 'POST'])
     def export_user_study_data(self):
+        from datetime import datetime
+
+        # datetime object containing current date and time
+        now = datetime.now()
+        # dd/mm/YY H:M:S
+        dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
         json_file = request.get_json()
-        with open('user_study_results/user_study_data.pkl', 'wb') as handle:
+        with open('user_study_results/data_user_study_'+dt_string+'.pkl', 'wb') as handle:
             pickle.dump(json_file, handle, protocol=4) #protocol 4 is compatible with python 3.6+
             print("Single corpus data saved sucessfully")
 
