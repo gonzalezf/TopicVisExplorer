@@ -19,7 +19,18 @@ var scenario_2_is_baseline_metric;
 
 var users_actions_across_time = [];
 
-users_actions_across_time.push('session_start',  new Date());
+
+function save_users_actions_across_time(action, timestamp){
+    users_actions_across_time.push({
+        "timestamp": timestamp,
+        "action": action
+    });
+}
+
+
+save_users_actions_across_time('session_start', new Date());
+
+
 
 
 if(type_vis== 2){
@@ -747,7 +758,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("transform", function(d) { 
                     return "translate(" + d.x + "," + d.y + ")"; }) // el d.y de aqui tambien hay que modificarlo
                 .on("click", function(d){
-                    users_actions_across_time.push('click_node_sankey', new Date());
+                    save_users_actions_across_time('click_node_sankey', new Date());
+
 
                     isSettingInitial = false
                     topic_on_sankey(d, min_target_node_value );
@@ -1442,7 +1454,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                     return (topicID + d.topics);
                 })
                 .on("click", function(d) {
-                    users_actions_across_time.push('click_circle_points', new Date());
+                    save_users_actions_across_time('click_circle_points', new Date());
+
 
                     // prevent click event defined on the div container from firing
                     // http://bl.ocks.org/jasondavies/3186840
@@ -2085,7 +2098,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 topicButtonsRightPanel.appendChild(edit2);
                 d3.select("#"+topicEdit2)
                 .on("click", function() {
-                    users_actions_across_time.push('open_rename_topic_modal', new Date());
+                    save_users_actions_across_time('open_rename_topic_modal', new Date());
+
 
                     $('#renameTopic2').modal(); 
                     
@@ -2209,7 +2223,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             d3.select("#"+topicReverse)
                 .on("click", function() {
-                    users_actions_across_time.push('open_reverse_modal', new Date());
+                    save_users_actions_across_time('open_reverse_modal', new Date());
+
 
                     console.log(' este es el largo que tengo en esto', old_topic_model_states.length)
                     $('#ReverseModel').modal(); 
@@ -2220,7 +2235,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .on('click', function(){
 
                     //the session is over
-                    users_actions_across_time.push('session_end',  new Date());
+                    save_users_actions_across_time('session_end', new Date());
+
 
 
                     if(type_vis == 1){
@@ -2280,7 +2296,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             d3.select("#help_button")
                 .on("click", function() {
-                    users_actions_across_time.push('help_button', new Date());
+                    save_users_actions_across_time('help_button', new Date());
+
                     console.log(' asi va esto', users_actions_across_time);
 
                     if(type_vis==1){
@@ -2515,7 +2532,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             d3.select("#apply_reverse_topic_model") //el usuario desea continuar con el mergin
                 .on("click", function() {
-                    users_actions_across_time.push('apply_reverse_topic_model', new Date());
+                    save_users_actions_across_time('apply_reverse_topic_model', new Date());
+
 
                     //console.log("que bacan, voy a revertir los cambios!!!");
                     //console.log("PRE reverse esto es lo q queda en la pila", old_topic_model_states);
@@ -2614,7 +2632,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
            d3.select("#apply_topic_merging") //el usuario desea continuar con el mergin
                 .on("click", function() {
-                    users_actions_across_time.push('apply_topic_merging', new Date());
+                    save_users_actions_across_time('apply_topic_merging', new Date());
+
 
                     //hacer_merge = true
                     
@@ -2674,7 +2693,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             d3.select("#"+topicEdit)
                 .on("click", function() {
-                    users_actions_across_time.push('open_renameTopic_modal', new Date());
+                    save_users_actions_across_time('open_renameTopic_modal', new Date());
+
 
                     $('#renameTopic').modal(); 
                 });
@@ -2685,7 +2705,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             if(type_vis == 1){
                 d3.select("#rename_topic_button")
                 .on("click", function(){
-                    users_actions_across_time.push('apply_rename_topic_scenario_1', new Date());
+                    save_users_actions_across_time('apply_rename_topic_scenario_1', new Date());
+
 
                     //rename the topic
                     name_topics_circles[document.getElementById("idTopic").innerText] = document.getElementById("renameTopicId").value
@@ -2703,7 +2724,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             else{
                 d3.select("#rename_topic_button")
                 .on("click", function(){
-                    users_actions_across_time.push('apply_rename_topic_model_1_scenario_2', new Date());
+                    save_users_actions_across_time('apply_rename_topic_model_1_scenario_2', new Date());
+
 
                     //rename the topic
                     name_topics_sankey[document.getElementById("idTopic").innerText] = document.getElementById("renameTopicId").value
@@ -2718,8 +2740,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
             d3.select("#rename_topic_button2")
                 .on("click", function(){
-                    
-                    users_actions_across_time.push('apply_rename_topic_model_2_scenario_2', new Date());
+                    save_users_actions_across_time('apply_rename_topic_model_2_scenario_2', new Date());
+
 
 
                     //cambiar el nombre del topico segun lo especifique el usuario
@@ -2735,7 +2757,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             d3.select("#"+topicSplit)
             .on("click",function(){
-                users_actions_across_time.push('open_split_topic_modal', new Date());
+                save_users_actions_across_time('open_split_topic_modal', new Date());
+
 
                 $('#topic_to_split_name').html(name_topics_circles[topicID + vis_state.topic]);                    
                 $('#SplitTopicModal').modal();
@@ -2749,21 +2772,23 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                 if(typeof slider_topic_splitting_values[splitting_topic] != "undefined"){
                     if((typeof slider_topic_splitting_values[splitting_topic]['TopicA'] == "undefined") || (typeof slider_topic_splitting_values[splitting_topic]['TopicB'] == "undefined")){
+                        save_users_actions_across_time('error_apply_topic_splitting_error_1', new Date());
 
                         $('#error_splitting').modal()
-                        users_actions_across_time.push('error_apply_topic_splitting_error_1', new Date());
+
 
                     }
                     else{
+                        save_users_actions_across_time('apply_topic_splitting', new Date());
 
-                        users_actions_across_time.push('apply_topic_splitting', new Date());
 
                         save_state_data()
                         splitting_topics_document_based_scenario_1()
                     }                
                 }
                 else{
-                    users_actions_across_time.push('error_apply_topic_splitting_error_2', new Date());
+                    save_users_actions_across_time('error_apply_topic_splitting_error_2', new Date());
+
 
                     $('#error_splitting').modal()
                 }
@@ -4123,7 +4148,8 @@ var LDAvis = function(to_select, data_or_file_name) {
           
         d3.select("#export_to_csv") 
         .on("click", function() {
-            users_actions_across_time.push('export_to_csv', new Date());
+            save_users_actions_across_time('export_to_csv', new Date());
+
 
             //create worksheet for single corpus data
             if(type_vis == 1){
@@ -4284,7 +4310,8 @@ var LDAvis = function(to_select, data_or_file_name) {
            //console.log('se ejecuto la funcion post body bs');
 
             $('.radio_button_topic_splitting').click(function () {
-                users_actions_across_time.push('radio_button_topic_splitting', new Date());
+                save_users_actions_across_time('radio_button_topic_splitting', new Date());
+
 
                 if ($(this).is(':checked')) {
                         //update the values in the dictionary                
