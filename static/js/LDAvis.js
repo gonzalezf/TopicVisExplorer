@@ -2078,8 +2078,10 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
             //element: document.querySelector('#svgMdsPlot'),
             var tutorial_steps = {}
-            
+            //take into consideration this tutorial
+            //https://monkeylearn.com/blog/introduction-to-topic-modeling/#:~:text=Topic%20modeling%20is%20a%20machine,been%20previously%20classified%20by%20humans.
             tutorial_steps['start_tutorial'] = {intro: 'Hello! This tutorial will guide you in the usage of this topic modeling visualization tool.'};
+            tutorial_steps['introduction_to_topic_modeling'] ={title: 'What is topic modeling?', intro: "Topic modeling is a technique that automatically analyzes text data to determine cluster words for a set of documents"}
             tutorial_steps['scenario_1_global_view_of_topics'] = { title: 'Global view of topics', element: document.querySelector('#CentralPanel'), intro: "The central panel presents a global view of the topics and aims to answer questions <b style='color: #1f77b4;'> How prevalent each topic is?</b>, and <b style='color: #1f77b4;'>How do topics relate to each other? </b>" };                
             tutorial_steps['documents_panel_scenario_1'] = { element: document.querySelector('#DocumentsPanel_first_scenario'), title: 'What is the meaning of each topic?', intro: "In order to identify the meaning of each topic. This panel provides the most relevant documents associated with the currently selected topic" };
             tutorial_steps['scenario_1_hil_buttons'] = { element: document.querySelector('#topic_buttons_div'), title: 'Rename-Split-Merge topics', intro: "Buttons from this panel allow to edit topics: rename, joint two topics, split a topic into two subtopics"};
