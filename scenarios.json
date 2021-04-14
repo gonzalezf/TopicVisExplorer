@@ -4,7 +4,7 @@
     "multi": false
   },
   "singlecorpus": {
-    "path": "models_output/single_corpus_europe_dataset_topics_6.pkl",
+    "path": "models_output/single_corpus_europe_dataset_topics_new_lda_6_topics_reduced_docs.pkl",
     "multi": false
   },
   "multi_demo": {
@@ -16,11 +16,11 @@
     "multi": true
   },
   "multicorpora": {
-    "path": "models_output/multi_corpora_data_europe_northamerica_ca_lda_mallet_gensim.pkl",
+    "path": "models_output/multi_corpora_data_europe_northamerica_ca_lda_mallet_gensim_new_topic_6_reduced_docs.pkl",
     "multi": true
   },
   "multicorpora_baseline": {
-    "path": "models_output/multi_corpora_data_europe_northamerica_ca_lda_mallet_gensim_topic_similarity_baseline.pkl",
+    "path": "models_output/multi_corpora_data_europe_northamerica_ca_lda_mallet_gensim_topic_similarity_baseline_new_topic_6_reduced_docs.pkl",
     "multi": true
   }
 }
