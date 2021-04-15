@@ -14,10 +14,16 @@ var list_terms_for_topic_splitting = [];
 var slider_topic_splitting_values = {};
 var is_human_in_the_loop;
 var scenario_2_is_baseline_metric;
-
+var is_first_time_sankey_diagram = true;
 var users_actions_across_time = [];
 
+function randomIntFromInterval(min, max) { // min and max included 
+    return Math.floor(Math.random() * (max - min + 1) + min);
+}
 
+function randomNumber(min, max) {
+    return Math.random() * (max - min) + min;
+}
 function save_users_actions_across_time(action, timestamp){
     users_actions_across_time.push({
         "timestamp": timestamp,
@@ -25,7 +31,7 @@ function save_users_actions_across_time(action, timestamp){
     });
 }
 
-
+//this function allow to access some values on the matrix_sankey
 function get_new_omega(old_omega){
     if(type_vis==2 && scenario_2_is_baseline_metric == true){
         return old_omega;
@@ -78,10 +84,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
     //for the user study. The omega value will be random
-    if(type_vis==2){
-        vis_state.lambda_lambda_topic_similarity = Math.random().toFixed(2) // Omega random , chosen randomly for the user study        
 
-    }
     // Set up a few 'global' variables to hold the data:
     var K, // number of topics
         mdsData, // (x,y) locations and topic proportions
@@ -2571,11 +2574,25 @@ var LDAvis = function(to_select, data_or_file_name) {
                 //var slider = document.getElementById('sliderDivInputFilteringTopicSimilarity');
                 
                 var slider = document.getElementById('lamdaInputTopicSimilarity');
+                
+
+                if(is_first_time_sankey_diagram == true){
+                    if(type_vis==2){
+                        vis_state.lambda_lambda_topic_similarity = Math.random().toFixed(2) // Omega random , chosen randomly for the user study     
+                        if(scenario_2_is_baseline_metric==true){
+                            vis_state.lambda_lambda_topic_similarity = randomNumber(min_similarity_score, max_similarity_score)
+                        }   
+                        //var start_random_user_study = 
+                        //console.log('ESTA ES EL INICIO',start_random_user_study);
+                    }
+
+                }
                 var range_slider = noUiSlider.create(slider, {
                     //start: [(max_similarity_score)*0.65, max_similarity_score],
-                    start: [(max_similarity_score)*0.65, max_similarity_score],
+                    start: [vis_state.lambda_lambda_topic_similarity , max_similarity_score],
                     //start: [-0.5, 0.17],
                     //start: [(min_similarity_score+max_similarity_score)/2.0, max_similarity_score],
+                    
                     connect: true,
                     range: {
                         'min': min_similarity_score,
