@@ -27,6 +27,9 @@ function save_users_actions_across_time(action, timestamp){
 
 
 function get_new_omega(old_omega){
+    if(type_vis==2 && scenario_2_is_baseline_metric == true){
+        return old_omega;
+    }
     var values_omega_temp = [0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.80, 0.90];
     var new_omega = (1.0-old_omega).toFixed(2);
     if(old_omega == 1.00 || old_omega == 0.00){
@@ -843,21 +846,24 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .text(function(d){
                     if(d.node>=min_target_node_value){ //model 2
                         
-                        var Freq = jsonData_2.mdsDat.Freq[d.node-min_target_node_value]    
-                        var freq_current_topic = Math.round(Freq * 10) / 10  
+                        var Freq = jsonData_2.mdsDat.Freq[d.node-min_target_node_value];    
+                        var freq_current_topic = Math.round(Freq * 10) / 10;
+                        var labeling_user_study = 'N'+String(d.node-min_target_node_value+1);  
                         
                         
 
                   
                     }
                     else{
-                        var Freq = jsonData.mdsDat.Freq[d.node]                       
-                        var freq_current_topic = Math.round(Freq * 10) / 10  
+                        var Freq = jsonData.mdsDat.Freq[d.node];                       
+                        var freq_current_topic = Math.round(Freq * 10) / 10;
+                        var labeling_user_study = 'E'+String(d.node+1);  
+  
                     }
 
 
 
-                    return "("+freq_current_topic+"%) "+ name_topics_sankey[topicID + d.node] ;}
+                    return labeling_user_study+' - '+"("+freq_current_topic+"%) "+ name_topics_sankey[topicID + d.node];}
                     //return name_topics_sankey[topicID + d.node] ;}                                                
                 ) //.text(function(d) { return d.name; })
                 .filter(function(d) { return d.x < user_width_sankey / 2; })
@@ -2511,6 +2517,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             sliderDivLambdaTopicSimilarity.setAttribute("class", "RowDiv");
             document.getElementById("TopicSimilarityMetricPanel").appendChild(sliderDivLambdaTopicSimilarity)  //document.getElementById(visID).appendChild(inputDiv); //creo que esto debiera estar unido al svg mejor
 
+            console.log(' QUE HAY AQUIIII',scenario_2_is_baseline_metric );
 
             if(type_vis==2){
 
@@ -2520,14 +2527,23 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                 var min_similarity_score = Infinity
                 var max_similarity_score = -Infinity
-                matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)].links.filter(function(el){
-                    if(el.value < min_similarity_score){
-                        min_similarity_score = el.value
-                    }
-                    if(el.value > max_similarity_score){
-                        max_similarity_score = el.value
-                    }
-                });
+                if(scenario_2_is_baseline_metric == true){
+
+                    matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)].links.filter(function(el){
+                        if(el.value < min_similarity_score){
+                            min_similarity_score = el.value;
+                        }
+    
+                        if(el.value > max_similarity_score){
+                            max_similarity_score = el.value;
+                        }
+                    });
+                }
+                else{
+                    var min_similarity_score = -1.0;
+                    var max_similarity_score = 1.0;
+                }
+
 
                 min_similarity_score =   Math.round(  min_similarity_score* 100) / 100
                 max_similarity_score = Math.round(  max_similarity_score* 100) / 100
@@ -2556,6 +2572,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
                 var slider = document.getElementById('lamdaInputTopicSimilarity');
                 var range_slider = noUiSlider.create(slider, {
+                    //start: [(max_similarity_score)*0.65, max_similarity_score],
                     start: [(max_similarity_score)*0.65, max_similarity_score],
                     //start: [-0.5, 0.17],
                     //start: [(min_similarity_score+max_similarity_score)/2.0, max_similarity_score],
@@ -2583,14 +2600,23 @@ var LDAvis = function(to_select, data_or_file_name) {
                     //por ahora, values[1] siempre sera el maximo score, vamos a desabilitar ese handle a mano
                     
                     document.getElementById("LabelFilteringTopicSimilarity").innerHTML = "Filtering = [<span id='slider-value-lower'>"+values[0]+"</span>, <span id='slider-value-upper'>"+values[1]+"</span>]";
-                    vis_state.max_value_filtering = values[1],
+                    
+                    if(scenario_2_is_baseline_metric==false){
+                        vis_state.max_value_filtering = 1.0;
+
+                    }
+                    else{
+                    vis_state.max_value_filtering = values[1];
+
+                    }
+                    //Do not change max_value:
                     vis_state.min_value_filtering = values[0],
                     visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
 
 
                 });
 
-
+                origins[1].setAttribute('disabled', true);
 
                 
                 var scaleContainerTopicSimilarityFiltering = d3.select("#" + "sliderDivInputFilteringTopicSimilarity").append("svg")
@@ -3482,10 +3508,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
         function to_percentage(number){
-            var result =  (number*100).toFixed(1);
-            if(result>100){
-                console.log('que weaaa este es el number', number, 'y este es el result', result);
-            }
+            
             return (number*100).toFixed(1) + '%';
 
         }
