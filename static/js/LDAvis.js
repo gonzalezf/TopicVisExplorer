@@ -628,6 +628,8 @@ var LDAvis = function(to_select, data_or_file_name) {
         
         //Inspired by: https://bl.ocks.org/d3noob/013054e8d7807dff76247b81b0e29030
        function visualize_sankey(graph, threshold_min, threshold_max){
+           console.log(' min', threshold_min, ' max', threshold_max, ' graph', graph);
+
            var node_padding = 25
             //////////console.log("este es el graph que recibo", graph)
             d3.selectAll('#svgCentralSankeyDiv').remove();
@@ -691,10 +693,13 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             //////console.log("este es el graph, ",graph)
             var links_filtered =  graph.links.filter(function(el){
-                return ((threshold_min <= el.value.toFixed(2) && el.value.toFixed(2) <= threshold_max));
+                return Number(threshold_min) <= Number(el.value.toFixed(2)); // we must to covner the threshold_min to number            
+                //return (threshold_min <= el.value.toFixed(2));
+                //return ((threshold_min <= el.value.toFixed(2)) && (el.value.toFixed(2) <= threshold_max));
                 }
             );
 
+            console.log(' estos son links filtered', links_filtered);
             //add a link dummy para que siempre dibuje algo
             
             if( links_filtered.length == 0){
@@ -2623,11 +2628,11 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                     }
                     else{
-                    vis_state.max_value_filtering = values[1];
+                    vis_state.max_value_filtering = Number(values[1]);
 
                     }
                     //Do not change max_value:
-                    vis_state.min_value_filtering = values[0],
+                    vis_state.min_value_filtering = Number(values[0]),
                     visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
 
 
