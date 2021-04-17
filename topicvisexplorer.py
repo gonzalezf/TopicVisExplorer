@@ -365,7 +365,9 @@ class TestView(FlaskView):
             #print(' new_document_seeds_TopicB',new_document_seeds_TopicB )
 
             start = time.time()
-
+            print('-----------')
+            print('veamos los nombres de columna', list_relevant_documents.columns)
+            print('estoy buscando esto', name_column_text)
             list_relevant_documents[name_tokenizacion] = list_relevant_documents[name_column_text].parallel_apply(lambda x: text_cleaner(x))
             list_relevant_documents = list_relevant_documents.to_dict('records')
 
@@ -427,7 +429,7 @@ class TestView(FlaskView):
             for row in most_relevant_documents_topic:
                 contribution_to_topic_a = row[0]
                 contribution_to_topic_b = row[1]
-                indexs = df.index[df['texto_completo'] == row[-1]].tolist()
+                indexs = df.index[df['text'] == row[-1]].tolist()
                 if len(indexs)<1:
                     print('Error, text not found')
                 #set final contribution to topic a, is contribution to topic_a multiply by the previous contribuiton

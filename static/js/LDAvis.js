@@ -15,7 +15,8 @@ var slider_topic_splitting_values = {};
 var is_human_in_the_loop;
 var scenario_2_is_baseline_metric;
 var is_first_time_sankey_diagram = true;
-var users_actions_across_time = [];
+var actions_across_time = [];
+var global_sankey_links_filtered;
 
 function randomIntFromInterval(min, max) { // min and max included 
     return Math.floor(Math.random() * (max - min + 1) + min);
@@ -25,7 +26,10 @@ function randomNumber(min, max) {
     return Math.random() * (max - min) + min;
 }
 function save_users_actions_across_time(action, timestamp){
-    users_actions_across_time.push({
+    console.log(action, timestamp);
+
+
+    actions_across_time.push({
         "timestamp": timestamp,
         "action": action
     });
@@ -484,6 +488,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             
         d3.select("#"+lambdaID)
             .on("mouseup", function() {
+                save_users_actions_across_time('change_lambda_left_panel', new Date());
+                save_users_actions_across_time('change_lambda_left_panel_value', document.getElementById(lambdaID).value);
 
                 
                 lambda.old = lambda.current;
@@ -507,6 +513,9 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         d3.select("#"+lambdaIDRightPanel)
             .on("mouseup", function() {
+                save_users_actions_across_time('change_lambda_right_panel', new Date());
+                save_users_actions_across_time('change_lambda_right_panel_value',  document.getElementById(lambdaIDRightPanel).value);
+
                 ////////////console.log("hice click en esti", "#"+lambdaIDRightPanel)
                 //lambda_select = "#"+lambdaID
                 
@@ -628,9 +637,14 @@ var LDAvis = function(to_select, data_or_file_name) {
         
         //Inspired by: https://bl.ocks.org/d3noob/013054e8d7807dff76247b81b0e29030
        function visualize_sankey(graph, threshold_min, threshold_max){
-           console.log(' min', threshold_min, ' max', threshold_max, ' graph', graph);
+            save_users_actions_across_time('min_filtering_sankey', threshold_min);
+            save_users_actions_across_time('min_filtering_sankey_time', new Date());
 
-           var node_padding = 25
+            //console.log(' value de filtering sankey', threshold_min, new Date())
+
+            //console.log(' min', threshold_min, ' max', threshold_max, ' graph', graph);
+
+            var node_padding = 25
             //////////console.log("este es el graph que recibo", graph)
             d3.selectAll('#svgCentralSankeyDiv').remove();
             d3.selectAll('#divider_central_panel_sankey').remove();
@@ -699,9 +713,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 }
             );
 
-            console.log(' estos son links filtered', links_filtered);
-            //add a link dummy para que siempre dibuje algo
             
+            //add a link dummy para que siempre dibuje algo
+            global_sankey_links_filtered = links_filtered; // i need this variable just for the user study
             if( links_filtered.length == 0){
                 
             }
@@ -781,14 +795,17 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .on("click", function(d){
                     save_users_actions_across_time('click_node_sankey', new Date());
 
-
                     isSettingInitial = false
                     topic_on_sankey(d, min_target_node_value );
                     if(d.node>=min_target_node_value){
                         real_last_clicked_sankey_model_2 = d
+                        save_users_actions_across_time('click_node_sankey_model_2_topic_id', d);
+
                     }
                     else{
                         real_last_clicked_sankey_model_1 = d
+                        save_users_actions_across_time('click_node_sankey_model_1_topic_id', d);
+
                     }
                     
                 })                                                
@@ -1087,7 +1104,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 }
                 current_index+=1;
             }
-            
+            save_users_actions_across_time('topics_merged_id', index_topic_name_1+'_'+index_topic_name_2);
+
             //1.- Join relevant documents
 
             for (var row in relevantDocumentsDict)
@@ -1198,6 +1216,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                     //console.log("AQUIII QUEREMOS BANEAR UNA ID!!!!")
                     
                     var new_merged_topic_name = name_topics_circles[topicID + (index_topic_name_1+1)].trim()+' - '+ name_topics_circles[topicID + (index_topic_name_2+1)].trim();
+                    save_users_actions_across_time('new_merged_topic_name', new_merged_topic_name);
+
                     name_topics_circles[topicID + (index_topic_name_1+1)] = new_merged_topic_name;
                     name_topics_circles[topicID + (index_topic_name_2+1)] = new_merged_topic_name+"-delete";
                     merged_topic_to_delete.push(index_topic_name_2+1);
@@ -1449,6 +1469,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 })
                 .on("click", function(d) {
                     save_users_actions_across_time('click_circle_points', new Date());
+                    save_users_actions_across_time('click_circle_points_topic_id', d.topics);
+                    save_users_actions_across_time('click_circle_points_topic_name', name_topics_circles[topicID + d.topics]);
+
 
 
                     // prevent click event defined on the div container from firing
@@ -1874,7 +1897,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 topicButtonsRightPanel.appendChild(edit2);
                 d3.select("#"+topicEdit2)
                 .on("click", function() {
-                    save_users_actions_across_time('open_rename_topic_modal', new Date());
+                    save_users_actions_across_time('open_rename_topic_modal_model2', new Date());
 
 
                     $('#renameTopic2').modal(); 
@@ -2029,7 +2052,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                             omega_value: vis_state.lambda_lambda_topic_similarity,
                             circle_positions: new_circle_positions,   
                             relevance_value: vis_state.lambda,
-                            users_actions_across_time: users_actions_across_time     
+                            actions_across_time: actions_across_time     
                         };
                         // we need to recalculate new coherence only in scenario 1, when hil is activated
                         if(is_human_in_the_loop == true){
@@ -2051,7 +2074,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                             relevance_value: vis_state.lambda,
                             min_filtering:  vis_state.min_value_filtering, 
                             max_filtering: vis_state.max_value_filtering,
-                            users_actions_across_time : users_actions_across_time
+                            actions_across_time : actions_across_time,
+                            global_sankey_links_filtered: global_sankey_links_filtered
                         };
                     }
 
@@ -2295,19 +2319,23 @@ var LDAvis = function(to_select, data_or_file_name) {
                     
                     var merging_final_topic_1 = document.getElementById("merging_topic_1_name").innerText;
                     var merging_final_topic_2 =  $("#selectTopicMerge" ).val()
+                    save_users_actions_across_time('topics_merged_', merging_final_topic_1+'_'+merging_final_topic_2);
+
+
                     save_state_data()
 
                     merging_topics_scenario_1(merging_final_topic_1, merging_final_topic_2);
-                    console.log("antes reverse", document.getElementById(topicReverse));
+                    //console.log("antes reverse", document.getElementById(topicReverse));
                     //document.getElementById(topicReverse).attr('disabled', null);
                     
-                    console.log("despues es el reverse", document.getElementById(topicReverse));
+                    //console.log("despues es el reverse", document.getElementById(topicReverse));
 
                 });
        
            d3.select("#"+topicMerge)
                .on("click", function() {
-                    users_actions_across_time.push('open_merge_modal', new Date());
+                    save_users_actions_across_time('open_merge_modal', new Date());
+
 
                    if(merging_topic_1!=-1){  
                        $('.merging_topic_1').html(merging_topic_1); //this is one topic wish I would like to merge
@@ -2349,7 +2377,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             d3.select("#"+topicEdit)
                 .on("click", function() {
-                    save_users_actions_across_time('open_renameTopic_modal', new Date());
+                    save_users_actions_across_time('open_rename_topic_modal_model1', new Date());
 
 
                     $('#renameTopic').modal(); 
@@ -2363,6 +2391,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .on("click", function(){
                     save_users_actions_across_time('apply_rename_topic_scenario_1', new Date());
 
+                    save_users_actions_across_time('old_topic_name_topic_scenario_1', name_topics_circles[document.getElementById("idTopic").innerText] );
+                    save_users_actions_across_time('new_topic_name_topic_scenario_1', document.getElementById("renameTopicId").value);
 
                     //rename the topic
                     name_topics_circles[document.getElementById("idTopic").innerText] = document.getElementById("renameTopicId").value
@@ -2381,7 +2411,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 d3.select("#rename_topic_button")
                 .on("click", function(){
                     save_users_actions_across_time('apply_rename_topic_model_1_scenario_2', new Date());
-
+                    save_users_actions_across_time('old_topic_name_topic_model_1_scenario_2', document.getElementById("idTopic").innerText);
+                    save_users_actions_across_time('new_topic_name_topic_model_1_scenario_2', document.getElementById("renameTopicId").value);
 
                     //rename the topic
                     name_topics_sankey[document.getElementById("idTopic").innerText] = document.getElementById("renameTopicId").value
@@ -2397,7 +2428,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             d3.select("#rename_topic_button2")
                 .on("click", function(){
                     save_users_actions_across_time('apply_rename_topic_model_2_scenario_2', new Date());
-
+                    save_users_actions_across_time('old_topic_name_topic_model_2_scenario_2', document.getElementById("idTopic2").innerText);
+                    save_users_actions_across_time('new_topic_name_topic_model_2_scenario_2', document.getElementById("renameTopicId2").value);
 
 
                     //cambiar el nombre del topico segun lo especifique el usuario
@@ -2414,7 +2446,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             d3.select("#"+topicSplit)
             .on("click",function(){
                 save_users_actions_across_time('open_split_topic_modal', new Date());
-
+                save_users_actions_across_time('splitting_topic_id', vis_state.topic);
+                save_users_actions_across_time('splitting_topic_name', name_topics_circles[topicID + vis_state.topic]);
 
                 $('#topic_to_split_name').html(name_topics_circles[topicID + vis_state.topic]);                    
                 $('#SplitTopicModal').modal();
@@ -2435,6 +2468,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                     }
                     else{
                         save_users_actions_across_time('apply_topic_splitting', new Date());
+                        save_users_actions_across_time('apply_topic_splitting_document_seeds', slider_topic_splitting_values[splitting_topic]);
+
 
 
                         save_state_data()
@@ -2525,7 +2560,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             sliderDivLambdaTopicSimilarity.setAttribute("class", "RowDiv");
             document.getElementById("TopicSimilarityMetricPanel").appendChild(sliderDivLambdaTopicSimilarity)  //document.getElementById(visID).appendChild(inputDiv); //creo que esto debiera estar unido al svg mejor
 
-            console.log(' QUE HAY AQUIIII',scenario_2_is_baseline_metric );
+            //console.log(' QUE HAY AQUIIII',scenario_2_is_baseline_metric );
 
             if(type_vis==2){
 
@@ -2576,28 +2611,26 @@ var LDAvis = function(to_select, data_or_file_name) {
                 sliderDivInputFilteringTopicSimilarity.appendChild(lambdaInputTopicSimilarity);
 
                 
-                //var slider = document.getElementById('sliderDivInputFilteringTopicSimilarity');
                 
                 var slider = document.getElementById('lamdaInputTopicSimilarity');
                 
 
                 if(is_first_time_sankey_diagram == true){
                     if(type_vis==2){
-                        vis_state.lambda_lambda_topic_similarity = Math.random().toFixed(2) // Omega random , chosen randomly for the user study     
-                        if(scenario_2_is_baseline_metric==true){
-                            vis_state.lambda_lambda_topic_similarity = randomNumber(min_similarity_score, max_similarity_score)
+                        var initial_filtering_value = randomNumber(min_similarity_score, max_similarity_score);
+                        save_users_actions_across_time('initial_filtering_value_start', initial_filtering_value);
+                        if(scenario_2_is_baseline_metric==false){
+                            vis_state.lambda_lambda_topic_similarity = Math.random().toFixed(2) // Omega random , chosen randomly for the user study  
+                            save_users_actions_across_time('omega_random_start',  vis_state.lambda_lambda_topic_similarity);
+
                         }   
-                        //var start_random_user_study = 
-                        //console.log('ESTA ES EL INICIO',start_random_user_study);
+
                     }
 
                 }
                 var range_slider = noUiSlider.create(slider, {
                     //start: [(max_similarity_score)*0.65, max_similarity_score],
-                    start: [vis_state.lambda_lambda_topic_similarity , max_similarity_score],
-                    //start: [-0.5, 0.17],
-                    //start: [(min_similarity_score+max_similarity_score)/2.0, max_similarity_score],
-                    
+                    start: [initial_filtering_value, max_similarity_score],                    
                     connect: true,
                     range: {
                         'min': min_similarity_score,
@@ -2619,6 +2652,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                 slider.noUiSlider.on('update', function (values, handle) {
                     
+
+    
                     //por ahora, values[1] siempre sera el maximo score, vamos a desabilitar ese handle a mano
                     
                     document.getElementById("LabelFilteringTopicSimilarity").innerHTML = "Filtering = [<span id='slider-value-lower'>"+values[0]+"</span>, <span id='slider-value-upper'>"+values[1]+"</span>]";
@@ -2632,7 +2667,12 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                     }
                     //Do not change max_value:
-                    vis_state.min_value_filtering = Number(values[0]),
+                    vis_state.min_value_filtering = Number(values[0]);
+
+                    save_users_actions_across_time('changing_filtering', new Date());
+                    save_users_actions_across_time('changing_filtering_value', vis_state.min_value_filtering);
+
+
                     visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
 
 
@@ -2710,6 +2750,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             d3.select("#"+"lambdaInputLambdaTopicSimilarity")
             .on("mouseup", function() {
+
+                
                 lambda_lambda_topic_similarity.old = lambda_lambda_topic_similarity.current;
                 lambda_lambda_topic_similarity.current = document.getElementById("lambdaInputLambdaTopicSimilarity").value;
                 
@@ -2723,7 +2765,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                
 
                 if(type_vis == 2){
-
+                    save_users_actions_across_time('changing_omega_scenario_2', new Date());
+                    save_users_actions_across_time('changing_omega_scenario_2_value', lambda_lambda_topic_similarity.current);
                     //mostramos 1 - omega, para que cuandos ea 0 signifique que damos mas importancia a las keywords, y 1 cuando le damos mas importancia a los docs
                     //console.log('sera asi ', matrix_sankey[(1.0-lambda_lambda_topic_similarity.current).toFixed(2)]);
                     //console.log('value', (1.0-lambda_lambda_topic_similarity.current).toFixed(2));
@@ -2731,6 +2774,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                     visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
                 }
                 if(type_vis == 1){
+                    save_users_actions_across_time('changing_omega_scenario_1', new Date());
+                    save_users_actions_across_time('changing_omega_scenario_1_value', lambda_lambda_topic_similarity.current);
+
                     createMdsPlot(1, mdsData, get_new_omega(lambda_lambda_topic_similarity.current))
                     topic_on(document.getElementById(topicID+vis_state.topic))
                 }
@@ -2740,7 +2786,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             d3.select("#lambdaInputTopicSimilarityFiltering") //Filtering paths of sankey diagram
             .on("mouseup", function() {
-                
+
                 // store the previous lambda value
                 lambda_topic_similarity.old = lambda_topic_similarity.current;
                 
@@ -2754,7 +2800,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 document.getElementById("lambdaInputTopicSimilarityFiltering-value").innerHTML = " <span id='lambdaInputTopicSimilarityFiltering-value'>" + Math.round( vis_state.lambda_topic_similarity * 100) / 100 + "</span>";
 
                 document.getElementById("lambdaInputTopicSimilarityFiltering").value = vis_state.lambda_topic_similarity;
-                
+                //creo que este es el omega??
+                save_users_actions_across_time('lambdaInputTopicSimilarityFiltering', new Date());
+                save_users_actions_across_time('lambdaInputTopicSimilarityFiltering_value', vis_state.lambda_topic_similarity);  
                 
                 visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
                 
@@ -2867,8 +2915,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                     })
             
                     .on("mouseout", function() {
-                        vis_state.term = "";
-                        term_off(this);
+                        //vis_state.term = "";
+                        //term_off(this);
                         //state_save(true);
                     });
 
@@ -3718,7 +3766,30 @@ var LDAvis = function(to_select, data_or_file_name) {
            
         }
 
-        
+        var omited_events_table =['pre-body.bs.table','post-header.bs.table', 'reset-view.bs.table', 'pre-body.bs.table', 'post-body.bs.table', 'post-footer.bs.table', 'click-row.bs.table']
+        $('#tableRelevantDocumentsClass_Model1').on('all.bs.table', function (e, name, args) {
+            //console.log('Event:', name, ', data:', args);
+            if(!omited_events_table.includes(name)){
+                save_users_actions_across_time('tableRelevantDocumentsClass_Model1_'+name, args);
+
+            }
+        });
+
+        $('#tableRelevantDocumentsClass_Model2').on('all.bs.table', function (e, name, args) {
+            //console.log('Event:', name, ', data:', args);
+            if(!omited_events_table.includes(name)){
+                save_users_actions_across_time('tableRelevantDocumentsClass_Model2_'+name, args);
+            }
+        });
+        $('#tableRelevantDocumentsClass_TopicSplitting').on('all.bs.table', function (e, name, args) {
+            //console.log('Event:', name, ', data:', args);
+            if(!omited_events_table.includes(name)){
+                save_users_actions_across_time('tableRelevantDocumentsClass_TopicSplitting_'+name, args);
+            }
+        });
+
+
+
 
 
         function updateRelevantDocuments(topic_id, relevantDocumentsDict, model){

@@ -4,7 +4,7 @@ from nltk.corpus import stopwords
 stop_words = stopwords.words('english')
 stop_words.extend(['usernameremoved', 'link', 'remove', 'usernameremove', 'amp', 'linkremoved',' <link removed>','usernameremoved','<usernameremoved>','<linkremoved>','usernameremoved_usernameremoved','linkremoved_linkremoved'])
 
-name_column_text = 'texto_completo'
+name_column_text = 'text'
 name_tokenizacion = 'text_cleaner'
 #/////////////////////////////Parameters////////////////////////////
 
