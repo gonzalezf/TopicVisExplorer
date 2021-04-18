@@ -43,7 +43,7 @@ function get_new_omega(old_omega){
     if(type_vis==2 && scenario_2_is_baseline_metric == true){
         return old_omega;
     }
-    var values_omega_temp = [0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.80, 0.90];
+    var values_omega_temp = [0.10, 0.20, 0.30, 0.40, 0.50, 0.60,0.70,  0.80, 0.90];
     var new_omega = (1.0-old_omega).toFixed(2);
     if(old_omega == 1.00 || old_omega == 0.00){
         new_omega = Number(new_omega).toFixed(1);
