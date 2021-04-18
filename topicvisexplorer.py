@@ -369,6 +369,14 @@ class TestView(FlaskView):
             print('veamos los nombres de columna', list_relevant_documents.columns)
             print('estoy buscando esto', name_column_text)
             list_relevant_documents[name_tokenizacion] = list_relevant_documents[name_column_text].parallel_apply(lambda x: text_cleaner(x))
+
+            #remove links and usernames
+            #print('type', list_relevant_documents[name_tokenizacion])
+            #list_relevant_documents[name_tokenizacion] = list_relevant_documents[name_tokenizacion].str.lower()
+            #list_relevant_documents[name_tokenizacion].replace({"http\S+": '<linkremoved>'}, inplace=True, regex=True)
+            #list_relevant_documents[name_tokenizacion].replace({"<link removed>": '<linkremoved>'}, inplace=True, regex=True)
+            #list_relevant_documents[name_tokenizacion].replace({"@[^\s]+": '<usernameremoved>'}, inplace=True, regex=True) #estas lineas estan comentadas porque ahora elimino los username y links en el text cleaner de topic splitting helper.py
+      
             list_relevant_documents = list_relevant_documents.to_dict('records')
 
             new_document_seeds_TopicA = pd.DataFrame(new_document_seeds_TopicA).reset_index()
@@ -422,9 +430,7 @@ class TestView(FlaskView):
 
             df[str(int(topic_id-1))]= 0.0
             df[str(current_number_of_topics)]= 0.0
-            print(' que wea es estoooo', type(most_relevant_documents_topic))
-            print(' que wea es estoooo most_relevant_documents_topic: ', type(most_relevant_documents_topic))
-            print(' este es el len', len(most_relevant_documents_topic))
+
 
             for row in most_relevant_documents_topic:
                 contribution_to_topic_a = row[0]
@@ -577,12 +583,10 @@ class TestView(FlaskView):
         # dd/mm/YY H:M:S
         dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
         json_file = request.get_json()
-        with open('user_study_results/data_user_study_'+dt_string+'.pkl', 'wb') as handle:
+        full_scenario_description = json_file['full_scenario_description']
+        with open('user_study_results/'+full_scenario_description+'_'+dt_string+'.pkl', 'wb') as handle:
             pickle.dump(json_file, handle, protocol=4) #protocol 4 is compatible with python 3.6+
-            print("Single corpus data saved sucessfully")
-
-
-
+            print("User study data exported sucessfully")
         return 'exito!! user study saved'
 
     #Merge topic

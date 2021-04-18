@@ -17,7 +17,10 @@ var scenario_2_is_baseline_metric;
 var is_first_time_sankey_diagram = true;
 var actions_across_time = [];
 var global_sankey_links_filtered;
+var sankey_topics_automatic_match;
+var name_topics_sankey = {};
 
+var testing;
 function randomIntFromInterval(min, max) { // min and max included 
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
@@ -206,7 +209,6 @@ var LDAvis = function(to_select, data_or_file_name) {
     //rename topic variables
     
     var name_topics_circles = {}
-    var name_topics_sankey = {}
 
     var isSettingInitial = true
 
@@ -225,6 +227,10 @@ var LDAvis = function(to_select, data_or_file_name) {
     //to_select = BarPlotPanelDivId
     
     //Get relevant documents from ajax
+    if(type_vis==1){
+        save_users_actions_across_time('omega_start_value', (1.0 - lambda_lambda_topic_similarity.current).toFixed(2));
+
+    }
     if(type_vis === 1){
         var relevantDocumentsDict;    
         $.ajax({
@@ -706,14 +712,23 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
             //////console.log("este es el graph, ",graph)
+            sankey_topics_automatic_match = []
             var links_filtered =  graph.links.filter(function(el){
+                if(Number(threshold_min) <= Number(el.value.toFixed(2))){
+                    //console.log(el.source.sourceLinks)
+
+                  
+                    //sankey_topics_automatic_match.push(el.source.sourceLinks);
+                    //                return Number(threshold_min) <= Number(el.value.toFixed(2)); // we must to covner the threshold_min to number            
+                    return true;
+
+                }
                 return Number(threshold_min) <= Number(el.value.toFixed(2)); // we must to covner the threshold_min to number            
                 //return (threshold_min <= el.value.toFixed(2));
                 //return ((threshold_min <= el.value.toFixed(2)) && (el.value.toFixed(2) <= threshold_max));
                 }
             );
 
-            
             //add a link dummy para que siempre dibuje algo
             global_sankey_links_filtered = links_filtered; // i need this variable just for the user study
             if( links_filtered.length == 0){
@@ -780,8 +795,19 @@ var LDAvis = function(to_select, data_or_file_name) {
     
             link.append("title")
                 .text(function(d) {
-                    return name_topics_sankey[topicID + d.source.node] + " → " + 
-                    name_topics_sankey[topicID + d.target.node] + "\n" + format(d.value);});
+                    var match = { 
+                        'source_node':topicID + d.source.node,
+                        'source_name': name_topics_sankey[topicID + d.source.node],
+                        'link_value': format(d.value),
+                        'target_node': topicID + d.target.node,
+                        'target_name': name_topics_sankey[topicID + d.target.node],
+                    }
+
+                    var title = name_topics_sankey[topicID + d.source.node] + " → " + 
+                    name_topics_sankey[topicID + d.target.node] + "\n" + format(d.value);
+                    sankey_topics_automatic_match.push(match);
+
+                    return title;});
                     
         
             // add in the nodes
@@ -1025,7 +1051,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             $('#loadMe').modal({
                 backdrop: 'static',
                 keyboard: false
-            })
+            });
 
             var postDataTopicSplitting = {
                 new_document_seeds: slider_topic_splitting_values[splitting_topic],
@@ -1076,8 +1102,12 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                 }, 
                 contentType: "application/json"             
-            });
-                                
+            })
+            .fail(function(data){
+                $("#loadMe").modal('hide');
+
+                console.log('Ajax failed'+ data['responseText'] );
+            });                                
         }
 
       
@@ -2052,7 +2082,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                             omega_value: vis_state.lambda_lambda_topic_similarity,
                             circle_positions: new_circle_positions,   
                             relevance_value: vis_state.lambda,
-                            actions_across_time: actions_across_time     
+                            actions_across_time: actions_across_time,
+                            full_scenario_description: type_vis+'_'+is_human_in_the_loop     
                         };
                         // we need to recalculate new coherence only in scenario 1, when hil is activated
                         if(is_human_in_the_loop == true){
@@ -2075,10 +2106,13 @@ var LDAvis = function(to_select, data_or_file_name) {
                             min_filtering:  vis_state.min_value_filtering, 
                             max_filtering: vis_state.max_value_filtering,
                             actions_across_time : actions_across_time,
-                            global_sankey_links_filtered: global_sankey_links_filtered
+                            sankey_topics_automatic_match: sankey_topics_automatic_match,
+                            full_scenario_description: type_vis+'_'+scenario_2_is_baseline_metric
+                            //global_sankey_links_filtered: global_sankey_links_filtered
                         };
                     }
-
+                    testing = global_sankey_links_filtered;
+                    console.log('QUIERO GUARDAR ESTA WEA',global_sankey_links_filtered);
 
                     console.log('User study data from Javascript', user_study_data);
         
@@ -2104,7 +2138,12 @@ var LDAvis = function(to_select, data_or_file_name) {
                             alert("Status: " + textStatus); alert("Error: " + errorThrown); 
                         }, 
                         contentType: "application/json"             
-                    });
+                    })
+                    .fail(function(data){
+                        $("#saving_results").modal('hide');
+        
+                        alert('Ajax failed'+ data['responseText'] );
+                    });      
         
                 
                 });

@@ -16,6 +16,7 @@ import importlib
 import topicvisexplorer
 import pandas as pd
 import warnings
+import re
 from scipy import spatial
 
 import sys
@@ -93,12 +94,16 @@ def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
     return texts_out
         
 def text_cleaner(tweet):
+    tweet = tweet.lower()
+    tweet = re.sub("http\S+", '<linkremoved>', tweet)
+    tweet = re.sub("<link removed>", '<linkremoved>', tweet)
+    tweet = re.sub("@[^\s]+", '<usernameremoved>', tweet)
 
     tweet = tweet.translate(remove_digits)
     #tweet = tweet.lower() it wasn't a good idea,, we lost a lot of
     tweet = tweet.translate(remove_punctuation)
     tweet = tweet.translate(remove_hashtags_caracter)
-    tweet = tweet.lower()
+
 
     tweet = unidecode.unidecode(tweet)
     tweet = sent_to_words(tweet)
