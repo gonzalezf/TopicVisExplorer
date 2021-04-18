@@ -29,7 +29,7 @@ function randomNumber(min, max) {
     return Math.random() * (max - min) + min;
 }
 function save_users_actions_across_time(action, timestamp){
-    console.log(action, timestamp);
+    //console.log(action, timestamp);
 
 
     actions_across_time.push({
@@ -1078,14 +1078,14 @@ var LDAvis = function(to_select, data_or_file_name) {
                     new_circle_positions = JSON.parse(new_dict_topic_splitting['new_circle_positions']); 
                    
                     //1. Update relevantDocumentsDict
-                    console.log('estos eran los documentos antes', relevantDocumentsDict);
+                    //console.log('estos eran los documentos antes', relevantDocumentsDict);
                     relevantDocumentsDict = JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython'].replace(/\bNaN\b/g, "null"));
-                    console.log('estos eran los documentos despues', relevantDocumentsDict);
+                    //console.log('estos eran los documentos despues', relevantDocumentsDict);
         
                     //update lambdata with the new informsation
-                    console.log('ojo este es el mds data antes de actualizar en topic splitting,', mdsData)
+                    //console.log('ojo este es el mds data antes de actualizar en topic splitting,', mdsData)
                     updateTopicNamesCircles(new_dict_topic_splitting['PreparedDataObtained_fromPython']);
-                    console.log('ojo este es el mds data despues de actualizar en topic splitting,', mdsData)
+                    //console.log('ojo este es el mds data despues de actualizar en topic splitting,', mdsData)
         
                     //see_most_relevant_keywords(12)
         
@@ -3711,7 +3711,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                     }
                 }               
-            console.log('asi va estoo aqui', slider_topic_splitting_values);
+            //console.log('asi va estoo aqui', slider_topic_splitting_values);
 
             }            
         });
@@ -3736,10 +3736,12 @@ var LDAvis = function(to_select, data_or_file_name) {
                     toggle:true,
                     //height:420,
                     pagination: true,
+
                     //showRefresh: true,
                     search: true,
                     sorting: true,
-                    uniqueId: true,
+                    //uniqueId: column_text_name,
+                    //idField: column_text_name, 
                     //pageList: [10, 25, 50, 100],
                     pageList: [10],
                     checkboxHeader: false,           
@@ -3766,8 +3768,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                             valign: 'middle',
                             clickToSelect: false,
                             formatter : function(value,row,index) {       
-                                //console.log('este es un value', value, row, index);             
-                             return '<input type="radio" name="radio_'+splitting_topic+'_'+index+'" id="'+splitting_topic+'_'+index+'_TopicA" class="radio_button_topic_splitting" />';
+                                index = relevantDocumentsDict.indexOf(row);   
+  
+                                return '<input type="radio" name="radio_'+splitting_topic+'_'+index+'" id="'+splitting_topic+'_'+index+'_TopicA" class="radio_button_topic_splitting" />';
                              }                      
                           },
                           {
@@ -3776,8 +3779,10 @@ var LDAvis = function(to_select, data_or_file_name) {
                              align: 'center',
                              valign: 'middle',
                              clickToSelect: false,
-                             formatter : function(value,row,index) {                                              
-                              return '<input type="radio"  name="radio_'+splitting_topic+'_'+index+'" id="'+splitting_topic+'_'+index+'_TopicB" class="radio_button_topic_splitting" />';
+                             formatter : function(value,row,index) {        
+                                index = relevantDocumentsDict.indexOf(row);   
+                            
+                                return '<input type="radio"  name="radio_'+splitting_topic+'_'+index+'" id="'+splitting_topic+'_'+index+'_TopicB" class="radio_button_topic_splitting" />';
      
                               }                      
                            },
@@ -3788,8 +3793,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                              valign: 'middle',
                              clickToSelect: false,
                              formatter : function(value,row,index) {                            
-                         
-                              return '<input type="radio" name="radio_'+splitting_topic+'_'+index+'"  id="'+splitting_topic+'_'+index+'_TopicNone" class="radio_button_topic_splitting" checked/>'; 
+                                index = relevantDocumentsDict.indexOf(row);   
+                        
+                                return '<input type="radio" name="radio_'+splitting_topic+'_'+index+'"  id="'+splitting_topic+'_'+index+'_TopicNone" class="radio_button_topic_splitting" checked/>'; 
                               }                      
                            }                               
                       
