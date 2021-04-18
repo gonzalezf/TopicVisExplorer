@@ -382,7 +382,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                             name_string += top_terms[i].Term+" "
                         }
                         
-                        name_topics_circles[topicID + d.topics] = name_string 
+                        //name_topics_circles[topicID + d.topics] = name_string 
     
                         return (topicID + d.topics);
                     });    
