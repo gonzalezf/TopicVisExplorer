@@ -1,6 +1,6 @@
 {
   "single_demo": {
-    "path": "models_output/single_corpus_airlines_dataset.pkl",
+    "path": "models_output/single_corpus_airlines_dataset_negative_tweets.pkl",
     "multi": false
   },
   "singlecorpus": {
