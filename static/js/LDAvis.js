@@ -805,7 +805,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                     var title = name_topics_sankey[topicID + d.source.node] + " → " + 
                     name_topics_sankey[topicID + d.target.node] + "\n" + format(d.value);
-                    sankey_topics_automatic_match.push(match);
+                    sankey_topics_automatic_match.push(JSON.stringify(match));
 
                     return title;});
                     
@@ -825,12 +825,12 @@ var LDAvis = function(to_select, data_or_file_name) {
                     topic_on_sankey(d, min_target_node_value );
                     if(d.node>=min_target_node_value){
                         real_last_clicked_sankey_model_2 = d
-                        save_users_actions_across_time('click_node_sankey_model_2_topic_id', d);
+                        save_users_actions_across_time('click_node_sankey_model_2_topic_id', d.name);
 
                     }
                     else{
                         real_last_clicked_sankey_model_1 = d
-                        save_users_actions_across_time('click_node_sankey_model_1_topic_id', d);
+                        save_users_actions_across_time('click_node_sankey_model_1_topic_id', d.name);
 
                     }
                     
@@ -2111,11 +2111,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                             //global_sankey_links_filtered: global_sankey_links_filtered
                         };
                     }
-                    testing = global_sankey_links_filtered;
-                    console.log('QUIERO GUARDAR ESTA WEA',global_sankey_links_filtered);
 
                     console.log('User study data from Javascript', user_study_data);
-        
+
                     var result; 
                     $.ajax({
                         type: 'POST',
@@ -3815,7 +3813,10 @@ var LDAvis = function(to_select, data_or_file_name) {
         $('#tableRelevantDocumentsClass_Model1').on('all.bs.table', function (e, name, args) {
             //console.log('Event:', name, ', data:', args);
             if(!omited_events_table.includes(name)){
+                //save_users_actions_across_time('tableRelevantDocumentsClass_Model1_'+name, args);
+                save_users_actions_across_time('tableRelevantDocumentsClass_Model1_'+name, new Date());
                 save_users_actions_across_time('tableRelevantDocumentsClass_Model1_'+name, args);
+
 
             }
         });
@@ -3823,13 +3824,17 @@ var LDAvis = function(to_select, data_or_file_name) {
         $('#tableRelevantDocumentsClass_Model2').on('all.bs.table', function (e, name, args) {
             //console.log('Event:', name, ', data:', args);
             if(!omited_events_table.includes(name)){
+                save_users_actions_across_time('tableRelevantDocumentsClass_Model2_'+name, new Date());
                 save_users_actions_across_time('tableRelevantDocumentsClass_Model2_'+name, args);
+
             }
         });
         $('#tableRelevantDocumentsClass_TopicSplitting').on('all.bs.table', function (e, name, args) {
             //console.log('Event:', name, ', data:', args);
             if(!omited_events_table.includes(name)){
+                save_users_actions_across_time('tableRelevantDocumentsClass_TopicSplitting_'+name, new Date());
                 save_users_actions_across_time('tableRelevantDocumentsClass_TopicSplitting_'+name, args);
+
             }
         });
 
