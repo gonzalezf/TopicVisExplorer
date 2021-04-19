@@ -95,9 +95,9 @@ def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
         
 def text_cleaner(tweet):
     tweet = tweet.lower()
-    tweet = re.sub("http\S+", '<linkremoved>', tweet)
-    tweet = re.sub("<link removed>", '<linkremoved>', tweet)
-    tweet = re.sub("@[^\s]+", '<usernameremoved>', tweet)
+    tweet = re.sub(r"http\S+", '<linkremoved>', tweet)
+    tweet = re.sub(r"<link removed>", '<linkremoved>', tweet)
+    tweet = re.sub(r"@[^\s]+", '<usernameremoved>', tweet)
 
     tweet = tweet.translate(remove_digits)
     #tweet = tweet.lower() it wasn't a good idea,, we lost a lot of
