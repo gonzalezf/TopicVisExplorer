@@ -38,6 +38,18 @@ function save_users_actions_across_time(action, timestamp){
     });
 }
 
+var userId =  new Date() || null; // Replace your_user_id with your own if available.
+window.hj('identify', userId, {
+    actions_across_time: actions_across_time
+    // Add your own custom attributes here. Some EXAMPLES:
+    // 'Signed up': '2019—06-20Z', // Signup date in ISO-8601 format.
+    // 'Last purchase category': 'Electronics', // Send strings with quotes around them.
+    // 'Total purchases': 15, // Send numbers without quotes.
+    // 'Last purchase date': '2019-06-20Z', // Send dates in ISO-8601 format.
+    // 'Last refund date': null, // Send null when no value exists for a user.
+});
+
+
 //this function allow to access some values on the matrix_sankey
 function get_new_omega(old_omega){
     if(type_vis==2 && scenario_2_is_baseline_metric == true){
