@@ -19,6 +19,7 @@ var actions_across_time = [];
 var global_sankey_links_filtered;
 var sankey_topics_automatic_match;
 var name_topics_sankey = {};
+var inverted_links_filtered; 
 
 var testing;
 function randomIntFromInterval(min, max) { // min and max included 
@@ -74,16 +75,18 @@ function get_new_omega(old_omega){
 save_users_actions_across_time('session_start', new Date());
 
 
-
+var testing;
 
 if(type_vis== 2){
     if( Object.keys(matrix_sankey).length == 1){
         scenario_2_is_baseline_metric = true;
-    
+
     }
     else{
         scenario_2_is_baseline_metric = false;
     }
+
+
 }
 
 
@@ -655,6 +658,24 @@ var LDAvis = function(to_select, data_or_file_name) {
         
         //Inspired by: https://bl.ocks.org/d3noob/013054e8d7807dff76247b81b0e29030
        function visualize_sankey(graph, threshold_min, threshold_max){
+            /*
+            if(scenario_2_is_baseline_metric==true){
+                graph.links = graph.links.map(function(e) { 
+                    e.value = -e.value; 
+                    return e;
+                });
+                console.log('ESTORESULTO AL FINAL', graph.links);
+                console.log('ESTOS SON LOS THRESHOLD', threshold_min, threshold_max);
+                var temp_min =   -threshold_max;
+                var temp_max =  -threshold_min;
+                threshold_min =  temp_min;
+                threshold_max = temp_max;
+
+            }*/
+
+            console.log('ESTOS SON LOS THRESHOLD', threshold_min, threshold_max);
+            inverted_links_filtered = graph;
+
             save_users_actions_across_time('min_filtering_sankey', threshold_min);
             save_users_actions_across_time('min_filtering_sankey_time', new Date());
             save_users_actions_across_time('max_filtering_sankey', threshold_max);
@@ -778,6 +799,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             //I deleted the filtered of nodes. Sankey diagram shows all the nodes (even if these nodes don't have any other similarities. I could add a different color even!. Thus 
             //we could detect original topics. Not only the topics that are similar)
+            
             var nodes_filtered = graph.nodes
             var sankey = d3.sankey()
             .nodeWidth(36)
@@ -1740,7 +1762,7 @@ var LDAvis = function(to_select, data_or_file_name) {
            document.getElementById("DocumentsPanel").appendChild(RelevantDocumentsTableDiv_2) 
            const  div_2 = document.getElementById('RelevantDocumentsTableDiv_2');
            div_2.insertAdjacentHTML('afterbegin', '<table  id="tableRelevantDocumentsClass_Model2" class="table table-hover"> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table>');
-
+           console.log('esto es justo antes de mandar todo', matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)])
            visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
        }
        
@@ -2780,8 +2802,14 @@ var LDAvis = function(to_select, data_or_file_name) {
                     save_users_actions_across_time('changing_filtering_max_value', vis_state.max_value_filtering);
 
 
+                    if(scenario_2_is_baseline_metric == false){
+                        visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
 
-                    visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
+                    }else
+                    {
+                        console.log(' Dando vuelta la matrix', matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)]);
+                        visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
+                    }
 
 
                 });
@@ -4026,9 +4054,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 d3.select("#TopicSimilarityMetricPanel").remove()       
             }                   
         }    
-        
-
-
     }
     
     if (typeof data_or_file_name === 'string'){
