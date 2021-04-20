@@ -46,12 +46,13 @@ class TopicVisExplorer:
 
     app = None
     
-    def __init__(self, name):        
+    def __init__(self, name): 
+
         self.app = Flask(name)
         TestView.register(self.app, route_base = '/')
     
     def run(self):
-        self.app.run(debug=False, host="0.0.0.0", port=80)
+        self.app.run(debug=False, host="0.0.0.0", port=5001)
     
     def load_scenarios(self, scenarios_dict):
         global scenarios

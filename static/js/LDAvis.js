@@ -1065,6 +1065,14 @@ var LDAvis = function(to_select, data_or_file_name) {
                 keyboard: false
             });
 
+            //make sure you have lower case "o"
+            setTimeout(function(){
+                $("#loadMe").modal('hide');
+                alert("There was error during this operation." ); 
+            }, 120000);
+
+
+
             var postDataTopicSplitting = {
                 new_document_seeds: slider_topic_splitting_values[splitting_topic],
                 old_circle_positions: new_circle_positions,
@@ -1131,6 +1139,12 @@ var LDAvis = function(to_select, data_or_file_name) {
                 keyboard: false
             })
 
+            //make sure you have lower case "o"
+            setTimeout(function(){
+                $("#loadMe").modal('hide');
+                alert("There was error during this operation." ); 
+
+            }, 120000);
     
             //get index topic from name    
             var current_index = 0;
