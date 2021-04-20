@@ -653,8 +653,17 @@ input[type=radio] {
   font-size: 1.1em
 }
 
+
+
 /*These modifications are necessary to hide the handle upper of filtering*/
+/*
 .noUi-handle-upper {
+  cursor: auto  !important;
+  display: none;
+}
+*/
+
+.disabled_slider {
   cursor: auto  !important;
   display: none;
 }
