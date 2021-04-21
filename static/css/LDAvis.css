@@ -667,3 +667,9 @@ input[type=radio] {
   cursor: auto  !important;
   display: none;
 }
+
+.introjs-skipbutton {
+  display: none;
+}
+
+
