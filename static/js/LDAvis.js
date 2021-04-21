@@ -51,6 +51,133 @@ window.hj('identify', userId, {
 });
 
 
+function show_tutorial(){
+    //elements of tutorial. Thus we dont need to write it everytime again and again
+    function fix_tutorial_identification_elements(id_element, json){
+        json["element"] = document.querySelector(id_element)
+        return json
+    }
+    //element: document.querySelector('#svgMdsPlot'),
+    var tutorial_steps = {}
+    //take into consideration this tutorial
+    //https://monkeylearn.com/blog/introduction-to-topic-modeling/#:~:text=Topic%20modeling%20is%20a%20machine,been%20previously%20classified%20by%20humans.
+    
+
+    tutorial_steps['start_tutorial'] = {intro: 'Hello! This tutorial will guide you in the usage of this topic modeling visualization tool.'};
+    tutorial_steps['topic_modeling_definition'] = {title: 'What is topic modeling?', intro: '<div class="card-content" style="width:80%"> Topic modeling is a technique that automatically analyzes text data to determine cluster words for a set of documents <img src="/static/img/IntroToLDA.png" /> </div>' };
+
+    //tutorial_steps['introduction_to_topic_modeling'] ={title: 'What is topic modeling?', intro: "Topic modeling is a technique that automatically analyzes text data to determine cluster words for a set of documents"}
+    tutorial_steps['scenario_1_global_view_of_topics'] = { title: 'Global view of topics', element: document.querySelector('#CentralPanel'), intro: "The central panel presents a global view of the topics" };                
+    tutorial_steps['documents_panel_scenario_1'] = { element: document.querySelector('#DocumentsPanel_first_scenario'), title: 'What is the meaning of each topic?', intro: "In order to identify the meaning of each topic. This panel provides the most relevant documents associated with the currently selected topic" };
+    tutorial_steps['scenario_1_hil_buttons'] = { element: document.querySelector('#topic_buttons_div'), title: 'Rename-Split-Merge topics', intro: "Buttons from this panel allow to edit topics: rename, joint two topics, split a topic into two subtopics"};
+    tutorial_steps['help_button'] = { element: document.querySelector('#help_button'), title: 'Ask for help!', intro: "Remember that you can always start the interactive tutorial here!" };
+
+    tutorial_steps['export_user_study_data'] = { element: document.querySelector('#save_data_user_study_button'), title: 'Export your results', intro: "After finishing all your tasks, you must export your results clicking this button." };
+
+    tutorial_steps['scenario_2_global_view_of_topics'] = {title: 'Global view of topics', element: document.querySelector('#CentralPanel'), intro: "The central panel presents a global view of the topics and aims to answer <b style='color: #1f77b4;'>How topics relate to each other? </b>" };
+    tutorial_steps['explanation_filtering_sankey'] = { element: document.querySelector('#TopicSimilarityMetricPanelFiltering'), title: 'Filtering links', intro: "You can modify this slider to visualize only links between topics with a similarity score between a range of values." };
+    tutorial_steps['documents_panel_scenario_2'] = { element: document.querySelector('#RelevantDocumentsTableDiv'), title: 'What is the meaning of each topic?', intro: "In order to identify the meaning of each topic. This panel provides the most relevant documents associated with the currently selected topic" };
+    tutorial_steps['omega_description'] = { element: document.querySelector('#TopicSimilarityMetricPanel'), title: 'Inter-topic comparison', intro: "This slider allows adjusting the similarity between topics. A higher omega score implies higher importance to the most relevant keywords, but a lower significance to the most relevant documents in the topic similarity calculation." };
+
+    //without element attribute
+    tutorial_steps['scenario_1_topic_frequency'] = { title: 'How prevalent each topic is?', intro: "Each topic is represented as a circle. The area of the circle  indicates how frequent it is in the collection of documents." };
+    tutorial_steps['scenario_1_topic_similarity'] = { title: 'How do topics relate to each other? ', intro: "Similar topics appear closer, while distinct topics appear more distant between each other" };
+    tutorial_steps['description_omega_slider'] = {title: 'Inter-topic comparison', intro: "This slider allows adjusting the similarity between topics. A higher omega score implies higher importance to the most relevant documents but a lower significance to the most relevant keywords in the topic similarity calculation." };
+    tutorial_steps['relevance_slider_most_relevant_keywords'] = {  title: 'Most relevant keywords', intro: "This slider allows adjusting the order of the most relevant keywords. A higher value assigns higher importance to the term's frequency but less priority to its uniqueness." };
+    tutorial_steps['most_relevant_keywords'] = {  title: 'Most relevant keywords', intro: "Here you can see the  most relevant keywords associated with the currently selected topic." };
+    tutorial_steps['only_rename_topic_button'] = {  title: 'Rename topics', intro: "You can use this button to rename a topic" };
+    tutorial_steps['scenario_2_explanation_of_datasets'] = {element: document.querySelector('#svg_sankey'), title: 'How topics relate to each other?', intro: "Each topic is represented as a box. Its color indicates to which dataset the topic belongs."};
+    tutorial_steps['explanation_of_sankey_diagram'] = { element: document.querySelector('#svg_sankey'), title: 'How  topics relate to each other? ', intro: "The link between topics indicates their similarity. A higher similarity is represented with a wider link." };
+
+    
+
+    if(type_vis==1){
+        if(is_human_in_the_loop == true){ // users can use topic splitting/ topic merging
+            introJs().setOptions({
+                steps: [
+
+                    tutorial_steps['start_tutorial'],
+                    tutorial_steps['topic_modeling_definition'],
+                    fix_tutorial_identification_elements("#barplot_1", tutorial_steps['most_relevant_keywords']),
+                    fix_tutorial_identification_elements("#relevanceSliderDiv", tutorial_steps['relevance_slider_most_relevant_keywords']),
+                    tutorial_steps['documents_panel_scenario_1'],
+                    tutorial_steps['scenario_1_global_view_of_topics'],
+                    fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_frequency']),
+                    fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_similarity']),
+                    fix_tutorial_identification_elements("#TopicSimilarityMetricPanel", tutorial_steps['description_omega_slider']),                                                            
+                    tutorial_steps['scenario_1_hil_buttons'], // this is only for scenario 1 , hil
+                    tutorial_steps['export_user_study_data'],
+                    tutorial_steps['help_button']
+
+            ]
+            }).start();
+        }
+        else{ // users cant use topic splitting and topic mergign
+            introJs().setOptions({
+                steps: [
+                    tutorial_steps['start_tutorial'],
+                    tutorial_steps['topic_modeling_definition'],
+                    fix_tutorial_identification_elements("#barplot_1", tutorial_steps['most_relevant_keywords']),
+                    fix_tutorial_identification_elements("#relevanceSliderDiv", tutorial_steps['relevance_slider_most_relevant_keywords']),
+                    tutorial_steps['documents_panel_scenario_1'],
+
+                    tutorial_steps['scenario_1_global_view_of_topics'],
+                    fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_frequency']),
+                    fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_similarity']),
+                    fix_tutorial_identification_elements("#TopicSimilarityMetricPanel", tutorial_steps['description_omega_slider']),
+                    fix_tutorial_identification_elements('#LDAvisContainer-topic-edit', tutorial_steps['only_rename_topic_button']),
+                    tutorial_steps['export_user_study_data'],
+                    tutorial_steps['help_button']
+            ]
+            }).start();
+        }
+        
+    }
+    else{ // scenario 2
+        if(scenario_2_is_baseline_metric == false){
+            introJs().setOptions({
+                steps: [
+                    tutorial_steps['start_tutorial'],  
+                    tutorial_steps['topic_modeling_definition'],
+                    fix_tutorial_identification_elements("#BarPlotDiv_zero", tutorial_steps['most_relevant_keywords']),
+                    fix_tutorial_identification_elements("#relevanceSliderDiv", tutorial_steps['relevance_slider_most_relevant_keywords']),
+                    fix_tutorial_identification_elements('#RelevantDocumentsTableDiv', tutorial_steps['documents_panel_scenario_2']),
+
+                    tutorial_steps['scenario_2_global_view_of_topics'],
+                    fix_tutorial_identification_elements('#svg_sankey', tutorial_steps['scenario_2_explanation_of_datasets']),
+                    fix_tutorial_identification_elements('#svg_sankey', tutorial_steps['explanation_of_sankey_diagram']),
+                    fix_tutorial_identification_elements('#TopicSimilarityMetricPanelFiltering', tutorial_steps['explanation_filtering_sankey']),
+                    fix_tutorial_identification_elements('#TopicSimilarityMetricPanel', tutorial_steps['omega_description']),
+                    fix_tutorial_identification_elements('#LDAvisContainer-topic-edit', tutorial_steps['only_rename_topic_button']),
+                    tutorial_steps['export_user_study_data'],
+                    tutorial_steps['help_button']
+                                                    
+            ]
+            }).start();
+        }
+        else{ // scenario 2, metric baseline. 
+            introJs().setOptions({
+                steps: [           
+                    tutorial_steps['start_tutorial'],  
+                    tutorial_steps['topic_modeling_definition'],
+                    fix_tutorial_identification_elements("#BarPlotDiv_zero", tutorial_steps['most_relevant_keywords']),
+                    fix_tutorial_identification_elements("#relevanceSliderDiv", tutorial_steps['relevance_slider_most_relevant_keywords']),
+                    fix_tutorial_identification_elements('#RelevantDocumentsTableDiv', tutorial_steps['documents_panel_scenario_2']),
+
+                    tutorial_steps['scenario_2_global_view_of_topics'],
+                    fix_tutorial_identification_elements('#svg_sankey', tutorial_steps['scenario_2_explanation_of_datasets']),
+                    fix_tutorial_identification_elements('#svg_sankey', tutorial_steps['explanation_of_sankey_diagram']),
+                    fix_tutorial_identification_elements('#TopicSimilarityMetricPanelFiltering', tutorial_steps['explanation_filtering_sankey']),
+
+                    fix_tutorial_identification_elements('#LDAvisContainer-topic-edit', tutorial_steps['only_rename_topic_button']),
+                    tutorial_steps['export_user_study_data'],
+                    tutorial_steps['help_button']                                                
+            ]
+            }).start();
+        }                
+    }
+}
+
 //this function allow to access some values on the matrix_sankey
 function get_new_omega(old_omega){
     if(type_vis==2 && scenario_2_is_baseline_metric == true){
@@ -2197,134 +2324,13 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
                 });
 
-            //elements of tutorial. Thus we dont need to write it everytime again and again
-            function fix_tutorial_identification_elements(id_element, json){
-                json["element"] = document.querySelector(id_element)
-                return json
-            }
-            //element: document.querySelector('#svgMdsPlot'),
-            var tutorial_steps = {}
-            //take into consideration this tutorial
-            //https://monkeylearn.com/blog/introduction-to-topic-modeling/#:~:text=Topic%20modeling%20is%20a%20machine,been%20previously%20classified%20by%20humans.
-            
+  
 
-            tutorial_steps['start_tutorial'] = {intro: 'Hello! This tutorial will guide you in the usage of this topic modeling visualization tool.'};
-            tutorial_steps['topic_modeling_definition'] = {title: 'What is topic modeling?', intro: '<div class="card-content" style="width:80%"> Topic modeling is a technique that automatically analyzes text data to determine cluster words for a set of documents <img src="/static/img/IntroToLDA.png" /> </div>' };
-
-            //tutorial_steps['introduction_to_topic_modeling'] ={title: 'What is topic modeling?', intro: "Topic modeling is a technique that automatically analyzes text data to determine cluster words for a set of documents"}
-            tutorial_steps['scenario_1_global_view_of_topics'] = { title: 'Global view of topics', element: document.querySelector('#CentralPanel'), intro: "The central panel presents a global view of the topics" };                
-            tutorial_steps['documents_panel_scenario_1'] = { element: document.querySelector('#DocumentsPanel_first_scenario'), title: 'What is the meaning of each topic?', intro: "In order to identify the meaning of each topic. This panel provides the most relevant documents associated with the currently selected topic" };
-            tutorial_steps['scenario_1_hil_buttons'] = { element: document.querySelector('#topic_buttons_div'), title: 'Rename-Split-Merge topics', intro: "Buttons from this panel allow to edit topics: rename, joint two topics, split a topic into two subtopics"};
-            tutorial_steps['help_button'] = { element: document.querySelector('#help_button'), title: 'Ask for help!', intro: "Remember that you can always start the interactive tutorial here!" };
-
-            tutorial_steps['export_user_study_data'] = { element: document.querySelector('#save_data_user_study_button'), title: 'Export your results', intro: "After finishing all your tasks, you must export your results clicking this button." };
-
-            tutorial_steps['scenario_2_global_view_of_topics'] = {title: 'Global view of topics', element: document.querySelector('#CentralPanel'), intro: "The central panel presents a global view of the topics and aims to answer <b style='color: #1f77b4;'>How topics relate to each other? </b>" };
-            tutorial_steps['explanation_filtering_sankey'] = { element: document.querySelector('#TopicSimilarityMetricPanelFiltering'), title: 'Filtering links', intro: "You can modify this slider to visualize only links between topics with a similarity score between a range of values." };
-            tutorial_steps['documents_panel_scenario_2'] = { element: document.querySelector('#RelevantDocumentsTableDiv'), title: 'What is the meaning of each topic?', intro: "In order to identify the meaning of each topic. This panel provides the most relevant documents associated with the currently selected topic" };
-            tutorial_steps['omega_description'] = { element: document.querySelector('#TopicSimilarityMetricPanel'), title: 'Inter-topic comparison', intro: "This slider allows adjusting the similarity between topics. A higher omega score implies higher importance to the most relevant keywords, but a lower significance to the most relevant documents in the topic similarity calculation." };
-
-            //without element attribute
-            tutorial_steps['scenario_1_topic_frequency'] = { title: 'How prevalent each topic is?', intro: "Each topic is represented as a circle. The area of the circle  indicates how frequent it is in the collection of documents." };
-            tutorial_steps['scenario_1_topic_similarity'] = { title: 'How do topics relate to each other? ', intro: "Similar topics appear closer, while distinct topics appear more distant between each other" };
-            tutorial_steps['description_omega_slider'] = {title: 'Inter-topic comparison', intro: "This slider allows adjusting the similarity between topics. A higher omega score implies higher importance to the most relevant documents but a lower significance to the most relevant keywords in the topic similarity calculation." };
-            tutorial_steps['relevance_slider_most_relevant_keywords'] = {  title: 'Most relevant keywords', intro: "This slider allows adjusting the order of the most relevant keywords. A higher value assigns higher importance to the term's frequency but less priority to its uniqueness." };
-            tutorial_steps['most_relevant_keywords'] = {  title: 'Most relevant keywords', intro: "Here you can see the  most relevant keywords associated with the currently selected topic." };
-            tutorial_steps['only_rename_topic_button'] = {  title: 'Rename topics', intro: "You can use this button to rename a topic" };
-            tutorial_steps['scenario_2_explanation_of_datasets'] = {element: document.querySelector('#svg_sankey'), title: 'How topics relate to each other?', intro: "Each topic is represented as a box. Its color indicates to which dataset the topic belongs."};
-            tutorial_steps['explanation_of_sankey_diagram'] = { element: document.querySelector('#svg_sankey'), title: 'How  topics relate to each other? ', intro: "The link between topics indicates their similarity. A higher similarity is represented with a wider link." };
-            
-            
             d3.select("#help_button")
             .on("click", function() {
                 save_users_actions_across_time('help_button', new Date());
+                show_tutorial()
 
-                if(type_vis==1){
-                    if(is_human_in_the_loop == true){ // users can use topic splitting/ topic merging
-                        introJs().setOptions({
-                            steps: [
-
-                                tutorial_steps['start_tutorial'],
-                                tutorial_steps['topic_modeling_definition'],
-                                fix_tutorial_identification_elements("#barplot_1", tutorial_steps['most_relevant_keywords']),
-                                fix_tutorial_identification_elements("#relevanceSliderDiv", tutorial_steps['relevance_slider_most_relevant_keywords']),
-                                tutorial_steps['documents_panel_scenario_1'],
-                                tutorial_steps['scenario_1_global_view_of_topics'],
-                                fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_frequency']),
-                                fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_similarity']),
-                                fix_tutorial_identification_elements("#TopicSimilarityMetricPanel", tutorial_steps['description_omega_slider']),                                                            
-                                tutorial_steps['scenario_1_hil_buttons'], // this is only for scenario 1 , hil
-                                tutorial_steps['export_user_study_data'],
-                                tutorial_steps['help_button']
-
-                        ]
-                        }).start();
-                    }
-                    else{ // users cant use topic splitting and topic mergign
-                        introJs().setOptions({
-                            steps: [
-                                tutorial_steps['start_tutorial'],
-                                tutorial_steps['topic_modeling_definition'],
-                                fix_tutorial_identification_elements("#barplot_1", tutorial_steps['most_relevant_keywords']),
-                                fix_tutorial_identification_elements("#relevanceSliderDiv", tutorial_steps['relevance_slider_most_relevant_keywords']),
-                                tutorial_steps['documents_panel_scenario_1'],
-
-                                tutorial_steps['scenario_1_global_view_of_topics'],
-                                fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_frequency']),
-                                fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_similarity']),
-                                fix_tutorial_identification_elements("#TopicSimilarityMetricPanel", tutorial_steps['description_omega_slider']),
-                                fix_tutorial_identification_elements('#LDAvisContainer-topic-edit', tutorial_steps['only_rename_topic_button']),
-                                tutorial_steps['export_user_study_data'],
-                                tutorial_steps['help_button']
-                        ]
-                        }).start();
-                    }
-                    
-                }
-                else{ // scenario 2
-                    if(scenario_2_is_baseline_metric == false){
-                        introJs().setOptions({
-                            steps: [
-                                tutorial_steps['start_tutorial'],  
-                                tutorial_steps['topic_modeling_definition'],
-                                fix_tutorial_identification_elements("#BarPlotDiv_zero", tutorial_steps['most_relevant_keywords']),
-                                fix_tutorial_identification_elements("#relevanceSliderDiv", tutorial_steps['relevance_slider_most_relevant_keywords']),
-                                fix_tutorial_identification_elements('#RelevantDocumentsTableDiv', tutorial_steps['documents_panel_scenario_2']),
-
-                                tutorial_steps['scenario_2_global_view_of_topics'],
-                                fix_tutorial_identification_elements('#svg_sankey', tutorial_steps['scenario_2_explanation_of_datasets']),
-                                fix_tutorial_identification_elements('#svg_sankey', tutorial_steps['explanation_of_sankey_diagram']),
-                                fix_tutorial_identification_elements('#TopicSimilarityMetricPanelFiltering', tutorial_steps['explanation_filtering_sankey']),
-                                fix_tutorial_identification_elements('#TopicSimilarityMetricPanel', tutorial_steps['omega_description']),
-                                fix_tutorial_identification_elements('#LDAvisContainer-topic-edit', tutorial_steps['only_rename_topic_button']),
-                                tutorial_steps['export_user_study_data'],
-                                tutorial_steps['help_button']
-                                                                
-                        ]
-                        }).start();
-                    }
-                    else{ // scenario 2, metric baseline. 
-                        introJs().setOptions({
-                            steps: [           
-                                tutorial_steps['start_tutorial'],  
-                                tutorial_steps['topic_modeling_definition'],
-                                fix_tutorial_identification_elements("#BarPlotDiv_zero", tutorial_steps['most_relevant_keywords']),
-                                fix_tutorial_identification_elements("#relevanceSliderDiv", tutorial_steps['relevance_slider_most_relevant_keywords']),
-                                fix_tutorial_identification_elements('#RelevantDocumentsTableDiv', tutorial_steps['documents_panel_scenario_2']),
-
-                                tutorial_steps['scenario_2_global_view_of_topics'],
-                                fix_tutorial_identification_elements('#svg_sankey', tutorial_steps['scenario_2_explanation_of_datasets']),
-                                fix_tutorial_identification_elements('#svg_sankey', tutorial_steps['explanation_of_sankey_diagram']),
-                                fix_tutorial_identification_elements('#TopicSimilarityMetricPanelFiltering', tutorial_steps['explanation_filtering_sankey']),
-
-                                fix_tutorial_identification_elements('#LDAvisContainer-topic-edit', tutorial_steps['only_rename_topic_button']),
-                                tutorial_steps['export_user_study_data'],
-                                tutorial_steps['help_button']                                                
-                        ]
-                        }).start();
-                    }
-                
-                }
             });
 
 
@@ -4017,6 +4023,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         // minor fixes
         //This is the special configuration needed for the user study
+        show_tutorial()
+
         if(type_vis == 1){
             document.getElementById("DocumentsPanel").style.height="80%";
             if(is_human_in_the_loop == false){
