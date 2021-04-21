@@ -20,7 +20,7 @@ var global_sankey_links_filtered;
 var sankey_topics_automatic_match;
 var name_topics_sankey = {};
 var inverted_links_filtered; 
-
+var is_tutorial;
 var testing;
 function randomIntFromInterval(min, max) { // min and max included 
     return Math.floor(Math.random() * (max - min + 1) + min);
@@ -29,6 +29,27 @@ function randomIntFromInterval(min, max) { // min and max included
 function randomNumber(min, max) {
     return Math.random() * (max - min) + min;
 }
+
+function isTutorial(){
+    //var curren_url = window.location.href;
+    var queryString  = window.location.search;
+    var urlParams = new URLSearchParams(queryString);
+    var scenario = urlParams.get('scenario')
+    console.log(' el escenario es', scenario);
+
+    if(scenario == null  || scenario == 'single_demo' || scenario == 'multi_demo_baseline' || scenario == 'multi_demo'){
+        is_tutorial = true;
+        console.log('This is a tutorial', is_tutorial);
+    }
+    else{
+        is_tutorial = false;
+        console.log('This is NOT a  tutorial', is_tutorial);
+
+    }
+
+}
+isTutorial()
+
 function save_users_actions_across_time(action, timestamp){
     //console.log(action, timestamp);
 
@@ -3368,16 +3389,20 @@ var LDAvis = function(to_select, data_or_file_name) {
             tutorial_steps['start_tutorial'] = {title: 'Welcome!', intro: 'This tutorial will guide you in the usage of this interface.'};
             tutorial_steps['topic_modeling_definition'] = {title: 'What is topic modeling?', intro: '<div id="topic_modeling_definition"> It is an unsupervised machine learning technique capable of discovering <b style="color: #1f77b4;"> topics </b> in a collection of documents.' };
             tutorial_steps['topic_flight_cancelled'] = { intro: 'In this tool, a circle represents one of the topics found by the topic modeling algorithm.' ,    position: 'top' };
-            tutorial_steps['most_relevant_keywords'] = {  title: 'Most relevant keywords', intro: "After selecting a topic, you will see its most relevant keywords. <br> <br>  These terms are sorted according to the relevance to the topic (e.g., <i style='color: #1f77b4;'>'flight' </i> , <i style='color: #1f77b4;'>'cancel' </i>, <i style='color: #1f77b4;'>'delay' </i>)", position: 'right' };
+            tutorial_steps['most_relevant_keywords'] = {  title: 'Most relevant keywords', intro: "After selecting a topic, you will see its most relevant keywords. <br> <br>  These terms are automatically sorted according to the relevance to the topic (e.g., <i style='color: #1f77b4;'>'flight' </i> , <i style='color: #1f77b4;'>'cancel' </i>, <i style='color: #1f77b4;'>'delay' </i>)", position: 'right' };
+            tutorial_steps['most_relevant_keywords_singlecorpus_dataset'] = {  title: 'Most relevant keywords', intro: "After selecting a topic, you will see its most relevant keywords. <br> <br>  These terms are automatically sorted according to the relevance to the topic.", position: 'right' };
             tutorial_steps['relevance_slider_most_relevant_keywords'] = {  title: 'Changing the ordering of the most relevant keywords', intro: "When topics are difficult to identify, it is better to explore different ordering of the keywords. To do so, you can change the  <i style='color: #1f77b4;'>relevance score </i> using this slider. <br> <br> A higher <i style='color: #1f77b4;'>relevance score </i> designates greater importance to the frequency of the term into the entire dataset (violet bar). But at the same time, it considers less important the frequency of the keyword in the selected topic (green bar).", position: 'right' };
             tutorial_steps['documents_panel_scenario_1'] = { element: document.querySelector('#DocumentsPanel_first_scenario'), title: 'Most relevant documents', intro: "Here, you can see the most relevant documents associated with the selected topic. Documents more related to the chosen topic will have a higher contribution (%) to it." , position: 'left'};
-            tutorial_steps['topic_flight_cancelled_interpretation'] = {  title: 'What is the selected topic about?', intro: "After reading its most relevant keywords (e.g, <i style='color: #1f77b4;'>'flight' </i> , <i style='color: #1f77b4;'>'cancel' </i>, <i style='color: #1f77b4;'>'delay' </i> , <i style='color: #1f77b4;'>'miss' </i>, etc) and its most relevant documents such as: <i style='color: #1f77b4;'> <usernameremoved> 2 canceled flights later, agent claimed she put me on a new flight but then canceled it. coworker got on flight- now delayed. now?</i> you may identify that the topic is about: <b style='color: #1f77b4'> 'airlines cancelling flights </b>.'"};
+            tutorial_steps['topic_flight_cancelled_interpretation'] = {  title: 'What is the selected topic about?', intro: "After reading its most relevant keywords (e.g, <i style='color: #1f77b4;'>'flight' </i> , <i style='color: #1f77b4;'>'cancel' </i>, <i style='color: #1f77b4;'>'delay' </i> , <i style='color: #1f77b4;'>'miss' </i>, etc) and its most relevant documents such as: <i style='color: #1f77b4;'> '<usernameremoved> 2 canceled flights later, agent claimed she put me on a new flight but then canceled it. coworker got on flight- now delayed. now?' </i> you may identify that the topic is about: <b style='color: #1f77b4'> 'airlines cancelling flights' </b>."};
+            tutorial_steps['topic_interpretation'] = {  title: 'What is the selected topic about?', intro: "To identify the topic's meaning, you must read its most relevant keywords and its most relevant documents."};
             tutorial_steps['topic_flight_cancelled_rename_button'] = {  intro: "Now that you have a name in mind for this topic (<b style='color: #1f77b4'> 'airlines cancelling flights' </b>), you can rename it by clicking this button.", position:"left"};
-            tutorial_steps['scenario_1_global_view_of_topics'] = { title: 'Global view of topics', element: document.querySelector('#CentralPanel'), intro: "The central panel presents a global view of the topics. <br> <br> Here you can select other topics too." };                
-            tutorial_steps['scenario_1_topic_frequency'] = { title: 'How prevalent each topic is?', intro: "The area of the circle indicates the frequency (%) of the topic in the dataset." };
+            tutorial_steps['rename_button'] = {  intro: "After identifying the topic's meaning, you have to assign a better name to it by clicking this button. <br> <br> Initially, all the topics have as name their three most relevant keywords. <b> You have to change these names. </b>", position:"left"};
+
+            tutorial_steps['scenario_1_global_view_of_topics'] = { title: 'Global view of topics', element: document.querySelector('#CentralPanel'), intro: "The central panel presents a global view of the topics found by the topic modeling algorithm. <br> <br> Here you can select other topics too." };                
+            tutorial_steps['scenario_1_topic_frequency'] = { title: 'How prevalent each topic is?', intro: "The area of the circle indicates the frequency (%) of the topic in the dataset. <br> <br> In this case, all the topics have the same frequency (16%)" };
             tutorial_steps['omega_description'] = { element: document.querySelector('#TopicSimilarityMetricPanel'), title: 'Similarity between topics', intro: "This slider allows adjusting the similarity between topics. A higher omega score implies higher importance to the most relevant keywords, but a lower significance to the most relevant documents in the topic similarity calculation." };
             tutorial_steps['description_omega_slider'] = {title: 'Similarity between topics', intro: "The similarity between topics is calculated automatically. You can explore other results using this slider. <br> <br> The algorithm compares topics considering their most relevant documents and their most relevant keywords. <br> <br> During the  calculation of the similarity between two topics,  a higher <i style='color: #1f77b4;'>omega  score </i>implies higher importance to their  most relevant documents, but a lower significance to their most relevant keywords." };
-            tutorial_steps['scenario_1_hil_buttons'] = { element: document.querySelector('#topic_buttons_div'), title: 'Modifying topic modeling results', intro: "After inspecting the topics, you may wish to join two similar topics into one (<b style='color: #1f77b4'> merge</b>) or to split a generic topic into two new subtopics  (<b style='color: #1f77b4'> split</b>). You can access to these functionalities here."};
+            tutorial_steps['scenario_1_hil_buttons'] = { element: document.querySelector('#topic_buttons_div'), title: 'Modifying topic modeling results', intro: "After inspecting the topics, you may wish to join two similar topics into one (<b style='color: #1f77b4'> merge</b>) or to split a generic topic into two new subtopics  (<b style='color: #1f77b4'> split</b>). You can access these functionalities here."};
             tutorial_steps['export_user_study_data'] = { element: document.querySelector('#save_data_user_study_button'), title: 'Exporting your results', intro: "After finishing  the tasks required in the  user study, you must export your results clicking this button." };
             tutorial_steps['help_button'] = { element: document.querySelector('#help_button'), title: 'Ask for help!', intro: "Finally, don't forget that you can always start the interactive tutorial here!" };
 
@@ -3401,57 +3426,114 @@ var LDAvis = function(to_select, data_or_file_name) {
         
             if(type_vis==1){
                 if(is_human_in_the_loop == true){ // users can use topic splitting/ topic merging
-                    topic_off(document.getElementById(topicID+'1'));
-                    topic_on(document.getElementById(topicID+'5'));
-                    introJs().setOptions({
-                        steps: [
-        
-                            tutorial_steps['start_tutorial'],
-                            tutorial_steps['topic_modeling_definition'],
-                            fix_tutorial_identification_elements("#"+topicID+'5', tutorial_steps['topic_flight_cancelled']),                            
-                            fix_tutorial_identification_elements("#barplot_1", tutorial_steps['most_relevant_keywords']),
-                            fix_tutorial_identification_elements("#relevanceSliderDiv", tutorial_steps['relevance_slider_most_relevant_keywords']),
-                            tutorial_steps['documents_panel_scenario_1'],
-                            tutorial_steps['topic_flight_cancelled_interpretation'],                            
-                            fix_tutorial_identification_elements('#LDAvisContainer-topic-edit', tutorial_steps['topic_flight_cancelled_rename_button']),
-                            tutorial_steps['scenario_1_global_view_of_topics'],
-                            fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_frequency']),
-                            fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_similarity']),
-
-                            fix_tutorial_identification_elements("#TopicSimilarityMetricPanel", tutorial_steps['description_omega_slider']),                                                            
-                            tutorial_steps['scenario_1_hil_buttons'], // this is only for scenario 1 , hil
-                            tutorial_steps['export_user_study_data'],
-                            tutorial_steps['help_button']
-        
-                    ]
-                    })
-                    .oncomplete(function(){
-                        //this.exit(true);
-                        //console.log('completadooo');
-                    })
-                    .onbeforeexit(function () {
-                        return confirm("Are you sure do you want to end the tutorial?");
-                    })
-                    .start();
+                    if(is_tutorial == true){
+                        topic_off(document.getElementById(topicID+'1'));
+                        topic_on(document.getElementById(topicID+'5'));
+                        introJs().setOptions({
+                            steps: [
+            
+                                tutorial_steps['start_tutorial'],
+                                tutorial_steps['topic_modeling_definition'],
+                                fix_tutorial_identification_elements("#"+topicID+'5', tutorial_steps['topic_flight_cancelled']),                            
+                                fix_tutorial_identification_elements("#barplot_1", tutorial_steps['most_relevant_keywords']),
+                                fix_tutorial_identification_elements("#relevanceSliderDiv", tutorial_steps['relevance_slider_most_relevant_keywords']),
+                                tutorial_steps['documents_panel_scenario_1'],
+                                tutorial_steps['topic_flight_cancelled_interpretation'],                            
+                                fix_tutorial_identification_elements('#LDAvisContainer-topic-edit', tutorial_steps['topic_flight_cancelled_rename_button']),
+                                tutorial_steps['scenario_1_global_view_of_topics'],
+                                fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_frequency']),
+                                fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_similarity']),
+    
+                                fix_tutorial_identification_elements("#TopicSimilarityMetricPanel", tutorial_steps['description_omega_slider']),                                                            
+                                tutorial_steps['scenario_1_hil_buttons'], // this is only for scenario 1 , hil
+                                tutorial_steps['export_user_study_data'],
+                                tutorial_steps['help_button']        
+                        ]
+                        })
+                        .onbeforeexit(function () {
+                            return confirm("Are you sure do you want to end the tutorial?");
+                        })
+                        .start();
+                    }
+                    else{ // Human in the loop - we are in single corpus and it is not a tutorial
+                        introJs().setOptions({
+                            steps: [            
+                                tutorial_steps['start_tutorial'],
+                                tutorial_steps['topic_modeling_definition'],
+                                fix_tutorial_identification_elements("#"+topicID+'1', tutorial_steps['topic_flight_cancelled']),                            
+                                fix_tutorial_identification_elements("#barplot_1", tutorial_steps['most_relevant_keywords_singlecorpus_dataset']),
+                                fix_tutorial_identification_elements("#relevanceSliderDiv", tutorial_steps['relevance_slider_most_relevant_keywords']),
+                                tutorial_steps['documents_panel_scenario_1'],
+                                tutorial_steps['topic_interpretation'],
+                                fix_tutorial_identification_elements('#LDAvisContainer-topic-edit', tutorial_steps['rename_button']),
+                                tutorial_steps['scenario_1_global_view_of_topics'],
+                                fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_frequency']),
+                                fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_similarity']),
+    
+                                fix_tutorial_identification_elements("#TopicSimilarityMetricPanel", tutorial_steps['description_omega_slider']),                                                            
+                                tutorial_steps['scenario_1_hil_buttons'], // this is only for scenario 1 , hil
+                                tutorial_steps['export_user_study_data'],
+                                tutorial_steps['help_button']        
+                        ]
+                        })
+                        .start();
+                    }
                 }
-                else{ // users cant use topic splitting and topic mergign
-                    introJs().setOptions({
-                        steps: [
-                            tutorial_steps['start_tutorial'],
-                            tutorial_steps['topic_modeling_definition'],
-                            fix_tutorial_identification_elements("#barplot_1", tutorial_steps['most_relevant_keywords']),
-                            fix_tutorial_identification_elements("#relevanceSliderDiv", tutorial_steps['relevance_slider_most_relevant_keywords']),
-                            tutorial_steps['documents_panel_scenario_1'],
-        
-                            tutorial_steps['scenario_1_global_view_of_topics'],
-                            fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_frequency']),
-                            fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_similarity']),
-                            fix_tutorial_identification_elements("#TopicSimilarityMetricPanel", tutorial_steps['description_omega_slider']),
-                            fix_tutorial_identification_elements('#LDAvisContainer-topic-edit', tutorial_steps['only_rename_topic_button']),
-                            tutorial_steps['export_user_study_data'],
-                            tutorial_steps['help_button']
-                    ]
-                    }).start();
+
+                else{ // SCENARIO 1 - NO HUMAN IN THE LOOP users cant use topic splitting and topic mergign
+                    if(is_tutorial == true){
+                        topic_off(document.getElementById(topicID+'1'));
+                        topic_on(document.getElementById(topicID+'5'));
+                        introJs().setOptions({
+                            steps: [
+            
+                                tutorial_steps['start_tutorial'],
+                                tutorial_steps['topic_modeling_definition'],
+                                fix_tutorial_identification_elements("#"+topicID+'5', tutorial_steps['topic_flight_cancelled']),                            
+                                fix_tutorial_identification_elements("#barplot_1", tutorial_steps['most_relevant_keywords']),
+                                fix_tutorial_identification_elements("#relevanceSliderDiv", tutorial_steps['relevance_slider_most_relevant_keywords']),
+                                tutorial_steps['documents_panel_scenario_1'],
+                                tutorial_steps['topic_flight_cancelled_interpretation'],                            
+                                fix_tutorial_identification_elements('#LDAvisContainer-topic-edit', tutorial_steps['topic_flight_cancelled_rename_button']),
+                                tutorial_steps['scenario_1_global_view_of_topics'],
+                                fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_frequency']),
+                                fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_similarity']),
+    
+                                fix_tutorial_identification_elements("#TopicSimilarityMetricPanel", tutorial_steps['description_omega_slider']),                                                            
+                                //tutorial_steps['scenario_1_hil_buttons'], // this is only for scenario 1 , hil
+                                tutorial_steps['export_user_study_data'],
+                                tutorial_steps['help_button']        
+                        ]
+                        })
+                        .onbeforeexit(function () {
+                            return confirm("Are you sure do you want to end the tutorial?");
+                        })
+                        .start();
+                    }
+                    else{ // Human in the loop - we are in single corpus and it is not a tutorial
+                        console.log(' AQUI O NOO')
+                        introJs().setOptions({
+                            steps: [            
+                                tutorial_steps['start_tutorial'],
+                                tutorial_steps['topic_modeling_definition'],
+                                fix_tutorial_identification_elements("#"+topicID+'1', tutorial_steps['topic_flight_cancelled']),                            
+                                fix_tutorial_identification_elements("#barplot_1", tutorial_steps['most_relevant_keywords_singlecorpus_dataset']),
+                                fix_tutorial_identification_elements("#relevanceSliderDiv", tutorial_steps['relevance_slider_most_relevant_keywords']),
+                                tutorial_steps['documents_panel_scenario_1'],
+                                tutorial_steps['topic_interpretation'],
+                                fix_tutorial_identification_elements('#LDAvisContainer-topic-edit', tutorial_steps['rename_button']),
+                                tutorial_steps['scenario_1_global_view_of_topics'],
+                                fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_frequency']),
+                                fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_similarity']),
+    
+                                fix_tutorial_identification_elements("#TopicSimilarityMetricPanel", tutorial_steps['description_omega_slider']),                                                            
+                                //tutorial_steps['scenario_1_hil_buttons'], // this is only for scenario 1 , hil
+                                tutorial_steps['export_user_study_data'],
+                                tutorial_steps['help_button']        
+                        ]
+                        })
+                        .start();
+                    }
                 }
                 
             }
