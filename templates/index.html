@@ -1,28 +1,5 @@
 <!--START OF MODALS -->
 
-<!-- Help modal-->
-<div class="modal fade" id="help_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Help</h5>
-        <!--<button type="button" class="close" data-dismiss="modal" aria-label="Close">-->
-          <!--<span aria-hidden="true">&times;</span>-->
-        </button>
-      </div>
-      <div class="modal-body">
-        <a onclick="jsFunction();">Start interactive tutorial</a>
-
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary"  data-dismiss="modal" >Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
 <!-- Modal rename topic (Model 1)-->
 <div class="modal fade" id="renameTopic" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
@@ -363,27 +340,14 @@
 
 
 <!-- ADD JQUERY-->
-
 <script src="static/js/jquery.min.js"></script>  
-<!--<script src="https://code.jquery.com/jquery-1.12.4.js"></script>-->
-<!--<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>-->
+
 
 <!-- ADD JS-->
-
-
-
-
 <script src="static/js/popper.min.js"></script>
 <script src="static/js/bootstrap.min.js" ></script>
-<!--<script src="static/js/mark.min.js" ></script> We are not using it anymore-->
 <script src="static/js/d3.v5.min.js"></script>
 <script src="static/js/sankey.js"></script>
-
-<!--To create spreedsheets and  save it-->
-<script src="static/js/xlsx.full.min.js"></script>
-<script src="static/js/FileSaver.js"></script>
-
-
 
 
 <!--Fontawesome-->
@@ -398,40 +362,15 @@
 
 
 <!--RANGE SLIDER-->
-
 <link href="static/css/nouislider.css" rel="stylesheet">
 <script src="static/js/nouislider.js"></script>
 
-<!-- Plotly , why am I using plotly?-->
 
-<!--
-<script src="/static/js/plotly-latest.min.js"></script> 
--->
 
 <!--for deep copy in JS-->
 <script src="/static/js/lodash.js"></script>  
 
-<!--Splitting operation. Allow multiple check box-->
-<!--<script src="/static/shift-select-multiple-checkboxes/jquery.checkbox-shift-selector.js"></script>-->
 
-<!--Splitting operation. Input slider column-->
-<!--https://www.jqueryscript.net/form/Highly-Customizable-Range-Slider-Plugin-For-Bootstrap-Bootstrap-Slider.html-->
-<!--https://github.com/seiyria/bootstrap-slider-->
-
-
-
-<!--
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/11.0.2/bootstrap-slider.js" integrity="sha512-tCkLWlSXiiMsUaDl5+8bqwpGXXh0zZsgzX6pB9IQCZH+8iwXRYfcCpdxl/owoM6U4ap7QZDW4kw7djQUiQ4G2A==" crossorigin="anonymous"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/11.0.2/css/bootstrap-slider.css" integrity="sha512-SZgE3m1he0aEF3tIxxnz/3mXu/u/wlMNxQSnE0Cni9j/O8Gs+TjM9tm1NX34nRQ7GiLwUEzwuE3Wv2FLz2667w==" crossorigin="anonymous" />
--->
-
-
-
-<!--cross symbol for scenario 1 circles-->
-<!--
-<script src="https://d3js.org/d3-path.v2.min.js"></script>
-<script src="https://d3js.org/d3-shape.v2.min.js"></script>
--->
 
 <script src="/static/jquery-checkradios-master/js/jquery.checkradios.min.js"></script>
 <link rel="stylesheet" href="/static/jquery-checkradios-master/css/jquery.checkradios.min.css"/>
@@ -441,10 +380,6 @@
 <script src="/static/intro-js/intro.min.js"></script>
 <link rel="stylesheet" href="/static/intro-js/introjs.min.css"/>
 
-<!--Crazyegg tracking-->
-<!--
-<script type="text/javascript" src="//script.crazyegg.com/pages/scripts/0104/6897.js" async="async"></script>
--->
 
 
 <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -470,20 +405,6 @@
   })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
 </script>
 
-<!-- Install this snippet AFTER the Hotjar tracking code. -->
-<!--
-<script>
-  var userId = your_user_id || null; // Replace your_user_id with your own if available.
-  window.hj('identify', userId, {
-      // Add your own custom attributes here. Some EXAMPLES:
-      // 'Signed up': '2019—06-20Z', // Signup date in ISO-8601 format.
-      // 'Last purchase category': 'Electronics', // Send strings with quotes around them.
-      // 'Total purchases': 15, // Send numbers without quotes.
-      // 'Last purchase date': '2019-06-20Z', // Send dates in ISO-8601 format.
-      // 'Last refund date': null, // Send null when no value exists for a user.
-  });
-  </script>
--->
 
 <div id={{ visid }}></div>
 
@@ -526,22 +447,11 @@ if(type_vis == 2){
           
           var html = '<div id="DocumentsPanel_first_scenario"> <table  id="tableRelevantDocumentsClass_Model1" </table></div>';
           
-          //old code
-          //var html = '<div id="DocumentsPanel_scenario_1">  <table  id="tableRelevantDocumentsClass_Model1" class= "table table-hover header-fixed"> </table> </div>';
-          //var html = '<div id="DocumentsPanel_scenario_1"> <table  id="tableRelevantDocumentsClass_Model1" class= "table table-hover header-fixed"> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Document</th> </tr> </thead> </table></div>';
-
-
-          //add button fab
-          //For the user study, the button to download data is disabled
-          //html+='<div class="btn-group-fab" role="group" aria-label="FAB Menu"> <div> <button type="button" class="btn btn-main btn-primary has-tooltip" data-placement="left" title="Download data"> <i class="fa fa-download"></i> </button><button type="button" class="btn btn-sub btn-danger has-tooltip" data-placement="left" title="Download xlsx" id="export_to_csv"> <i class="fa fa-file-excel"></i> </button> <button type="button" class="btn btn-sub btn-warning has-tooltip" data-placement="left" title="Download CSV file"> <i class="fas fa-file-csv"></i> </button> </div> </div>'
           document.write(html)
 
         }
         if(type_vis === 2){
-          //console.log("estoy aqui leyendo ijiji")
-          //document.write('<button class="button" id="export_to_csv">Export data</button>')
-          //var html ='<div class="btn-group-fab" role="group" aria-label="FAB Menu"> <div> <button type="button" class="btn btn-main btn-primary has-tooltip" data-placement="left" id="export_to_csv" title="Download data"> <i class="fa fa-download"></i> </button><button type="button" class="btn btn-sub btn-danger has-tooltip" data-placement="left" title="Download xlsx" id="export_to_csv"> <i class="fa fa-file-excel"></i> </button> <button type="button" class="btn btn-sub btn-warning has-tooltip" data-placement="left" title="Download CSV file"> <i class="fas fa-file-csv"></i> </button> </div> </div>'          
-          var html = '';
+             var html = '';
         }
 
         document.write(html) // ojo, esta linea no deberia estar, x eso q se escribe dos veces el DocumentsPanel_first_scenario, pero si lo saco ahora, comienzan a fallar cosas en el scenario 1
