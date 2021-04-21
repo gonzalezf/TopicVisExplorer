@@ -3397,7 +3397,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             tutorial_steps['topic_interpretation'] = {  title: 'What is the selected topic about?', intro: "To identify the topic's meaning, you must read its most relevant keywords and its most relevant documents."};
             tutorial_steps['topic_flight_cancelled_rename_button'] = {  intro: "Now that you have a name in mind for this topic (<b style='color: #1f77b4'> 'airlines cancelling flights' </b>), you can rename it by clicking this button.", position:"left"};
             tutorial_steps['rename_button'] = {  intro: "After identifying the topic's meaning, you have to assign a better name to it by clicking this button. <br> <br> Initially, all the topics have as name their three most relevant keywords. <b> You have to change these names. </b>", position:"left"};
-
             tutorial_steps['scenario_1_global_view_of_topics'] = { title: 'Global view of topics', element: document.querySelector('#CentralPanel'), intro: "The central panel presents a global view of the topics found by the topic modeling algorithm. <br> <br> Here you can select other topics too." };                
             tutorial_steps['scenario_1_topic_frequency'] = { title: 'How prevalent each topic is?', intro: "The area of the circle indicates the frequency (%) of the topic in the dataset. <br> <br> In this case, all the topics have the same frequency (16%)" };
             tutorial_steps['omega_description'] = { element: document.querySelector('#TopicSimilarityMetricPanel'), title: 'Similarity between topics', intro: "This slider allows adjusting the similarity between topics. A higher omega score implies higher importance to the most relevant keywords, but a lower significance to the most relevant documents in the topic similarity calculation." };
@@ -3410,17 +3409,24 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             //tutorial_steps['introduction_to_topic_modeling'] ={title: 'What is topic modeling?', intro: "Topic modeling is a technique that automatically analyzes text data to determine cluster words for a set of documents"}
         
-        
-            tutorial_steps['scenario_2_global_view_of_topics'] = {title: 'Global view of topics', element: document.querySelector('#CentralPanel'), intro: "The central panel presents a global view of the topics and aims to answer <b style='color: #1f77b4;'>How topics relate to each other? </b>" };
+            tutorial_steps['scenario_2_explanation'] = {title: 'Comparing datasets', intro: 'This visualization allows to  <b style="color: #1f77b4;"> identify </b>  and <b style="color: #1f77b4;"> compare  </b> topics from two different datasets' };
+            tutorial_steps['scenario_2_box_explanation'] = { intro: 'Each topic found by the topic modeling algorithm is represented by a box.  <br><br> <b style="color: #1f77b4;">  All the topics from the same dataset have the same color </b> ' ,    position: 'top' };
+            tutorial_steps['scenario_2_left_column_explanation'] = { intro: 'After selecting a topic on the left column on the central panel (violet box), you will see here all the information associated with that topic, such as its most relevant keywords and its most relevant documents.' ,    position: 'right' };
+            tutorial_steps['scenario_2_box_second_dataset_explanation'] = { intro: 'Each topic of the second dataset appears with a green color' ,    position: 'top' };
+            tutorial_steps['scenario_2_right_column_explanation'] = { intro: 'Here you can see the information related to a topic of the second dataset (green box)' ,    position: 'left' };
+            //tutorial_steps['scenario_2_global_view_of_topics'] = {title: 'Global view of topics', element: document.querySelector('#CentralPanel'), intro: "The central panel presents a global view of the topics and aims to answer <b style='color: #1f77b4;'>How topics relate to each other? </b>" };
+            tutorial_steps['explanation_of_sankey_diagram'] = { element: document.querySelector('#svg_sankey'), title: 'How  topics relate to each other? ', intro: "The link between topics indicates their similarity.  <br><br> Topics that are more similar are connected with a <b style='color: #1f77b4;'>wider </b> link." };
+
             tutorial_steps['explanation_filtering_sankey'] = { element: document.querySelector('#TopicSimilarityMetricPanelFiltering'), title: 'Filtering links', intro: "You can modify this slider to visualize only links between topics with a similarity score between a range of values." };
-            tutorial_steps['documents_panel_scenario_2'] = { element: document.querySelector('#RelevantDocumentsTableDiv'), title: 'What is the meaning of each topic?', intro: "In order to identify the meaning of each topic. This panel provides the most relevant documents associated with the currently selected topic" };
+            
+            
 
             //without element attribute
             
             tutorial_steps['scenario_1_topic_similarity'] = { title: 'How do topics relate to each other? ', intro: "Similar topics appear closer, while distinct topics appear more distant between each other" };
             tutorial_steps['only_rename_topic_button'] = {  title: 'Rename topics', intro: "You can use this button to rename a topic" };
+            
             tutorial_steps['scenario_2_explanation_of_datasets'] = {element: document.querySelector('#svg_sankey'), title: 'How topics relate to each other?', intro: "Each topic is represented as a box. Its color indicates to which dataset the topic belongs."};
-            tutorial_steps['explanation_of_sankey_diagram'] = { element: document.querySelector('#svg_sankey'), title: 'How  topics relate to each other? ', intro: "The link between topics indicates their similarity. A higher similarity is represented with a wider link." };
         
             
         
@@ -3537,45 +3543,50 @@ var LDAvis = function(to_select, data_or_file_name) {
                 }
                 
             }
-            else{ // scenario 2
+            //-------------------------------------Scenario 2 --------------------------------------------------
+            else{ // We are in scenario 2 - Metric proposed
                 if(scenario_2_is_baseline_metric == false){
-                    introJs().setOptions({
-                        steps: [
-                            tutorial_steps['start_tutorial'],  
-                            tutorial_steps['topic_modeling_definition'],
-                            fix_tutorial_identification_elements("#BarPlotDiv_zero", tutorial_steps['most_relevant_keywords']),
-                            fix_tutorial_identification_elements("#relevanceSliderDiv", tutorial_steps['relevance_slider_most_relevant_keywords']),
-                            fix_tutorial_identification_elements('#RelevantDocumentsTableDiv', tutorial_steps['documents_panel_scenario_2']),
-        
-                            tutorial_steps['scenario_2_global_view_of_topics'],
-                            fix_tutorial_identification_elements('#svg_sankey', tutorial_steps['scenario_2_explanation_of_datasets']),
-                            fix_tutorial_identification_elements('#svg_sankey', tutorial_steps['explanation_of_sankey_diagram']),
-                            fix_tutorial_identification_elements('#TopicSimilarityMetricPanelFiltering', tutorial_steps['explanation_filtering_sankey']),
-                            fix_tutorial_identification_elements('#TopicSimilarityMetricPanel', tutorial_steps['omega_description']),
-                            fix_tutorial_identification_elements('#LDAvisContainer-topic-edit', tutorial_steps['only_rename_topic_button']),
-                            tutorial_steps['export_user_study_data'],
-                            tutorial_steps['help_button']
-                                                            
-                    ]
-                    }).start();
+                    if(is_tutorial == true){
+                        var tutorial_graph =  matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)];
+                        var tutorial_nodes = tutorial_graph.nodes;
+                        var tutorial_topic_chosen = tutorial_nodes[4];
+                        topic_on_sankey(tutorial_topic_chosen, 6 );
+
+                        console.log(' QUE HAY AQUI', tutorial_nodes);
+                        
+                        introJs().setOptions({
+                            steps: [
+                                //tutorial_steps['start_tutorial'],  
+                                //tutorial_steps['topic_modeling_definition'],
+                                tutorial_steps['scenario_2_explanation'],     
+                                fix_tutorial_identification_elements("#node_4",tutorial_steps['scenario_2_box_explanation'] ),                                                          
+                                fix_tutorial_identification_elements('#'+BarPlotPanelDivId, tutorial_steps['scenario_2_left_column_explanation']),
+                                fix_tutorial_identification_elements("#node_6",tutorial_steps['scenario_2_box_second_dataset_explanation'] ),                                                          
+                                fix_tutorial_identification_elements('#DocumentsPanel', tutorial_steps['scenario_2_right_column_explanation']),
+                                fix_tutorial_identification_elements('#svg_sankey', tutorial_steps['scenario_2_explanation_of_datasets']),
+                                //tutorial_steps['scenario_2_global_view_of_topics'],
+                                //fix_tutorial_identification_elements('#svg_sankey', tutorial_steps['explanation_of_sankey_diagram']),
+                                fix_tutorial_identification_elements('#TopicSimilarityMetricPanelFiltering', tutorial_steps['explanation_filtering_sankey']),
+                                fix_tutorial_identification_elements('#TopicSimilarityMetricPanel', tutorial_steps['omega_description']),
+                                fix_tutorial_identification_elements('#LDAvisContainer-topic-edit', tutorial_steps['only_rename_topic_button']),
+                                tutorial_steps['export_user_study_data'],
+                                tutorial_steps['help_button']    
+                                                                                                                                                      
+                        ]
+                        })
+                        .onbeforeexit(function () {
+                            return confirm("Are you sure do you want to end the tutorial?");
+                        })
+                        .start();                    
+                    }
+                    else{ //Scenario 2 - metric proposed- No tutorial
+
+                    }
                 }
                 else{ // scenario 2, metric baseline. 
                     introJs().setOptions({
                         steps: [           
-                            tutorial_steps['start_tutorial'],  
-                            tutorial_steps['topic_modeling_definition'],
-                            fix_tutorial_identification_elements("#BarPlotDiv_zero", tutorial_steps['most_relevant_keywords']),
-                            fix_tutorial_identification_elements("#relevanceSliderDiv", tutorial_steps['relevance_slider_most_relevant_keywords']),
-                            fix_tutorial_identification_elements('#RelevantDocumentsTableDiv', tutorial_steps['documents_panel_scenario_2']),
-        
-                            tutorial_steps['scenario_2_global_view_of_topics'],
-                            fix_tutorial_identification_elements('#svg_sankey', tutorial_steps['scenario_2_explanation_of_datasets']),
-                            fix_tutorial_identification_elements('#svg_sankey', tutorial_steps['explanation_of_sankey_diagram']),
-                            fix_tutorial_identification_elements('#TopicSimilarityMetricPanelFiltering', tutorial_steps['explanation_filtering_sankey']),
-        
-                            fix_tutorial_identification_elements('#LDAvisContainer-topic-edit', tutorial_steps['only_rename_topic_button']),
-                            tutorial_steps['export_user_study_data'],
-                            tutorial_steps['help_button']                                                
+                                                     
                     ]
                     }).start();
                 }                
