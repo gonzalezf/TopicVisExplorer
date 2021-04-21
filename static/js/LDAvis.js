@@ -1095,7 +1095,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             //make sure you have lower case "o"
             setTimeout(function(){
                 $("#loadMe").modal('hide');
-                alert("There was error during this operation." ); 
             }, 120000);
 
 
@@ -1169,7 +1168,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             //make sure you have lower case "o"
             setTimeout(function(){
                 $("#loadMe").modal('hide');
-                alert("There was error during this operation." ); 
 
             }, 120000);
     

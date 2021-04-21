@@ -380,7 +380,8 @@ class TestView(FlaskView):
             list_terms_relevance = PreparedData_dict_with_more_info.loc[PreparedData_dict_with_more_info['Category'] == 'Topic'+str(topic_id)].sort_values(by='relevance', ascending=False)['Term'].tolist()
             #deactivate this sample when there is a user study
             list_relevant_documents = random.sample(single_corpus_data['relevantDocumentsDict'], 200)
-            
+            #list_relevant_documents = random.sample(single_corpus_data['relevantDocumentsDict'], 500)
+
             df = pd.DataFrame(list_relevant_documents)
             df.columns = df.columns.map(str)
 
@@ -609,10 +610,11 @@ class TestView(FlaskView):
         # datetime object containing current date and time
         now = datetime.now()
         # dd/mm/YY H:M:S
-        dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+        dt_string = now.strftime("%d-%m-%Y-%H-%M-%S")
         json_file = request.get_json()
+        ip = request.environ.get("HTTP_X_REAL_IP")
         full_scenario_description = json_file['full_scenario_description']
-        with open('user_study_results/'+full_scenario_description+'_'+dt_string+'.pkl', 'wb') as handle:
+        with open('user_study_results/'+full_scenario_description+'_'+ip+'_'+dt_string+'.pkl', 'wb') as handle:
             pickle.dump(json_file, handle, protocol=4) #protocol 4 is compatible with python 3.6+
             print("User study data exported sucessfully")
         return 'exito!! user study saved'
