@@ -39,9 +39,9 @@ pandarallel.initialize()
 scenarios = {
 }
 
-single_corpus_data = {}
-multi_corpora_data = {}
-previous_single_corpus_data = []
+single_corpus_datasets = {}
+multi_corpora_datasets = {}
+previous_single_corpus_datasets = {}
 class TopicVisExplorer:
 
     app = None
@@ -67,6 +67,9 @@ class TopicVisExplorer:
 
         
     def calculate_topic_similarity_on_single_corpus(self, word_embedding_model, lda_model, corpus, id2word, matrix_documents_topic_contribution,topn_terms, topk_documents, relevance_lambda ):        
+        global single_corpus_datasets
+        ip = request.environ.get("HTTP_X_REAL_IP")
+        single_corpus_data = single_corpus_datasets[ip] 
         print("we are calculating a new topic similarity matirx")
         if 'data_dict' not in single_corpus_data:
             data_dict = gensim_helpers.prepare(lda_model, corpus,id2word) 
@@ -100,8 +103,11 @@ class TopicVisExplorer:
 
     
     def calculate_topic_similarity_on_multi_corpora(self, word_embedding_model, lda_model_1, lda_model_2, corpus_1,corpus_2,  id2word_1,id2word_2, matrix_documents_topic_contribution_1, matrix_documents_topic_contribution_2, topn_terms, topk_documents, relevance_lambda ):        
-
-
+        global multi_corpora_datasets
+        global single_corpus_datasets
+        ip = request.environ.get("HTTP_X_REAL_IP")
+        multi_corpora_data = multi_corpora_datasets[ip] 
+        single_corpus_data = single_corpus_datasets[ip]
         if 'data_dict_1' not in multi_corpora_data:
             data_dict_1 = gensim_helpers.prepare(lda_model_1, corpus_1,id2word_1) 
             multi_corpora_data['data_dict_1']  = data_dict_1  
@@ -163,7 +169,9 @@ class TopicVisExplorer:
         return  generar_matrix_baseline_metric(word_embedding_model,   prepared_data_topic_1, prepared_data_topic_2, relevance_lambda, topn_terms)
     
     def prepare_single_corpus(self, lda_model, corpus, id2word, matrix_documents_topic_contribution, topic_similarity_matrix):
-        
+        global single_corpus_datasets
+        ip = request.environ.get("HTTP_X_REAL_IP")
+        single_corpus_data = single_corpus_datasets[ip]
         if 'data_dict' not in single_corpus_data:
             data_dict = gensim_helpers.prepare(lda_model, corpus,id2word) 
             single_corpus_data['data_dict']  = data_dict  
@@ -188,7 +196,7 @@ class TopicVisExplorer:
         single_corpus_data['new_circle_positions'] = new_circle_positions
 
     def prepare_multi_corpora(self, lda_model_1,lda_model_2, corpus_1, corpus_2,  id2word_1,id2word_2, matrix_documents_topic_contribution_1,matrix_documents_topic_contribution_2, topic_similarity_matrix):
-
+        multi_corpora_data = {}
         if 'data_dict_1' not in multi_corpora_data:
             data_dict_1 = gensim_helpers.prepare(lda_model_1, corpus_1,id2word_1) 
             multi_corpora_data['data_dict_1']  = data_dict_1  
@@ -236,6 +244,10 @@ class TopicVisExplorer:
         'new_circle_positions', 'relevantDocumentsDict', 
         'PreparedDataObtained', 'data_dict']
 
+        global single_corpus_datasets
+        ip = request.environ.get("HTTP_X_REAL_IP")
+        single_corpus_data = single_corpus_datasets[ip] 
+
         for key in single_corpus_data_keys:
             if key not in single_corpus_data.keys():
                 save = False
@@ -247,6 +259,11 @@ class TopicVisExplorer:
 
     def save_multi_corpora_data(self, route_file): #hay que indicar a si corresponde al single corpus o al multicorpora
         save = True
+
+        global multi_corpora_datasets
+        ip = request.environ.get("HTTP_X_REAL_IP")
+        multi_corpora_data = single_corpus_datasets[ip] 
+
         multi_corpora_data_keys = ['lda_model_1','lda_model_2',
         'corpus_1','corpus_2','id2word_1','id2word_2',
         'relevantDocumentsDict_collection_1','relevantDocumentsDict_collection_2',
@@ -273,10 +290,10 @@ class TestView(FlaskView):
     def load_corpus_data(self, scenario_name):#human_in_the_loop=True):
         print(scenario_name)
         global scenarios
-        global multi_corpora_data
-        global single_corpus_data
-        multi_corpora_data = None
-        single_corpus_data = None
+        #global multi_corpora_data
+        #global single_corpus_data
+        #multi_corpora_data = None
+        #single_corpus_data = None
         scenario = scenarios[scenario_name]
         with open(scenario["path"], 'rb') as handle:
             loaded_scenario = pickle.load(handle)
@@ -293,20 +310,26 @@ class TestView(FlaskView):
 
     @route('/MultiCorpora_documents_1')
     def get_documents_data_multicorpus_1(self):
-        global multi_corpora_data        
+        global multi_corpora_datasets
+        ip = request.environ.get("HTTP_X_REAL_IP")
+        multi_corpora_data = multi_corpora_datasets[ip]       
         #return Response(js.dumps(random.sample(multi_corpora_data['relevantDocumentsDict_collection_1'],10)),  mimetype='application/json')
         return Response(js.dumps(multi_corpora_data['relevantDocumentsDict_collection_1']),  mimetype='application/json')
 
     @route('/MultiCorpora_documents_2')
     def get_documents_data_multicorpus_2(self):
-        global multi_corpora_data        
+        global multi_corpora_datasets
+        ip = request.environ.get("HTTP_X_REAL_IP")
+        multi_corpora_data = multi_corpora_datasets[ip]        
         #return Response(js.dumps(random.sample(multi_corpora_data['relevantDocumentsDict_collection_2'],10)),  mimetype='application/json')
         return Response(js.dumps(multi_corpora_data['relevantDocumentsDict_collection_2']),  mimetype='application/json')
 
     @route('/SingleCorpus_documents')
     def get_documents_data_singlecorpus(self):
 
-        global single_corpus_data   
+        global single_corpus_datasets
+        ip = request.environ.get("HTTP_X_REAL_IP")
+        single_corpus_data = single_corpus_datasets[ip]
         return Response(js.dumps( single_corpus_data['relevantDocumentsDict']),  mimetype='application/json')
         #return Response(js.dumps( random.sample(single_corpus_data['relevantDocumentsDict'],2000)),  mimetype='application/json')
 
@@ -316,23 +339,27 @@ class TestView(FlaskView):
     @route('/undo_merge_splitting',  methods=['POST'])
     def undo_merge_splitting(self):
         print('doing el undo merge splitting operation ')
-        global single_corpus_data
-        global previous_single_corpus_data
-        single_corpus_data = previous_single_corpus_data.pop()
+        global single_corpus_datasets
+        global previous_single_corpus_datasets
+        ip = request.environ.get("HTTP_X_REAL_IP")
+        single_corpus_data = single_corpus_datasets[ip]
+        single_corpus_data = previous_single_corpus_datasets[ip].pop()
 
 
         return 'se ha quiitado el ultimo single corpus data del arreglo'
         
-    @route('/Topic_Splitting_Document_Based',  methods=['GET', 'POST'])
+    @route('/Topic_Splitting_Document_Based',  methods=['POST'])
     def get_new_sub_topics(self):
             print('Calculando nuevos dos subtopicos')
 
             start = time.time()
             
-            global single_corpus_data
-            global previous_single_corpus_data
+            global single_corpus_datasets
+            global previous_single_corpus_datasets
+            ip = request.environ.get("HTTP_X_REAL_IP")
+            single_corpus_data = single_corpus_datasets[ip]
 
-            previous_single_corpus_data.append(deepcopy(single_corpus_data))
+            previous_single_corpus_datasets[ip].append(deepcopy(single_corpus_data))
     
 
             json_file = request.get_json()
@@ -368,7 +395,7 @@ class TestView(FlaskView):
             print('-----------')
             print('veamos los nombres de columna', list_relevant_documents.columns)
             print('estoy buscando esto', name_column_text)
-            list_relevant_documents[name_tokenizacion] = list_relevant_documents[name_column_text].parallel_apply(lambda x: text_cleaner(x))
+            list_relevant_documents[name_tokenizacion] = list_relevant_documents[name_column_text].apply(lambda x: text_cleaner(x))
 
             #remove links and usernames
             #print('type', list_relevant_documents[name_tokenizacion])
@@ -380,12 +407,12 @@ class TestView(FlaskView):
             list_relevant_documents = list_relevant_documents.to_dict('records')
 
             new_document_seeds_TopicA = pd.DataFrame(new_document_seeds_TopicA).reset_index()
-            new_document_seeds_TopicA[name_tokenizacion] = new_document_seeds_TopicA[name_column_text].parallel_apply(lambda x: text_cleaner(x))
+            new_document_seeds_TopicA[name_tokenizacion] = new_document_seeds_TopicA[name_column_text].apply(lambda x: text_cleaner(x))
             new_document_seeds_TopicA = new_document_seeds_TopicA.to_dict('records')
 
 
             new_document_seeds_TopicB = pd.DataFrame(new_document_seeds_TopicB).reset_index()
-            new_document_seeds_TopicB[name_tokenizacion] = new_document_seeds_TopicB[name_column_text].parallel_apply(lambda x: text_cleaner(x))
+            new_document_seeds_TopicB[name_tokenizacion] = new_document_seeds_TopicB[name_column_text].apply(lambda x: text_cleaner(x))
             new_document_seeds_TopicB = new_document_seeds_TopicB.to_dict('records')
             end = time.time()
             print("Topic splitting - Cleaning text", end - start)
@@ -485,7 +512,7 @@ class TestView(FlaskView):
             list_terms_B = list(data_model_B_df['vocab'])
 
             
-            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)] = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].parallel_apply(lambda row:  update_current_freq_and_total_freq_on_prepared_data(row, data_model_A_df,data_model_B_df, list_terms_A, list_terms_B,total_sum_frequency_corpus), axis=1)
+            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)] = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(topic_id)].apply(lambda row:  update_current_freq_and_total_freq_on_prepared_data(row, data_model_A_df,data_model_B_df, list_terms_A, list_terms_B,total_sum_frequency_corpus), axis=1)
 
 
             #copy values for the new subtopic b
@@ -494,7 +521,7 @@ class TestView(FlaskView):
             temp_tinfo_df = temp_tinfo_df.append(temp2, ignore_index=True)
 
             #update those values with the current terms probability\
-            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_of_topics+1)] = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_of_topics+1)].parallel_apply(lambda row:  update_current_freq_and_total_freq_on_prepared_data(row, data_model_B_df,data_model_A_df, list_terms_B, list_terms_A,total_sum_frequency_corpus), axis=1)
+            temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_of_topics+1)] = temp_tinfo_df[temp_tinfo_df.Category == 'Topic'+str(current_number_of_topics+1)].apply(lambda row:  update_current_freq_and_total_freq_on_prepared_data(row, data_model_B_df,data_model_A_df, list_terms_B, list_terms_A,total_sum_frequency_corpus), axis=1)
 
         
             #save the new tinfo
@@ -593,9 +620,13 @@ class TestView(FlaskView):
     @route('/get_new_topic_vector',  methods=['GET', 'POST'])
     def get_new_topic_vector(self):
         start = time.time()
-        global single_corpus_data
-        global previous_single_corpus_data
-        previous_single_corpus_data.append(deepcopy(single_corpus_data))
+        global single_corpus_datasets
+        ip = request.environ.get("HTTP_X_REAL_IP")
+        single_corpus_data = single_corpus_datasets[ip]  
+        
+        global previous_single_corpus_datasets
+        
+        previous_single_corpus_datasets[ip].append(deepcopy(single_corpus_data))
         
         json_file = request.get_json()
 
@@ -689,16 +720,23 @@ class TestView(FlaskView):
     def topic_similarity_matrix_excel_single_corpus(self):
         #send data regarding to current omega value selected
         lambda_lambda_topic_similarity_current = request.args.get('value', 0, type=float)        
-        global single_corpus_data                
+        global single_corpus_datasets
+        ip = request.environ.get("HTTP_X_REAL_IP")
+        single_corpus_data = single_corpus_datasets[ip]                
         return Response(js.dumps( single_corpus_data['topic_similarity_matrix'][lambda_lambda_topic_similarity_current].tolist()),  mimetype='application/json')
 
 
     @route('/singlecorpus')
     def single_corpus(self,  methods=['GET']):           
-        print('Estoy en la funcion single corpuuuus') 
+        print('Estoy en la funcion single corpuuuus')
         #load data
-        global single_corpus_data
-        single_corpus_data = self.load_corpus_data(request.args.get("scenario", 'single_demo'))   
+        global single_corpus_datasets
+        global previous_single_corpus_datasets
+
+        ip = request.environ.get("HTTP_X_REAL_IP")
+        single_corpus_datasets[ip] = self.load_corpus_data(request.args.get("scenario", 'single_demo'))  
+        single_corpus_data =  single_corpus_datasets[ip]
+        previous_single_corpus_datasets[ip] = []
         
         assert  single_corpus_data["multi"] == False, "Scenario not for single corpus"
 
@@ -720,8 +758,11 @@ class TestView(FlaskView):
     @route('/multicorpora')
     def multi_corpora(self):            
         #load data
-        global multi_corpora_data
-        multi_corpora_data = self.load_corpus_data(request.args.get("scenario", 'multi_demo'))
+        global multi_corpora_datasets
+        ip = request.environ.get("HTTP_X_REAL_IP")
+        multi_corpora_datasets[ip] = self.load_corpus_data(request.args.get("scenario", 'multi_demo'))
+        multi_corpora_data = multi_corpora_datasets[ip]
+
         assert  multi_corpora_data["multi"] == True, "Scenario not for multicorpora comparison"
 
         lda_model_1 = multi_corpora_data['lda_model_1']

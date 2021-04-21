@@ -3649,6 +3649,10 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         function get_name_text_column_on_relevant_documents(relevantDocumentsDict){
             //get the name of the columns
+
+            /* For the user study we are going to comment this
+            console.log(' AHH', relevantDocumentsDict[0])
+            console.log(' BBBBB', relevantDocumentsDict)
             var name_columns = Object.keys(relevantDocumentsDict[0])
             var column_text_name = ''
             name_columns.forEach(
@@ -3658,7 +3662,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                         
                     }
                 })
-            return column_text_name                                      
+            return column_text_name*/
+                       
+            return 'text'                           
         }
 
 
