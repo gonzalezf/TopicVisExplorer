@@ -366,7 +366,10 @@ d3.sankey = function() {
   }
 
   function value(link) {
+    //console.log('ASHJKASJKASJKAS AQUI')
+    //return link.value;
     return link.value;
+
   }
 
   return sankey;

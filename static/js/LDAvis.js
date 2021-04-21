@@ -19,6 +19,7 @@ var actions_across_time = [];
 var global_sankey_links_filtered;
 var sankey_topics_automatic_match;
 var name_topics_sankey = {};
+var inverted_links_filtered; 
 
 var testing;
 function randomIntFromInterval(min, max) { // min and max included 
@@ -74,16 +75,18 @@ function get_new_omega(old_omega){
 save_users_actions_across_time('session_start', new Date());
 
 
-
+var testing;
 
 if(type_vis== 2){
     if( Object.keys(matrix_sankey).length == 1){
         scenario_2_is_baseline_metric = true;
-    
+
     }
     else{
         scenario_2_is_baseline_metric = false;
     }
+
+
 }
 
 
@@ -655,8 +658,28 @@ var LDAvis = function(to_select, data_or_file_name) {
         
         //Inspired by: https://bl.ocks.org/d3noob/013054e8d7807dff76247b81b0e29030
        function visualize_sankey(graph, threshold_min, threshold_max){
+            /*
+            if(scenario_2_is_baseline_metric==true){
+                graph.links = graph.links.map(function(e) { 
+                    e.value = -e.value; 
+                    return e;
+                });
+                console.log('ESTORESULTO AL FINAL', graph.links);
+                console.log('ESTOS SON LOS THRESHOLD', threshold_min, threshold_max);
+                var temp_min =   -threshold_max;
+                var temp_max =  -threshold_min;
+                threshold_min =  temp_min;
+                threshold_max = temp_max;
+
+            }*/
+
+            console.log('ESTOS SON LOS THRESHOLD', threshold_min, threshold_max);
+            inverted_links_filtered = graph;
+
             save_users_actions_across_time('min_filtering_sankey', threshold_min);
             save_users_actions_across_time('min_filtering_sankey_time', new Date());
+            save_users_actions_across_time('max_filtering_sankey', threshold_max);
+            save_users_actions_across_time('max_filtering_sankey_time', new Date());
 
             //console.log(' value de filtering sankey', threshold_min, new Date())
 
@@ -726,7 +749,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             //////console.log("este es el graph, ",graph)
             sankey_topics_automatic_match = []
             var links_filtered =  graph.links.filter(function(el){
-                if(Number(threshold_min) <= Number(el.value.toFixed(2))){
+                if((Number(threshold_min) <= Number(el.value.toFixed(2)) )&&(Number(el.value.toFixed(2)) <= Number(threshold_max) )){
                     //console.log(el.source.sourceLinks)
 
                   
@@ -735,7 +758,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                     return true;
 
                 }
-                return Number(threshold_min) <= Number(el.value.toFixed(2)); // we must to covner the threshold_min to number            
+                return (Number(threshold_min) <= Number(el.value.toFixed(2)) )&&(Number(el.value.toFixed(2)) <= Number(threshold_max))
+                //return Number(threshold_min) <= Number(el.value.toFixed(2)); // we must to covner the threshold_min to number            
                 //return (threshold_min <= el.value.toFixed(2));
                 //return ((threshold_min <= el.value.toFixed(2)) && (el.value.toFixed(2) <= threshold_max));
                 }
@@ -775,6 +799,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             //I deleted the filtered of nodes. Sankey diagram shows all the nodes (even if these nodes don't have any other similarities. I could add a different color even!. Thus 
             //we could detect original topics. Not only the topics that are similar)
+            
             var nodes_filtered = graph.nodes
             var sankey = d3.sankey()
             .nodeWidth(36)
@@ -926,7 +951,9 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
 
-                    return labeling_user_study+' - '+"("+freq_current_topic+"%) "+ name_topics_sankey[topicID + d.node];}
+                    //return labeling_user_study+' - '+"("+freq_current_topic+"%) "+ name_topics_sankey[topicID + d.node];}
+                    return labeling_user_study+' - '+ name_topics_sankey[topicID + d.node];}
+
                     //return name_topics_sankey[topicID + d.node] ;}                                                
                 ) //.text(function(d) { return d.name; })
                 .filter(function(d) { return d.x < user_width_sankey / 2; })
@@ -1065,6 +1092,14 @@ var LDAvis = function(to_select, data_or_file_name) {
                 keyboard: false
             });
 
+            //make sure you have lower case "o"
+            setTimeout(function(){
+                $("#loadMe").modal('hide');
+                alert("There was error during this operation." ); 
+            }, 120000);
+
+
+
             var postDataTopicSplitting = {
                 new_document_seeds: slider_topic_splitting_values[splitting_topic],
                 old_circle_positions: new_circle_positions,
@@ -1131,6 +1166,12 @@ var LDAvis = function(to_select, data_or_file_name) {
                 keyboard: false
             })
 
+            //make sure you have lower case "o"
+            setTimeout(function(){
+                $("#loadMe").modal('hide');
+                alert("There was error during this operation." ); 
+
+            }, 120000);
     
             //get index topic from name    
             var current_index = 0;
@@ -1721,7 +1762,7 @@ var LDAvis = function(to_select, data_or_file_name) {
            document.getElementById("DocumentsPanel").appendChild(RelevantDocumentsTableDiv_2) 
            const  div_2 = document.getElementById('RelevantDocumentsTableDiv_2');
            div_2.insertAdjacentHTML('afterbegin', '<table  id="tableRelevantDocumentsClass_Model2" class="table table-hover"> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table>');
-
+           console.log('esto es justo antes de mandar todo', matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)])
            visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
        }
        
@@ -1875,9 +1916,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             // barchart axis adapted from http://bl.ocks.org/mbostock/1166403
             var xAxis = d3.axisTop().scale(x).tickSize(-barheight).ticks(6);
-            
-            
-            
+                                    
             chart.append("g")
                 .attr("class", xaxis_class)
                 .call(xAxis);
@@ -2690,15 +2729,42 @@ var LDAvis = function(to_select, data_or_file_name) {
                     }
 
                 }
-                var range_slider = noUiSlider.create(slider, {
-                    //start: [(max_similarity_score)*0.65, max_similarity_score],
-                    start: [initial_filtering_value, max_similarity_score],                    
-                    connect: true,
-                    range: {
-                        'min': min_similarity_score,
-                        'max': max_similarity_score
-                    }
-                });
+                var origins = slider.getElementsByClassName('noUi-origin');
+
+                if(scenario_2_is_baseline_metric == false){
+                    var range_slider = noUiSlider.create(slider, {
+                        //start: [(max_similarity_score)*0.65, max_similarity_score],
+                        start: [initial_filtering_value, max_similarity_score],                    
+                        connect: true,
+                        range: {
+                            'min': min_similarity_score,
+                            'max': max_similarity_score
+                        }
+                    });
+                    origins[1].setAttribute('disabled', true);
+                    origins[1].setAttribute('class', 'disabled_slider');
+
+                }
+                else{
+                    console.log('estoy en este slider!!')
+                    var range_slider = noUiSlider.create(slider, {
+                        //start: [(max_similarity_score)*0.65, max_similarity_score],
+                        start: [min_similarity_score, initial_filtering_value],                    
+                        connect: true,
+                        range: {
+                            'min': min_similarity_score,
+                            'max': max_similarity_score
+                        }
+                    });
+                    origins[0].setAttribute('disabled', true);
+                    origins[0].setAttribute('class', 'disabled_slider');
+
+
+                    //console.log('que es estoo', origins[0]);
+                    //origins[1].setAttribute('disabled', true);
+
+                }
+
                 //disable right handle of the slider                    
                 //read values from slider slider-value-lower
                 
@@ -2709,7 +2775,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 lambdaLabelTopicSimilarity.innerHTML = "Filtering = [<span id='slider-value-lower'></span> - <span id='slider-value-upper'>]";
                 sliderDivFiltering.appendChild(lambdaLabelTopicSimilarity);
 
-                var origins = slider.getElementsByClassName('noUi-origin');
                 
 
                 slider.noUiSlider.on('update', function (values, handle) {
@@ -2722,25 +2787,33 @@ var LDAvis = function(to_select, data_or_file_name) {
                     
                     if(scenario_2_is_baseline_metric==false){
                         vis_state.max_value_filtering = 1.0;
+                        vis_state.min_value_filtering = Number(values[0]);
+
 
                     }
                     else{
                     vis_state.max_value_filtering = Number(values[1]);
-
+                    vis_state.min_value_filtering = Number(min_similarity_score);                
                     }
                     //Do not change max_value:
-                    vis_state.min_value_filtering = Number(values[0]);
-
+                    console.log('MIN VALUE', vis_state.min_value_filtering, 'Max value',vis_state.max_value_filtering  );
                     save_users_actions_across_time('changing_filtering', new Date());
-                    save_users_actions_across_time('changing_filtering_value', vis_state.min_value_filtering);
+                    save_users_actions_across_time('changing_filtering_min_value', vis_state.min_value_filtering);
+                    save_users_actions_across_time('changing_filtering_max_value', vis_state.max_value_filtering);
 
 
-                    visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
+                    if(scenario_2_is_baseline_metric == false){
+                        visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
+
+                    }else
+                    {
+                        console.log(' Dando vuelta la matrix', matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)]);
+                        visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
+                    }
 
 
                 });
 
-                origins[1].setAttribute('disabled', true);
 
                 
                 var scaleContainerTopicSimilarityFiltering = d3.select("#" + "sliderDivInputFilteringTopicSimilarity").append("svg")
@@ -3756,7 +3829,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             relevantDocumentsDict.sort(function(row_1, row_2){
                 return row_2[String(topic_id)]-row_1[String(topic_id)];
             });
-
+            var threshold_max_number_docs_splitting = (0.10*Object.keys(relevantDocumentsDict).length).toFixed(0)
             current_relevant_documents_topic_splitting = relevantDocumentsDict; // the documents are sorted according to the contribution to the specific topic 
 
             if(model == 1){
@@ -3830,7 +3903,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                       
                         
                     ],
-                    data: relevantDocumentsDict // We dont need to show to the user a huge number of documents
+                    data: relevantDocumentsDict.slice(0,threshold_max_number_docs_splitting) // We dont need to show to the user a huge number of documents
                 });
             }
 
@@ -3987,9 +4060,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 d3.select("#TopicSimilarityMetricPanel").remove()       
             }                   
         }    
-        
-
-
     }
     
     if (typeof data_or_file_name === 'string'){

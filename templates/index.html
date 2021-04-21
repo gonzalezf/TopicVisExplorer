@@ -94,9 +94,12 @@
       <div class="modal-body " style=' overflow-y: scroll'>
 
         <!--<input type='text' name='somename' data-provide='slider' data-slider-ticks='[1, 2, 3]' data-slider-min='1' data-slider-max='3' data-slider-step='1' data-slider-value='3' >-->
-        You are going to split the current selected topic: <b> <span id="topic_to_split_name"></span></b>.  <br><br> To split a  topic,  you must select the most relevant documents associated to the new subtopics. You may choose as many documents you wish. Also, you can select 
+        You are going to split the current selected topic: <b> <span id="topic_to_split_name"></span></b>.  <br><br> 
+        To split a topic, you must select the most relevant documents to the new subtopics. For each category, you may choose as many documents as you deem necessary. Documents in neither subtopic will be categorized automatically.
+        
+        <!--To split a  topic,  you must select the most relevant documents associated to the new subtopics. You may choose as many documents you wish. Also, you can select 
         more documents selecting different pages at the bottom of this window. 
-
+        -->
 
         <!--<div id="input"></div>      -->
         <div class="row" > <!--All the visualization must be placed in this row-->
@@ -399,8 +402,11 @@
 <link href="static/css/nouislider.css" rel="stylesheet">
 <script src="static/js/nouislider.js"></script>
 
-<!-- Plotly-->
-<script src="/static/js/plotly-latest.min.js"></script> <!---what, ocupo plotly? revisar-->
+<!-- Plotly , why am I using plotly?-->
+
+<!--
+<script src="/static/js/plotly-latest.min.js"></script> 
+-->
 
 <!--for deep copy in JS-->
 <script src="/static/js/lodash.js"></script>  
