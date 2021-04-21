@@ -3402,7 +3402,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             tutorial_steps['omega_description'] = { element: document.querySelector('#TopicSimilarityMetricPanel'), title: 'Similarity between topics', intro: "This slider allows adjusting the similarity between topics. A higher omega score implies higher importance to the most relevant keywords, but a lower significance to the most relevant documents in the topic similarity calculation." };
             tutorial_steps['description_omega_slider'] = {title: 'Similarity between topics', intro: "The similarity between topics is calculated automatically. You can explore other results using this slider. <br> <br> The algorithm compares topics considering their most relevant documents and their most relevant keywords. <br> <br> During the  calculation of the similarity between two topics,  a higher <i style='color: #1f77b4;'>omega  score </i>implies higher importance to their  most relevant documents, but a lower significance to their most relevant keywords." };
             tutorial_steps['scenario_1_hil_buttons'] = { element: document.querySelector('#topic_buttons_div'), title: 'Modifying topic modeling results', intro: "After inspecting the topics, you may wish to join two similar topics into one (<b style='color: #1f77b4'> merge</b>) or to split a generic topic into two new subtopics  (<b style='color: #1f77b4'> split</b>). You can access these functionalities here."};
-            tutorial_steps['export_user_study_data'] = { element: document.querySelector('#save_data_user_study_button'), title: 'Exporting your results', intro: "After finishing  the tasks required in the  user study, you must export your results clicking this button." };
+            tutorial_steps['export_user_study_data'] = { element: document.querySelector('#save_data_user_study_button'), title: 'Exporting your results', intro: "After finishing  the tasks required in the  user study, you must export your results by clicking this button." };
             tutorial_steps['help_button'] = { element: document.querySelector('#help_button'), title: 'Ask for help!', intro: "Finally, don't forget that you can always start the interactive tutorial here!" };
 
 
@@ -3415,10 +3415,13 @@ var LDAvis = function(to_select, data_or_file_name) {
             tutorial_steps['scenario_2_box_second_dataset_explanation'] = { intro: 'Each topic of the second dataset appears with a green color' ,    position: 'top' };
             tutorial_steps['scenario_2_right_column_explanation'] = { intro: 'Here you can see the information related to a topic of the second dataset (green box)' ,    position: 'left' };
             //tutorial_steps['scenario_2_global_view_of_topics'] = {title: 'Global view of topics', element: document.querySelector('#CentralPanel'), intro: "The central panel presents a global view of the topics and aims to answer <b style='color: #1f77b4;'>How topics relate to each other? </b>" };
-            tutorial_steps['explanation_of_sankey_diagram'] = { element: document.querySelector('#svg_sankey'), title: 'How  topics relate to each other? ', intro: "The link between topics indicates their similarity.  <br><br> Topics that are more similar are connected with a <b style='color: #1f77b4;'>wider </b> link." };
+            tutorial_steps['explanation_of_sankey_diagram'] = { element: document.querySelector('#svg_sankey'), title: 'How  topics relate to each other? ', intro: "This interface allows identifying the similarity between topics from two different datasets. <br> <br> The similarity score between two topics is automatically calculated <br><br> The link between topics indicates their similarity. Topics that are more similar are connected with a <b style='color: #1f77b4;'>wider </b> link." };
 
-            tutorial_steps['explanation_filtering_sankey'] = { element: document.querySelector('#TopicSimilarityMetricPanelFiltering'), title: 'Filtering links', intro: "You can modify this slider to visualize only links between topics with a similarity score between a range of values." };
-            
+            tutorial_steps['explanation_filtering_sankey'] = {  title: 'Filtering links', intro: "You can see more or fewer links in the visualization modifying this slider.", position: 'right' };
+            tutorial_steps['explanation_filtering_sankey_part2'] = { title: 'Filtering links', intro: "The interface will only show links that have a similarity score in this range of values.", position: 'left' };
+            tutorial_steps['rename_button_scenario_2_left'] = {  intro: "This button allows you to change the name of a topic of the first dataset (violet box).  <br> <br>  The topics' default name corresponds to their three most relevant keywords.", position:"right"};
+            tutorial_steps['rename_button_scenario_2_right'] = {  intro: "Here you can assign a name to a topic of the second dataset (green box)", position:"left"};
+
             
 
             //without element attribute
@@ -3426,7 +3429,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             tutorial_steps['scenario_1_topic_similarity'] = { title: 'How do topics relate to each other? ', intro: "Similar topics appear closer, while distinct topics appear more distant between each other" };
             tutorial_steps['only_rename_topic_button'] = {  title: 'Rename topics', intro: "You can use this button to rename a topic" };
             
-            tutorial_steps['scenario_2_explanation_of_datasets'] = {element: document.querySelector('#svg_sankey'), title: 'How topics relate to each other?', intro: "Each topic is represented as a box. Its color indicates to which dataset the topic belongs."};
+            //tutorial_steps['scenario_2_explanation_of_datasets'] = {element: document.querySelector('#svg_sankey'), title: 'How topics relate to each other?', intro: "Each topic is represented as a box. Its color indicates to which dataset the topic belongs."};
         
             
         
@@ -3481,6 +3484,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                                 tutorial_steps['export_user_study_data'],
                                 tutorial_steps['help_button']        
                         ]
+                        })
+                        .onbeforeexit(function () {
+                            return confirm("Are you sure do you want to end the tutorial?");
                         })
                         .start();
                     }
@@ -3538,6 +3544,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                                 tutorial_steps['help_button']        
                         ]
                         })
+                        .onbeforeexit(function () {
+                            return confirm("Are you sure do you want to end the tutorial?");
+                        })
                         .start();
                     }
                 }
@@ -3545,50 +3554,57 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
             //-------------------------------------Scenario 2 --------------------------------------------------
             else{ // We are in scenario 2 - Metric proposed
-                if(scenario_2_is_baseline_metric == false){
-                    if(is_tutorial == true){
-                        var tutorial_graph =  matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)];
-                        var tutorial_nodes = tutorial_graph.nodes;
-                        var tutorial_topic_chosen = tutorial_nodes[4];
-                        topic_on_sankey(tutorial_topic_chosen, 6 );
-
-                        console.log(' QUE HAY AQUI', tutorial_nodes);
-                        
-                        introJs().setOptions({
-                            steps: [
-                                //tutorial_steps['start_tutorial'],  
-                                //tutorial_steps['topic_modeling_definition'],
-                                tutorial_steps['scenario_2_explanation'],     
-                                fix_tutorial_identification_elements("#node_4",tutorial_steps['scenario_2_box_explanation'] ),                                                          
-                                fix_tutorial_identification_elements('#'+BarPlotPanelDivId, tutorial_steps['scenario_2_left_column_explanation']),
-                                fix_tutorial_identification_elements("#node_6",tutorial_steps['scenario_2_box_second_dataset_explanation'] ),                                                          
-                                fix_tutorial_identification_elements('#DocumentsPanel', tutorial_steps['scenario_2_right_column_explanation']),
-                                fix_tutorial_identification_elements('#svg_sankey', tutorial_steps['scenario_2_explanation_of_datasets']),
-                                //tutorial_steps['scenario_2_global_view_of_topics'],
-                                //fix_tutorial_identification_elements('#svg_sankey', tutorial_steps['explanation_of_sankey_diagram']),
-                                fix_tutorial_identification_elements('#TopicSimilarityMetricPanelFiltering', tutorial_steps['explanation_filtering_sankey']),
-                                fix_tutorial_identification_elements('#TopicSimilarityMetricPanel', tutorial_steps['omega_description']),
-                                fix_tutorial_identification_elements('#LDAvisContainer-topic-edit', tutorial_steps['only_rename_topic_button']),
-                                tutorial_steps['export_user_study_data'],
-                                tutorial_steps['help_button']    
-                                                                                                                                                      
-                        ]
-                        })
-                        .onbeforeexit(function () {
-                            return confirm("Are you sure do you want to end the tutorial?");
-                        })
-                        .start();                    
-                    }
-                    else{ //Scenario 2 - metric proposed- No tutorial
-
-                    }
+                if(is_tutorial == true){
+                    var tutorial_graph =  matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)];
+                    var tutorial_nodes = tutorial_graph.nodes;
+                    var tutorial_topic_chosen = tutorial_nodes[4];
+                    topic_on_sankey(tutorial_topic_chosen, 6 );
+                }
+                if(scenario_2_is_baseline_metric == false){                        
+                    introJs().setOptions({
+                        steps: [
+                            tutorial_steps['scenario_2_explanation'],     
+                            fix_tutorial_identification_elements("#node_4",tutorial_steps['scenario_2_box_explanation'] ),                                                          
+                            fix_tutorial_identification_elements('#'+BarPlotPanelDivId, tutorial_steps['scenario_2_left_column_explanation']),
+                            fix_tutorial_identification_elements("#node_6",tutorial_steps['scenario_2_box_second_dataset_explanation'] ),                                                          
+                            fix_tutorial_identification_elements('#DocumentsPanel', tutorial_steps['scenario_2_right_column_explanation']),                                
+                            fix_tutorial_identification_elements('#svg_sankey', tutorial_steps['explanation_of_sankey_diagram']),
+                            fix_tutorial_identification_elements('#TopicSimilarityMetricPanelFiltering', tutorial_steps['explanation_filtering_sankey']),
+                            fix_tutorial_identification_elements('#LabelFilteringTopicSimilarity', tutorial_steps['explanation_filtering_sankey_part2']),                                
+                            fix_tutorial_identification_elements("#TopicSimilarityMetricPanel", tutorial_steps['description_omega_slider']),
+                            fix_tutorial_identification_elements("#LDAvisContainer-topic-edit", tutorial_steps['rename_button_scenario_2_left']),                                                            
+                            fix_tutorial_identification_elements("#LDAvisContainer-topic-edit_2", tutorial_steps['rename_button_scenario_2_right']),                                                                                                                            
+                            tutorial_steps['export_user_study_data'],
+                            tutorial_steps['help_button']                                                                                                                                                          
+                    ]
+                    })
+                    .onbeforeexit(function () {
+                        return confirm("Are you sure do you want to end the tutorial?");
+                    })
+                    .start();                                    
                 }
                 else{ // scenario 2, metric baseline. 
                     introJs().setOptions({
                         steps: [           
-                                                     
+                            tutorial_steps['scenario_2_explanation'],     
+                            fix_tutorial_identification_elements("#node_4",tutorial_steps['scenario_2_box_explanation'] ),                                                          
+                            fix_tutorial_identification_elements('#'+BarPlotPanelDivId, tutorial_steps['scenario_2_left_column_explanation']),
+                            fix_tutorial_identification_elements("#node_6",tutorial_steps['scenario_2_box_second_dataset_explanation'] ),                                                          
+                            fix_tutorial_identification_elements('#DocumentsPanel', tutorial_steps['scenario_2_right_column_explanation']),                                
+                            fix_tutorial_identification_elements('#svg_sankey', tutorial_steps['explanation_of_sankey_diagram']),
+                            fix_tutorial_identification_elements('#TopicSimilarityMetricPanelFiltering', tutorial_steps['explanation_filtering_sankey']),
+                            fix_tutorial_identification_elements('#LabelFilteringTopicSimilarity', tutorial_steps['explanation_filtering_sankey_part2']),                                
+                            //fix_tutorial_identification_elements("#TopicSimilarityMetricPanel", tutorial_steps['description_omega_slider']),
+                            fix_tutorial_identification_elements("#LDAvisContainer-topic-edit", tutorial_steps['rename_button_scenario_2_left']),                                                            
+                            fix_tutorial_identification_elements("#LDAvisContainer-topic-edit_2", tutorial_steps['rename_button_scenario_2_right']),                                                                                                                            
+                            tutorial_steps['export_user_study_data'],
+                            tutorial_steps['help_button']                                                             
                     ]
-                    }).start();
+                    })
+                    .onbeforeexit(function () {
+                        return confirm("Are you sure do you want to end the tutorial?");
+                    })                    
+                    .start();
                 }                
             }
         }
