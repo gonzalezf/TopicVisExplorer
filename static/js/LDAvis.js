@@ -3424,7 +3424,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             tutorial_steps['scenario_2_box_second_dataset_explanation'] = { intro: 'Each topic of the second dataset appears with a green color' ,    position: 'top' };
             tutorial_steps['scenario_2_right_column_explanation'] = { intro: 'Here you can see the information related to a topic of the second dataset (green box)' ,    position: 'left' };
             //tutorial_steps['scenario_2_global_view_of_topics'] = {title: 'Global view of topics', element: document.querySelector('#CentralPanel'), intro: "The central panel presents a global view of the topics and aims to answer <b style='color: #1f77b4;'>How topics relate to each other? </b>" };
-            tutorial_steps['explanation_of_sankey_diagram'] = { element: document.querySelector('#svg_sankey'), title: 'How  topics relate to each other? ', intro: "This interface allows identifying the similarity between topics from two different datasets. <br> <br> The similarity score between two topics is automatically calculated <br><br> The link between topics indicates their similarity. Topics that are more similar are connected with a <b style='color: #1f77b4;'>wider </b> link." };
+            tutorial_steps['explanation_of_sankey_diagram'] = { element: document.querySelector('#svg_sankey'), title: 'How  topics relate to each other? ', intro: "This interface allows identifying the similarity between topics from two different datasets. <br> <br> The similarity score between two topics is automatically calculated <br><br> The link between topics indicates their similarity. Topics that are more similar are connected with a <b style='color: #1f77b4;'>wider </b> link and they have a higher similarity score." };
 
             tutorial_steps['explanation_filtering_sankey'] = {  title: 'Filtering links', intro: "You can see more or fewer links in the visualization modifying this slider.", position: 'right' };
             tutorial_steps['explanation_filtering_sankey_part2'] = { title: 'Filtering links', intro: "The interface will only show links that have a similarity score in this range of values.", position: 'left' };
@@ -3582,7 +3582,10 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
             //-------------------------------------Scenario 2 --------------------------------------------------
             else{ // We are in scenario 2 - Metric proposed
+                var id_node_selected_left = '#node_0';
+
                 if(is_tutorial == true){
+                    id_node_selected_left = '#node_4';
                     var tutorial_graph =  matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)];
                     var tutorial_nodes = tutorial_graph.nodes;
                     var tutorial_topic_chosen = tutorial_nodes[4];
@@ -3601,7 +3604,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     introJs().setOptions({
                         steps: [
                             tutorial_steps['scenario_2_explanation'],     
-                            fix_tutorial_identification_elements("#node_4",tutorial_steps['scenario_2_box_explanation'] ),                                                          
+                            fix_tutorial_identification_elements(id_node_selected_left,tutorial_steps['scenario_2_box_explanation'] ),                                                          
                             fix_tutorial_identification_elements('#'+BarPlotPanelDivId, tutorial_steps['scenario_2_left_column_explanation']),
                             fix_tutorial_identification_elements("#node_6",tutorial_steps['scenario_2_box_second_dataset_explanation'] ),                                                          
                             fix_tutorial_identification_elements('#DocumentsPanel', tutorial_steps['scenario_2_right_column_explanation']),                                
@@ -3628,7 +3631,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     introJs().setOptions({
                         steps: [           
                             tutorial_steps['scenario_2_explanation'],     
-                            fix_tutorial_identification_elements("#node_4",tutorial_steps['scenario_2_box_explanation'] ),                                                          
+                            fix_tutorial_identification_elements(id_node_selected_left,tutorial_steps['scenario_2_box_explanation'] ),                                                          
                             fix_tutorial_identification_elements('#'+BarPlotPanelDivId, tutorial_steps['scenario_2_left_column_explanation']),
                             fix_tutorial_identification_elements("#node_6",tutorial_steps['scenario_2_box_second_dataset_explanation'] ),                                                          
                             fix_tutorial_identification_elements('#DocumentsPanel', tutorial_steps['scenario_2_right_column_explanation']),                                
