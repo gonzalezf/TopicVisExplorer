@@ -3596,7 +3596,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                     isSettingInitial = false;
 
-                    console.log('TENGO ESTO', real_last_clicked_sankey_model_1);
                 }
                 if(scenario_2_is_baseline_metric == false){                        
                     introJs().setOptions({

@@ -307,7 +307,7 @@ class TestView(FlaskView):
     @route('/')
     def index(self):
     # http://localhost:5000/
-        return "<h1>index</h1>"
+        return render_template("user_study_code.html")
 
     @route('/MultiCorpora_documents_1')
     def get_documents_data_multicorpus_1(self):
