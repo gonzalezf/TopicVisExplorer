@@ -15,7 +15,7 @@ import time
 
 
 from gensim.corpora import Dictionary
-from flask import Flask, render_template, request, json, Response, render_template_string, jsonify
+from flask import Flask, render_template, request, json, Response, render_template_string, jsonify, redirect
 from flask_classful import FlaskView,route
 from _display import *
 from _prepare import prepare, js_PCoA, PreparedData, _pcoa
@@ -335,6 +335,38 @@ class TestView(FlaskView):
     def index(self):
     # http://localhost:5000/
         return render_template("user_study_code.html")
+
+    def find_url(self, user_code):
+        f = open('user_study_codes_and_urls.json',)
+        user_codes_and_urls_file = js.load(f)
+        for url in user_codes_and_urls_file:
+            current_list = user_codes_and_urls_file[url]['codes']
+            if int(user_code) in current_list:
+                return url
+        return 'error' 
+
+
+
+    @route('/redirect_with_user_study_code', methods=['POST'])
+    def redirect_users(self):
+        json_file = request.get_json()
+
+        user_code = json_file['user_code']
+        ip = request.environ.get("HTTP_X_REAL_IP")
+        local_time = time.ctime()
+        if ip == None:
+            ip = 'ip_not_found'
+        
+        url = self.find_url(user_code)
+
+        file_object = open('previous_users.txt', 'a')
+        file_object.write('user_code_'+user_code+' - '+ip+' - '+local_time+' - '+url+'\n')
+        file_object.close()
+
+        
+        
+        return self.find_url(user_code)
+
 
     @route('/MultiCorpora_documents_1')
     def get_documents_data_multicorpus_1(self):
