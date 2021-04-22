@@ -680,22 +680,10 @@ var LDAvis = function(to_select, data_or_file_name) {
         
         //Inspired by: https://bl.ocks.org/d3noob/013054e8d7807dff76247b81b0e29030
        function visualize_sankey(graph, threshold_min, threshold_max){
-            /*
-            if(scenario_2_is_baseline_metric==true){
-                graph.links = graph.links.map(function(e) { 
-                    e.value = -e.value; 
-                    return e;
-                });
-                console.log('ESTORESULTO AL FINAL', graph.links);
-                console.log('ESTOS SON LOS THRESHOLD', threshold_min, threshold_max);
-                var temp_min =   -threshold_max;
-                var temp_max =  -threshold_min;
-                threshold_min =  temp_min;
-                threshold_max = temp_max;
+            
+            
 
-            }*/
-
-            console.log('ESTOS SON LOS THRESHOLD', threshold_min, threshold_max);
+            //console.log('ESTOS SON LOS THRESHOLD', threshold_min, threshold_max);
             inverted_links_filtered = graph;
 
             save_users_actions_across_time('min_filtering_sankey', threshold_min);
@@ -800,10 +788,10 @@ var LDAvis = function(to_select, data_or_file_name) {
             var formatNumber = d3.format(",.2f"),    // two decimal places
                 format = function(d) { 
                     if(scenario_2_is_baseline_metric == true){
-                        return "distance: "+formatNumber(d);
+                        return "similarity score: "+formatNumber(d);
 
                     }else{
-                        return "similarity: "+formatNumber(d);
+                        return "similarity score: "+formatNumber(d);
 
                     }
                 
@@ -996,9 +984,10 @@ var LDAvis = function(to_select, data_or_file_name) {
                 real_last_clicked_sankey_model_1 = nodes_filtered[0];
                 real_last_clicked_sankey_model_2 = nodes_filtered[min_target_node_value];
                 
-                topic_on_sankey(real_last_clicked_sankey_model_1, min_target_node_value);
-                topic_on_sankey(real_last_clicked_sankey_model_2, min_target_node_value);
+
             }
+            topic_on_sankey(real_last_clicked_sankey_model_1, min_target_node_value);
+            topic_on_sankey(real_last_clicked_sankey_model_2, min_target_node_value);
             
             d3.selectAll('.txt').call(dotme);
 
@@ -2571,8 +2560,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 var min_similarity_score = Infinity
                 var max_similarity_score = -Infinity
                 if(scenario_2_is_baseline_metric == true){
+                    var graph_temp = matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)];
 
-                    matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)].links.filter(function(el){
+                    graph_temp.links.filter(function(el){
                         if(el.value < min_similarity_score){
                             min_similarity_score = el.value;
                         }
@@ -2581,6 +2571,22 @@ var LDAvis = function(to_select, data_or_file_name) {
                             max_similarity_score = el.value;
                         }
                     });
+                    var inverted_scale = d3.scaleLinear()
+                    .domain([min_similarity_score, max_similarity_score])
+                    .range([max_similarity_score, min_similarity_score]);
+
+
+                    //aqui hay q dar vuelta la wea
+                    if(scenario_2_is_baseline_metric==true){
+                            console.log('INVIRTIENDO VALORESSSS');
+                            graph_temp.links = graph_temp.links.map(function(e) { 
+                            e.value = inverted_scale.invert(e.value);
+                            //e.value = -e.value; 
+                            return e;
+                        });        
+                    }
+                    matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)] = graph_temp;
+                                        
                 }
                 else{
                     var min_similarity_score = -1.0;
@@ -2648,15 +2654,15 @@ var LDAvis = function(to_select, data_or_file_name) {
                     console.log('estoy en este slider!!')
                     var range_slider = noUiSlider.create(slider, {
                         //start: [(max_similarity_score)*0.65, max_similarity_score],
-                        start: [min_similarity_score, initial_filtering_value],                    
+                        start: [initial_filtering_value, max_similarity_score],                    
                         connect: true,
                         range: {
                             'min': min_similarity_score,
                             'max': max_similarity_score
                         }
                     });
-                    origins[0].setAttribute('disabled', true);
-                    origins[0].setAttribute('class', 'disabled_slider');
+                    origins[1].setAttribute('disabled', true);
+                    origins[1].setAttribute('class', 'disabled_slider');
 
 
                     //console.log('que es estoo', origins[0]);
@@ -2691,11 +2697,11 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                     }
                     else{
-                    vis_state.max_value_filtering = Number(values[1]);
-                    vis_state.min_value_filtering = Number(min_similarity_score);                
+                    vis_state.max_value_filtering = Number(max_similarity_score);
+                    vis_state.min_value_filtering = Number(values[0]);                
                     }
                     //Do not change max_value:
-                    console.log('MIN VALUE', vis_state.min_value_filtering, 'Max value',vis_state.max_value_filtering  );
+                    //console.log('MIN VALUE', vis_state.min_value_filtering, 'Max value',vis_state.max_value_filtering  );
                     save_users_actions_across_time('changing_filtering', new Date());
                     save_users_actions_across_time('changing_filtering_min_value', vis_state.min_value_filtering);
                     save_users_actions_across_time('changing_filtering_max_value', vis_state.max_value_filtering);
@@ -2711,6 +2717,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     }
 
 
+        
                 });
 
 
@@ -3579,7 +3586,17 @@ var LDAvis = function(to_select, data_or_file_name) {
                     var tutorial_graph =  matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)];
                     var tutorial_nodes = tutorial_graph.nodes;
                     var tutorial_topic_chosen = tutorial_nodes[4];
+                    var tutorial_topic_chosen_2= tutorial_nodes[6];
+
                     topic_on_sankey(tutorial_topic_chosen, 6 );
+                    topic_on_sankey(tutorial_topic_chosen_2, 6 );
+
+                    real_last_clicked_sankey_model_1 = tutorial_topic_chosen;
+                    real_last_clicked_sankey_model_2 = tutorial_topic_chosen_2;
+
+                    isSettingInitial = false;
+
+                    console.log('TENGO ESTO', real_last_clicked_sankey_model_1);
                 }
                 if(scenario_2_is_baseline_metric == false){                        
                     introJs().setOptions({
