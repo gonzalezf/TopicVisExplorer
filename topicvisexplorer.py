@@ -36,18 +36,45 @@ from copy import deepcopy
 from pandarallel import pandarallel
 pandarallel.initialize()
 
+class MaxClientQueue:
+    
+    def __init__(self, n) -> None:
+        self.max_n = n
+        self.client_list = []
+
+    def purge(self, client_ip):
+        global single_corpus_datasets
+        global multi_corpora_datasets
+        global previous_single_corpus_datasets
+
+        single_corpus_datasets.pop(client_ip, None)
+        multi_corpora_datasets.pop(client_ip, None)
+        previous_single_corpus_datasets.pop(client_ip, None)
+        print(f"Purged {client_ip}", flush=True)
+
+
+    def enqueue(self, client_ip: str) -> None:
+
+        if client_ip not in self.client_list:
+            self.client_list.append(client_ip)
+
+            if len(self.client_list) > self.max_n:
+                self.purge(self.client_list.pop(0))
+
 scenarios = {
 }
 
 single_corpus_datasets = {}
 multi_corpora_datasets = {}
 previous_single_corpus_datasets = {}
+client_queue = MaxClientQueue(5)
+
+
 class TopicVisExplorer:
 
     app = None
     
     def __init__(self, name): 
-
         self.app = Flask(name)
         TestView.register(self.app, route_base = '/')
     
@@ -735,8 +762,12 @@ class TestView(FlaskView):
         #load data
         global single_corpus_datasets
         global previous_single_corpus_datasets
+        global client_queue
 
         ip = request.environ.get("HTTP_X_REAL_IP")
+
+        client_queue.enqueue(ip)
+
         single_corpus_datasets[ip] = self.load_corpus_data(request.args.get("scenario", 'single_demo'))  
         single_corpus_data =  single_corpus_datasets[ip]
         previous_single_corpus_datasets[ip] = []
@@ -763,6 +794,9 @@ class TestView(FlaskView):
         #load data
         global multi_corpora_datasets
         ip = request.environ.get("HTTP_X_REAL_IP")
+
+        client_queue.enqueue(ip)
+
         multi_corpora_datasets[ip] = self.load_corpus_data(request.args.get("scenario", 'multi_demo'))
         multi_corpora_data = multi_corpora_datasets[ip]
 
