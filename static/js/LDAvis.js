@@ -3401,7 +3401,9 @@ var LDAvis = function(to_select, data_or_file_name) {
             tutorial_steps['scenario_1_topic_frequency'] = { title: 'How prevalent each topic is?', intro: "The area of the circle indicates the frequency (%) of the topic in the dataset. <br> <br> In this case, all the topics have the same frequency (16%)" };
             tutorial_steps['omega_description'] = { element: document.querySelector('#TopicSimilarityMetricPanel'), title: 'Similarity between topics', intro: "This slider allows adjusting the similarity between topics. A higher omega score implies higher importance to the most relevant keywords, but a lower significance to the most relevant documents in the topic similarity calculation." };
             tutorial_steps['description_omega_slider'] = {title: 'Similarity between topics', intro: "The similarity between topics is calculated automatically. You can explore other results using this slider. <br> <br> The algorithm compares topics considering their most relevant documents and their most relevant keywords. <br> <br> During the  calculation of the similarity between two topics,  a higher <i style='color: #1f77b4;'>omega  score </i>implies higher importance to their  most relevant documents, but a lower significance to their most relevant keywords." };
-            tutorial_steps['scenario_1_hil_buttons'] = { element: document.querySelector('#topic_buttons_div'), title: 'Modifying topic modeling results', intro: "After inspecting the topics, you may wish to join two similar topics into one (<b style='color: #1f77b4'> merge</b>) or to split a generic topic into two new subtopics  (<b style='color: #1f77b4'> split</b>). You can access these functionalities here."};
+            tutorial_steps['scenario_1_hil_buttons'] = { title: 'Modifying topic modeling results', intro: "After inspecting the topics, you may wish to join two similar topics into one (<b style='color: #1f77b4'> merge</b>) or to split a generic topic into two new subtopics  (<b style='color: #1f77b4'> split</b>). You can access these functionalities here."};
+            tutorial_steps['scenario_1_reverse_button'] = { title: 'Modifying topic modeling results', intro: "If the results after applying a (<b style='color: #1f77b4'> topic merging </b>) or (<b style='color: #1f77b4'> topic splitting </b>) operation are not satisfactory, you can reverse the changes by clicking this button."};
+
             tutorial_steps['export_user_study_data'] = { element: document.querySelector('#save_data_user_study_button'), title: 'Exporting your results', intro: "After finishing  the tasks required in the  user study, you must export your results by clicking this button." };
             tutorial_steps['help_button'] = { element: document.querySelector('#help_button'), title: 'Ask for help!', intro: "Finally, don't forget that you can always start the interactive tutorial here!" };
 
@@ -3453,11 +3455,17 @@ var LDAvis = function(to_select, data_or_file_name) {
                                 fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_frequency']),
                                 fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_similarity']),
     
-                                fix_tutorial_identification_elements("#TopicSimilarityMetricPanel", tutorial_steps['description_omega_slider']),                                                            
-                                tutorial_steps['scenario_1_hil_buttons'], // this is only for scenario 1 , hil
+                                fix_tutorial_identification_elements("#TopicSimilarityMetricPanel", tutorial_steps['description_omega_slider']),  
+                                fix_tutorial_identification_elements("#topic_buttons_div", tutorial_steps['scenario_1_hil_buttons']),                                                                                                                                                      
+                                fix_tutorial_identification_elements("#LDAvisContainer-topic-reverse", tutorial_steps['scenario_1_reverse_button']),                                                            
+
                                 tutorial_steps['export_user_study_data'],
                                 tutorial_steps['help_button']        
                         ]
+                        })
+                        .oncomplete(function() {
+                            save_users_actions_across_time('tutorial_completed', new Date());
+
                         })
                         .onbeforeexit(function () {
                             return confirm("Are you sure do you want to end the tutorial?");
@@ -3480,10 +3488,15 @@ var LDAvis = function(to_select, data_or_file_name) {
                                 fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_similarity']),
     
                                 fix_tutorial_identification_elements("#TopicSimilarityMetricPanel", tutorial_steps['description_omega_slider']),                                                            
-                                tutorial_steps['scenario_1_hil_buttons'], // this is only for scenario 1 , hil
+                                fix_tutorial_identification_elements("#topic_buttons_div", tutorial_steps['scenario_1_hil_buttons']),                                                                                            
+                                fix_tutorial_identification_elements("#LDAvisContainer-topic-reverse", tutorial_steps['scenario_1_reverse_button']),                                                            
                                 tutorial_steps['export_user_study_data'],
                                 tutorial_steps['help_button']        
                         ]
+                        })
+                        .oncomplete(function() {
+                            save_users_actions_across_time('tutorial_completed', new Date());
+
                         })
                         .onbeforeexit(function () {
                             return confirm("Are you sure do you want to end the tutorial?");
@@ -3517,6 +3530,10 @@ var LDAvis = function(to_select, data_or_file_name) {
                                 tutorial_steps['help_button']        
                         ]
                         })
+                        .oncomplete(function() {
+                            save_users_actions_across_time('tutorial_completed', new Date());
+
+                        })
                         .onbeforeexit(function () {
                             return confirm("Are you sure do you want to end the tutorial?");
                         })
@@ -3543,6 +3560,10 @@ var LDAvis = function(to_select, data_or_file_name) {
                                 tutorial_steps['export_user_study_data'],
                                 tutorial_steps['help_button']        
                         ]
+                        })
+                        .oncomplete(function() {
+                            save_users_actions_across_time('tutorial_completed', new Date());
+
                         })
                         .onbeforeexit(function () {
                             return confirm("Are you sure do you want to end the tutorial?");
@@ -3578,6 +3599,10 @@ var LDAvis = function(to_select, data_or_file_name) {
                             tutorial_steps['help_button']                                                                                                                                                          
                     ]
                     })
+                    .oncomplete(function() {
+                        save_users_actions_across_time('tutorial_completed', new Date());
+
+                    })
                     .onbeforeexit(function () {
                         return confirm("Are you sure do you want to end the tutorial?");
                     })
@@ -3600,6 +3625,10 @@ var LDAvis = function(to_select, data_or_file_name) {
                             tutorial_steps['export_user_study_data'],
                             tutorial_steps['help_button']                                                             
                     ]
+                    })
+                    .oncomplete(function() {
+                        save_users_actions_across_time('tutorial_completed', new Date());
+
                     })
                     .onbeforeexit(function () {
                         return confirm("Are you sure do you want to end the tutorial?");
