@@ -20,7 +20,7 @@ var global_sankey_links_filtered;
 var sankey_topics_automatic_match;
 var name_topics_sankey = {};
 var inverted_links_filtered; 
-var is_tutorial;
+var is_tutorial = 'undefined';
 var testing;
 function randomIntFromInterval(min, max) { // min and max included 
     return Math.floor(Math.random() * (max - min + 1) + min);
@@ -35,7 +35,6 @@ function isTutorial(){
     var queryString  = window.location.search;
     var urlParams = new URLSearchParams(queryString);
     var scenario = urlParams.get('scenario')
-    console.log(' el escenario es', scenario);
 
     if(scenario == null  || scenario == 'single_demo' || scenario == 'multi_demo_baseline' || scenario == 'multi_demo'){
         is_tutorial = true;
@@ -1389,7 +1388,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("width", "100%")
                 .attr("opacity", 0) //.style("fill", color1_1)
 
-
+            
             mdsplot.append("line") // draw x-axis
                 .attr("x1", 0)
                 .attr("x2", mdswidth)
@@ -1415,6 +1414,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("y", 7)
                 .text(data['plot.opts'].ylab)
                 .attr("fill", "gray");
+            
 
             // new definitions based on fixing the sum of the areas of the default topic circles:
             
@@ -1460,7 +1460,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr('class', "circleGuideTitle")
                 .style("text-anchor", "left")
                 .style("fontWeight", "bold")
-                .text("Marginal topic distribution");
+                .text("Topic frequency");
             d3.select("#" + leftPanelID).append("text")
                 .attr("x", cx2 + 10)
                 .attr("y", 0.88*mdsheight + 2 * newSmall)
@@ -1823,7 +1823,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("id", barFreqsID_actual)
                     .attr("class", "BarPlotClass");
             
-            if(type_vis == 1 && splitting!=1){
+            if(type_vis == 1 ){
 
                 var legend_svg = d3.select(to_select).append("svg") //BarPlotPanelDiv
                 .attr("width", "100%")
@@ -1835,30 +1835,30 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("x", 0)
                     .attr("y", mdsheight + 10)
                     .attr("height", barguide.height)
-                    .attr("width", barguide.width)
+                    .attr("width", (barguide.width/2))
                     .style("fill", color1_1)
                     .attr("opacity", 0.4);
                 d3.select("#legend_svg").append("text")
-                    .attr("x", barguide.width + 5)
+                    .attr("x", (barguide.width/2)+ 5)
                     .attr("y", mdsheight + 10 + barguide.height/2)
                     .style("dominant-baseline", "middle")
                     .text("Overall term frequency");
                 
                 d3.select("#legend_svg").append("rect")
-                    .attr("x", 0)
-                    .attr("y", mdsheight + 10 + barguide.height + 5)
+                    .attr("x", 1.8*barguide.width+ 5)
+                    .attr("y", mdsheight + 10)
                     .attr("height", barguide.height)
-                    .attr("width", barguide.width/2)
+                    .attr("width", (barguide.width/4))
                     .style("fill", color2_1)
                     .attr("opacity", 0.8);
                 d3.select("#legend_svg").append("text")
-                    .attr("x", barguide.width/2 + 5)
-                    .attr("y", mdsheight + 10 + (3/2)*barguide.height + 5)
+                    .attr("x", 1.8*barguide.width+(barguide.width/4) + 10 )
+                    .attr("y", mdsheight + 10 + barguide.height/2 )
                     .style("dominant-baseline", "middle")
                     .text("Estimated term frequency within the selected topic");
                 
                 
-                
+                /*
                 d3.select("#legend_svg")
                     .append("a")
                     .attr("xlink:href", "http://vis.stanford.edu/files/2012-Termite-AVI.pdf")
@@ -1877,6 +1877,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("y", mdsheight + 10 + (8/2)*barguide.height + 5)
                     .style("dominant-baseline", "middle")
                     .text("2. relevance(term w | topic t) = \u03BB * p(w | t) + (1 - \u03BB) * p(w | t)/p(w); see Sievert & Shirley (2014)");
+                */
+
             }
             // Bind 'default' data to 'default' bar chart
             var basebars = chart.selectAll(to_select + " ."+bar_totals_actual)
@@ -2143,6 +2145,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                             circle_positions: new_circle_positions,   
                             relevance_value: vis_state.lambda,
                             actions_across_time: actions_across_time,
+                            is_tutorial: is_tutorial,
                             full_scenario_description: type_vis+'_'+is_human_in_the_loop     
                         };
                         // we need to recalculate new coherence only in scenario 1, when hil is activated
@@ -2167,6 +2170,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                             max_filtering: vis_state.max_value_filtering,
                             actions_across_time : actions_across_time,
                             sankey_topics_automatic_match: sankey_topics_automatic_match,
+                            is_tutorial: is_tutorial,
                             full_scenario_description: type_vis+'_'+scenario_2_is_baseline_metric
                             //global_sankey_links_filtered: global_sankey_links_filtered
                         };
@@ -4200,7 +4204,14 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         // minor fixes
         //This is the special configuration needed for the user study
-        show_tutorial()
+        if(is_tutorial==true){
+            show_tutorial()
+            console.log('this is a tutorial');
+
+        }
+        else{
+            console.log('this is not a tutorial');
+        }
 
         if(type_vis == 1){
             document.getElementById("DocumentsPanel").style.height="80%";
