@@ -149,10 +149,10 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         },
         color1_1 = "#BE7CF0", //violeta
-        color1_2 = "#632A9E", //morado
+        color1_2 = "#57009E", //morado
         
 
-        color2_1 = "#6BF0A7", //"red", //"#6BF0A7", //verde claro
+        color2_1 = "#29F0B6", //"red", //"#6BF0A7", //verde claro
         color2_2 = "#00A385"; //"blue"; //"00A385"; //"13A383"; //verde oscuro
                 
 
@@ -196,7 +196,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
 
-    var termID = visID + "-term";
+    var termID = "barplotterm-";
 
     var topicReverse = topicID+"-reverse";    
 
@@ -1779,7 +1779,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
 
-
         function createBarPlot(to_select, dat3, barFreqsID_actual, bar_totals_actual, terms_actual,  splitting, xaxis_class, number_terms){
 
             
@@ -1916,11 +1915,39 @@ var LDAvis = function(to_select, data_or_file_name) {
                     return d.Term;
                 })
                 .on("mouseover", function() {
-                    
+                    //this.style["fontWeight"] = "bolder"
+                    var current_term = this.id.split('-')[1];
+                    d3.selectAll('#barplotterm-'+current_term).style("font-weight",'bolder');
+                    if(type_vis==1){
+                        d3.select('#bar-totals-'+current_term).style("fill",color1_2);
+                        d3.select('#bar-freq-estimated-'+current_term).style("fill",color2_2);
+                    }
+                    else{
+                        d3.select('#bar-totals-'+current_term).style("fill",color1_2);
+                        d3.select('#overlay-'+current_term).style("fill",color2_2);
+
+                        d3.select('#bar-totals_2-'+current_term).style("fill",color1_2);
+                        d3.select('#overlay_2-'+current_term).style("fill",color2_2);
+                    }                    
                 })
                 .on("mouseout", function() {
-                    vis_state.term = "";
                     
+                    //this.style["fontWeight"] = "normal";
+                    var current_term = this.id.split('-')[1];
+
+                    d3.selectAll('#barplotterm-'+current_term).style("font-weight",'normal');
+                    //barplotterm-flight
+                    if(type_vis==1){
+                        d3.select('#bar-freq-estimated-'+current_term).style("fill",color2_1);
+                        d3.select('#bar-totals-'+current_term).style("fill",color1_1);
+                    }
+                    else{
+                        d3.select('#bar-totals-'+current_term).style("fill",color1_1);
+                        d3.select('#overlay-'+current_term).style("fill",color2_1);
+
+                        d3.select('#bar-totals_2-'+current_term).style("fill",color1_1);
+                        d3.select('#overlay_2-'+current_term).style("fill",color2_1);
+                    }                    
                 });
             
             
@@ -2956,12 +2983,16 @@ var LDAvis = function(to_select, data_or_file_name) {
                         return d.Term;
                     })
                     .on("mouseover", function() {
+                        this.style["fontWeight"] = "bold"
+
                         //term_hover(this); esto lo desactive
                     })
             
                     .on("mouseout", function() {
+                        this.style["fontWeight"] = "normal"
+
                         //vis_state.term = "";
-                        //term_off(this);
+                         //term_off(this);
                         //state_save(true);
                     });
 
@@ -3318,6 +3349,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("y", function(d) {
                     return y(d.Term);
                 })
+                .attr('id', function(d){
+                    return bar_totals_actual+'-'+d.Term;
+                })
                 .attr("height", y.bandwidth()/2)
                 .attr("width", function(d) {
                     return x(d.Total);
@@ -3349,6 +3383,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("x", 0)
                 .attr("y", function(d) {
                     return y.bandwidth()/2 + y(d.Term);
+                })
+                .attr('id', function(d){
+                    return overlay+'-'+d.Term;
                 })
                 .attr("height", y.bandwidth()/2)
                 .attr("width", function(d) {
@@ -3752,6 +3789,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("y", function(d) {
                     return y(d.Term);
                 })
+                .attr('id', function(d){
+                    return 'bar-totals-'+d.Term;
+                })
                 .attr("height", y.bandwidth()/2)
                 .attr("width", function(d) {
                     return x(d.Total);
@@ -3781,6 +3821,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .append("rect")
                 .attr("class", "overlay")
                 .attr("x", 0)
+                .attr('id', function(d){
+                    return 'bar-freq-estimated-'+d.Term;
+                })
                 .attr("y", function(d) {
                     return (y.bandwidth()/2)+y(d.Term);
                 })
