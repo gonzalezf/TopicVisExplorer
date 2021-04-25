@@ -1893,7 +1893,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("y", function(d) {
                     return y(d.Term);
                 })
-                .attr("height", y.bandwidth())
+                .attr("height", y.bandwidth()/2)
                 .attr("width", function(d) {
                     return x(d.Total);
                 })
@@ -1906,7 +1906,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("x", -5)
                 .attr("class", terms_actual)
                 .attr("y", function(d) {
-                    return y(d.Term) + 12;
+                    return y(d.Term) + 9;
                 })
                 .attr("id", function(d) {
                     return (termID + d.Term);
@@ -2937,7 +2937,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("y", function(d) {
                         return y(d.Term) + barheight + margin.bottom + 2 * rMax;
                     })
-                    .attr("height", y.bandwidth())
+                    .attr("height", y.bandwidth()/2)
                     .style("fill", color1_1)
                     .attr("opacity", 0.4);
 
@@ -2946,7 +2946,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("x", -5)
                     .attr("class", terms_actual)
                     .attr("y", function(d) {
-                        return y(d.Term) + 12 + barheight + margin.bottom + 2 * rMax;
+                        return y(d.Term) + 9 + barheight + margin.bottom + 2 * rMax;
                     })
                     .style("text-anchor", "end")
                     .attr("id", function(d) {
@@ -2969,9 +2969,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("class", overlay)
                     .attr("x", 0)
                     .attr("y", function(d) {
-                        return y(d.Term) + barheight + margin.bottom + 2 * rMax;
-                    })
-                    .attr("height", y.bandwidth())
+                        return  (y.bandwidth()/2)+ y(d.Term) + barheight + margin.bottom + 2 * rMax;
+                    }) 
+                    .attr("height", y.bandwidth()/2)
                     .style("fill", color2_1)
                     .attr("opacity", 0.8);
 
@@ -2990,7 +2990,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .transition().duration(duration)
                     .delay(duration)
                     .attr("y", function(d) {
-                        return y(d.Term) + 12;
+                        return y(d.Term) + 9;
                     });
                 redbarsEnter
                     .attr("width", function(d) {
@@ -2999,7 +2999,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .transition().duration(duration)
                     .delay(duration)
                     .attr("y", function(d) {
-                        return y(d.Term);
+                        return (y.bandwidth()/2)+y(d.Term);
                     });
 
                 graybars.transition().duration(duration)
@@ -3013,7 +3013,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 labels.transition().duration(duration)
                     .delay(duration)
                     .attr("y", function(d) {
-                        return y(d.Term) + 12;
+                        return y(d.Term) + 9;
                     });
                 redbars.transition().duration(duration)
                     .attr("width", function(d) {
@@ -3021,7 +3021,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     })
                     .transition().duration(duration)
                     .attr("y", function(d) {
-                        return y(d.Term);
+                        return (y.bandwidth()/2) + y(d.Term);
                     });
 
                 // Transition exiting rectangles to the bottom of the barchart:
@@ -3070,13 +3070,13 @@ var LDAvis = function(to_select, data_or_file_name) {
                 labelsEnter
                     .transition().duration(duration)
                     .attr("y", function(d) {
-                        return y(d.Term) + 12;
+                        return y(d.Term) + 9;
                     });
                 redbarsEnter
                     .attr("width", 50) // FIXME by looking up old width of these bars
                     .transition().duration(duration)
                     .attr("y", function(d) {
-                        return y(d.Term);
+                        return (y.bandwidth()/2)+y(d.Term);
                     })
                     .transition().duration(duration)
                     .attr("width", function(d) {
@@ -3093,11 +3093,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                     });
                 labels.transition().duration(duration)
                     .attr("y", function(d) {
-                        return y(d.Term) + 12;
+                        return y(d.Term) + 9;
                     });
                 redbars.transition().duration(duration)
                     .attr("y", function(d) {
-                        return y(d.Term);
+                        return  (y.bandwidth()/2)+y(d.Term);
                     })
                     .transition().duration(duration)
                     .attr("width", function(d) {
@@ -3318,7 +3318,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("y", function(d) {
                     return y(d.Term);
                 })
-                .attr("height", y.bandwidth())
+                .attr("height", y.bandwidth()/2)
                 .attr("width", function(d) {
                     return x(d.Total);
                 })
@@ -3330,7 +3330,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .data(dat3)
                 .attr("x", -5)
                 .attr("y", function(d) {
-                    return y(d.Term) + 12;
+                    return y(d.Term) + 9;
                 })
                 .attr("id", function(d) {
                     return (termID + d.Term);
@@ -3348,9 +3348,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("class", overlay)
                 .attr("x", 0)
                 .attr("y", function(d) {
-                    return y(d.Term);
+                    return y.bandwidth()/2 + y(d.Term);
                 })
-                .attr("height", y.bandwidth())
+                .attr("height", y.bandwidth()/2)
                 .attr("width", function(d) {
                     return x(d.Freq);
                 })
@@ -3752,7 +3752,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("y", function(d) {
                     return y(d.Term);
                 })
-                .attr("height", y.bandwidth())
+                .attr("height", y.bandwidth()/2)
                 .attr("width", function(d) {
                     return x(d.Total);
                 })
@@ -3764,7 +3764,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .data(dat3)
                 .attr("x", -5)
                 .attr("y", function(d) {
-                    return y(d.Term) + 12;
+                    return y(d.Term) + 9; //to center bars
                 })
                 .attr("id", function(d) {
                     return (termID + d.Term);
@@ -3782,9 +3782,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("class", "overlay")
                 .attr("x", 0)
                 .attr("y", function(d) {
-                    return y(d.Term);
+                    return (y.bandwidth()/2)+y(d.Term);
                 })
-                .attr("height", y.bandwidth())
+                .attr("height", y.bandwidth()/2)
                 .attr("width", function(d) {
                     return x(d.Freq);
                 })
@@ -3847,7 +3847,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("y", function(d) {
                     return y(d.Term);
                 })
-                .attr("height", y.bandwidth())
+                .attr("height", y.bandwidth()/2)
                 .attr("width", function(d) {
                     return x(d.Total);
                 })
@@ -3859,7 +3859,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .data(dat2)
                 .attr("x", -5)
                 .attr("y", function(d) {
-                    return y(d.Term) + 12;
+                    return y(d.Term) + 9;
                 })
                 .style("text-anchor", "end") // right align text - use 'middle' for center alignment
                 .text(function(d) {
