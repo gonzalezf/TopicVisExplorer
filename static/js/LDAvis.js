@@ -1611,6 +1611,31 @@ var LDAvis = function(to_select, data_or_file_name) {
         .attr("id", function(d) {        
             return ("text-"+topicID + d.topics);
         })
+        .on("click", function(d) {
+            save_users_actions_across_time('click_circle_points', new Date());
+            save_users_actions_across_time('click_circle_points_topic_id', d.topics);
+            save_users_actions_across_time('click_circle_points_topic_name', name_topics_circles[topicID + d.topics]);
+
+
+
+            // prevent click event defined on the div container from firing
+            // http://bl.ocks.org/jasondavies/3186840
+            d3.event.stopPropagation();
+            var old_topic = topicID + vis_state.topic;
+            if (vis_state.topic > 0 && old_topic != this.id) {
+                topic_off(document.getElementById(old_topic));
+            }
+            // make sure topic input box value and fragment reflects clicked selection
+            vis_state.topic = d.topics;
+            
+
+            splitting_topic= vis_state.topic
+            
+            document.getElementById("renameTopicId").value = name_topics_circles[topicID + d.topics]
+            $('#idTopic').html(topicID + d.topics);
+            
+            topic_on(document.getElementById(topicID+d.topics));             
+        })
         .attr("stroke", "black")
         .style("stroke-opacity", .2)
         .attr("opacity", 1)
