@@ -759,18 +759,12 @@ var LDAvis = function(to_select, data_or_file_name) {
             sankey_topics_automatic_match = []
             var links_filtered =  graph.links.filter(function(el){
                 if((Number(threshold_min) <= Number(el.value.toFixed(2)) )&&(Number(el.value.toFixed(2)) <= Number(threshold_max) )){
-                    //console.log(el.source.sourceLinks)
-
-                  
-                    //sankey_topics_automatic_match.push(el.source.sourceLinks);
-                    //                return Number(threshold_min) <= Number(el.value.toFixed(2)); // we must to covner the threshold_min to number            
+         
                     return true;
 
                 }
                 return (Number(threshold_min) <= Number(el.value.toFixed(2)) )&&(Number(el.value.toFixed(2)) <= Number(threshold_max))
-                //return Number(threshold_min) <= Number(el.value.toFixed(2)); // we must to covner the threshold_min to number            
-                //return (threshold_min <= el.value.toFixed(2));
-                //return ((threshold_min <= el.value.toFixed(2)) && (el.value.toFixed(2) <= threshold_max));
+
                 }
             );
 
@@ -835,6 +829,37 @@ var LDAvis = function(to_select, data_or_file_name) {
                     return Math.max(1, d.dy)
                 
                 })
+                .on("click", function(d){
+                    
+                    //console.log('HACIENDO CLICK EN EL PATH',  min_target_node_value, d.source.node, d.target.node);
+                    topic_on_sankey(nodes_filtered[Number(d.source.node)], min_target_node_value );
+                    topic_on_sankey(nodes_filtered[Number(d.target.node)], min_target_node_value );
+
+
+                    console.log('DE SOURCE',d.source.node )
+                    
+                    save_users_actions_across_time('click_path_sankey', new Date());
+
+                    isSettingInitial = false;
+                    if(Number(d.source.node)>=min_target_node_value){
+                        real_last_clicked_sankey_model_2 = nodes_filtered[Number(d.source.node)];
+                        save_users_actions_across_time('click_path_sankey_model_2_topic_id', nodes_filtered[Number(d.source.node)].name);
+
+                    }
+                    else{
+                        real_last_clicked_sankey_model_1 = nodes_filtered[Number(d.source.node)];
+                        save_users_actions_across_time('click_path_sankey_model_1_topic_id', nodes_filtered[Number(d.source.node)].name);
+                    }
+                    if(Number(d.target.node)>=min_target_node_value){
+                        real_last_clicked_sankey_model_2 = nodes_filtered[Number(d.target.node)];
+                        save_users_actions_across_time('click_path_sankey_model_2_topic_id', nodes_filtered[Number(d.target.node)].name);
+
+                    }
+                    else{
+                        real_last_clicked_sankey_model_1 = nodes_filtered[Number(d.target.node)];
+                        save_users_actions_across_time('click_path_sankey_model_1_topic_id', nodes_filtered[Number(d.target.node)].name);
+                    }                    
+                }) 
                 .sort(function(a, b) { return b.dy - a.dy; }); // el dy de aqui tambien hay que modificarlo
 
             
@@ -867,7 +892,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .on("click", function(d){
                     save_users_actions_across_time('click_node_sankey', new Date());
 
-                    isSettingInitial = false
+                    isSettingInitial = false;
+
                     topic_on_sankey(d, min_target_node_value );
                     if(d.node>=min_target_node_value){
                         real_last_clicked_sankey_model_2 = d
@@ -3263,7 +3289,6 @@ var LDAvis = function(to_select, data_or_file_name) {
         // function to update bar chart when a topic is selected
         // the circle argument should be the appropriate circle element
         function topic_on_sankey(box, min_target_node_value ){
-            
             if(box.node>=min_target_node_value){
                 //pertenece al modelo de corpus 2
                 to_select = "#DocumentsPanel"
