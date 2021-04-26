@@ -38,11 +38,9 @@ function isTutorial(){
 
     if(scenario == null  || scenario == 'single_demo' || scenario == 'multi_demo_baseline' || scenario == 'multi_demo'){
         is_tutorial = true;
-        console.log('This is a tutorial', is_tutorial);
     }
     else{
         is_tutorial = false;
-        console.log('This is NOT a  tutorial', is_tutorial);
 
     }
 
@@ -321,7 +319,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         };
     }
 
-    function updateTopicNamesCircles(data){
+    function updateTopicNamesCircles(data, id_topic_splitted){
         
         // set the number of topics to global variable K:
         ////console.log("este data yo recibi", data)
@@ -417,9 +415,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                         
                             name_string += top_terms[i].Term+" "
                         }
-                        
-                        //name_topics_circles[topicID + d.topics] = name_string 
-    
+                        //name_topics_circles[topicID + d.topics] = 'New subtopic '+name_string;
+                        if(d.topics == id_topic_splitted || name_topics_circles[topicID + d.topics] == undefined){
+                            name_topics_circles[topicID + d.topics] = 'New subtopic '+name_string;
+                        }
+                        //name_topics_circles[topicID + d.topics] = name_string     
                         return (topicID + d.topics);
                     });    
     }
@@ -933,7 +933,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("y", function(d) { return d.dy / 2; })
                 .attr("dy", ".35em")
                 .attr("width", function(d) {
-                    return 0.25*d3.selectAll('#svg_sankey').node().getBoundingClientRect().width
+                    return 0.45*d3.selectAll('#svg_sankey').node().getBoundingClientRect().width
                     
                 })
                 .attr("class", "txt")
@@ -1140,7 +1140,9 @@ var LDAvis = function(to_select, data_or_file_name) {
         
                     //update lambdata with the new informsation
                     //console.log('ojo este es el mds data antes de actualizar en topic splitting,', mdsData)
-                    updateTopicNamesCircles(new_dict_topic_splitting['PreparedDataObtained_fromPython']);
+                    updateTopicNamesCircles(new_dict_topic_splitting['PreparedDataObtained_fromPython'], vis_state.topic);
+                    document.getElementById("renameTopicId").value = name_topics_circles[topicID + vis_state.topic];
+
                     //console.log('ojo este es el mds data despues de actualizar en topic splitting,', mdsData)
         
                     //see_most_relevant_keywords(12)
@@ -1148,6 +1150,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                     createMdsPlot(1, mdsData, get_new_omega(lambda_lambda_topic_similarity.current)); //update central panel
         
                     topic_on(document.getElementById(topicID+vis_state.topic));
+                    
+                    //reset selection of documents for topic splitting.
                     slider_topic_splitting_values[splitting_topic] = {};
                     $("#loadMe").modal('hide');
                     
@@ -1306,7 +1310,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                                         //5.- get new topic name
                     //console.log("AQUIII QUEREMOS BANEAR UNA ID!!!!")
                     
-                    var new_merged_topic_name = name_topics_circles[topicID + (index_topic_name_1+1)].trim()+' - '+ name_topics_circles[topicID + (index_topic_name_2+1)].trim();
+                    var new_merged_topic_name = 'New merged topic '+name_topics_circles[topicID + (index_topic_name_1+1)].trim()+' & '+ name_topics_circles[topicID + (index_topic_name_2+1)].trim();
                     save_users_actions_across_time('new_merged_topic_name', new_merged_topic_name);
 
                     name_topics_circles[topicID + (index_topic_name_1+1)] = new_merged_topic_name;
@@ -1640,14 +1644,20 @@ var LDAvis = function(to_select, data_or_file_name) {
         .style("stroke-opacity", .2)
         .attr("opacity", 1)
         .style("text-anchor", "middle")
-        .style("font-size", "11px")                //.style("fontWeight", 50)
-        .text(function(d) {
-            var freq_current_topic = Math.round(mdsData[d.topics-1].Freq* 10) / 10;
-            
-            return "("+freq_current_topic+"%) "+name_topics_circles[topicID + d.topics];
-            
-        });
-
+        .style("font-size", "11px")  
+        .append("tspan")
+            .attr("dy", "0em")
+            .text(function(d){
+                var freq_current_topic = Math.round(mdsData[d.topics-1].Freq* 10) / 10;
+                
+                return "("+freq_current_topic+"%)";
+            })
+        .append("tspan")
+            .attr("dy", "2em")
+            .attr('class', 'txt')
+            .text(function(d){
+                return name_topics_circles[topicID + d.topics];
+            });
 
 
         //overflow-text in svg
@@ -1847,64 +1857,41 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("id", barFreqsID_actual)
                     .attr("class", "BarPlotClass");
             
-            if(type_vis == 1 ){
 
                 var legend_svg = d3.select(to_select).append("svg") //BarPlotPanelDiv
                 .attr("width", "100%")
-                .attr("id", "legend_svg")
+                .attr("height", "3%")
+                .attr("id", bar_totals_actual+"legend_svg")
                 
                 mdsheight = 0
                 var barguide = {"width": 100, "height": 15};
-                d3.select("#legend_svg").append("rect")
+                d3.select("#"+bar_totals_actual+"legend_svg").append("rect")
                     .attr("x", 0)
                     .attr("y", mdsheight + 10)
                     .attr("height", barguide.height)
                     .attr("width", (barguide.width/2))
                     .style("fill", color1_1)
                     .attr("opacity", 0.4);
-                d3.select("#legend_svg").append("text")
+                d3.select("#"+bar_totals_actual+"legend_svg").append("text")
                     .attr("x", (barguide.width/2)+ 5)
                     .attr("y", mdsheight + 10 + barguide.height/2)
                     .style("dominant-baseline", "middle")
                     .text("Overall term frequency");
                 
-                d3.select("#legend_svg").append("rect")
+                d3.select("#"+bar_totals_actual+"legend_svg").append("rect")
                     .attr("x", 1.8*barguide.width+ 5)
                     .attr("y", mdsheight + 10)
                     .attr("height", barguide.height)
                     .attr("width", (barguide.width/4))
                     .style("fill", color2_1)
                     .attr("opacity", 0.8);
-                d3.select("#legend_svg").append("text")
+                d3.select("#"+bar_totals_actual+"legend_svg").append("text")
                     .attr("x", 1.8*barguide.width+(barguide.width/4) + 10 )
                     .attr("y", mdsheight + 10 + barguide.height/2 )
                     .style("dominant-baseline", "middle")
                     .text("Estimated term frequency within the selected topic");
                 
-                
-                /*
-                d3.select("#legend_svg")
-                    .append("a")
-                    .attr("xlink:href", "http://vis.stanford.edu/files/2012-Termite-AVI.pdf")
-                    .attr("target", "_blank")
-                    .append("text")
-                    .attr("x", 0)
-                    .attr("y", mdsheight + 10 + (6/2)*barguide.height + 5)
-                    .style("dominant-baseline", "middle")
-                    .text("1. saliency(term w) = frequency(w) * [sum_t p(t | w) * log(p(t | w)/p(t))] for topics t; see Chuang et. al (2012)");
-                d3.select("#legend_svg")
-                    .append("a")
-                    .attr("xlink:href", "http://nlp.stanford.edu/events/illvi2014/papers/sievert-illvi2014.pdf")
-                    .attr("target", "_blank")
-                    .append("text")
-                    .attr("x", 0)
-                    .attr("y", mdsheight + 10 + (8/2)*barguide.height + 5)
-                    .style("dominant-baseline", "middle")
-                    .text("2. relevance(term w | topic t) = \u03BB * p(w | t) + (1 - \u03BB) * p(w | t)/p(w); see Sievert & Shirley (2014)");
-                */
-
-            }
-            // Bind 'default' data to 'default' bar chart
+                            // Bind 'default' data to 'default' bar chart
             var basebars = chart.selectAll(to_select + " ."+bar_totals_actual)
                     .data(barDefault2)
                     .enter();
@@ -2119,23 +2106,50 @@ var LDAvis = function(to_select, data_or_file_name) {
             svgLeftPanel.attr("id", BarPlotPanelDivId)
             //svgLeftPanel.attr("class", "border_box my-1")
             
+            if(type_vis==1){
+                var topicNameRow = document.createElement("div");
+                topicNameRow.setAttribute("id", "full_topic_name_row")
+                topicNameRow.setAttribute("class", "RowDiv ") //border_box my-1
+                document.getElementById(BarPlotPanelDivId).appendChild(topicNameRow)
+
+                var topicNameDiv = document.createElement("div");
+                topicNameDiv.setAttribute("id", "topic_name_div_full_row")
+                topicNameDiv.setAttribute("class", "ColumnDiv")
+                topicNameRow.appendChild(topicNameDiv) 
+
+
+
+            }
             var topicDiv = document.createElement("div");
             topicDiv.setAttribute("id", "topic_name_and_buttons_div")
             topicDiv.setAttribute("class", "RowDiv ") //border_box my-1
+            document.getElementById(BarPlotPanelDivId).appendChild(topicDiv) 
+            if(type_vis==1){
+                var topicButtonsDivLeft = document.createElement("div");
+                topicButtonsDivLeft.setAttribute("id", "topic_buttons_div_left_full_row")
+                topicButtonsDivLeft.setAttribute("class", "ColumnDiv")
+                topicDiv.appendChild(topicButtonsDivLeft) 
+
+                var topicButtonsDivRight = document.createElement("div");
+                topicButtonsDivRight.setAttribute("id", "topic_buttons_div_right_full_row")
+                topicButtonsDivRight.setAttribute("class", "ColumnDiv")
+                topicDiv.appendChild(topicButtonsDivRight) 
+            }
+
+            if(type_vis==2){
+                var topicNameDiv = document.createElement("div");
+                topicNameDiv.setAttribute("id", "topic_name_div")
+                topicNameDiv.setAttribute("class", "ColumnDiv")
+                topicDiv.appendChild(topicNameDiv) 
+
+                var topicButtonsDiv = document.createElement("div");
+                topicButtonsDiv.setAttribute("id", "topic_buttons_div")
+                topicButtonsDiv.setAttribute("class", "ColumnDiv")
+                topicDiv.appendChild(topicButtonsDiv) 
+
+            }
             
-            document.getElementById(BarPlotPanelDivId).appendChild(topicDiv) ////topicDiv.setAttribute("style", "width:100%; height:5%; background-color: red")
-
-        
-            var topicNameDiv = document.createElement("div");
-            topicNameDiv.setAttribute("id", "topic_name_div")
-            topicNameDiv.setAttribute("class", "ColumnDiv")
-            topicDiv.appendChild(topicNameDiv) ////topicDiv.setAttribute("style", "width:100%; height:5%; background-color: red")
-
-
-            var topicButtonsDiv = document.createElement("div");
-            topicButtonsDiv.setAttribute("id", "topic_buttons_div")
-            topicButtonsDiv.setAttribute("class", "ColumnDiv")
-            topicDiv.appendChild(topicButtonsDiv) ////topicDiv.setAttribute("style", "width:100%; height:5%; background-color: red")
+            
             
             var reverse = document.createElement("button");
             reverse.setAttribute("id", topicReverse);
@@ -2159,11 +2173,18 @@ var LDAvis = function(to_select, data_or_file_name) {
             save_data_user_study_button.setAttribute("class", "btn btn-info btnTopic");
             save_data_user_study_button.innerHTML = "<i class='fas fa-1x fa-file-export'></i>";
 
+            if(type_vis==1){
+                topicButtonsDivRight.appendChild(help);
+                topicButtonsDivRight.appendChild(save_data_user_study_button);
+    
+            }
+            else{
+                topicButtonsDiv.appendChild(help);
+                topicButtonsDiv.appendChild(save_data_user_study_button);
+    
+                topicButtonsDiv.appendChild(reverse);
+            }
 
-            topicButtonsDiv.appendChild(help);
-            topicButtonsDiv.appendChild(save_data_user_study_button);
-
-            topicButtonsDiv.appendChild(reverse);
             
             d3.select("#"+topicReverse)
                 .on("click", function() {
@@ -2351,7 +2372,14 @@ var LDAvis = function(to_select, data_or_file_name) {
            merge.setAttribute("id", topicMerge);
            merge.setAttribute("class", "btn btn-primary btnTopic"); //merge.setAttribute("disabled", true);
            merge.innerHTML = "Merge";
-           topicButtonsDiv.appendChild(merge);
+
+           if(type_vis==1){
+
+           }
+           else{
+            topicButtonsDiv.appendChild(merge);
+
+           }
 
         
 
@@ -2408,7 +2436,13 @@ var LDAvis = function(to_select, data_or_file_name) {
            split.setAttribute("id", topicSplit);
            split.setAttribute("class", "btn btn-primary btnTopic");           
            split.innerHTML = "Split";
-           topicButtonsDiv.appendChild(split);
+           if(type_vis==1){
+
+           }
+           else{
+            topicButtonsDiv.appendChild(split);
+
+           }
            //split.setAttribute("disabled", true);
 
   
@@ -2417,7 +2451,21 @@ var LDAvis = function(to_select, data_or_file_name) {
             edit.setAttribute("id", topicEdit);
             edit.setAttribute("class", "btn btn-primary btnTopic");
             edit.innerHTML = "Rename";
-            topicButtonsDiv.appendChild(edit);
+
+            if(type_vis==1){
+                topicButtonsDivLeft.appendChild(edit);
+                topicButtonsDivLeft.appendChild(merge);
+
+                topicButtonsDivLeft.appendChild(split);
+                topicButtonsDivLeft.appendChild(reverse);
+
+
+
+            }
+            else{
+                topicButtonsDiv.appendChild(edit);
+
+            }
 
             
             d3.select("#"+topicEdit)
@@ -3477,7 +3525,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             tutorial_steps['scenario_1_hil_buttons'] = { title: 'Modifying topic modeling results', intro: "After inspecting the topics, you may wish to join two similar topics into one (<b style='color: #1f77b4'> merge</b>) or to split a generic topic into two new subtopics  (<b style='color: #1f77b4'> split</b>). You can access these functionalities here."};
             tutorial_steps['scenario_1_reverse_button'] = { title: 'Modifying topic modeling results', intro: "If the results after applying a (<b style='color: #1f77b4'> topic merging </b>) or (<b style='color: #1f77b4'> topic splitting </b>) operation are not satisfactory, you can reverse the changes by clicking this button."};
 
-            tutorial_steps['export_user_study_data'] = { element: document.querySelector('#save_data_user_study_button'), title: 'Exporting your results', intro: "After finishing  the tasks required in the  user study, you must export your results by clicking this button." };
+            tutorial_steps['export_user_study_data'] = { element: document.querySelector('#save_data_user_study_button'), title: 'Sending your results', intro: "After finishing  the tasks required in the  user study, you must send your results by clicking this button." };
             tutorial_steps['help_button'] = { element: document.querySelector('#help_button'), title: 'Ask for help!', intro: "Finally, don't forget that you can always start the interactive tutorial here!" };
 
 
@@ -3529,7 +3577,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                                 fix_tutorial_identification_elements("#svgMdsPlot", tutorial_steps['scenario_1_topic_similarity']),
     
                                 fix_tutorial_identification_elements("#TopicSimilarityMetricPanel", tutorial_steps['description_omega_slider']),  
-                                fix_tutorial_identification_elements("#topic_buttons_div", tutorial_steps['scenario_1_hil_buttons']),                                                                                                                                                      
+                                fix_tutorial_identification_elements("#topic_buttons_div_left_full_row", tutorial_steps['scenario_1_hil_buttons']),                                                                                                                                                      
                                 fix_tutorial_identification_elements("#LDAvisContainer-topic-reverse", tutorial_steps['scenario_1_reverse_button']),                                                            
 
                                 tutorial_steps['export_user_study_data'],
@@ -4274,19 +4322,23 @@ var LDAvis = function(to_select, data_or_file_name) {
         //This is the special configuration needed for the user study
         if(is_tutorial==true){
             show_tutorial()
-            console.log('this is a tutorial');
 
-        }
-        else{
-            console.log('this is not a tutorial');
         }
 
         if(type_vis == 1){
             document.getElementById("DocumentsPanel").style.height="80%";
+            d3.select("#"+topicEdit).attr('class', 'btn btn-primary btnTopicLeft');
             if(is_human_in_the_loop == false){
-                d3.select("#"+topicReverse).remove()
-                d3.select("#"+topicSplit).remove()
-                d3.select("#"+topicMerge).remove()
+                d3.select("#"+topicReverse).remove();
+                d3.select("#"+topicSplit).remove();
+                d3.select("#"+topicMerge).remove();
+
+            }
+            else{
+                //align buttons to the left
+                d3.select("#"+topicMerge).attr('class', 'btn btn-primary btnTopicLeft');
+                d3.select("#"+topicSplit).attr('class', 'btn btn-primary btnTopicLeft');
+                d3.select("#"+topicReverse).attr('class', 'btn btn-primary btnTopicLeft');                
             }
         }
         if(type_vis == 2){

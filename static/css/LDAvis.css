@@ -183,7 +183,7 @@ rect.bordered {
 
 .RelevantDocumentsSankeyDiagram{
   width:100%;
-  height: 35%;
+  height: 32%;
   /*background-color: orange;*/
 }
 
@@ -211,7 +211,7 @@ rect.bordered {
   display: table;
   width: 100%; /*Optional*/
   table-layout: fixed; /*Optional*/
-  border-spacing: 10px; /*Optional*/
+  /*border-spacing: 10px; Optional*/
 }
 .ColumnDiv {
   display: table-cell;
@@ -682,4 +682,40 @@ input[type=radio] {
 
 .txt{
   cursor: pointer;
+}
+#full_topic_name_row{
+  width: 100%;
+  font-size:20px;
+}
+
+#topic_name_div_full_row{
+  overflow: hidden;
+  padding-top:10px;
+  width:100%;
+  height:100%;
+  float:left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+#topic_buttons_div_left_full_row{
+  width: 60%;
+  height:100%;
+  float:left;
+}
+
+#topic_buttons_div_right_full_row{
+  width: 40%;
+  height:100%;
+  float:left;
+}
+
+.btnTopicLeft{
+  margin-right: 5px;
+  margin-top: 5px;
+  float:left;
+}
+
+#BarPlotPanel{
+  height: 100%;
 }
