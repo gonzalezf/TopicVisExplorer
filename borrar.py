@@ -22,7 +22,6 @@ var name_topics_sankey = {};
 var inverted_links_filtered; 
 var is_tutorial = 'undefined';
 var testing;
-var story_hil_operations = [];
 function randomIntFromInterval(min, max) { // min and max included 
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
@@ -95,6 +94,7 @@ function get_new_omega(old_omega){
 save_users_actions_across_time('session_start', new Date());
 
 
+var testing;
 
 if(type_vis== 2){
     if( Object.keys(matrix_sankey).length == 1){
@@ -319,7 +319,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         };
     }
 
-    function updateTopicNamesCircles(data, id_topic_splitted, old_mdsData){
+    function updateTopicNamesCircles(data, id_topic_splitted){
         
         // set the number of topics to global variable K:
         ////console.log("este data yo recibi", data)
@@ -418,14 +418,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                         //name_topics_circles[topicID + d.topics] = 'New subtopic '+name_string;
                         if(d.topics == id_topic_splitted || name_topics_circles[topicID + d.topics] == undefined){
                             name_topics_circles[topicID + d.topics] = 'New subtopic '+name_string;
-                        }else{
-                            //get antiguas frecuencias
-                            var old_element  = old_mdsData.find(element => element.topics == d.topics);
-                            var current_element  = mdsData.find(element => element.topics == d.topics);
-                            console.log('Antes de hacer el cambio de frencuencia', old_element, mdsData);
-                            current_element.Freq = old_element.Freq;
-                            console.log('despues  de hacer el cambio de frencuencia', current_element, mdsData);
-                            
                         }
                         //name_topics_circles[topicID + d.topics] = name_string     
                         return (topicID + d.topics);
@@ -1107,9 +1099,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             
 
             current_state_dict.relevantDocumentsDict = _.cloneDeep(relevantDocumentsDict);
-            current_state_dict.merged_topic_to_delete =  _.cloneDeep(merged_topic_to_delete);
-            current_state_dict.name_merged_topic_to_delete = _.cloneDeep(name_merged_topic_to_delete);
-
             
             current_state_dict.lamData = _.cloneDeep(lamData);
             current_state_dict.mdsData = _.cloneDeep(mdsData);
@@ -1120,7 +1109,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             current_state_dict.slider_topic_splitting_values = _.cloneDeep(slider_topic_splitting_values);
 
             old_topic_model_states.push(current_state_dict);
-            
 
             //console.log("en el merge/splitting acabo de guardar este estado", current_state_dict);
             //console.log("en la pila tengo esto",old_topic_model_states);
@@ -1139,7 +1127,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 backdrop: 'static',
                 keyboard: false
             });
-            console.log('TOPIC SPLITING MDS DATA', mdsData);
 
             //make sure you have lower case "o"
             setTimeout(function(){
@@ -1156,8 +1143,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 //mdsData: mdsData, 
                 //lamData: lamData                
             };
-            testing = mdsData;
-            console.log('este es el numero de topicos actual que envio', );
+            console.log('este es el numero de topicos actual que envio', postDataTopicSplitting);
 
             //4.- Create new new_position circle arrray
             //console.log('Se mando estos datos en este arreglo', postDataTopicSplitting);
@@ -1180,13 +1166,13 @@ var LDAvis = function(to_select, data_or_file_name) {
         
                     //update lambdata with the new informsation
                     //console.log('ojo este es el mds data antes de actualizar en topic splitting,', mdsData)
-                    updateTopicNamesCircles(new_dict_topic_splitting['PreparedDataObtained_fromPython'], vis_state.topic, mdsData);
+                    updateTopicNamesCircles(new_dict_topic_splitting['PreparedDataObtained_fromPython'], vis_state.topic);
                     document.getElementById("renameTopicId").value = name_topics_circles[topicID + vis_state.topic];
 
                     //console.log('ojo este es el mds data despues de actualizar en topic splitting,', mdsData)
         
                     //see_most_relevant_keywords(12)
-                    console.log('OJOO RECIBI ESTO DESDE PYTHON PARA MDS DATA', new_dict_topic_splitting['PreparedDataObtained_fromPython']);
+        
                     createMdsPlot(1, mdsData, get_new_omega(lambda_lambda_topic_similarity.current)); //update central panel
         
                     topic_on(document.getElementById(topicID+vis_state.topic));
@@ -1194,7 +1180,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     //reset selection of documents for topic splitting.
                     slider_topic_splitting_values[splitting_topic] = {};
                     $("#loadMe").modal('hide');
-                    story_hil_operations.push('split')
                     
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) { 
@@ -1288,7 +1273,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
                 var new_relevance = vis_state.lambda * row_topic_1.logprob +(1 - vis_state.lambda) * row_topic_1.loglift;
-                //console.log("en APPLY MERGING TOPIC TENGO ESTOS VALORES", vis_state.lambda, lambda.current ); retorna los ismos valores.
 
 
                 if(isNaN(new_relevance)){
@@ -1302,7 +1286,7 @@ var LDAvis = function(to_select, data_or_file_name) {
            
                 
                 if(row_topic_1.relevance != row_topic_2.relevance){
-                    console.log("puta nacho, era esta weaaaa ME LA QUIERO CORTAR", row_topic_1, row_topic_2)
+                    console.log("this is the error", row_topic_1, row_topic_2)
                 }
                 contador+=1;
                 
@@ -1338,7 +1322,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
             };
 
-            console.log(' ESTO ES EL POST DATA', postData)
 
             //4.- Create new new_position circle arrray
 
@@ -1349,18 +1332,36 @@ var LDAvis = function(to_select, data_or_file_name) {
                 data: JSON.stringify(postData),                
                 success: function(data) {
                                 
+                    //DELETE POSITION OF THE DUPLICATED ELEMENT!
                     new_circle_positions = data;
-                                        //5.- get new topic name
-                    //console.log("AQUIII QUEREMOS BANEAR UNA ID!!!!")
-                    
+                    for (var current_omega in new_circle_positions){
+                        new_circle_positions[current_omega].splice(index_topic_name_2,1);                        
+                    }
                     var new_merged_topic_name = 'New merged topic '+name_topics_circles[topicID + (index_topic_name_1+1)].trim()+' & '+ name_topics_circles[topicID + (index_topic_name_2+1)].trim();
                     save_users_actions_across_time('new_merged_topic_name', new_merged_topic_name);
-
+                    
+                    //DELETE DUPLICATED NAME
                     name_topics_circles[topicID + (index_topic_name_1+1)] = new_merged_topic_name;
-                    name_topics_circles[topicID + (index_topic_name_2+1)] = new_merged_topic_name+"-delete";
+                    //name_topics_circles[topicID + (index_topic_name_2+1)] = new_merged_topic_name+"-delete";
+                    delete name_topics_circles[topicID + (index_topic_name_2+1)];
+                    //console.log(' ESTOS SON LOS NOMBRES',index_topic_name_1, index_topic_name_2, name_topics_circles );
+
                     merged_topic_to_delete.push(index_topic_name_2+1);
                     name_merged_topic_to_delete.push(new_merged_topic_name+"-delete");
-                        
+
+                    //delete duplicated relevant documents values!!
+                
+                    for( var current_row in relevantDocumentsDict){
+                        delete relevantDocumentsDict[current_row][index_topic_name_2];
+                    }
+
+                    //delete duplicated elements in mdsData
+
+                    mdsData.splice(index_topic_name_2,1);                        
+
+                    console.log(' este es el mdsdata', mdsData);
+
+
                     d3.selectAll('#svgMdsPlot').remove();
                     d3.selectAll('#divider_central_panel').remove();
                     document.getElementById("renameTopicId").value = name_topics_circles[topicID + vis_state.topic];
@@ -1368,7 +1369,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     createMdsPlot(1, mdsData, get_new_omega(lambda_lambda_topic_similarity.current)); //update central panel
                     topic_on(document.getElementById(topicID+vis_state.topic));         
                     $("#loadMe").modal('hide');
-                    story_hil_operations.push('merge')
 
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) { 
@@ -1380,13 +1380,12 @@ var LDAvis = function(to_select, data_or_file_name) {
                 dataType: 'json'
 
              });
-             console.log('TOPIC MERGING MDS DATA', mdsData);
 
         }
 
 
         function createMdsPlot(number, mdsData, lambda_lambda_topic_similarity){
-                        
+            console.log(' este es el mdsdata que recibi', mdsData);                        
             //if  previous mdsplot exists, remove it
             d3.selectAll('#svgMdsPlot').remove();
             d3.selectAll('#divider_central_panel').remove();
@@ -1584,32 +1583,30 @@ var LDAvis = function(to_select, data_or_file_name) {
             // draw circles
             var cx_new_positions = -1;
             var cy_new_positions = -1;
+
             points.append("circle")
                 .attr("class", "dot")
                 .style("opacity",0.2)
                 .style("fill", color1_1)
                 .attr("r", function(d) {
                     var current_element  = mdsData.find(element => element.topics == d.topics);
-
-                    return (Math.sqrt((current_element.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI)); //se hace esto porque el new_positions array no inclue 'Freq', en cambioe el MdsDATA YA LO OBTIENE
+                    return (Math.sqrt((current_element.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+                    //return (Math.sqrt((mdsData[d.topics-1].Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI)); //se hace esto porque el new_positions array no inclue 'Freq', en cambioe el MdsDATA YA LO OBTIENE
                     
                 })
                 .attr("cx", function(d) {
                     cx_new_positions+=1
+                    console.log(' esrte es el d', d,cx_new_positions,  new_positions)
                     //console.log('este es el id', d.topics-1);
-                    console.log('OBSERVAAA estas son las posiciones', new_positions);
+  
                     return (xScale(+new_positions[cx_new_positions][0])); 
-
-                    //return (xScale(+new_positions[d.topics-1][0])); 
 
 
                 })
                 .attr("cy", function(d) {
+                    cy_new_positions+=1
                     //return (yScale(+d.y));
-                    cy_new_positions+=1;
                     return (yScale(+new_positions[cy_new_positions][1]));
-
-                    //return (yScale(+new_positions[d.topics-1][1]));
                 })
                 .attr("stroke", "black")
                 .attr("id", function(d) {        
@@ -1655,10 +1652,8 @@ var LDAvis = function(to_select, data_or_file_name) {
         .attr("class", "txt")
         .attr("width", function(d) {
             var current_element  = mdsData.find(element => element.topics == d.topics);
-
-            return (2*Math.sqrt((current_element.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+            return (2*Math.sqrt((current_element.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI))
             //return (2*Math.sqrt((mdsData[d.topics-1].Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI))
-
         })
         .attr("x", function(d) {
             cx_new_positions+=1;
@@ -1669,9 +1664,8 @@ var LDAvis = function(to_select, data_or_file_name) {
         })
         .attr("y", function(d) {
             cy_new_positions+=1;
-            //return (yScale(new_positions[d.topics-1][1]));
             return (yScale(new_positions[cy_new_positions][1]));
-
+            //return (yScale(new_positions[d.topics-1][1]));
         })
         .attr("id", function(d) {        
             return ("text-"+topicID + d.topics);
@@ -1709,7 +1703,10 @@ var LDAvis = function(to_select, data_or_file_name) {
         .append("tspan")
             .attr("dy", "0em")
             .text(function(d){
-                var freq_current_topic = Math.round(mdsData[d.topics-1].Freq* 10) / 10;
+                var current_element  = mdsData.find(element => element.topics == d.topics);
+                var freq_current_topic = Math.round(current_element.Freq* 10) / 10;
+
+                //var freq_current_topic = Math.round(mdsData[d.topics-1].Freq* 10) / 10;
                 
                 return "("+freq_current_topic+"%)";
             })
@@ -1727,11 +1724,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                         
         //remove topic merged
         for(var i = 0; i<merged_topic_to_delete.length; i++){
-            console.log('merged_topic_to_delete', merged_topic_to_delete)
             var d_topics_current = merged_topic_to_delete[i];
             d3.selectAll('#text-'+topicID + d_topics_current).remove();
             d3.selectAll("#circles_center-"+topicID + d_topics_current).remove();            
             d3.selectAll('#'+topicID + d_topics_current).remove();
+            //console.log("topico borradoooo")
 
         }
         arrangeCircles();        
@@ -2364,20 +2361,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                     vis_state.topic = last_state_dict.current_topic_id;
                     slider_topic_splitting_values = last_state_dict.slider_topic_splitting_values;
 
-                    merged_topic_to_delete =  last_state_dict.merged_topic_to_delete;
-                    name_merged_topic_to_delete = last_state_dict.name_merged_topic_to_delete;
-                    console.log(' ESTO ES LO Q REGRESO, ', merged_topic_to_delete, name_merged_topic_to_delete)
+
 
                     //quitar del arreglo de topicos a no mostrar. En un split hay que crear la condicion para saber de que arreglo sacar el ultimo topico baneado
-                    
-                    var last_operation = story_hil_operations.pop();
-                    console.log('LAST OPERATION', last_operation);
-                    if(last_operation =='merge'){
-                        console.log('YAAAY IDENTIFIQUE UN MERGE');
-                        merged_topic_to_delete.pop();
-                        name_merged_topic_to_delete.pop();
-                    }
-
+                    merged_topic_to_delete.pop();
+                    name_merged_topic_to_delete.pop();
 
 
                     d3.selectAll('#svgMdsPlot').remove();
@@ -2450,7 +2438,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     save_state_data()
 
                     merging_topics_scenario_1(merging_final_topic_1, merging_final_topic_2);
-                    console.log('DESPUES DEL TOPIC MERGE MDSDARTA', mdsData);
                     //console.log("antes reverse", document.getElementById(topicReverse));
                     //document.getElementById(topicReverse).attr('disabled', null);
                     

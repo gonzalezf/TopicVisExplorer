@@ -89,7 +89,7 @@ class TopicVisExplorer:
     def calculate_topic_similarity_on_single_corpus_for_topic_splitting(self, current_number_of_topics,  word_embedding_model, lda_model, corpus, id2word, matrix_documents_topic_contribution,topn_terms, topk_documents, relevance_lambda ):        
         #single_corpus_data['lda_model'].num_topics = single_corpus_data['lda_model'].num_topics+1
         #single_corpus_data['lda_model'].num_topics
-        temp_lda = lda_model
+        temp_lda = deepcopy(lda_model)
         temp_lda.num_topics = current_number_of_topics+1
         return self.calculate_topic_similarity_on_single_corpus(word_embedding_model, temp_lda, corpus, id2word, matrix_documents_topic_contribution,topn_terms, topk_documents, relevance_lambda )
 
@@ -548,7 +548,10 @@ class TestView(FlaskView):
             #Get prepared data
             print('Getting new prepared data')
             temp = single_corpus_data['PreparedDataObtained']
+            print('ANTES DEL EL CAMBIOOOO O NO', temp['mdsDat'] )
 
+            #temp['mdsDat'] = json_file['mdsData']
+            print('FUNCIONO EL CAMBIOOOO O NO', temp['mdsDat'] )
             #update MdsDat
             #add temporal coordinates. We are going to change these later with the new topic similarity metric.
             temp['mdsDat']['x'].append(temp['mdsDat']['x'][topic_id-1])
@@ -695,6 +698,10 @@ class TestView(FlaskView):
         previous_single_corpus_datasets[ip].append(deepcopy(single_corpus_data))
         
         json_file = request.get_json()
+        print('---------------------------')
+        #print('ESTO FUE LO RECIBIDO X JSON FILE', json_file)
+        print('---------------------------')
+
 
 
         index_topic_name_1 = json_file['index_topic_name_1']
@@ -717,7 +724,10 @@ class TestView(FlaskView):
         topk_documents = 20
         relevance_lambda = 0.6
         
-        
+        print(' XXXXXXXXXXXXXXXXXXXXX CUAL ES EL NUMERO DE TOPICOS ---', lda_model.num_topics)
+        lda_model.num_topics = len(old_circle_positions[list(old_circle_positions.keys())[0]])
+        print(' XXXXXXXXXXXXXXXXXXXXX NUEVOOO!!! CUAL ES EL NUMERO DE TOPICOS ---', lda_model.num_topics)
+
         #hay que hacer que get dict topic similarity matrix no reciba el prepared data, solo el lmabdata
         
         
@@ -755,6 +765,18 @@ class TestView(FlaskView):
         end = time.time()
         print("calculo de nueva matrix ", end - start)
         start = time.time()
+        print('--------------------------------------------')
+        print('OLD CIRCLE POSITIONS', old_circle_positions.keys())
+        print('VALUES', old_circle_positions[list(old_circle_positions.keys())[0]])
+
+        print('--------------------------------------------')
+        print('OLD CIRCLE POSITIONS', new_topic_similarity_matrix.keys())
+        print('VALUES', new_topic_similarity_matrix[list(new_topic_similarity_matrix.keys())[0]])
+
+
+        print('--------------------------------------------')
+
+
         new_circle_positions = get_circle_positions_from_old_matrix(old_circle_positions, new_topic_similarity_matrix )
 
         #save data
