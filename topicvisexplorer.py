@@ -784,7 +784,6 @@ class TestView(FlaskView):
         single_corpus_data['tinfo_collection'] = tinfo_collection_1
         single_corpus_data['topkeywords_vectors_dict'] = topkeywords_vectors_dict_1
         single_corpus_data['relevantdocuments_vectors_dict'] = relevantdocuments_vectors_dict_1
-        print("se ha calculado con optimization numer 1s")
 
         end = time.time()
 
