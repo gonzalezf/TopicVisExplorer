@@ -1970,11 +1970,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 })
                 .on("mouseout", function() {
                     
-                    //this.style["fontWeight"] = "normal";
                     var current_term = this.id.split('-')[1];
 
                     d3.selectAll('#barplotterm-'+current_term).style("font-weight",'normal');
-                    //barplotterm-flight
                     if(type_vis==1){
                         d3.select('#bar-freq-estimated-'+current_term).style("fill",color2_1);
                         d3.select('#bar-totals-'+current_term).style("fill",color1_1);
@@ -2397,18 +2395,9 @@ var LDAvis = function(to_select, data_or_file_name) {
            var merge = document.createElement("button");
            merge.setAttribute("id", topicMerge);
            merge.setAttribute("class", "btn btn-primary btnTopic"); //merge.setAttribute("disabled", true);
-           merge.innerHTML = "Merge";
+           merge.innerHTML = "Mergesss";
 
-           if(type_vis==1){
-
-           }
-           else{
-            topicButtonsDiv.appendChild(merge);
-
-           }
-
-        
-
+          
            d3.select("#apply_topic_merging") //el usuario desea continuar con el mergin
                 .on("click", function() {
                     save_users_actions_across_time('apply_topic_merging', new Date());
@@ -2431,44 +2420,13 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                 });
        
-           d3.select("#"+topicMerge)
-               .on("click", function() {
-                    save_users_actions_across_time('open_merge_modal', new Date());
-
-
-                   if(merging_topic_1!=-1){  
-                       $('.merging_topic_1').html(merging_topic_1); //this is one topic wish I would like to merge
-                       //populate el dropdown, topics should be sorted according to the distance to the current topic
-                       $('#selectTopicMerge').empty();
-                       var topics_name_sorted_by_distance = get_topics_sorted_by_distance(mdsData, get_new_omega(lambda_lambda_topic_similarity.current), merging_topic_1)
-                       $.each(topics_name_sorted_by_distance, function(i, p) {
-                           //add the array with the topics sorted according to the distance to the current topic
-                           if(i!=0 && ( !(name_merged_topic_to_delete.includes(topics_name_sorted_by_distance[i])))){ //el primer elemento no se ocupa, ya que es el mismo topico con el q se quiere unir. ESTO NO OCURRE ASI EN EL SCENARIO 2. Ojo, tambien chequeamos que ese elemento no haya que borrarse
-                            $('#selectTopicMerge').append($('<option></option>').val(topics_name_sorted_by_distance[i]).html(topics_name_sorted_by_distance[i]));
-                           }
-                           else{
-                               ////console.log("no agregamos este", topics_name_sorted_by_distance[i])
-                           }                           
-                       });
-                       $('#MergeModal_new_design').modal();                        
-                   }
-                   else{ //you need to select a topic first
-                       $('#MergeModal_0').modal(); 
-                   }
-                   
-               });
+           
 
            var split = document.createElement("button");
            split.setAttribute("id", topicSplit);
            split.setAttribute("class", "btn btn-primary btnTopic");           
            split.innerHTML = "Split";
-           if(type_vis==1){
 
-           }
-           else{
-            topicButtonsDiv.appendChild(split);
-
-           }
            //split.setAttribute("disabled", true);
 
   
@@ -2492,6 +2450,34 @@ var LDAvis = function(to_select, data_or_file_name) {
                 topicButtonsDiv.appendChild(edit);
 
             }
+
+            d3.select("#"+topicMerge)
+            .on("click", function() {
+                console.log(' estoy haciendo click en el boton o no?!!!');
+                    save_users_actions_across_time('open_merge_modal', new Date());
+
+
+                if(merging_topic_1!=-1){  
+                    $('.merging_topic_1').html(merging_topic_1); //this is one topic wish I would like to merge
+                    //populate el dropdown, topics should be sorted according to the distance to the current topic
+                    $('#selectTopicMerge').empty();
+                    var topics_name_sorted_by_distance = get_topics_sorted_by_distance(mdsData, get_new_omega(lambda_lambda_topic_similarity.current), merging_topic_1)
+                    $.each(topics_name_sorted_by_distance, function(i, p) {
+                        //add the array with the topics sorted according to the distance to the current topic
+                        if(i!=0 && ( !(name_merged_topic_to_delete.includes(topics_name_sorted_by_distance[i])))){ //el primer elemento no se ocupa, ya que es el mismo topico con el q se quiere unir. ESTO NO OCURRE ASI EN EL SCENARIO 2. Ojo, tambien chequeamos que ese elemento no haya que borrarse
+                            $('#selectTopicMerge').append($('<option></option>').val(topics_name_sorted_by_distance[i]).html(topics_name_sorted_by_distance[i]));
+                        }
+                        else{
+                            ////console.log("no agregamos este", topics_name_sorted_by_distance[i])
+                        }                           
+                    });
+                    $('#MergeModal_new_design').modal();                        
+                }
+                else{ //you need to select a topic first
+                    $('#MergeModal_0').modal(); 
+                }
+                
+            });
 
             
             d3.select("#"+topicEdit)
@@ -3063,6 +3049,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("y", function(d) {
                         return y(d.Term) + barheight + margin.bottom + 2 * rMax;
                     })
+                    .attr('id', function(d){
+                        return bar_totals_actual+'-'+d.Term;
+                    })
                     .attr("height", y.bandwidth()/2)
                     .style("fill", color1_1)
                     .attr("opacity", 0.4);
@@ -3082,17 +3071,38 @@ var LDAvis = function(to_select, data_or_file_name) {
                         return d.Term;
                     })
                     .on("mouseover", function() {
-                        this.style["fontWeight"] = "bold"
+                        var current_term = this.id.split('-')[1];
+                        console.log(' estoy aqui', current_term,d3.selectAll('#barplotterm-'+current_term) );
+                        d3.selectAll('#barplotterm-'+current_term).style("font-weight",'bolder');
+                        if(type_vis==1){
+                            d3.select('#bar-totals-'+current_term).style("fill",color1_2);
+                            d3.select('#bar-freq-estimated-'+current_term).style("fill",color2_2);
+                        }
+                        else{
+                            d3.select('#bar-totals-'+current_term).style("fill",color1_2);
+                            d3.select('#overlay-'+current_term).style("fill",color2_2);
 
-                        //term_hover(this); esto lo desactive
+                            d3.select('#bar-totals_2-'+current_term).style("fill",color1_2);
+                            d3.select('#overlay_2-'+current_term).style("fill",color2_2);
+                        }                                            
                     })
             
                     .on("mouseout", function() {
-                        this.style["fontWeight"] = "normal"
+                        var current_term = this.id.split('-')[1];
 
-                        //vis_state.term = "";
-                         //term_off(this);
-                        //state_save(true);
+                        d3.selectAll('#barplotterm-'+current_term).style("font-weight",'normal');
+                        if(type_vis==1){
+                            d3.select('#bar-freq-estimated-'+current_term).style("fill",color2_1);
+                            d3.select('#bar-totals-'+current_term).style("fill",color1_1);
+                        }
+                        else{
+                            d3.select('#bar-totals-'+current_term).style("fill",color1_1);
+                            d3.select('#overlay-'+current_term).style("fill",color2_1);
+    
+                            d3.select('#bar-totals_2-'+current_term).style("fill",color1_1);
+                            d3.select('#overlay_2-'+current_term).style("fill",color2_1);
+                        }                    
+
                     });
 
             var redbarsEnter = redbars.enter().append("rect")
@@ -3101,6 +3111,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("y", function(d) {
                         return  (y.bandwidth()/2)+ y(d.Term) + barheight + margin.bottom + 2 * rMax;
                     }) 
+                    .attr('id', function(d){
+                        return 'bar-freq-estimated-'+d.Term;
+                    })
                     .attr("height", y.bandwidth()/2)
                     .style("fill", color2_1)
                     .attr("opacity", 0.8);

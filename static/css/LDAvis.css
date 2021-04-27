@@ -719,3 +719,11 @@ input[type=radio] {
 #BarPlotPanel{
   height: 100%;
 }
+
+#LambdaLabelLambdaTopicSimilarity{
+  width: 35%;
+}
+
+#LabelFilteringTopicSimilarity{
+  width: 35%;
+}
