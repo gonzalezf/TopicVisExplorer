@@ -23,6 +23,8 @@ var inverted_links_filtered;
 var is_tutorial = 'undefined';
 var testing;
 var story_hil_operations = [];
+var old_topic;
+var first_time_clicking_circle = true;
 function randomIntFromInterval(min, max) { // min and max included 
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
@@ -1132,7 +1134,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                     //reset selection of documents for topic splitting.
                     slider_topic_splitting_values[splitting_topic] = {};
                     $("#loadMe").modal('hide');
-                    story_hil_operations.push('split')
+                    story_hil_operations.push('split');
+                    console.log(' SPLIT - NUEVO MDSDATA', mdsData);
                     
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) { 
@@ -1298,7 +1301,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                     createMdsPlot(1, mdsData, get_new_omega(lambda_lambda_topic_similarity.current)); //update central panel
                     topic_on(document.getElementById(topicID+vis_state.topic));         
                     $("#loadMe").modal('hide');
-                    story_hil_operations.push('merge')
+                    story_hil_operations.push('merge');
+                    console.log(' MERGE - NUEVO MDSDATA', mdsData);
 
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) { 
@@ -1553,9 +1557,13 @@ var LDAvis = function(to_select, data_or_file_name) {
                     // prevent click event defined on the div container from firing
                     // http://bl.ocks.org/jasondavies/3186840
                     d3.event.stopPropagation();
-                    var old_topic = topicID + vis_state.topic;
+                    old_topic = topicID + vis_state.topic;
                     if (vis_state.topic > 0 && old_topic != this.id) {
                         topic_off(document.getElementById(old_topic));
+                    }
+                    if(first_time_clicking_circle==true){
+                        topic_off(document.getElementById(topicID+'5'));
+                        first_time_clicking_circle = false;
                     }
                     // make sure topic input box value and fragment reflects clicked selection
                     vis_state.topic = d.topics;
@@ -1612,7 +1620,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             // prevent click event defined on the div container from firing
             // http://bl.ocks.org/jasondavies/3186840
             d3.event.stopPropagation();
-            var old_topic = topicID + vis_state.topic;
+            old_topic = topicID + vis_state.topic;
             if (vis_state.topic > 0 && old_topic != this.id) {
                 topic_off(document.getElementById(old_topic));
             }
@@ -2310,8 +2318,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                         url: '/undo_merge_splitting',
                         async: false,
                         success: function(data) {
-                                        
+                            console.log(' UNDO - NUEVO MDSDATA', mdsData);
                         },
+                        
         
                      });
 
@@ -2360,7 +2369,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                     merging_topics_scenario_1(merging_final_topic_1, merging_final_topic_2);
 
-
+                    
                 });
        
            
@@ -3748,7 +3757,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         
         function topic_on(circle) {
-            
+
             to_select = "#BarPlotPanelDiv"
             if (circle == null) return null;
                         
