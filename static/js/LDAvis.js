@@ -2210,14 +2210,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
 
             
-            d3.select("#"+topicReverse)
-                .on("click", function() {
-                    save_users_actions_across_time('open_reverse_modal', new Date());
 
-
-                    console.log(' este es el largo que tengo en esto', old_topic_model_states.length)
-                    $('#ReverseModel').modal(); 
-                });
             
             //quizas guardar un json en vez de un pickle
             d3.select('#save_data_user_study_button')
@@ -2395,7 +2388,7 @@ var LDAvis = function(to_select, data_or_file_name) {
            var merge = document.createElement("button");
            merge.setAttribute("id", topicMerge);
            merge.setAttribute("class", "btn btn-primary btnTopic"); //merge.setAttribute("disabled", true);
-           merge.innerHTML = "Mergesss";
+           merge.innerHTML = "Merge";
 
           
            d3.select("#apply_topic_merging") //el usuario desea continuar con el mergin
@@ -2451,6 +2444,14 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             }
 
+            d3.select("#"+topicReverse)
+            .on("click", function() {
+                save_users_actions_across_time('open_reverse_modal', new Date());
+
+
+                console.log(' este es el largo que tengo en esto', old_topic_model_states.length)
+                $('#ReverseModel').modal(); 
+            });
             d3.select("#"+topicMerge)
             .on("click", function() {
                 console.log(' estoy haciendo click en el boton o no?!!!');

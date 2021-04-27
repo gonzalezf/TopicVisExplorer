@@ -699,13 +699,13 @@ input[type=radio] {
 }
 
 #topic_buttons_div_left_full_row{
-  width: 60%;
+  width: 70%;
   height:100%;
   float:left;
 }
 
 #topic_buttons_div_right_full_row{
-  width: 40%;
+  width: 30%;
   height:100%;
   float:left;
 }
