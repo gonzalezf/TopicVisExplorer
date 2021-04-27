@@ -49,9 +49,6 @@ function isTutorial(){
 isTutorial()
 
 function save_users_actions_across_time(action, timestamp){
-    //console.log(action, timestamp);
-
-
     actions_across_time.push({
         "timestamp": timestamp,
         "action": action
@@ -82,7 +79,6 @@ function get_new_omega(old_omega){
         new_omega = Number(new_omega).toFixed(1);
     }
     else if ( values_omega_temp.includes(Number(new_omega)) ){
-        //console.log('la raja')
         new_omega = Number(new_omega).toFixed(1);
 
     }
@@ -322,15 +318,12 @@ var LDAvis = function(to_select, data_or_file_name) {
     function updateTopicNamesCircles(data, id_topic_splitted, old_mdsData, old_frequency){
         
         // set the number of topics to global variable K:
-        ////console.log("este data yo recibi", data)
-        //console.log('estoy en la funcion update topic names circles')
         K = data['mdsDat'].x.length;
 
         // R is the number of top relevant (or salient) words whose bars we display
         var R = Math.min(data['R'], 20);
 
         // a (K x 5) matrix with columns x, y, topics, Freq, cluster (where x and y are locations for left panel)
-        //console.log('Before MDS ', mdsData);
 
         mdsData = [];
         for (var i = 0; i < K; i++) {
@@ -340,17 +333,12 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
             mdsData.push(obj);
         }
-        
-        //console.log('Step 1: mds data updated', mdsData);
 
-
-        //console.log('step 3,  lamdata BEFORE', lamData);
         var length_tinfo =   Object.keys(data['tinfo']['Term']).length;
 
       
-        //console.log('este es el largo', length_tinfo);
         lamData = [];
-        for (var i = 0; i <  length_tinfo ; i++) { // data['tinfo'].Term.length
+        for (var i = 0; i <  length_tinfo ; i++) {
             var obj = {};
             for (var key in data['tinfo']) {
                 obj[key] = data['tinfo'][key][i];
@@ -365,17 +353,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
 
-        //console.log('step 3, updated lamdata', lamData);
 
         var dat3 = lamData.slice(0, R);
-        //console.log('step 4, updated dat3', dat3);
-
-
-    
-
-
-        //console.log(data);
-        //console.log('estos datos a mirar , se debieron actualizar ojala lamdata', lamData,'r',R,'k',K);
 
         //assign name to array
 
@@ -407,7 +386,6 @@ var LDAvis = function(to_select, data_or_file_name) {
     
                         // truncate to the top R tokens:
                         var top_terms = dat2.slice(0, number_top_keywords_name);
-                        //console.log('cuales son los nombres de esto', top_terms, 'number top keywords', number_top_keywords_name, 'dat2', dat2);
                         
                         var name_string = '';
     
@@ -416,9 +394,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         
                             name_string += top_terms[i].Term+" "
                         }
-                        //name_topics_circles[topicID + d.topics] = 'New subtopic '+name_string;
                         if(d.topics == id_topic_splitted || name_topics_circles[topicID + d.topics] == undefined){
-                            //console.log(' ESTO PUSHEANDO ESTO',d.topics);
                             name_topics_circles[topicID + d.topics] = 'New subtopic '+name_string;
                             new_subtopics_id.push(d.topics)
                             freq_splitted_total  += mdsData.find(element => element.topics == d.topics).Freq;
@@ -432,19 +408,13 @@ var LDAvis = function(to_select, data_or_file_name) {
                         }
 
                     });    
-        console.log(' este es el arreglo',new_subtopics_id)
         for ( var i = 0; i < new_subtopics_id.length; i++){
            
             var current_id =new_subtopics_id[i];
-            console.log('name_topics_circles', name_topics_circles);
-            console.log(' este es el current id',current_id );
-            console.log(' este es el mdsdata', mdsData);
-            console.log(' este es el elemento', mdsData.find(element => Number(element.topics) == Number(current_id)))
+
             var current_freq = mdsData.find(element => Number(element.topics) == Number(current_id)).Freq;
             mdsData.find(element => element.topics == current_id).Freq = old_frequency*(current_freq/freq_splitted_total);
-            console.log('FREQUENCIAS NUEVAS', old_frequency, current_freq, freq_splitted_total);
         }
-        console.log('11111111111111111111111111111111111111111111111111')
     
     }
 
@@ -452,9 +422,7 @@ var LDAvis = function(to_select, data_or_file_name) {
   
 
     function visualize(data) {
-        //console.log('esto es data dentro de la funcion visualize', data);
         // set the number of topics to global variable K:
-        ////console.log("este data yo recibi", data)
         is_human_in_the_loop = data['human_in_the_loop'];
         K = data['mdsDat'].x.length;
 
@@ -471,27 +439,11 @@ var LDAvis = function(to_select, data_or_file_name) {
             mdsData.push(obj);
         }
 
-        // a huge matrix with 3 columns: Term, Topic, Freq, where Freq is all non-zero probabilities of topics given terms
-        // for the terms that appear in the barcharts for this data
-        /*
-        mdsData3 = [];
-        for (var i = 0; i < data['token.table'].Term.length; i++) {
-            var obj = {};
-            for (var key in data['token.table']) {
-                obj[key] = data['token.table'][key][i];
-            }
-            mdsData3.push(obj);
-        }
-        */
-
-        
+            
         // large data for the widths of bars in bar-charts. 6 columns: Term, logprob, loglift, Freq, Total, Category
         // Contains all possible terms for topics in (1, 2, ..., k) and lambda in the user-supplied grid of lambda values
         // which defaults to (0, 0.01, 0.02, ..., 0.99, 1).
-
-        
-
-
+    
         lamData = [];
         for (var i = 0; i < data['tinfo'].Term.length; i++) {
             var obj = {};
@@ -512,8 +464,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         var dat2 = lamData.filter(function(e) {
                             return e.Category == "Topic"+d.topics;s
                         });
-                        
-    
+                            
                         // define relevance:
                         for (var i = 0; i < dat2.length; i++) {
                             dat2[i].relevance = lambda.current * dat2[i].logprob +
@@ -525,9 +476,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         }
             
                         // sort by relevance:
-                        dat2.sort(fancysort("relevance"));
-                        
-    
+                        dat2.sort(fancysort("relevance"));                    
                         // truncate to the top R tokens:
                         var top_terms = dat2.slice(0, number_top_keywords_name);
                         
@@ -582,7 +531,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 save_users_actions_across_time('change_lambda_right_panel', new Date());
                 save_users_actions_across_time('change_lambda_right_panel_value',  document.getElementById(lambdaIDRightPanel).value);
 
-                ////////////console.log("hice click en esti", "#"+lambdaIDRightPanel)
                 //lambda_select = "#"+lambdaID
                 
                 // store the previous lambda value
@@ -706,7 +654,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             
 
-            //console.log('ESTOS SON LOS THRESHOLD', threshold_min, threshold_max);
             inverted_links_filtered = graph;
 
             save_users_actions_across_time('min_filtering_sankey', threshold_min);
@@ -714,12 +661,9 @@ var LDAvis = function(to_select, data_or_file_name) {
             save_users_actions_across_time('max_filtering_sankey', threshold_max);
             save_users_actions_across_time('max_filtering_sankey_time', new Date());
 
-            //console.log(' value de filtering sankey', threshold_min, new Date())
 
-            //console.log(' min', threshold_min, ' max', threshold_max, ' graph', graph);
 
             var node_padding = 25
-            //////////console.log("este es el graph que recibo", graph)
             d3.selectAll('#svgCentralSankeyDiv').remove();
             d3.selectAll('#divider_central_panel_sankey').remove();
             
@@ -738,13 +682,9 @@ var LDAvis = function(to_select, data_or_file_name) {
             var bounds_svgCentralSankey = d3.selectAll('#svgCentralSankeyDiv').node().getBoundingClientRect();
             var user_width_sankey = bounds_svgCentralSankey.width - margin.left - margin.right;
             var user_height_sankey= bounds_svgCentralSankey.height - margin.top - margin.bottom;
-
-            
-            
-
+                
             d3.selectAll('#svg_sankey').remove();
-        
-            
+                
             var nodes_filtered_set = new Set();
 
             //get min_target_node_value
@@ -775,11 +715,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 }
             );
 
-
-
-
-
-            //////console.log("este es el graph, ",graph)
             sankey_topics_automatic_match = []
             var links_filtered =  graph.links.filter(function(el){
                 if((Number(threshold_min) <= Number(el.value.toFixed(2)) )&&(Number(el.value.toFixed(2)) <= Number(threshold_max) )){
@@ -855,12 +790,10 @@ var LDAvis = function(to_select, data_or_file_name) {
                 })
                 .on("click", function(d){
                     
-                    //console.log('HACIENDO CLICK EN EL PATH',  min_target_node_value, d.source.node, d.target.node);
                     topic_on_sankey(nodes_filtered[Number(d.source.node)], min_target_node_value );
                     topic_on_sankey(nodes_filtered[Number(d.target.node)], min_target_node_value );
 
 
-                    console.log('DE SOURCE',d.source.node )
                     
                     save_users_actions_across_time('click_path_sankey', new Date());
 
@@ -1136,10 +1069,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             current_state_dict.slider_topic_splitting_values = _.cloneDeep(slider_topic_splitting_values);
 
             old_topic_model_states.push(current_state_dict);
-            
 
-            //console.log("en el merge/splitting acabo de guardar este estado", current_state_dict);
-            //console.log("en la pila tengo esto",old_topic_model_states);
             if(old_topic_model_states.length>0){
                 document.getElementById(topicReverse).disabled = false;
 
@@ -1195,7 +1125,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         
                     //see_most_relevant_keywords(12)
-                    console.log('OJOO RECIBI ESTO DESDE PYTHON PARA MDS DATA', new_dict_topic_splitting['PreparedDataObtained_fromPython']);
                     createMdsPlot(1, mdsData, get_new_omega(lambda_lambda_topic_similarity.current)); //update central panel
         
                     topic_on(document.getElementById(topicID+vis_state.topic));
@@ -1223,7 +1152,6 @@ var LDAvis = function(to_select, data_or_file_name) {
       
 
         function merging_topics_scenario_1(topic_name_1, topic_name_2){
-            console.log(' aqui estoy en el mergin');
             $('#loadMe').modal({
                 backdrop: 'static',
                 keyboard: false
@@ -1267,11 +1195,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             var terms_topic_2 = lamData.filter(function(d) {
                 return d.Category == "Topic" + (index_topic_name_2+1);
             });
-            
-            
-            //console.log(' LARGO 1', terms_topic_1.length);
-            //console.log(' LARGO 2', terms_topic_2.length);
-            
+                        
             var total_sum_frequency_corpus = terms_topic_1.sum("Total");
 
             var contador = 0;
@@ -1287,7 +1211,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 if(row_topic_2.Freq>row_topic_2.Total){
                     row_topic_2.Total = row_topic_2.Freq;
                 }
-                //console.log('Terms',row_topic_1.Term, row_topic_2.Term, contador);
                 var new_probability_term = Math.exp(row_topic_1.logprob)+Math.exp(row_topic_2.logprob);
                 var new_logprob = Math.log(new_probability_term);                                    
                 var new_loglift = Math.log(new_probability_term/(row_topic_1.Total/total_sum_frequency_corpus));                    
@@ -1307,8 +1230,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
                 var new_relevance = vis_state.lambda * row_topic_1.logprob +(1 - vis_state.lambda) * row_topic_1.loglift;
-                //console.log("en APPLY MERGING TOPIC TENGO ESTOS VALORES", vis_state.lambda, lambda.current ); retorna los ismos valores.
-
 
                 if(isNaN(new_relevance)){
                     new_relevance = -Infinity;
@@ -1321,7 +1242,7 @@ var LDAvis = function(to_select, data_or_file_name) {
            
                 
                 if(row_topic_1.relevance != row_topic_2.relevance){
-                    console.log("puta nacho, era esta weaaaa ME LA QUIERO CORTAR", row_topic_1, row_topic_2)
+                    console.log("ERROR In relevance calculation", row_topic_1, row_topic_2)
                 }
             }      
                 
@@ -1350,7 +1271,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
             };
 
-            console.log(' ESTO ES EL POST DATA', postData)
 
             //4.- Create new new_position circle arrray
 
@@ -1362,9 +1282,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 success: function(data) {
                                 
                     new_circle_positions = data;
-                                        //5.- get new topic name
-                    //console.log("AQUIII QUEREMOS BANEAR UNA ID!!!!")
-                    
+                    //5.- get new topic name                    
                     var new_merged_topic_name = 'New merged topic '+name_topics_circles[topicID + (index_topic_name_1+1)].trim()+' & '+ name_topics_circles[topicID + (index_topic_name_2+1)].trim();
                     save_users_actions_across_time('new_merged_topic_name', new_merged_topic_name);
 
@@ -1392,7 +1310,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 dataType: 'json'
 
              });
-             console.log('TOPIC MERGING MDS DATA', mdsData);
 
         }
 
@@ -1543,7 +1460,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             
 
             // bind mdsData to the points in the left panel:
-            //console.log('en el createmdsplot tenemos esto', mdsData)
             var new_positions = new_circle_positions[lambda_lambda_topic_similarity]
             
             function getCol(matrix, col){
@@ -1594,6 +1510,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
             // draw circles
+            console.log(' estas son las nuevas posiciones', new_positions);
             var cx_new_positions = -1;
             var cy_new_positions = -1;
             points.append("circle")
@@ -1608,7 +1525,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 })
                 .attr("cx", function(d) {
                     cx_new_positions+=1
-                    //console.log('este es el id', d.topics-1);
+                    console.log('este es el cx_new_positions', cx_new_positions);
                     return (xScale(+new_positions[cx_new_positions][0])); 
 
                     //return (xScale(+new_positions[d.topics-1][0])); 
@@ -1624,7 +1541,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 })
                 .attr("stroke", "black")
                 .attr("id", function(d) {        
-                    //console.log("estas son las idssss de los topicooos", d.topics)            
                     return (topicID + d.topics);
                 })
                 .on("click", function(d) {
@@ -1655,7 +1571,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 })
                 .append("title")
                     .text(function(d) { 
-                        //console.log("este es el nombre del topico, ", name_topics_circles[topicID + d.topics] )
                         return name_topics_circles[topicID + d.topics] ;});
 
             // text to indicate topic
@@ -1738,7 +1653,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                         
         //remove topic merged
         for(var i = 0; i<merged_topic_to_delete.length; i++){
-            console.log('merged_topic_to_delete', merged_topic_to_delete)
             var d_topics_current = merged_topic_to_delete[i];
             d3.selectAll('#text-'+topicID + d_topics_current).remove();
             d3.selectAll("#circles_center-"+topicID + d_topics_current).remove();            
@@ -1878,7 +1792,6 @@ var LDAvis = function(to_select, data_or_file_name) {
            document.getElementById("DocumentsPanel").appendChild(RelevantDocumentsTableDiv_2) 
            const  div_2 = document.getElementById('RelevantDocumentsTableDiv_2');
            div_2.insertAdjacentHTML('afterbegin', '<table  id="tableRelevantDocumentsClass_Model2" class="table table-hover"> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table>');
-           console.log('esto es justo antes de mandar todo', matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)])
            visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
        }
        
@@ -1888,7 +1801,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         function createBarPlot(to_select, dat3, barFreqsID_actual, bar_totals_actual, terms_actual,  splitting, xaxis_class, number_terms){
             
-            //console.log(' ESTE ES EL DAT3 RECIBIDO', dat3);
 
             var svg = d3.select(to_select).append("svg") //BarPlotPanelDiv
             .attr("width", "100%")
@@ -2313,8 +2225,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                         };
                     }
 
-                    console.log('User study data from Javascript', user_study_data);
-
                     var result; 
                     $.ajax({
                         type: 'POST',
@@ -2324,7 +2234,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                         success: function(data) {
                                         
                             result = data;
-                            console.log('esto fue lo q recibi after exporting data with python', result);  
                             $("#saving_results").modal('hide');
 
                             $('#export_results_user_study_successfully').modal(); 
@@ -2360,13 +2269,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             d3.select("#apply_reverse_topic_model") //el usuario desea continuar con el mergin
                 .on("click", function() {
                     save_users_actions_across_time('apply_reverse_topic_model', new Date());
-
-
-                    //console.log("que bacan, voy a revertir los cambios!!!");
-                    //console.log("PRE reverse esto es lo q queda en la pila", old_topic_model_states);
-
                     var last_state_dict = old_topic_model_states.pop();
-                    //console.log("este es mi last state dict", last_state_dict)
+                    
 
                     relevantDocumentsDict = last_state_dict.relevantDocumentsDict;
                     lamData = last_state_dict.lamData;
@@ -2378,14 +2282,11 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                     merged_topic_to_delete =  last_state_dict.merged_topic_to_delete;
                     name_merged_topic_to_delete = last_state_dict.name_merged_topic_to_delete;
-                    console.log(' ESTO ES LO Q REGRESO, ', merged_topic_to_delete, name_merged_topic_to_delete)
 
                     //quitar del arreglo de topicos a no mostrar. En un split hay que crear la condicion para saber de que arreglo sacar el ultimo topico baneado
                     
                     var last_operation = story_hil_operations.pop();
-                    console.log('LAST OPERATION', last_operation);
                     if(last_operation =='merge'){
-                        console.log('YAAAY IDENTIFIQUE UN MERGE');
                         merged_topic_to_delete.pop();
                         name_merged_topic_to_delete.pop();
                     }
@@ -2403,20 +2304,16 @@ var LDAvis = function(to_select, data_or_file_name) {
                     createMdsPlot(1, mdsData, get_new_omega(lambda_lambda_topic_similarity.current)); //update central panel
                     topic_on(document.getElementById(topicID+vis_state.topic));
         
-                    
-                    console.log("debiese haberse actualizado todo");
-                    console.log("post reverse esto es lo q queda en la pila", old_topic_model_states);
+
                     $.ajax({
                         type: 'POST',
                         url: '/undo_merge_splitting',
                         async: false,
                         success: function(data) {
                                         
-                            console.log('esto fue lo recibido en el undoooo', data)
                         },
         
                      });
-                     console.log('a esta altura tendria q haber realizado el undo merge splitting. etse es el mds data', mdsData)
 
                     
                    if(old_topic_model_states.length>0){
@@ -2462,11 +2359,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     save_state_data()
 
                     merging_topics_scenario_1(merging_final_topic_1, merging_final_topic_2);
-                    console.log('DESPUES DEL TOPIC MERGE MDSDARTA', mdsData);
-                    //console.log("antes reverse", document.getElementById(topicReverse));
-                    //document.getElementById(topicReverse).attr('disabled', null);
-                    
-                    //console.log("despues es el reverse", document.getElementById(topicReverse));
+
 
                 });
        
@@ -2505,14 +2398,11 @@ var LDAvis = function(to_select, data_or_file_name) {
             .on("click", function() {
                 save_users_actions_across_time('open_reverse_modal', new Date());
 
-
-                console.log(' este es el largo que tengo en esto', old_topic_model_states.length)
                 $('#ReverseModel').modal(); 
             });
             d3.select("#"+topicMerge)
             .on("click", function() {
-                console.log(' estoy haciendo click en el boton o no?!!!');
-                    save_users_actions_across_time('open_merge_modal', new Date());
+                save_users_actions_across_time('open_merge_modal', new Date());
 
 
                 if(merging_topic_1!=-1){  
@@ -2723,7 +2613,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             sliderDivLambdaTopicSimilarity.setAttribute("class", "RowDiv");
             document.getElementById("TopicSimilarityMetricPanel").appendChild(sliderDivLambdaTopicSimilarity)  //document.getElementById(visID).appendChild(inputDiv); //creo que esto debiera estar unido al svg mejor
 
-            //console.log(' QUE HAY AQUIIII',scenario_2_is_baseline_metric );
 
             if(type_vis==2){
 
@@ -2752,7 +2641,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                     //aqui hay q dar vuelta la wea
                     if(scenario_2_is_baseline_metric==true){
-                            console.log('INVIRTIENDO VALORESSSS');
                             graph_temp.links = graph_temp.links.map(function(e) { 
                             e.value = inverted_scale.invert(e.value);
                             //e.value = -e.value; 
@@ -2825,7 +2713,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                 }
                 else{
-                    console.log('estoy en este slider!!')
                     var range_slider = noUiSlider.create(slider, {
                         //start: [(max_similarity_score)*0.65, max_similarity_score],
                         start: [initial_filtering_value, max_similarity_score],                    
@@ -2839,7 +2726,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     origins[1].setAttribute('class', 'disabled_slider');
 
 
-                    //console.log('que es estoo', origins[0]);
                     //origins[1].setAttribute('disabled', true);
 
                 }
@@ -2875,7 +2761,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     vis_state.min_value_filtering = Number(values[0]);                
                     }
                     //Do not change max_value:
-                    //console.log('MIN VALUE', vis_state.min_value_filtering, 'Max value',vis_state.max_value_filtering  );
                     save_users_actions_across_time('changing_filtering', new Date());
                     save_users_actions_across_time('changing_filtering_min_value', vis_state.min_value_filtering);
                     save_users_actions_across_time('changing_filtering_max_value', vis_state.max_value_filtering);
@@ -2886,7 +2771,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                     }else
                     {
-                        console.log(' Dando vuelta la matrix', matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)]);
                         visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
                     }
 
@@ -2983,9 +2867,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     save_users_actions_across_time('changing_omega_scenario_2', new Date());
                     save_users_actions_across_time('changing_omega_scenario_2_value', lambda_lambda_topic_similarity.current);
                     //mostramos 1 - omega, para que cuandos ea 0 signifique que damos mas importancia a las keywords, y 1 cuando le damos mas importancia a los docs
-                    //console.log('sera asi ', matrix_sankey[(1.0-lambda_lambda_topic_similarity.current).toFixed(2)]);
-                    //console.log('value', (1.0-lambda_lambda_topic_similarity.current).toFixed(2));
-                    //console.log('omega', new_omega);
+
                     visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
                 }
                 if(type_vis == 1){
@@ -3033,7 +2915,6 @@ var LDAvis = function(to_select, data_or_file_name) {
         // function to re-order the bars (gray and red), and terms:
 
         function reorder_bars_helper(to_select, increase, topic_id_in_model, barFreqsID_actual, bar_totals_actual, terms_actual, overlay, xaxis_class){
-            ////////////console.log("ojo, estos son los parametros que recibe reorder_bars_helper", increase, topic_id_in_model, barFreqsID_actual, bar_totals_actual, terms_actual, overlay, xaxis_class)
             
             var dat2 = lamData.filter(function(d) {
                 
@@ -3130,7 +3011,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     })
                     .on("mouseover", function() {
                         var current_term = this.id.split('-')[1];
-                        console.log(' estoy aqui', current_term,d3.selectAll('#barplotterm-'+current_term) );
                         d3.selectAll('#barplotterm-'+current_term).style("font-weight",'bolder');
                         if(type_vis==1){
                             d3.select('#bar-totals-'+current_term).style("fill",color1_2);
@@ -3757,7 +3637,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                         .start();
                     }
                     else{ // Human in the loop - we are in single corpus and it is not a tutorial
-                        console.log(' AQUI O NOO')
                         introJs().setOptions({
                             steps: [            
                                 tutorial_steps['start_tutorial'],
@@ -4123,8 +4002,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             //get the name of the columns
 
             /* For the user study we are going to comment this
-            console.log(' AHH', relevantDocumentsDict[0])
-            console.log(' BBBBB', relevantDocumentsDict)
             var name_columns = Object.keys(relevantDocumentsDict[0])
             var column_text_name = ''
             name_columns.forEach(
@@ -4150,9 +4027,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             //slider topic splitting
         $('#tableRelevantDocumentsClass_TopicSplitting').on('post-body.bs.table', function (e) {
-            /*This add a slider too all the table*/
-            //$(".checkradios").checkradios();
-           //console.log('se ejecuto la funcion post body bs');
+
 
             $('.radio_button_topic_splitting').click(function () {
                 save_users_actions_across_time('radio_button_topic_splitting', new Date());
@@ -4166,9 +4041,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                             
                         }
                         //The element is removed from other places
-
-
-                        //console.log('que hay en esta fila', this);
                         var current_id_radio_button = this.id;
                         var current_topic = current_id_radio_button.split("_")[0];
                         var current_index = current_id_radio_button.split("_")[1];
@@ -4190,10 +4062,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                         }
 
                         slider_topic_splitting_values[splitting_topic][current_class].push(current_row);
-                        //console.log('asi va estoo', slider_topic_splitting_values);
-
-
-
 
                     }
 
@@ -4212,7 +4080,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                     }
                 }               
-            //console.log('asi va estoo aqui', slider_topic_splitting_values);
 
             }            
         });
@@ -4314,9 +4181,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         var omited_events_table =['pre-body.bs.table','post-header.bs.table', 'reset-view.bs.table', 'pre-body.bs.table', 'post-body.bs.table', 'post-footer.bs.table', 'click-row.bs.table']
         $('#tableRelevantDocumentsClass_Model1').on('all.bs.table', function (e, name, args) {
-            //console.log('Event:', name, ', data:', args);
             if(!omited_events_table.includes(name)){
-                //save_users_actions_across_time('tableRelevantDocumentsClass_Model1_'+name, args);
                 save_users_actions_across_time('tableRelevantDocumentsClass_Model1_'+name, new Date());
                 save_users_actions_across_time('tableRelevantDocumentsClass_Model1_'+name, args);
 
@@ -4325,7 +4190,6 @@ var LDAvis = function(to_select, data_or_file_name) {
         });
 
         $('#tableRelevantDocumentsClass_Model2').on('all.bs.table', function (e, name, args) {
-            //console.log('Event:', name, ', data:', args);
             if(!omited_events_table.includes(name)){
                 save_users_actions_across_time('tableRelevantDocumentsClass_Model2_'+name, new Date());
                 save_users_actions_across_time('tableRelevantDocumentsClass_Model2_'+name, args);
@@ -4333,7 +4197,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
         });
         $('#tableRelevantDocumentsClass_TopicSplitting').on('all.bs.table', function (e, name, args) {
-            //console.log('Event:', name, ', data:', args);
             if(!omited_events_table.includes(name)){
                 save_users_actions_across_time('tableRelevantDocumentsClass_TopicSplitting_'+name, new Date());
                 save_users_actions_across_time('tableRelevantDocumentsClass_TopicSplitting_'+name, args);
