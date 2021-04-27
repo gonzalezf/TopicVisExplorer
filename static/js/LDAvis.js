@@ -319,7 +319,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         };
     }
 
-    function updateTopicNamesCircles(data, id_topic_splitted, old_mdsData){
+    function updateTopicNamesCircles(data, id_topic_splitted, old_mdsData, old_frequency){
         
         // set the number of topics to global variable K:
         ////console.log("este data yo recibi", data)
@@ -379,7 +379,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         //assign name to array
 
-        
+        var new_subtopics_id = []
+        var freq_splitted_total = 0;
         d3.select("#name_topics")
                     .data(mdsData)
                     .enter()
@@ -417,17 +418,34 @@ var LDAvis = function(to_select, data_or_file_name) {
                         }
                         //name_topics_circles[topicID + d.topics] = 'New subtopic '+name_string;
                         if(d.topics == id_topic_splitted || name_topics_circles[topicID + d.topics] == undefined){
+                            //console.log(' ESTO PUSHEANDO ESTO',d.topics);
                             name_topics_circles[topicID + d.topics] = 'New subtopic '+name_string;
+                            new_subtopics_id.push(d.topics)
+                            freq_splitted_total  += mdsData.find(element => element.topics == d.topics).Freq;
+                        
                         }else{
                             //get antiguas frecuencias
                             var old_element  = old_mdsData.find(element => element.topics == d.topics);
-                            var current_element  = mdsData.find(element => element.topics == d.topics);
-                            current_element.Freq = old_element.Freq;
+                            mdsData.find(element => element.topics == d.topics).Freq = old_element.Freq;
+
                             
                         }
-                        //name_topics_circles[topicID + d.topics] = name_string     
-                        return (topicID + d.topics);
+
                     });    
+        console.log(' este es el arreglo',new_subtopics_id)
+        for ( var i = 0; i < new_subtopics_id.length; i++){
+           
+            var current_id =new_subtopics_id[i];
+            console.log('name_topics_circles', name_topics_circles);
+            console.log(' este es el current id',current_id );
+            console.log(' este es el mdsdata', mdsData);
+            console.log(' este es el elemento', mdsData.find(element => Number(element.topics) == Number(current_id)))
+            var current_freq = mdsData.find(element => Number(element.topics) == Number(current_id)).Freq;
+            mdsData.find(element => element.topics == current_id).Freq = old_frequency*(current_freq/freq_splitted_total);
+            console.log('FREQUENCIAS NUEVAS', old_frequency, current_freq, freq_splitted_total);
+        }
+        console.log('11111111111111111111111111111111111111111111111111')
+    
     }
 
     
@@ -1137,14 +1155,13 @@ var LDAvis = function(to_select, data_or_file_name) {
                 backdrop: 'static',
                 keyboard: false
             });
-            console.log('TOPIC SPLITING MDS DATA', mdsData);
 
-            //make sure you have lower case "o"
             setTimeout(function(){
                 $("#loadMe").modal('hide');
             }, 120000);
 
 
+            var old_frequency  = mdsData.find(element => element.topics == vis_state.topic).Freq;
 
             var postDataTopicSplitting = {
                 new_document_seeds: slider_topic_splitting_values[splitting_topic],
@@ -1170,16 +1187,12 @@ var LDAvis = function(to_select, data_or_file_name) {
                     new_circle_positions = JSON.parse(new_dict_topic_splitting['new_circle_positions']); 
                    
                     //1. Update relevantDocumentsDict
-                    //console.log('estos eran los documentos antes', relevantDocumentsDict);
                     relevantDocumentsDict = JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython'].replace(/\bNaN\b/g, "null"));
-                    //console.log('estos eran los documentos despues', relevantDocumentsDict);
         
                     //update lambdata with the new informsation
-                    //console.log('ojo este es el mds data antes de actualizar en topic splitting,', mdsData)
-                    updateTopicNamesCircles(new_dict_topic_splitting['PreparedDataObtained_fromPython'], vis_state.topic, mdsData);
+                    updateTopicNamesCircles(new_dict_topic_splitting['PreparedDataObtained_fromPython'], vis_state.topic, mdsData, old_frequency);
                     document.getElementById("renameTopicId").value = name_topics_circles[topicID + vis_state.topic];
 
-                    //console.log('ojo este es el mds data despues de actualizar en topic splitting,', mdsData)
         
                     //see_most_relevant_keywords(12)
                     console.log('OJOO RECIBI ESTO DESDE PYTHON PARA MDS DATA', new_dict_topic_splitting['PreparedDataObtained_fromPython']);
@@ -1225,8 +1238,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             //get index topic from name    
             var current_index = 0;
             for (var [key, value] of Object.entries(name_topics_circles)) {
-                //console.log("topic_name_1", topic_name_1.trim());
-                //console.log("value ", value.trim());
                 if(value.trim() == topic_name_1.trim()){
                 
                     var index_topic_name_1 = current_index;
@@ -1257,21 +1268,26 @@ var LDAvis = function(to_select, data_or_file_name) {
                 return d.Category == "Topic" + (index_topic_name_2+1);
             });
             
-            terms_topic_1.sort(fancysort("relevance"));
-            terms_topic_2.sort(fancysort("relevance"));
+            
+            //console.log(' LARGO 1', terms_topic_1.length);
+            //console.log(' LARGO 2', terms_topic_2.length);
+            
+            var total_sum_frequency_corpus = terms_topic_1.sum("Total");
 
- 
-            console.log(' final TERMINOS RODENADOS POR RELEVANCIA 111', terms_topic_1);
-            console.log(' FINAAAL TERMINOS RODENADOS POR RELEVANCIA 12222', terms_topic_2);
-
-            console.log(' LARGO 1', terms_topic_1.length);
-            console.log(' LARGO 2', terms_topic_2.length);
-            var total_sum_frequency_corpus = terms_topic_2.sum("Total");
             var contador = 0;
+
             for(var i = 0; i < terms_topic_1.length; i += 1) {            //we have a 'matrix'. There is the same information for all the terms.                                                                                 
                 var row_topic_1 = terms_topic_1[i];
                 var row_topic_2 = terms_topic_2.find( row => row.Term ===  terms_topic_1[i].Term);
 
+                if(row_topic_1.Freq>row_topic_1.Total){
+                    row_topic_1.Total = row_topic_1.Freq;
+                }
+                
+                if(row_topic_2.Freq>row_topic_2.Total){
+                    row_topic_2.Total = row_topic_2.Freq;
+                }
+                //console.log('Terms',row_topic_1.Term, row_topic_2.Term, contador);
                 var new_probability_term = Math.exp(row_topic_1.logprob)+Math.exp(row_topic_2.logprob);
                 var new_logprob = Math.log(new_probability_term);                                    
                 var new_loglift = Math.log(new_probability_term/(row_topic_1.Total/total_sum_frequency_corpus));                    
@@ -1307,18 +1323,10 @@ var LDAvis = function(to_select, data_or_file_name) {
                 if(row_topic_1.relevance != row_topic_2.relevance){
                     console.log("puta nacho, era esta weaaaa ME LA QUIERO CORTAR", row_topic_1, row_topic_2)
                 }
-                contador+=1;
-                
-
             }      
-                        
-
+                
             terms_topic_1.sort(fancysort("relevance"));
             terms_topic_2.sort(fancysort("relevance"));
-
- 
-            console.log(' final TERMINOS RODENADOS POR RELEVANCIA 111', terms_topic_1);
-            console.log(' FINAAAL TERMINOS RODENADOS POR RELEVANCIA 12222', terms_topic_2);
 
             //3.- Update frequency of mdsData
 
@@ -1880,7 +1888,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         function createBarPlot(to_select, dat3, barFreqsID_actual, bar_totals_actual, terms_actual,  splitting, xaxis_class, number_terms){
             
-            console.log(' ESTE ES EL DAT3 RECIBIDO', dat3);
+            //console.log(' ESTE ES EL DAT3 RECIBIDO', dat3);
 
             var svg = d3.select(to_select).append("svg") //BarPlotPanelDiv
             .attr("width", "100%")

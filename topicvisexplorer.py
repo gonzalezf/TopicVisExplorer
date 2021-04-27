@@ -548,10 +548,8 @@ class TestView(FlaskView):
             #Get prepared data
             print('Getting new prepared data')
             temp = single_corpus_data['PreparedDataObtained']
-            print('ANTES DEL EL CAMBIOOOO O NO', temp['mdsDat'] )
 
             #temp['mdsDat'] = json_file['mdsData']
-            print('FUNCIONO EL CAMBIOOOO O NO', temp['mdsDat'] )
             #update MdsDat
             #add temporal coordinates. We are going to change these later with the new topic similarity metric.
             temp['mdsDat']['x'].append(temp['mdsDat']['x'][topic_id-1])
