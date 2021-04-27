@@ -319,7 +319,7 @@ var LDAvis = function(to_select, data_or_file_name) {
     }
 
     function updateTopicNamesCircles(data, id_topic_splitted, old_mdsData, old_frequency){
-        
+        console.log(' recibi esta frecuencia', old_frequency);
         // set the number of topics to global variable K:
         K = data['mdsDat'].x.length;
 
@@ -397,10 +397,12 @@ var LDAvis = function(to_select, data_or_file_name) {
                         
                             name_string += top_terms[i].Term+" "
                         }
-                        if(d.topics == id_topic_splitted || name_topics_circles[topicID + d.topics] == undefined){
+                        if(d.topics == id_topic_splitted || name_topics_circles[topicID + d.topics] == undefined){// como hay varios topicos undefined, esto tira un calculo equivaco a aveces
+
                             name_topics_circles[topicID + d.topics] = 'New subtopic '+name_string;
+                            console.log(' nuevo topico,', name_topics_circles[topicID + d.topics]);
                             new_subtopics_id.push(d.topics)
-                            freq_splitted_total  += mdsData.find(element => element.topics == d.topics).Freq;
+                            freq_splitted_total  = mdsData.find(element => element.topics == d.topics).Freq;
                         
                         }else{
                             //get antiguas frecuencias
@@ -411,6 +413,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                         }
 
                     });    
+        console.log(' FREQ TOTAL ANTES', freq_splitted_total);
+        freq_splitted_total +=  mdsData.find(element => Number(element.topics) == Number(id_topic_splitted)).Freq;
+        console.log(' FREQ TOTAL DESPUES', freq_splitted_total);
         for ( var i = 0; i < new_subtopics_id.length; i++){
            
             var current_id =new_subtopics_id[i];
@@ -1095,7 +1100,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
             var old_frequency  = mdsData.find(element => element.topics == vis_state.topic).Freq;
-
+            console.log(' OJOO!!!!', vis_state.topic, splitting_topic, mdsData, old_frequency)
             var postDataTopicSplitting = {
                 new_document_seeds: slider_topic_splitting_values[splitting_topic],
                 old_circle_positions: new_circle_positions,
@@ -1537,7 +1542,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                     }
                     else{
                         console.log('ENCONTRAMOS UN UNDEFINED cx', cx_new_positions, mdsData);
-                        topics_with_error.push(d.topics);
+                        name_topics_circles[topicID + d.topics] = name_topics_circles[topicID + d.topics]+'_topicwitherror'
+                        topics_with_error.push(d.topics+'-'+name_topics_circles[topicID + d.topics]);
                     }
 
                     //return (xScale(+new_positions[d.topics-1][0])); 
@@ -1701,11 +1707,14 @@ var LDAvis = function(to_select, data_or_file_name) {
         }
         //topicos errados
         for(var i = 0; i<topics_with_error.length; i++){
-            var d_topics_current = topics_with_error[i];
-            d3.selectAll('#text-'+topicID + d_topics_current).remove();
-            d3.selectAll("#circles_center-"+topicID + d_topics_current).remove();            
-            d3.selectAll('#'+topicID + d_topics_current).remove();
 
+            var d_topics_current = Number(topics_with_error[i].split('-')[0]);
+            var d_name_current = topics_with_error[i].split('-')[1]
+            if(d_name_current ==name_topics_circles[topicID + d_topics_current] ){
+                d3.selectAll('#text-'+topicID + d_topics_current).remove();
+                d3.selectAll("#circles_center-"+topicID + d_topics_current).remove();            
+                d3.selectAll('#'+topicID + d_topics_current).remove();
+            }            
         }
 
 
@@ -2245,7 +2254,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                             relevance_value: vis_state.lambda,
                             actions_across_time: actions_across_time,
                             is_tutorial: is_tutorial,
-                            full_scenario_description: type_vis+'_'+is_human_in_the_loop     
+                            full_scenario_description: type_vis+'_'+is_human_in_the_loop,
+                            topics_with_error: topics_with_error
                         };
                         // we need to recalculate new coherence only in scenario 1, when hil is activated
                         if(is_human_in_the_loop == true){
