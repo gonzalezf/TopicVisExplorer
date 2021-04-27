@@ -24,7 +24,8 @@ var is_tutorial = 'undefined';
 var testing;
 var story_hil_operations = [];
 var old_topic;
-var first_time_clicking_circle = true;
+var first_time_clicking_circle = false;
+var topics_with_error = [];
 function randomIntFromInterval(min, max) { // min and max included 
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
@@ -1530,7 +1531,14 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("cx", function(d) {
                     cx_new_positions+=1
                     console.log('este es el cx_new_positions', cx_new_positions);
-                    return (xScale(+new_positions[cx_new_positions][0])); 
+                    if(new_positions[cx_new_positions]!= undefined){
+                        return (xScale(+new_positions[cx_new_positions][0])); 
+
+                    }
+                    else{
+                        console.log('ENCONTRAMOS UN UNDEFINED cx', cx_new_positions, mdsData);
+                        topics_with_error.push(d.topics);
+                    }
 
                     //return (xScale(+new_positions[d.topics-1][0])); 
 
@@ -1539,7 +1547,13 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("cy", function(d) {
                     //return (yScale(+d.y));
                     cy_new_positions+=1;
-                    return (yScale(+new_positions[cy_new_positions][1]));
+                    if(new_positions[cy_new_positions] != undefined){
+                        return (yScale(+new_positions[cy_new_positions][1]));
+
+                    }
+                    else{
+                        console.log('ENCONTRAMOS UN UNDEFINED cy ', cy_new_positions, mdsData);
+                    }
 
                     //return (yScale(+new_positions[d.topics-1][1]));
                 })
@@ -1582,12 +1596,17 @@ var LDAvis = function(to_select, data_or_file_name) {
                         return name_topics_circles[topicID + d.topics] ;});
 
             // text to indicate topic
-            
+        var frequency_circle_d = -1;                
         var cx_new_positions = -1;
         var cy_new_positions = -1;
         points.append("text")
         .attr("class", "txt")
         .attr("width", function(d) {
+            frequency_circle_d+=1;
+            if(new_positions[frequency_circle_d] == undefined){
+                return 0;
+
+            }
             var current_element  = mdsData.find(element => element.topics == d.topics);
 
             return (2*Math.sqrt((current_element.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
@@ -1595,16 +1614,29 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         })
         .attr("x", function(d) {
+            
             cx_new_positions+=1;
-            return (xScale(new_positions[cx_new_positions][0]));
+            if(new_positions[cx_new_positions] != undefined){
+                return (xScale(new_positions[cx_new_positions][0]));
+
+            }
+            else{
+                console.log('ENCONTRAMOS UNDEFINED AQUI', cx_new_positions, mdsData);
+            }
 
             //return (xScale(new_positions[d.topics-1][0]));
 
         })
         .attr("y", function(d) {
             cy_new_positions+=1;
-            //return (yScale(new_positions[d.topics-1][1]));
-            return (yScale(new_positions[cy_new_positions][1]));
+            if(new_positions[cy_new_positions] != undefined){
+                return (yScale(new_positions[cy_new_positions][1]));
+
+            }
+            else{
+                console.log('ENCONTRAMOS UNDEFINED AQUI', cy_new_positions, mdsData);
+
+            }
 
         })
         .attr("id", function(d) {        
@@ -1667,6 +1699,16 @@ var LDAvis = function(to_select, data_or_file_name) {
             d3.selectAll('#'+topicID + d_topics_current).remove();
 
         }
+        //topicos errados
+        for(var i = 0; i<topics_with_error.length; i++){
+            var d_topics_current = topics_with_error[i];
+            d3.selectAll('#text-'+topicID + d_topics_current).remove();
+            d3.selectAll("#circles_center-"+topicID + d_topics_current).remove();            
+            d3.selectAll('#'+topicID + d_topics_current).remove();
+
+        }
+
+
         arrangeCircles();        
 
         }
@@ -3546,6 +3588,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     if(is_tutorial == true){
                         topic_off(document.getElementById(topicID+'1'));
                         topic_on(document.getElementById(topicID+'5'));
+                        first_time_clicking_circle = true;
                         introJs().setOptions({
                             steps: [
             
@@ -3615,6 +3658,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     if(is_tutorial == true){
                         topic_off(document.getElementById(topicID+'1'));
                         topic_on(document.getElementById(topicID+'5'));
+                        first_time_clicking_circle = true;
                         introJs().setOptions({
                             steps: [
             
