@@ -26,6 +26,8 @@ var story_hil_operations = [];
 var old_topic;
 var first_time_clicking_circle = false;
 var topics_with_error = [];
+var topics_splitted = [];
+
 function randomIntFromInterval(min, max) { // min and max included 
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
@@ -403,7 +405,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                             console.log(' nuevo topico,', name_topics_circles[topicID + d.topics]);
                             new_subtopics_id.push(d.topics)
                             freq_splitted_total  = mdsData.find(element => element.topics == d.topics).Freq;
-                        
+                            topics_splitted.push( topicID + d.topics);
+                            //topicID + d.topics
                         }else{
                             //get antiguas frecuencias
                             var old_element  = old_mdsData.find(element => element.topics == d.topics);
@@ -1066,6 +1069,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             current_state_dict.relevantDocumentsDict = _.cloneDeep(relevantDocumentsDict);
             current_state_dict.merged_topic_to_delete =  _.cloneDeep(merged_topic_to_delete);
             current_state_dict.name_merged_topic_to_delete = _.cloneDeep(name_merged_topic_to_delete);
+            current_state_dict.topics_splitted = _.cloneDeep(topics_splitted);
 
             
             current_state_dict.lamData = _.cloneDeep(lamData);
@@ -1100,7 +1104,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
             var old_frequency  = mdsData.find(element => element.topics == vis_state.topic).Freq;
-            console.log(' OJOO!!!!', vis_state.topic, splitting_topic, mdsData, old_frequency)
+            //console.log(' OJOO!!!!', vis_state.topic, splitting_topic, mdsData, old_frequency)
             var postDataTopicSplitting = {
                 new_document_seeds: slider_topic_splitting_values[splitting_topic],
                 old_circle_positions: new_circle_positions,
@@ -1520,7 +1524,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
             // draw circles
-            console.log(' estas son las nuevas posiciones', new_positions);
+            //console.log(' estas son las nuevas posiciones', new_positions);
             var cx_new_positions = -1;
             var cy_new_positions = -1;
             points.append("circle")
@@ -1535,7 +1539,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 })
                 .attr("cx", function(d) {
                     cx_new_positions+=1
-                    console.log('este es el cx_new_positions', cx_new_positions);
+                    //console.log('este es el cx_new_positions', cx_new_positions);
                     if(new_positions[cx_new_positions]!= undefined){
                         return (xScale(+new_positions[cx_new_positions][0])); 
 
@@ -2339,6 +2343,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                     name_topics_circles = last_state_dict.name_topics_circles;
                     vis_state.topic = last_state_dict.current_topic_id;
                     slider_topic_splitting_values = last_state_dict.slider_topic_splitting_values;
+                    
+                    topics_splitted = last_state_dict.topics_splitted;
+
 
                     merged_topic_to_delete =  last_state_dict.merged_topic_to_delete;
                     name_merged_topic_to_delete = last_state_dict.name_merged_topic_to_delete;
@@ -2463,29 +2470,63 @@ var LDAvis = function(to_select, data_or_file_name) {
             });
             d3.select("#"+topicMerge)
             .on("click", function() {
-                save_users_actions_across_time('open_merge_modal', new Date());
+                var current_element_to_merge = mdsData.find(element => Number(element.topics) == Number(merging_topic_1));
+                //name_topics_circles[topicID + current_element_to_merge.topics];
+
+                if(! topics_splitted.includes(topicID +current_element_to_merge.topics)){
+                    save_users_actions_across_time('open_merge_modal', new Date());
+                    
+
+                    /*
+                    for (const [key, value] of Object.entries(name_topics_circles )) {
+                        console.log(' key', key, 'value', value);
+                    }
+                    */
+
+ 
+        
+                    if(merging_topic_1!=-1){  
+                        $('.merging_topic_1').html(merging_topic_1); //this is one topic wish I would like to merge
+                        //populate el dropdown, topics should be sorted according to the distance to the current topic
+                        $('#selectTopicMerge').empty();
+                        var topics_name_sorted_by_distance = get_topics_sorted_by_distance(mdsData, get_new_omega(lambda_lambda_topic_similarity.current), merging_topic_1)
+                        $.each(topics_name_sorted_by_distance, function(i, p) {
+                            //add the array with the topics sorted according to the distance to the current topic
+                            if(i!=0 && ( !(name_merged_topic_to_delete.includes(topics_name_sorted_by_distance[i])))){ //el primer elemento no se ocupa, ya que es el mismo topico con el q se quiere unir. ESTO NO OCURRE ASI EN EL SCENARIO 2. Ojo, tambien chequeamos que ese elemento no haya que borrarse
+                                
+                                
+
+                                var current_index = 1;
+                                for (var [key, value] of Object.entries(name_topics_circles)) {
+                                    if(value.trim() == topics_name_sorted_by_distance[i].trim()){
+                                    
+                                        var index_topic_name_1 = current_index;
+                                        console.log('yaaay', index_topic_name_1)
+                                    }                                    
+                                    current_index+=1;
+                                }
+                                if(! topics_splitted.includes(topicID +index_topic_name_1)){
+
+                                    $('#selectTopicMerge').append($('<option></option>').val(topics_name_sorted_by_distance[i]).html(topics_name_sorted_by_distance[i]));
+                                }
 
 
-                if(merging_topic_1!=-1){  
-                    $('.merging_topic_1').html(merging_topic_1); //this is one topic wish I would like to merge
-                    //populate el dropdown, topics should be sorted according to the distance to the current topic
-                    $('#selectTopicMerge').empty();
-                    var topics_name_sorted_by_distance = get_topics_sorted_by_distance(mdsData, get_new_omega(lambda_lambda_topic_similarity.current), merging_topic_1)
-                    $.each(topics_name_sorted_by_distance, function(i, p) {
-                        //add the array with the topics sorted according to the distance to the current topic
-                        if(i!=0 && ( !(name_merged_topic_to_delete.includes(topics_name_sorted_by_distance[i])))){ //el primer elemento no se ocupa, ya que es el mismo topico con el q se quiere unir. ESTO NO OCURRE ASI EN EL SCENARIO 2. Ojo, tambien chequeamos que ese elemento no haya que borrarse
-                            $('#selectTopicMerge').append($('<option></option>').val(topics_name_sorted_by_distance[i]).html(topics_name_sorted_by_distance[i]));
-                        }
-                        else{
-                            ////console.log("no agregamos este", topics_name_sorted_by_distance[i])
-                        }                           
-                    });
-                    $('#MergeModal_new_design').modal();                        
+                            }
+                            else{
+                                ////console.log("no agregamos este", topics_name_sorted_by_distance[i])
+                            }                           
+                        });
+                        $('#MergeModal_new_design').modal();                        
+                    }
+                    else{ //you need to select a topic first
+                        $('#MergeModal_0').modal(); 
+                    }
+
                 }
-                else{ //you need to select a topic first
-                    $('#MergeModal_0').modal(); 
-                }
-                
+                else{
+                    $('#cant_merge_this_topic').modal();                        
+
+                }                
             });
 
             
@@ -2503,6 +2544,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             if(type_vis == 1){
                 d3.select("#rename_topic_button")
                 .on("click", function(){
+
+
                     save_users_actions_across_time('apply_rename_topic_scenario_1', new Date());
 
                     save_users_actions_across_time('old_topic_name_topic_scenario_1', name_topics_circles[document.getElementById("idTopic").innerText] );
@@ -2529,7 +2572,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                     save_users_actions_across_time('new_topic_name_topic_model_1_scenario_2', document.getElementById("renameTopicId").value);
 
                     //rename the topic
+
+
+
                     name_topics_sankey[document.getElementById("idTopic").innerText] = document.getElementById("renameTopicId").value
+                    
                     
                     //visualize the new name
                     visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
@@ -2559,14 +2606,17 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             d3.select("#"+topicSplit)
             .on("click",function(){
-                save_users_actions_across_time('open_split_topic_modal', new Date());
-                save_users_actions_across_time('splitting_topic_id', vis_state.topic);
-                save_users_actions_across_time('splitting_topic_name', name_topics_circles[topicID + vis_state.topic]);
 
-                $('#topic_to_split_name').html(name_topics_circles[topicID + vis_state.topic]);                    
-                $('#SplitTopicModal').modal();
-
-                updateRelevantDocumentsTopicSplitting(splitting_topic-1, relevantDocumentsDict, 1);                
+                    save_users_actions_across_time('open_split_topic_modal', new Date());
+                    save_users_actions_across_time('splitting_topic_id', vis_state.topic);
+                    save_users_actions_across_time('splitting_topic_name', name_topics_circles[topicID + vis_state.topic]);
+    
+                    $('#topic_to_split_name').html(name_topics_circles[topicID + vis_state.topic]);                    
+                    $('#SplitTopicModal').modal();
+    
+                    updateRelevantDocumentsTopicSplitting(splitting_topic-1, relevantDocumentsDict, 1);     
+                
+                           
             });
 
             $("#apply_topic_splitting").click(function() {
