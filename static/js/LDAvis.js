@@ -1591,6 +1591,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     if (vis_state.topic > 0 && old_topic != this.id) {
                         topic_off(document.getElementById(old_topic));
                     }
+                    console.log('este es el ', first_time_clicking_circle);
                     if(first_time_clicking_circle==true){
                         topic_off(document.getElementById(topicID+'5'));
                         first_time_clicking_circle = false;
@@ -1672,6 +1673,12 @@ var LDAvis = function(to_select, data_or_file_name) {
             if (vis_state.topic > 0 && old_topic != this.id) {
                 topic_off(document.getElementById(old_topic));
             }
+            console.log('este es el2222 ', first_time_clicking_circle);
+            if(first_time_clicking_circle==true){
+                topic_off(document.getElementById(topicID+'5'));
+                first_time_clicking_circle = false;
+            }
+            
             // make sure topic input box value and fragment reflects clicked selection
             vis_state.topic = d.topics;
             
@@ -3605,7 +3612,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             tutorial_steps['topic_flight_cancelled'] = { intro: 'In this tool, a circle represents one of the topics found by the topic modeling algorithm.' ,    position: 'top' };
             tutorial_steps['most_relevant_keywords'] = {  title: 'Most relevant keywords', intro: "After selecting a topic, you will see its most relevant keywords. <br> <br>  These terms are automatically sorted according to the relevance to the topic (e.g., <i style='color: #1f77b4;'>'flight' </i> , <i style='color: #1f77b4;'>'cancel' </i>, <i style='color: #1f77b4;'>'delay' </i>)", position: 'right' };
             tutorial_steps['most_relevant_keywords_singlecorpus_dataset'] = {  title: 'Most relevant keywords', intro: "After selecting a topic, you will see its most relevant keywords. <br> <br>  These terms are automatically sorted according to the relevance to the topic.", position: 'right' };
-            tutorial_steps['relevance_slider_most_relevant_keywords'] = {  title: 'Changing the ordering of the most relevant keywords', intro: "When topics are difficult to identify, it is better to explore different ordering of the keywords. To do so, you can change the  <i style='color: #1f77b4;'>relevance score </i> using this slider. <br> <br> A higher <i style='color: #1f77b4;'>relevance score </i> designates greater importance to the frequency of the term into the entire dataset (violet bar). But at the same time, it considers less important the frequency of the keyword in the selected topic (green bar).", position: 'right' };
+            tutorial_steps['relevance_slider_most_relevant_keywords'] = {  title: 'Changing the ordering of the most relevant keywords', intro: "When topics are difficult to identify, it is better to explore different ordering of the keywords. To do so, you can change the  <i style='color: #1f77b4;'>relevance score </i> using this slider. <br> <br> A higher <i style='color: #1f77b4;'>relevance score </i> designates greater importance to the frequency of terms within the selected topic (green bar). But at the same time, it reduces the importance of their exclusivity, in other words, how rare these words are on other topics.", position: 'right' };
             tutorial_steps['documents_panel_scenario_1'] = { element: document.querySelector('#DocumentsPanel_first_scenario'), title: 'Most relevant documents', intro: "Here, you can see the most relevant documents associated with the selected topic. Documents more related to the chosen topic will have a higher contribution (%) to it." , position: 'left'};
             tutorial_steps['topic_flight_cancelled_interpretation'] = {  title: 'What is the selected topic about?', intro: "After reading its most relevant keywords (e.g, <i style='color: #1f77b4;'>'flight' </i> , <i style='color: #1f77b4;'>'cancel' </i>, <i style='color: #1f77b4;'>'delay' </i> , <i style='color: #1f77b4;'>'miss' </i>, etc) and its most relevant documents such as: <i style='color: #1f77b4;'> '<usernameremoved> 2 canceled flights later, agent claimed she put me on a new flight but then canceled it. coworker got on flight- now delayed. now?' </i> you may identify that the topic is about: <b style='color: #1f77b4'> 'airlines cancelling flights' </b>."};
             tutorial_steps['topic_interpretation'] = {  title: 'What is the selected topic about?', intro: "To identify the topic's meaning, you must read its most relevant keywords and its most relevant documents."};
@@ -3627,16 +3634,16 @@ var LDAvis = function(to_select, data_or_file_name) {
         
             tutorial_steps['scenario_2_explanation'] = {title: 'Comparing datasets', intro: 'This visualization allows to  <b style="color: #1f77b4;"> identify </b>  and <b style="color: #1f77b4;"> compare  </b> topics from two different datasets' };
             tutorial_steps['scenario_2_box_explanation'] = { intro: 'Each topic found by the topic modeling algorithm is represented by a box.  <br><br> <b style="color: #1f77b4;">  All the topics from the same dataset have the same color </b> ' ,    position: 'top' };
-            tutorial_steps['scenario_2_left_column_explanation'] = { intro: 'After selecting a topic on the left column on the central panel (violet box), you will see here all the information associated with that topic, such as its most relevant keywords and its most relevant documents.' ,    position: 'right' };
-            tutorial_steps['scenario_2_box_second_dataset_explanation'] = { intro: 'Each topic of the second dataset appears with a green color' ,    position: 'top' };
-            tutorial_steps['scenario_2_right_column_explanation'] = { intro: 'Here you can see the information related to a topic of the second dataset (green box)' ,    position: 'left' };
+            tutorial_steps['scenario_2_left_column_explanation'] = { intro: 'After selecting a topic on the left column on the central panel (lightblue box), you will see here all the information associated with that topic, such as its most relevant keywords and its most relevant documents.' ,    position: 'right' };
+            tutorial_steps['scenario_2_box_second_dataset_explanation'] = { intro: 'Each topic of the second dataset appears with a pink color' ,    position: 'top' };
+            tutorial_steps['scenario_2_right_column_explanation'] = { intro: 'Here you can see the information related to a topic of the second dataset (pink box)' ,    position: 'left' };
             //tutorial_steps['scenario_2_global_view_of_topics'] = {title: 'Global view of topics', element: document.querySelector('#CentralPanel'), intro: "The central panel presents a global view of the topics and aims to answer <b style='color: #1f77b4;'>How topics relate to each other? </b>" };
             tutorial_steps['explanation_of_sankey_diagram'] = { element: document.querySelector('#svg_sankey'), title: 'How  topics relate to each other? ', intro: "This interface allows identifying the similarity between topics from two different datasets. <br> <br> The similarity score between two topics is automatically calculated <br><br> The link between topics indicates their similarity. Topics that are more similar are connected with a <b style='color: #1f77b4;'>wider </b> link and they have a higher similarity score." };
 
             tutorial_steps['explanation_filtering_sankey'] = {  title: 'Filtering links', intro: "You can see more or fewer links in the visualization modifying this slider.", position: 'right' };
             tutorial_steps['explanation_filtering_sankey_part2'] = { title: 'Filtering links', intro: "The interface will only show links that have a similarity score in this range of values.", position: 'left' };
-            tutorial_steps['rename_button_scenario_2_left'] = {  intro: "This button allows you to change the name of a topic of the first dataset (violet box).  <br> <br>  The topics' default name corresponds to their three most relevant keywords.", position:"right"};
-            tutorial_steps['rename_button_scenario_2_right'] = {  intro: "Here you can assign a name to a topic of the second dataset (green box)", position:"left"};
+            tutorial_steps['rename_button_scenario_2_left'] = {  intro: "This button allows you to change the name of a topic of the first dataset (lightblue box).  <br> <br>  The topics' default name corresponds to their three most relevant keywords.", position:"right"};
+            tutorial_steps['rename_button_scenario_2_right'] = {  intro: "Here you can assign a name to a topic of the second dataset (pink box)", position:"left"};
 
             
 
