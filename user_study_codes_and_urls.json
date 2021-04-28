@@ -2,13 +2,13 @@
     "https://www.surveymonkey.com/r/topicvisexplorer_1030": {
       "codes": [100,301,101,102,103]
     },
-    "http://url_2.com": {
+    "https://www.surveymonkey.com/r/topicvisexplorer_1040": {
         "codes": [200,201,202,203]
     },
     "https://www.surveymonkey.com/r/topicvisexplorer_2040": {
         "codes": [300,302,303]
     },
-    "http://url_4.com": {
+    "https://www.surveymonkey.com/r/topicvisexplorer_2040": {
         "codes": [400,401,402,403]
     }    
 }
