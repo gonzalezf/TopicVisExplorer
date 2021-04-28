@@ -4321,8 +4321,8 @@ var LDAvis = function(to_select, data_or_file_name) {
         $('#tableRelevantDocumentsClass_Model1').on('search.bs.table', function (e, text){
 
             $('#tableRelevantDocumentsClass_Model1').highlight(text);
-            console.log(e);
-            console.log(text);
+            //console.log(e);
+            //console.log(text);
         });
 
 
@@ -4340,8 +4340,8 @@ var LDAvis = function(to_select, data_or_file_name) {
         $('#tableRelevantDocumentsClass_Model2').on('search.bs.table', function (e, text){
 
             $('#tableRelevantDocumentsClass_Model2').highlight(text);
-            console.log(e);
-            console.log(text);
+            //console.log(e);
+            //console.log(text);
         });
 
 
@@ -4359,8 +4359,8 @@ var LDAvis = function(to_select, data_or_file_name) {
         $('#tableRelevantDocumentsClass_TopicSplitting').on('search.bs.table', function (e, text){
 
             $('#tableRelevantDocumentsClass_TopicSplitting').highlight(text);
-            console.log(e);
-            console.log(text);
+            //console.log(e);
+            //console.log(text);
         });
 
 
@@ -4460,9 +4460,18 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
         }
         if(type_vis == 2){
-            document.getElementById(topicMerge).disabled = true;
-            document.getElementById(topicSplit).disabled = true;
-            document.getElementById(topicReverse).disabled = true;
+            if(document.getElementById(topicMerge)!= undefined){
+                document.getElementById(topicMerge).disabled = true;
+
+            }
+            if(document.getElementById(topicSplit) != undefined){
+                document.getElementById(topicSplit).disabled = true;
+
+            }
+            if(document.getElementById(topicReverse) != undefined){
+                document.getElementById(topicReverse).disabled = true;
+
+            }
         }
         if(old_topic_model_states.length>0){
             document.getElementById(topicReverse).disabled = false;
@@ -4487,10 +4496,11 @@ var LDAvis = function(to_select, data_or_file_name) {
             document.getElementById("topic_buttons_div_right_panel").style.width="35%";
             //document.getElementsByClassName('bootstrap-table ').style.height='80%';
             
-
+            console.log('resultado de metric baseline o no',scenario_2_is_baseline_metric );
 
             if( scenario_2_is_baseline_metric == true ) { // it means we are using the metric baseline
-                //we need to remove the omega slider, in this case                         
+                //we need to remove the omega slider, in this case  
+                console.log('estamos o no??')                       
                 d3.select("#TopicSimilarityMetricPanel").remove()       
             }                   
         }    
