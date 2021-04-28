@@ -148,12 +148,18 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         },
         color1_1 = "#BE7CF0", //violeta
-        color1_2 = "#57009E", //morado
+        color1_2 = "#5C059E", //morado
         
 
-        color2_1 = "#29F0B6", //"red", //"#6BF0A7", //verde claro
-        color2_2 = "#00A385"; //"blue"; //"00A385"; //"13A383"; //verde oscuro
+        color2_1 = "#60F5B7", //verde claro
+        color2_2 = "#0BA37C", //verde oscuro
                 
+        color_topic_1_1 = '#93bafc',// celeste
+        color_topic_1_2 = '#0044B8',
+        
+        color_topic_2_1 = '#fa8276',// naranjo
+        color_topic_2_2 = '#BD1100';
+
 
     // Set the duration of each half of the transition:
     var duration = 750;
@@ -180,7 +186,7 @@ var LDAvis = function(to_select, data_or_file_name) {
     
 
     // opacity of topic circles:
-    var base_opacity = 0.2,
+    var base_opacity = 0.3,
     highlight_opacity = 0.5;
 
     // lambda selection names are specific to *this* vis
@@ -905,11 +911,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .style("fill", function(d) { 
                     if(d.node < min_target_node_value){
 
-                        return color1_1;
+                        return color_topic_1_1;
                         
                     }
                     else{
-                        return color2_1;
+                        return color_topic_2_1;
                         
                     }
                      
@@ -1529,8 +1535,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             var cy_new_positions = -1;
             points.append("circle")
                 .attr("class", "dot")
-                .style("opacity",0.2)
-                .style("fill", color1_1)
+                .style("opacity",base_opacity)
+                .style("fill", color_topic_1_1)
                 .attr("r", function(d) {
                     var current_element  = mdsData.find(element => element.topics == d.topics);
 
@@ -3380,12 +3386,12 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
                 //colorear el item seleccionado
                 if(last_clicked_model_2!=-1){
-                    d3.select("#"+last_clicked_model_2).style("fill",color2_1)
+                    d3.select("#"+last_clicked_model_2).style("fill",color_topic_2_1)
                 }
 
                 
                 last_clicked_model_2 = "node_"+box.node
-                d3.select("#"+last_clicked_model_2).style("fill",color2_2) //color2_2
+                d3.select("#"+last_clicked_model_2).style("fill",color_topic_2_2) //color2_2
                 //d3.select("#"+last_clicked_model_2).style("opacity", 1.0)
                 document.getElementById("renameTopicId2").value = name_topics_sankey[topicID + box.node] 
                 $('#idTopic2').html(topicID + box.node); 
@@ -3426,11 +3432,11 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                 //colorear el item seleccionado
                 if(last_clicked_model_1!=-1){
-                    d3.select("#"+last_clicked_model_1).style("fill",color1_1)
+                    d3.select("#"+last_clicked_model_1).style("fill",color_topic_1_1)
                 }
 
                 last_clicked_model_1 = "node_"+box.node
-                d3.select("#"+last_clicked_model_1).style("fill",color1_2)
+                d3.select("#"+last_clicked_model_1).style("fill",color_topic_1_2)
                 //cual es el d al que le estoy haciendo click??
 
 
@@ -3876,7 +3882,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 topics = d.topics;
             // change opacity and fill of the selected circle
             circle.style.opacity = highlight_opacity;
-            circle.style.fill = color1_2;
+            circle.style.fill = color_topic_1_2;
 
             // Remove 'old' bar chart title
             var text = d3.select(to_select + " .bubble-tool");
@@ -4013,7 +4019,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             if (circle == null) return circle;
             // go back to original opacity/fill
             circle.style.opacity = base_opacity;
-            circle.style.fill = color1_1;
+            circle.style.fill = color_topic_1_1;
 
             var title = d3.selectAll(to_select + " .bubble-tool")
                     .text("Top-" + R + " Most Salient Terms");
