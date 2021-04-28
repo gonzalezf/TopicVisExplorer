@@ -729,3 +729,7 @@ input[type=radio] {
 }
 
 .highlight {background-color: #FFF978}
+
+#sliderDivFiltering{
+  margin-top: 7px;
+}
