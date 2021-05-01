@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import datetime
 import random, threading, webbrowser
 import gensim, pickle, random
 import gensim_helpers 
@@ -345,10 +345,36 @@ class TestView(FlaskView):
                 return url
         return 'error' 
 
+        
+    def number_minutes(self, data1, data2):
+        diff = data2 - data1
+        total_mins = (diff.days*1440 + diff.seconds/60)
+        return total_mins
+
+    def is_a_space_for_a_user(self, max_number_users, min_minutes): #max_number_users: 5, min_minutes: 120
+        df = pd.read_csv('previous_users.txt', delimiter = "-",  header=None)
+        df.columns = ['user_code', 'user_ip', 'timestamp', 'returned_link']
+        df.drop_duplicates(subset=['user_code'],  keep='last', inplace=True)
+        df['timestamp'] = df.apply(lambda row : datetime.datetime.strptime(row['timestamp'].strip(), "%a %b %d %H:%M:%S %Y"), axis = 1)        
+        current_time = datetime.datetime.strptime(time.ctime(), "%a %b %d %H:%M:%S %Y") 
+        current_users = 0
+        for index, row in df.tail(max_number_users).iterrows():
+            if (self.number_minutes(row['timestamp'],current_time)) < min_minutes:
+                print(row['timestamp'])
+                current_users+=1
+        print(current_users)
+        if current_users >=max_number_users:
+            return False
+        else:
+            return True
+
+
 
 
     @route('/redirect_with_user_study_code', methods=['POST'])
     def redirect_users(self):
+        max_number_users = 5 # maximum naumber of users
+        min_minutes = 120 #we cant get more than 5 users in two houts
         json_file = request.get_json()
 
         user_code = json_file['user_code']
@@ -357,15 +383,23 @@ class TestView(FlaskView):
         if ip == None:
             ip = 'ip_not_found'
         
-        url = self.find_url(user_code)
-
-        file_object = open('previous_users.txt', 'a')
-        file_object.write('user_code_'+user_code+' - '+ip+' - '+local_time+' - '+url+'\n')
-        file_object.close()
-
-        
-        
-        return self.find_url(user_code)
+        if(self.is_a_space_for_a_user(max_number_users, min_minutes)==True):
+            url = self.find_url(user_code)
+            if(url!='error'):
+                file_object = open('previous_users.txt', 'a')
+                file_object.write('user_code_'+user_code+' - '+ip+' - '+local_time+' - '+url+'\n')
+                file_object.close()    
+            else:
+                file_object = open('codes_with_errors.txt', 'a')
+                file_object.write('user_code_'+user_code+' - '+ip+' - '+local_time+' - '+url+'\n')
+                file_object.close()    
+            return self.find_url(user_code)
+        else:
+            url = self.find_url(user_code)
+            file_object = open('max_users_reached.txt', 'a')
+            file_object.write('user_code_'+user_code+' - '+ip+' - '+local_time+' - '+url+'\n')
+            file_object.close()    
+            return 'max_users_reached'
 
 
     @route('/MultiCorpora_documents_1')
