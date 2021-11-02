@@ -4,7 +4,7 @@ Note: This is work-in-progress. Currently, we are conducting  a  user study to e
 This project is being developed by Felipe González (Msc. Computer science student at Universidad Técnica Federico Santa María) and it is being guided by Dr. Evangelos Millos (Dalhousie Univerisity), Dr. FernandoPaulovich (Dalhousie University), Dr. Claudia López (Universidad Técnica Federico Santa María), and Dr. Marcelo Mendoza(Universidad Técnica Federico Santa María)
 
 ## Scenario 1: Interpreting a topic modeling output
-You can interact with a **demo** of this first scenario [**here**](https://topicvisexplorer.herokuapp.com/scenario1 "here")
+You can interact with a **demo** of this first scenario [**here**](http://topicvisexplorer.tk/singlecorpus "here")
 
 ![TopicVisExplorer Scenario 1](https://github.com/gonzalezf/TopicVisExplorer/blob/master/img/scenario_1.png?raw=true)
 
@@ -19,7 +19,7 @@ Finally, to help users answer the question "What is the meaning of each topic?",
 The left, central and right panels of our visualization are linked such that selecting a topic (on the central panel) reveals the most useful terms (on the left panel) and the most useful documents (on the right panel) for interpreting the selected topic automatically.
 
 ## Scenario 2: Comparing topics from two topic modeling output
-You can interact with a **demo** of this second scenario [**here**](https://topicvisexplorer.herokuapp.com/scenario2 "here")
+You can interact with a **demo** of this second scenario [**here**](http://topicvisexplorer.tk/multicorpora "here")
 
 ![TopicVisExplorer Scenario 2](https://github.com/gonzalezf/TopicVisExplorer/blob/master/img/scenario_2.png?raw=true)
 
