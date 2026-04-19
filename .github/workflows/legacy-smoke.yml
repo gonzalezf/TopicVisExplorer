@@ -1,0 +1,39 @@
+name: Legacy smoke (paper version)
+
+on:
+  push:
+    branches: [legacy, master]
+  pull_request:
+    branches: [legacy]
+
+concurrency:
+  group: legacy-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install system build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libcrypt-dev
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - name: Install Python 3.8
+        run: uv python install 3.8
+      - name: Create legacy venv
+        run: uv venv --python 3.8 .venv-legacy
+      - name: Sync legacy lockfile
+        run: uv pip sync --python .venv-legacy/bin/python legacy/requirements.lock
+      - name: Smoke import + version check
+        run: |
+          .venv-legacy/bin/python -c "
+          import importlib, sys
+          for mod in ('gensim', 'sklearn', 'spacy', 'flask', 'numpy', 'pandas'):
+              m = importlib.import_module(mod)
+              print(f'{mod}: {getattr(m, \"__version__\", \"unknown\")}')
+          "

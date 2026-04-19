@@ -1,0 +1,42 @@
+{
+  "artifacts": {
+    "fixture_pkl": "golden_baseline/tiny_lda.pkl",
+    "prepare_output_json": "golden_baseline/tiny_prepare_output.json",
+    "similarity_json": "golden_baseline/tiny_similarity_matrix.json",
+    "similarity_npy": "golden_baseline/tiny_similarity_matrix.npy",
+    "word2vec_kv": "golden_baseline/tiny_word2vec.kv"
+  },
+  "captured_at": "2026-04-19T21:21:19Z",
+  "elapsed_sec": 5.72,
+  "n_docs_actual": 200,
+  "n_docs_target": 200,
+  "n_terms_per_topic": 30,
+  "n_topics": 4,
+  "omega_default": 0.5,
+  "relevance_lambda_default": 0.6,
+  "seed": 42,
+  "sha256": {
+    "tiny_lda.pkl": "285a54857c12e464988468b6ebd69753de5b382c03c61055387e6239e375adf1",
+    "tiny_prepare_output.json": "23c6303dbb8046e9b94bd603757e5b272edc8b9ca1417b8d69c6e76d8d0d2bd9",
+    "tiny_similarity_matrix.json": "98127a7ec88cd388582ad934a6d3c9de32c925cdfb30325680a19d5e41794a97",
+    "tiny_similarity_matrix.npy": "d085d62d0c034cdff167e82de7caba2c02bf14defa162ad763052d8b7fd491d3",
+    "tiny_word2vec.kv": "d385c33ce1cb9319a3570e05aa69ce3c98f4fb5d4d8bd1eeb24feb2088ace0ab"
+  },
+  "top_k_documents": 10,
+  "versions": {
+    "gensim": "3.8.3",
+    "numpy": "1.19.4",
+    "python": "3.8.20",
+    "sklearn": "0.23.2"
+  },
+  "word2vec_defaults": {
+    "iter": 50,
+    "min_count": 5,
+    "negative": 5,
+    "seed": 42,
+    "sg": 0,
+    "size": 300,
+    "window": 5,
+    "workers": 1
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "captured_at": "2026-04-19T21:22:19Z",
+  "seed": 42,
+  "fixture": "golden_baseline/tiny_lda.pkl",
+  "word2vec": "golden_baseline/tiny_word2vec.kv",
+  "n_topics": 4,
+  "n_docs": 200,
+  "n_repetitions": 5,
+  "n_terms_per_topic": 30,
+  "top_k_documents": 10,
+  "omega": 0.5,
+  "relevance_lambda": 0.6,
+  "similarity_matrix_seconds": {
+    "min": 0.00197,
+    "median": 0.00201,
+    "mean": 0.002062,
+    "max": 0.002301,
+    "samples": [
+      0.002301,
+      0.00201,
+      0.002009,
+      0.00197,
+      0.002018
+    ]
+  },
+  "phase3b_target_seconds": {
+    "median_max": 0.000402,
+    "note": "Phase 3b must run the same operation in <= median/5 to claim the 5x speedup gate."
+  },
+  "environment": {
+    "python": "3.8.20",
+    "gensim": "3.8.3",
+    "sklearn": "0.23.2",
+    "numpy": "1.19.4",
+    "platform": "Linux-6.19.11+deb14-amd64-x86_64-with-glibc2.2.5",
+    "cpu_count_logical": 2
+  }
+}
