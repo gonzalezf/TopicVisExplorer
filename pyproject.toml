@@ -28,6 +28,7 @@ classifiers = [
 dependencies = [
     "fastapi>=0.110",
     "uvicorn[standard]>=0.27",
+    "jinja2>=3.1",
     "numpy>=1.24",
     "scipy>=1.11",
     "pandas>=2.0",
@@ -76,6 +77,9 @@ tve = "topicvisexplorer.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/topicvisexplorer"]
+artifacts = [
+    "src/topicvisexplorer/web/legacy/**/*",
+]
 
 [tool.hatch.build.targets.sdist]
 include = [
@@ -156,7 +160,8 @@ filterwarnings = [
 source = ["src/topicvisexplorer"]
 branch = true
 omit = [
-    "src/topicvisexplorer/server/*",                          # Phase 2: API contract tests
+    "src/topicvisexplorer/server/runner.py",                  # uvicorn launcher (manual test)
+    "src/topicvisexplorer/server/demo_data.py",               # exercised via manual demo only
     "src/topicvisexplorer/cli.py",                            # Phase 2
     "src/topicvisexplorer/embeddings/word2vec.py",            # needs gensim corpus
     "src/topicvisexplorer/embeddings/sbert.py",               # needs sentence-transformers

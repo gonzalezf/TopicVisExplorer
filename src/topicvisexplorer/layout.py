@@ -35,7 +35,9 @@ if TYPE_CHECKING:
 logger = get_logger(__name__)
 
 
-def get_circle_positions(topic_similarity_matrix: Mapping[float, np.ndarray]) -> str:
+def circle_positions(
+    topic_similarity_matrix: Mapping[float, np.ndarray],
+) -> dict[float, list[list[float]]]:
     """Compute Procrustes-aligned circle positions across the omega slider.
 
     Parameters
@@ -46,9 +48,9 @@ def get_circle_positions(topic_similarity_matrix: Mapping[float, np.ndarray]) ->
 
     Returns
     -------
-    str
-        JSON-encoded mapping ``{omega: [[x, y], ...]}`` ready to ship to
-        the front end.
+    dict[float, list[list[float]]]
+        Mapping ``{omega: [[x, y], ...]}``. JSON-encode at the boundary
+        if you need to ship it to the front end.
     """
     new_positions: dict[float, list[list[float]]] = {}
     for raw_step in range(101):
@@ -74,7 +76,42 @@ def get_circle_positions(topic_similarity_matrix: Mapping[float, np.ndarray]) ->
     standardized[omegas[-1]] = last_b.tolist()
     disparities[omegas[-1]] = disparities.get(omegas[-2], 0.0)
 
-    return json.dumps(standardized)
+    return standardized
+
+
+def get_circle_positions(topic_similarity_matrix: Mapping[float, np.ndarray]) -> str:
+    """Legacy alias: returns the layout already JSON-encoded.
+
+    Prefer :func:`circle_positions` in new code.
+    """
+    return json.dumps(circle_positions(topic_similarity_matrix))
+
+
+def circle_positions_from_old_matrix(
+    old_circle_positions: Mapping[str, list[list[float]]],
+    topic_similarity_matrix: Mapping[float, np.ndarray],
+) -> dict[str, list[list[float]]]:
+    """Re-align new layouts to a previous omega-keyed layout.
+
+    See :func:`get_circle_positions_from_old_matrix` for the legacy
+    JSON-string-returning variant kept for backwards compatibility.
+    """
+    new_positions: dict[str, list[list[float]]] = {}
+    for raw_step in range(101):
+        omega = raw_step / 100.0
+        sim = np.asarray(topic_similarity_matrix[omega], dtype=np.float64)
+        dist = 1.0 - sim
+        np.fill_diagonal(dist, 0.0)
+        new_positions[str(omega)] = _pcoa(dist, n_components=2).tolist()
+
+    standardized: dict[str, list[list[float]]] = {}
+    for current_omega in old_circle_positions:
+        original_a = np.asarray(old_circle_positions[current_omega], dtype=np.float64)
+        original_b = np.asarray(new_positions[current_omega], dtype=np.float64)
+        _mtx1, mtx2, _disparity = procrustes(original_a, original_b)
+        standardized[current_omega] = mtx2.tolist()
+
+    return standardized
 
 
 def get_circle_positions_from_old_matrix(
@@ -96,19 +133,6 @@ def get_circle_positions_from_old_matrix(
         Mapping from omega (float-keyed) to the new ``(K, K)`` cosine
         similarity matrix.
     """
-    new_positions: dict[str, list[list[float]]] = {}
-    for raw_step in range(101):
-        omega = raw_step / 100.0
-        sim = np.asarray(topic_similarity_matrix[omega], dtype=np.float64)
-        dist = 1.0 - sim
-        np.fill_diagonal(dist, 0.0)
-        new_positions[str(omega)] = _pcoa(dist, n_components=2).tolist()
-
-    standardized: dict[str, list[list[float]]] = {}
-    for current_omega in old_circle_positions:
-        original_a = np.asarray(old_circle_positions[current_omega], dtype=np.float64)
-        original_b = np.asarray(new_positions[current_omega], dtype=np.float64)
-        _mtx1, mtx2, _disparity = procrustes(original_a, original_b)
-        standardized[current_omega] = mtx2.tolist()
-
-    return json.dumps(standardized)
+    return json.dumps(
+        circle_positions_from_old_matrix(old_circle_positions, topic_similarity_matrix)
+    )

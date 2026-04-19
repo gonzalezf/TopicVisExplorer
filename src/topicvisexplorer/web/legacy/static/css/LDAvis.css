@@ -1,0 +1,735 @@
+/* Taken from https://github.com/cpsievert/LDAvis */
+/* Copyright 2013, AT&T Intellectual Property */
+/* MIT Licence */
+
+path {
+  fill: none;
+  stroke: none;
+}
+
+.xaxis .tick.major {
+    fill: black;
+    stroke: black;
+    stroke-width: 0.1;
+    opacity: 0.7;
+}
+
+.slideraxis {
+    fill: black;
+    stroke: black;
+    stroke-width: 0.4;
+    opacity: 1;
+}
+
+text {
+    font-family: sans-serif;
+    font-size: 11px;
+}
+
+/* IPython Notebook CSS to allow visualization to fit */
+/* I'm open to a better way of accomplishing this goal... */
+.container { width:1350px !important; }
+/* This is for nbviewer's benefit since the above wasn't enough... */
+.output_area { width:1450px !important; }
+
+/*
+#relevantDocumentsPanel {
+    background-color: rgb(31, 58, 82);
+}
+*/
+
+#totalContainer{
+    /*background-color: coral;*/
+}
+
+
+mark {
+    padding: 0px;
+    /*background-color:yellow;*/
+  }
+
+
+#mdsplotHeatMap{
+    /*background-color: yellowgreen;*/
+}
+
+rect.bordered {
+    stroke: #E6E6E6;
+    stroke-width:2px;   
+  }
+
+  text.mono {
+    font-size: 9pt;
+    font-family: Consolas, courier;
+    fill: #aaa;
+  }
+
+  text.axis-workweek {
+    fill: #000;
+  }
+
+  text.axis-worktime {
+    fill: #000;
+  }
+
+
+  /*Sankey diagram*/
+  .node rect {
+    cursor: pointer; /*move*/
+    fill-opacity: .9;
+    shape-rendering: crispEdges;
+  }
+
+  .dot {
+    cursor: pointer;
+  }
+  .node text {
+    pointer-events: none;
+    text-shadow: 0 1px 0 #fff;
+  }
+  
+  .link {
+    fill: none;
+    stroke: #000;
+    stroke-opacity: .2;
+  }
+  
+  .link:hover {
+    stroke-opacity: .5;
+  }
+
+  #svg_sankey{
+    padding-top: 3px;
+
+    /*background-color: lightblue;*/
+  }
+
+  
+  th {
+    position: sticky;
+    top: 0px;  /* 0px if you don't have a navbar, but something is required */
+    /*background: white;*/
+  }
+
+
+  
+
+/*
+  #tableRelevantDocumentsClass_TopicSplitting{
+    overflow-y: scroll;
+
+  }
+*/
+
+/*
+
+#SplitTopicModal{
+  
+  width: 80%;
+  height:50%;
+  margin: auto;
+  overflow-y: scroll;
+  overflow-y: hidden;
+
+
+  
+}
+
+*/
+
+/*
+.tableRelevantDocumentsClass_Model2{
+  margin-top: 20px;
+
+}
+*/
+
+.border_box{
+  border-radius: 5px;
+  border: solid;
+  border-color: #c4c4c4;
+  border-width: 2px;
+  
+}
+
+#topic_name_and_buttons_div{
+  width: 100%;
+  font-size:22px;
+  height: 5%;
+  /*background-color: lightblue;*/
+}
+
+#topic_name_and_buttons_div_right_panel{
+  width: 100%;
+  font-size:22px;
+  height: 5%;
+  /*background-color: lightblue;*/
+}
+
+
+#BarPlotDiv{
+  
+  width:100%;
+  height: 5%;
+  /*background-color: blue;*/
+}
+
+#BarPlotDivRightPanel{
+  
+  width:100%;
+  height: 5%;
+  /*background-color: blue;*/
+}
+
+.RelevantDocumentsSankeyDiagram{
+  width:100%;
+  height: 32%;
+  /*background-color: orange;*/
+}
+
+#relevanceSliderDiv{
+  padding: 5px;
+  /*background-color: yellow;*/
+  margin-top: 5px;
+  display: inline-block;
+  width: 100%;
+}
+
+#relevanceSliderDivRightPanel{
+  padding: 5px;
+  /*background-color: yellow;*/
+  margin-top: 5px;
+  display: inline-block;
+  width: 100%;
+}
+
+
+/* This is the text that is accompanied by the sldier FOR SOME REASON NO ESTA FUNCIONANDO, SIENDO LLAMADO*/
+
+
+.RowDiv {
+  display: table;
+  width: 100%; /*Optional*/
+  table-layout: fixed; /*Optional*/
+  /*border-spacing: 10px; Optional*/
+}
+.ColumnDiv {
+  display: table-cell;
+  /*background-color: red; */
+}
+
+
+#RelevanceSliderContenedor{
+  /*padding: 5px; */
+  /*height: 40px; */
+  width: 60%; 
+  float: right; 
+  margin-top: -5px; 
+}
+
+#RelevanceSliderContenedorRightPanel{
+  /*padding: 5px; */
+  /*height: 40px; */
+  width: 60%; 
+  float: right; 
+  margin-top: -5px; 
+  
+
+}
+
+#RelevanceSliderContenedorTopicSimilarity{
+  width: 60%; 
+  float: right; 
+  margin-top: -5px; 
+  margin-right: 10px
+}
+
+.SliderInput{
+  width:100%;
+}
+
+.slideraxis{
+  width: 100%;
+}
+
+#RelevanceSliderLabel{
+  width: 40%; 
+  font-family: sans-serif; 
+  font-size: 16px; 
+  /*background-color:green;*/
+  float: left;
+}
+
+#RelevanceSliderLabelRightPanel{
+  /*width: 50%; /* I NEED TO CHANGE THIS TO %*/
+  width: 40%; 
+  font-family: sans-serif; 
+  font-size: 16px; 
+  /*background-color:green;*/
+  float: left;
+}
+
+
+
+.graph-svg-component {
+  /*background-color: #BCFEFC;*/
+  border-color: red;
+  border: double;
+
+}
+
+.BarPlotClass{
+  /*background-color: red;*/
+}
+
+
+
+
+#scaleContainer{
+  width: 100%;
+  height:25;
+  
+}
+
+#scaleContainerRightPanel{
+  width: 100%;
+  height:25;
+}
+
+#TopicSimilarityMetricPanel{
+  margin-top:2%;
+  width:100%;
+  height:5%;
+
+  /*background-color: blue;*/
+
+}
+
+#TopicSimilarityMetricPanelFiltering{
+  width:100%;
+  height:5%;
+  /*background-color: green;*/
+}
+
+
+#lambdaInputLambdaTopicSimilarity{
+  width: 100%;
+  /*
+  height: 100%; 
+  margin-left: 100px; 
+  margin-right: 0px;
+  background-color:greenyellow;*/
+}
+
+#lambdaInputTopicSimilarityFiltering{
+  width:100%;
+}
+#LambdaLabelLambdaTopicSimilarity{
+  font-family: sans-serif; 
+  font-size: 16px; 
+  float: left;
+}
+
+#LabelFilteringTopicSimilarity{
+  font-family: sans-serif; 
+  font-size: 16px; 
+  float: left;
+}
+
+.btnTopic{
+  margin-right: 5px;
+  margin-top: 5px;
+  float:right;
+}
+
+#RelevanceSliderContenedorOmegaTopicSimilarity{
+width: 60%; 
+float: right; 
+margin-top: -5px; 
+margin-right: 10px;
+}
+
+#sliderDivInputFilteringTopicSimilarity{
+  width: 60%; 
+  float: right; 
+  /*margin-top: -5px; */
+  margin-right: 10px;
+}
+
+#svgCentralSankeyDiv{
+  width:100%;
+  height:85%;
+}
+#scaleContainerOmegaTopicSimilarity{
+  width:100%;
+  height:100%;
+  /*width:100%;
+  height:20%;*/
+}
+#scaleContainerTopicSimilarityFiltering{
+  width:100%;
+  height:100%;
+  /*width:100%;
+  height:20%;*/
+}
+
+
+#BarPlotPanelDiv{
+  max-height: 100%;
+  height: 100%;
+}
+#CentralPanel{
+  height:100%;
+}
+
+.bootstrap-table{
+  /*height:80%;*/
+}
+
+#DocumentsPanel_scenario_1{
+  height:85%;
+}
+#DocumentsPanel{
+  height:100%;
+  /*max-height:100%;*/
+}
+
+/* Slider css*/
+
+section.range-slider {
+  position: relative;
+  width: 200px;
+  height: 35px;
+  text-align: center;
+}
+
+section.range-slider input {
+  pointer-events: none;
+  position: absolute;
+  overflow: hidden;
+  left: 0;
+  top: 15px;
+  width: 200px;
+  outline: none;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+}
+
+section.range-slider input::-webkit-slider-thumb {
+  pointer-events: all;
+  position: relative;
+  z-index: 1;
+  outline: 0;
+}
+
+section.range-slider input::-moz-range-thumb {
+  pointer-events: all;
+  position: relative;
+  z-index: 10;
+  -moz-appearance: none;
+  width: 9px;
+}
+
+section.range-slider input::-moz-range-track {
+  position: relative;
+  z-index: -1;
+  background-color: rgba(0, 0, 0, 1);
+  border: 0;
+}
+section.range-slider input:last-of-type::-moz-range-track {
+  -moz-appearance: none;
+  background: none transparent;
+  border: 0;
+}
+section.range-slider input[type=range]::-moz-focus-outer {
+border: 0;
+}
+
+#lamdaInputTopicSimilarity{
+ margin-right:8x;
+ margin-left:8px;
+}
+
+#renameTopicId{
+  width:100%;
+}
+
+#renameTopicId2{
+  width:100%;
+}
+
+#topic_buttons_div{
+  width: 70%;
+  height:100%;
+  float:right;
+}
+#topic_name_div{
+  overflow: hidden;
+  padding-top:10px;
+  width:30%;
+  height:100%;
+  float:left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+#topic_buttons_div_right_panel{
+  width: 50%;
+  height:100%;
+  float:right;
+}
+#topic_name_div_right_panel{
+  overflow: hidden;
+  padding-top:10px;
+  width:50%;
+  height:100%;
+  float:left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+.headerdivider {
+  border-left: 1px solid #38546d;
+  background: #16222c;
+  width: 1px;
+  height: 80px;
+  position: absolute;
+  right: 250px;
+  top: 10px;
+}
+
+.search{
+  width:100%;
+}
+
+/*t header fixed*/
+thead tr:nth-child(1) th{
+  background: white;
+  position: sticky;
+    
+  top: 0;
+  z-index: 10;
+}
+
+tbody{
+  font-size: 12px;
+}
+
+.fixed-table-pagination{
+  font-size: 12px;
+}
+
+.page-size{
+  font-size: 12px;
+}
+
+/*collapse text , revisar si estoy ocupando esto*/ 
+#module {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+
+#module #collapseExample.collapse:not(.show) {
+  display: block;
+  height: 3rem;
+  overflow: hidden;
+}
+
+#module #collapseExample.collapsing {
+  height: 3rem;
+}
+
+#module a.collapsed::after {
+  content: '+ Show More';
+}
+
+#module a:not(.collapsed)::after {
+  content: '- Show Less';
+}
+
+/*add button fab*/
+
+.btn-group-fab {
+  position: fixed;
+  width: 50px;
+  height: auto;
+  right: 20px; bottom: 20px;
+}
+.btn-group-fab div {
+  position: relative; width: 100%;
+  height: auto;
+}
+.btn-group-fab .btn {
+  position: absolute;
+  bottom: 0;
+  border-radius: 50%;
+  display: block;
+  margin-bottom: 4px;
+  width: 40px; height: 40px;
+  margin: 4px auto;
+}
+.btn-group-fab .btn-main {
+  width: 50px; height: 50px;
+  right: 50%; margin-right: -25px;
+  z-index: 9;
+}
+.btn-group-fab .btn-sub {
+  bottom: 0; z-index: 8;
+  right: 50%;
+  margin-right: -20px;
+  -webkit-transition: all 2s;
+  transition: all 0.5s;
+}
+.btn-group-fab.active .btn-sub:nth-child(2) {
+  bottom: 60px;
+}
+.btn-group-fab.active .btn-sub:nth-child(3) {
+  bottom: 110px;
+}
+.btn-group-fab.active .btn-sub:nth-child(4) {
+  bottom: 160px;
+}
+.btn-group-fab .btn-sub:nth-child(5) {
+  bottom: 210px;
+}
+
+/* Add json icon*/
+
+#selectTopicMerge{
+  width:100%;
+}
+
+.slider-rangeHighlight.category1 {
+  background: rgb(190, 124, 240);
+}
+
+.slider-rangeHighlight.category2 {
+  background: rgb(107, 240, 167);
+}
+
+/*fULL SCREEN MODAL FOR TOPIC SPLITTING*/
+.modal_full_screen {
+  padding: 0 !important; /* override inline padding-right added from js*/
+}
+.modal_full_screen .modal-dialog_full_screen {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  margin: 0;
+}
+.modal_full_screen .modal-content_full_screen {
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+}
+.modal_full_screen .modal-body_full_screen {
+  overflow-y: auto;
+}
+
+.custom-style{
+    
+  font-size:25px;
+  color:#FF0084;
+  border:2px solid#FF0084;
+  
+  -webkitbox-shadow:inset 0px 0.1em 0.1em rgba(0,0,0,0.3);
+  -moz-box-shadow:inset 0px 0.1em 0.1em rgba(0,0,0,0.3);
+  box-shadow:inset 0px 0.1em 0.1em rgba(0,0,0,0.3);
+}
+
+#help_button{
+  font-size: 1.1em
+}
+input[type=radio] {
+  border: 0px;
+  width: 100%;
+  height: 2em;
+}
+
+#save_data_user_study_button{
+  font-size: 1.1em
+}
+
+
+
+/*These modifications are necessary to hide the handle upper of filtering*/
+/*
+.noUi-handle-upper {
+  cursor: auto  !important;
+  display: none;
+}
+*/
+
+.disabled_slider {
+  cursor: auto  !important;
+  display: none;
+}
+
+.introjs-skipbutton {
+  display: none;
+}
+
+.terms{
+  cursor: pointer;
+}
+
+.terms_2{
+  cursor: pointer;
+}
+
+.txt{
+  cursor: pointer;
+}
+#full_topic_name_row{
+  width: 100%;
+  font-size:20px;
+}
+
+#topic_name_div_full_row{
+  overflow: hidden;
+  padding-top:10px;
+  width:100%;
+  height:100%;
+  float:left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+#topic_buttons_div_left_full_row{
+  width: 70%;
+  height:100%;
+  float:left;
+}
+
+#topic_buttons_div_right_full_row{
+  width: 30%;
+  height:100%;
+  float:left;
+}
+
+.btnTopicLeft{
+  margin-right: 5px;
+  margin-top: 5px;
+  float:left;
+}
+
+#BarPlotPanel{
+  height: 100%;
+}
+
+#LambdaLabelLambdaTopicSimilarity{
+  width: 35%;
+}
+
+#LabelFilteringTopicSimilarity{
+  width: 35%;
+}
+
+.highlight {background-color: #FFF978}
+
+#sliderDivFiltering{
+  margin-top: 7px;
+}

@@ -53,10 +53,9 @@ desktop.ini
 .ipynb_checkpoints/
 
 # Build outputs
-src/topicvisexplorer/web/
-frontend/dist/
-frontend/node_modules/
-node_modules/
+# The web/legacy/ subtree IS committed because it's vendored paper-version
+# assets needed at runtime; nothing else under web/ is auto-generated yet
+# (Vite output lands in Phase 3).
 
 # Local data
 *.pkl

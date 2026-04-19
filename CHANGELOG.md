@@ -14,6 +14,19 @@ major bumps. The `next` branch is the only branch that receives these
 
 ## [Unreleased]
 
+### Added (Phase 2, complete)
+
+- `src/topicvisexplorer/server/`: FastAPI app factory, Pydantic
+  request/response schemas, cookie-based LRU session store, scenario
+  registry, and a programmatic Uvicorn launcher.
+- `src/topicvisexplorer/web/legacy/`: byte-identical copy of the paper
+  version's `static/` and `templates/` directories so the Phase 3 visual
+  regression has a baseline to diff against.
+- `tests/api/`: 17 contract tests using `fastapi.testclient.TestClient`
+  covering session lifecycle, scenario routing, similarity matrix,
+  topic split / merge / undo, and add / remove / exclude operations.
+- `tve.show()` / `tve.demo()` / `tve.save_html()` public entry points.
+
 ### Added (Phase 1, complete)
 
 - `pyproject.toml` declaring the `topicvisexplorer` package on Python
