@@ -79,6 +79,11 @@ tve = "topicvisexplorer.cli:main"
 packages = ["src/topicvisexplorer"]
 artifacts = [
     "src/topicvisexplorer/web/legacy/**/*",
+    # Vite output (frontend/). Built into src/topicvisexplorer/web/dist/
+    # by `cd frontend && npm install && npm run build`. The wheel works
+    # without it (legacy template kicks in), but ships it whenever it's
+    # present so end users get the modern bundle.
+    "src/topicvisexplorer/web/dist/**/*",
 ]
 
 [tool.hatch.build.targets.sdist]

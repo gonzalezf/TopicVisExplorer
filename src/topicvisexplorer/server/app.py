@@ -48,7 +48,7 @@ from .._version import __version__
 from ..errors import TopicVisExplorerError, ValidationError
 from ..logging import get_logger
 from ..utils import NumPyEncoder
-from ..web import LEGACY_STATIC, LEGACY_TEMPLATES
+from ..web import LEGACY_STATIC, LEGACY_TEMPLATES, MODERN_DIST, has_modern_bundle
 from .scenarios import Scenario, ScenarioLoader, ScenarioRegistry
 from .schemas import (
     AddRemoveWordRequest,
@@ -106,6 +106,12 @@ class ServerConfig:
     cors_allow_origins: list[str] = field(default_factory=list)
     register_demo: bool = True
     extra_scenarios: dict[str, ScenarioLoader] = field(default_factory=dict)
+    #: Front-end track to serve. ``"auto"`` (default) prefers the modern
+    #: bundled ``web/dist/`` if present, else falls back to the legacy
+    #: paper-version template. ``"legacy"`` and ``"modern"`` force one or
+    #: the other (raising at startup if ``"modern"`` is requested but the
+    #: bundle is missing).
+    frontend: str = "auto"
 
 
 def build_app(config: ServerConfig | None = None) -> FastAPI:
@@ -158,11 +164,27 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
 
     app.mount("/static", StaticFiles(directory=str(LEGACY_STATIC)), name="static")
 
-    # Phase 2 always serves the verbatim paper-version template. The
-    # modern Vite bundle and the ``frontend`` config switch land in
-    # Phase 3.
-    app.state.template_name = "index.html"
-    logger.info("Serving legacy paper-version template from %s", LEGACY_TEMPLATES)
+    # Resolve which front-end template + bundle to serve. The decision is
+    # made once at startup; the chosen template name is stored on
+    # ``app.state`` so routes can pick it up cheaply per request.
+    if config.frontend == "modern" and not has_modern_bundle():
+        raise RuntimeError(
+            f"frontend='modern' requested but no Vite bundle found at {MODERN_DIST}. "
+            "Run `cd frontend && npm install && npm run build` first, or pass "
+            "frontend='legacy' to force the paper-version template."
+        )
+    use_modern = config.frontend == "modern" or (config.frontend == "auto" and has_modern_bundle())
+    if use_modern:
+        # Mount the bundled JS/CSS alongside the legacy /static blob so
+        # the modern template can fetch them at /dist/tve.js etc.
+        app.mount("/dist", StaticFiles(directory=str(MODERN_DIST)), name="dist")
+        template_name = "index_v1.html"
+        logger.info("Serving modern Vite bundle from %s", MODERN_DIST)
+    else:
+        template_name = "index.html"
+        logger.info("Serving legacy paper-version template from %s", LEGACY_TEMPLATES)
+    app.state.template_name = template_name
+    app.state.use_modern = use_modern
 
     templates = Jinja2Templates(directory=str(LEGACY_TEMPLATES))
 

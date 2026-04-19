@@ -1,0 +1,33 @@
+/**
+ * Aggregated TopicVisExplorer stylesheet.
+ *
+ * Imports the npm-installed vendor stylesheets first, then layers the
+ * paper-version visualisation CSS on top so visual parity with the
+ * reviewed paper figures is preserved byte-for-byte.
+ *
+ * The two LDAvis-specific stylesheets (LDAvis.css and the small overrides
+ * embedded in the legacy template) live in the Python package as static
+ * files. We re-import them here through a relative path so a single
+ * `tve.css` ships in the wheel.
+ */
+
+@import "bootstrap/dist/css/bootstrap.min.css";
+@import "bootstrap-table/dist/bootstrap-table.min.css";
+@import "nouislider/distribute/nouislider.min.css";
+@import "intro.js/introjs.css";
+
+// Paper-version stylesheets (vendored in the Python package). These contain
+// the bespoke styling for the topic scatter plot, term-relevance bar chart,
+// and sankey diagram. They MUST stay byte-identical with the legacy CSS or
+// reviewer screenshots will diff.
+@import "../../../src/topicvisexplorer/web/legacy/static/css/LDAvis.css";
+
+// Small set of overrides we need now that fontawesome / a few other assets
+// move under /dist/. These are not present in the legacy code; they are
+// purely path adjustments and do not change visible style.
+.tve-modern-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}

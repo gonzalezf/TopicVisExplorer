@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TopicVisExplorer</title>
+
+  {#
+    Modernized template (v1.0+).
+
+    Replaces the dozen-or-so vendored <script> and <link> tags from
+    legacy/templates/index.html with a single hashed-free bundle produced
+    by `frontend/` (Vite + TypeScript). Server-rendered scenario state is
+    handed to the bundle via `window.TVE_SCENARIO` so the bundle stays
+    fully cacheable and the per-session payload arrives only through the
+    JSON contract.
+
+    Visual parity with the paper version is enforced by the Playwright
+    screenshot diff suite in `frontend/tests/visual.spec.ts`.
+  #}
+
+  <link rel="stylesheet" href="/dist/tve.css" />
+  <link rel="stylesheet" href="/static/fontawesome/css/fontawesome.css" />
+  <link rel="stylesheet" href="/static/fontawesome/css/brands.css" />
+  <link rel="stylesheet" href="/static/fontawesome/css/solid.css" />
+  <link rel="stylesheet" type="text/css" href="{{ ldavis_css_url }}" />
+</head>
+<body>
+
+{# --- Modal markup is identical to the paper version so DOM ids match --- #}
+<!-- Rename topic modals -->
+<div class="modal fade" id="renameTopic" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Rename Topic</h5></div>
+      <div class="modal-body">
+        New name: <input type="text" id="renameTopicId">
+        <span hidden="hidden" id="idTopic"></span>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="rename_topic_button" data-dismiss="modal">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="renameTopic2" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Rename Topic Model</h5></div>
+      <div class="modal-body">
+        Name: <input type="text" id="renameTopicId2">
+        <span hidden="hidden" id="idTopic2"></span>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="rename_topic_button2" data-dismiss="modal">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Split / Merge / Undo / Loading modals (same DOM ids as legacy) -->
+<div class="modal fade" id="SplitTopicModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered" role="document" style="height:80%">
+    <div class="modal-content" style="height:80%">
+      <div class="modal-header"><h5 class="modal-title">Topic Splitting</h5></div>
+      <div class="modal-body" style="overflow-y:scroll">
+        You are going to split the current selected topic: <b><span id="topic_to_split_name"></span></b>.<br><br>
+        To split a topic, you must select the most relevant documents to the new subtopics. For each category, you may choose as many documents as you deem necessary. Documents in neither subtopic will be categorized automatically.
+        <div class="row">
+          <div class="col-12" id="DocumentsPanel_TopicSplitting">
+            <table id="tableRelevantDocumentsClass_TopicSplitting">
+              <thead>
+                <tr>
+                  <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th>
+                  <th class="text-center" data-field="text" scope="col">Document</th>
+                </tr>
+              </thead>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" id="apply_topic_splitting" class="btn btn-primary" data-dismiss="modal">Split topic</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="MergeModal_2" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Topic Merging</h5></div>
+      <div class="modal-body">
+        Are you sure you want to merge topic (<span class="merging_topic_1"></span>) with topic (<span class="merging_topic_2"></span>)?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="cancel_merging_2" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="apply_merging" data-dismiss="modal">Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="MergeModal_1" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Topic Merging</h5></div>
+      <div class="modal-body">
+        You are going to merge the current selected topic (<span class="merging_topic_1"></span>) with another one. Do you want to continue?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="cancel_merging" data-dismiss="modal">Cancel</button>
+        <button type="button" id="continue_merging" data-dismiss="modal" class="btn btn-primary">Continue</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="MergeModal_0" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Topic Merging</h5></div>
+      <div class="modal-body">You need to select a topic first</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="MergeModal_new_design" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Topic Merging</h5></div>
+      <div class="modal-body">
+        <span hidden="hidden" class="merging_topic_1"></span>
+        From the list, select the topic with which you want to merge the selected topic: <b><span id="merging_topic_1_name"></span></b>
+        <form id="selectTopicMergeForm">
+          <select id="selectTopicMerge"></select>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="cancel_merging" data-dismiss="modal">Cancel</button>
+        <button type="button" id="apply_topic_merging" data-dismiss="modal" class="btn btn-primary">Confirm Merge</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="ReverseModel" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Undo changes</h5></div>
+      <div class="modal-body">
+        This action will reverse the last topic merging/topic splitting operation. Are you sure you want to continue?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="cancel_merging" data-dismiss="modal">Cancel</button>
+        <button type="button" id="apply_reverse_topic_model" data-dismiss="modal" class="btn btn-primary">Continue</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="loadMe" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-body">
+        <div class="text-center">
+          <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+          <p>We are calculating the best result for you.<br>This operation usually takes around one minute to complete. Please wait.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# Server-rendered scenario state. The bundle reads from window.TVE_SCENARIO. #}
+<script>
+  window.TVE_SCENARIO = {
+    visid: {{ visid_str | tojson }},
+    visidRaw: {{ visid_raw | tojson }},
+    visJson: {{ vis_json | safe }},
+    typeVis: {{ type_vis | tojson }},
+    topicOrder: {{ topic_order | tojson }},
+    {% if type_vis == 1 %}
+    newCirclePositions: {{ new_circle_positions | tojson }},
+    {% endif %}
+    {% if type_vis == 2 %}
+    {# matrix_sankey arrives pre-JSON-encoded (string), like vis_json -- use
+       `| safe` to embed it as a JS object literal. Using `| tojson` here
+       would re-encode it and the bundle would see a string instead of a
+       dict, then crash with "Cannot read properties of undefined". #}
+    matrixSankey: {{ matrix_sankey | safe }},
+    visJson2: {{ vis_json_2 | safe }},
+    topicOrder2: {{ topic_order_2 | tojson }},
+    {% endif %}
+    d3Url: {{ d3_url | tojson }},
+    ldavisUrl: {{ ldavis_url | tojson }},
+    ldavisCssUrl: {{ ldavis_css_url | tojson }}
+  };
+</script>
+
+<div id="{{ visid_str }}"></div>
+
+<div class="container-fluid">
+  <div class="row" style="height:100%">
+    <div class="col-4 border-right" id="BarPlotPanel"></div>
+    <div class="col-4 border-right" id="CentralPanel"></div>
+    <div class="col-4" id="DocumentsPanel">
+      {# Single-corpus scaffolding always present; multi-corpus mode hides it via JS. #}
+      <div id="DocumentsPanel_first_scenario">
+        <table id="tableRelevantDocumentsClass_Model1"></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/dist/tve.js"></script>
+</body>
+</html>

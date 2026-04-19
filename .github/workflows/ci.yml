@@ -56,27 +56,102 @@ jobs:
           files: coverage.xml
           fail_ci_if_error: false
 
-  build:
-    needs: [lint, test]
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install npm deps
+        run: npm ci --no-audit --no-fund
+      - name: Lint
+        run: npm run lint
+      - name: Type-check
+        run: npx tsc --noEmit
+      - name: Build bundle
+        run: npm run build
+      - name: Upload bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: src/topicvisexplorer/web/dist/
+          if-no-files-found: error
+
+  visual:
+    needs: [frontend]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
       - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - name: Install python package
+        run: uv sync --extra dev
+      - name: Install npm deps
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+      - name: Build bundle
+        working-directory: frontend
+        run: npm run build
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Run visual regression tests
+        working-directory: frontend
+        run: npx playwright test
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          if-no-files-found: ignore
+
+  build:
+    needs: [lint, test, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - uses: astral-sh/setup-uv@v3
+      - name: Build frontend bundle (wheel ships it)
+        working-directory: frontend
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
       - name: Build wheel + sdist
         run: uv build
       - name: Check distribution metadata
         run: uv run --with twine twine check dist/*
-      - name: Verify legacy assets are in the wheel
+      - name: Verify bundle is in the wheel
         run: |
           uv run python -c "
           import zipfile, glob, sys
           whl = glob.glob('dist/*.whl')[0]
           names = zipfile.ZipFile(whl).namelist()
-          required = ['topicvisexplorer/web/legacy/templates/index.html']
+          required = ['topicvisexplorer/web/dist/tve.js',
+                      'topicvisexplorer/web/dist/tve.css',
+                      'topicvisexplorer/web/legacy/templates/index.html',
+                      'topicvisexplorer/web/legacy/templates/index_v1.html']
           missing = [n for n in required if n not in names]
           if missing:
               sys.exit('Missing from wheel: ' + ', '.join(missing))
-          print('Wheel contains all expected web/legacy/ artifacts.')
+          print('Wheel contains all expected web/ artifacts.')
           "
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
