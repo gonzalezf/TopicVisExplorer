@@ -26,7 +26,13 @@ def test_scenarios_list_includes_demo(client: TestClient) -> None:
 def test_index_redirects_to_singlecorpus(client: TestClient) -> None:
     res = client.get("/", follow_redirects=False)
     assert res.status_code in (302, 307)
-    assert res.headers["location"] == "/singlecorpus"
+    # The redirect now embeds the demo scenario in the query string so the
+    # legacy LDAvis.js code (which gates its tutorial on whether it sees a
+    # ``scenario`` query param) does not auto-launch the tutorial when a
+    # user opens a bare URL.
+    location = res.headers["location"]
+    assert location.startswith("/singlecorpus")
+    assert "scenario=tiny_demo" in location
 
 
 def test_unknown_scenario_returns_400(client: TestClient) -> None:

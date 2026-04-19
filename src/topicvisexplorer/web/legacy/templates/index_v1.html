@@ -24,6 +24,24 @@
   <link rel="stylesheet" href="/static/fontawesome/css/brands.css" />
   <link rel="stylesheet" href="/static/fontawesome/css/solid.css" />
   <link rel="stylesheet" type="text/css" href="{{ ldavis_css_url }}" />
+
+  <style>
+    /*
+     * Full-viewport layout so the percentage-based heights inside LDAvis.js
+     * resolve correctly. The legacy Flask deployment got these rules from
+     * its outer page chrome; the standalone modern template has to set them
+     * itself, otherwise:
+     *   <div class="row" style="height:100%">  -> resolves to 0
+     *   <svg id="svgMdsPlot" height="85%">     -> resolves to ~0
+     *   r = sqrt((Freq/100) * width * (-margin) * 0.20 / pi) -> NaN
+     * which is what made the topic bubbles invisible.
+     */
+    html, body { height: 100%; margin: 0; }
+    body { display: flex; flex-direction: column; }
+    .container-fluid { flex: 1 1 auto; min-height: 0; }
+    .container-fluid > .row { height: 100%; }
+    #BarPlotPanel, #CentralPanel, #DocumentsPanel { height: 100%; overflow: auto; }
+  </style>
 </head>
 <body>
 
@@ -184,6 +202,7 @@
 {# Server-rendered scenario state. The bundle reads from window.TVE_SCENARIO. #}
 <script>
   window.TVE_SCENARIO = {
+    name: {{ scenario_name | tojson }},
     visid: {{ visid_str | tojson }},
     visidRaw: {{ visid_raw | tojson }},
     visJson: {{ vis_json | safe }},

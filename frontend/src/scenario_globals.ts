@@ -23,6 +23,27 @@ const w = window as any;
 
 const scenario = w.TVE_SCENARIO;
 
+// If the user navigated to e.g. ``/singlecorpus`` without a ``?scenario=``
+// query string, the legacy LDAvis.js code at module load time reads
+// ``window.location.search`` to decide between "real visualization" and
+// "tutorial mode". Backfill the query string from the server-rendered
+// ``TVE_SCENARIO.name`` so the tutorial doesn't auto-fire on bare URLs.
+// ``history.replaceState`` keeps the browser-bar URL coherent without
+// adding a navigation entry.
+if (scenario && scenario.name) {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("scenario")) {
+      params.set("scenario", scenario.name);
+      if (!params.has("hitl")) params.set("hitl", "false");
+      const newSearch = "?" + params.toString();
+      window.history.replaceState({}, "", window.location.pathname + newSearch);
+    }
+  } catch {
+    /* history API unavailable (very old browsers); legacy code falls back */
+  }
+}
+
 if (scenario) {
   // Single-corpus and multi-corpus globals used by LDAvis.js / topicflow.js
   // at top-level, before any UI event ever fires.

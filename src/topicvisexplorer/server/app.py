@@ -243,7 +243,13 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
 
     @app.get("/", include_in_schema=False)
     async def index() -> RedirectResponse:
-        return RedirectResponse("/singlecorpus")
+        # Redirect with the demo scenario already in the query string so the
+        # legacy LDAvis.js code (which reads from window.location.search to
+        # decide whether to launch its built-in tutorial) sees a non-null
+        # scenario and stays out of tutorial mode. ``hitl=false`` hides the
+        # human-in-the-loop only buttons that have no effect outside the
+        # paper user study.
+        return RedirectResponse("/singlecorpus?scenario=tiny_demo&hitl=false")
 
     @app.get("/health", response_model=HealthResponse)
     async def health() -> HealthResponse:
@@ -286,6 +292,7 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
                 new_circle_positions=loaded.circle_positions,
                 matrix_sankey="{}",
                 type_vis=1,
+                scenario_name=scenario,
             ),
         )
 
@@ -315,6 +322,7 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
                 new_circle_positions=loaded.circle_positions,
                 matrix_sankey=_json.dumps(sankey),
                 type_vis=2,
+                scenario_name=scenario,
             ),
         )
 
@@ -434,6 +442,7 @@ def _build_template_context(
     new_circle_positions: Any,
     matrix_sankey: str,
     type_vis: int,
+    scenario_name: str = "",
 ) -> dict[str, Any]:
     """Build a Jinja context that satisfies both templates.
 
@@ -459,6 +468,10 @@ def _build_template_context(
         "new_circle_positions": new_circle_positions,
         "matrix_sankey": matrix_sankey,
         "type_vis": type_vis,
+        # Scenario name surfaced in window.TVE_SCENARIO.name so the bundle
+        # can backfill ``?scenario=...`` into the URL when missing (this
+        # keeps the legacy LDAvis.js tutorial gate from auto-firing).
+        "scenario_name": scenario_name,
         # Identifiers exposed in two shapes (see docstring above).
         "visid": _json.dumps(f"vis-{sid}"),
         "visid_str": f"vis-{sid}",
