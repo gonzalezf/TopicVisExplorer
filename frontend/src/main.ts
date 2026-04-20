@@ -28,6 +28,12 @@ import "./legacy/topicflow.js";
 import "./legacy/highlight.js";
 import "./legacy/LDAvis.js";
 
+// Phase 4f: collapsible coherence panel. Self-installs on
+// DOMContentLoaded; closed by default so it does not perturb the
+// visual baseline. See ``./coherence_panel.ts`` for the contract
+// (GET /coherence -> table).
+import "./coherence_panel";
+
 // `LDAvis` is a constructor that the legacy script registers as a global
 // (in legacy land, via `window.LDAvis = ...`). Vite scopes module-level
 // `var` declarations to the module, so the legacy file does not pollute the

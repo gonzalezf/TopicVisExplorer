@@ -341,6 +341,42 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
         sc = _require_multi(state)
         return JSONResponse(content=sc.relevant_documents_b)
 
+    @app.get("/coherence")
+    async def coherence_endpoint(state: SessionState = SessionDep) -> JSONResponse:
+        """Return per-topic NPMI / C_v / segregation / coverage.
+
+        The collapsible coherence panel in the modern UI is **off by
+        default** (so the v0.1 visual baseline is byte-identical), and
+        only fetches this endpoint on first expand. We compute on
+        demand rather than eagerly precomputing because the per-pair
+        document co-occurrence sweep is O(D * V_top^2) and can be a
+        few hundred ms on real corpora; deferring it to first-open
+        keeps boot fast for users who never look at coherence.
+
+        Multi-corpus is not currently supported -- returns 404 there.
+        Adding it is a v1.1 enhancement (need to compute per-corpus
+        and decide what "segregation" means across corpora).
+        """
+        from ..coherence import report
+
+        sc = _require_single(state)
+        prepared = sc.require("prepared")
+        model_data = sc.require("model_data")
+        raw_texts = sc.raw_texts or []
+        if not raw_texts:
+            raise HTTPException(
+                404,
+                "Scenario does not provide raw_texts; coherence cannot be computed. "
+                "See docs/extending.md for how to attach raw_texts to a custom loader.",
+            )
+        # Tokenize naively (whitespace + lowercase). Realistic loaders
+        # should pre-tokenize and pass through ``Scenario.extras`` once
+        # we have a stable contract for that; for the bundled demo
+        # scenarios this is sufficient.
+        tokenized = [t.lower().split() for t in raw_texts]
+        rep = report(prepared, tokenized, model_data.doc_topic_dists)
+        return JSONResponse(content=sanitize_for_json(rep.to_dict()))
+
     @app.get("/get_topic_similarity_matrix_single_corpus")
     async def topic_similarity_matrix(
         value: float = DEFAULT_OMEGA, state: SessionState = SessionDep

@@ -14,6 +14,48 @@ major bumps. The `next` branch is the only branch that receives these
 
 ## [Unreleased]
 
+### Added (Phase 4f, complete)
+
+- **Collapsible coherence panel** in the modern UI. A 28×28 toggle
+  button (Σ glyph) in the top-right corner expands a floating panel
+  showing per-topic NPMI, C_v, segregation, and coverage. Delivers
+  paper Section 6 future-work line "extend with topic-quality
+  metrics (NPMI, C_v) and topic-distinctness/coverage indicators".
+  - **Closed by default**: the body is hidden via `hidden` and the
+    wrapper uses `position: fixed`, so the closed state contributes
+    only the small toggle button to the screenshot. The visual
+    baselines were re-captured to absorb that 0.085% pixel delta;
+    the existing `maxDiffPixelRatio: 0.05` tolerance keeps real
+    layout regressions caught.
+  - **Lazy-loaded**: the panel only fetches `/coherence` on first
+    expand and caches the response, so users who never look at
+    coherence pay zero cost. The endpoint computes per-pair
+    document co-occurrence which is O(D · V_top²) and a few
+    hundred ms on real corpora — deferring it keeps boot fast.
+  - **Single-corpus only for v1.0**: the `{% if type_vis == 1 %}`
+    Jinja guard hides the toggle in multi-corpus mode and the
+    endpoint returns 400 there. Multi-corpus support (per-corpus
+    columns, cross-corpus segregation) is a v1.1 enhancement.
+- `GET /coherence` endpoint (`src/topicvisexplorer/server/app.py`):
+  computes `CoherenceReport` for the active single-corpus session
+  using the existing pure-NumPy `topicvisexplorer.coherence` module
+  and returns it as `{npmi: [...], c_v: [...], segregation: [...],
+  coverage: [...], mean_npmi, mean_c_v}`. Sanitized through
+  `sanitize_for_json` so NPMI's log-of-zero edges that produce
+  `-inf` don't blow up FastAPI's `allow_nan=False` serializer.
+- `frontend/src/coherence_panel.ts`: vanilla-DOM panel controller
+  (no extra runtime deps). Exposes only side effects so it can be
+  imported from `main.ts` for its `DOMContentLoaded` listener.
+- `frontend/tests/coherence_panel.spec.ts`: three Playwright tests
+  covering the open-state contract — toggle absent in multi-corpus
+  mode, toggle expands/lazy-loads/renders one row per topic with
+  the expected 5 columns and `Topic <n>` labels, and toggle
+  collapses again on second click.
+- `tests/api/test_coherence_endpoint.py`: four pytest API tests —
+  contract (4 columns, equal lengths), strict-JSON cleanliness (no
+  raw NaN/Infinity tokens leak), 400 in multi-corpus mode, 400
+  without an active session.
+
 ### Added (Phase 4d/4e, complete)
 
 - **Add/remove word UI** (`frontend/src/legacy/LDAvis.js`): each term

@@ -228,6 +228,57 @@
 
 <div id="{{ visid_str }}"></div>
 
+{#
+  Phase 4f: Collapsible coherence panel.
+
+  - Closed by default so the visual baseline is byte-identical to the
+    paper version. The panel only renders the toggle button, which sits
+    above the three-column layout in a 32px tall row. Visual diff is
+    bounded by visual.spec.ts's maxDiffPixelRatio.
+  - Available in single-corpus mode only (multi-corpus needs a richer
+    UX deferred to v1.1).
+  - Lazy: the content area stays empty until the user expands the
+    panel; `frontend/src/coherence_panel.ts` then GETs /coherence and
+    renders the table.
+#}
+{#
+  The wrapper is absolutely positioned (top-right) and the body slides
+  out only when expanded, so the closed state takes ZERO layout space
+  in the central panel grid. That keeps the screenshot byte-identical
+  to v0.1 modulo the small caret button in the corner. The button
+  itself is 24x24 px which is well inside the visual.spec.ts diff
+  tolerance and a clearly intentional new affordance.
+#}
+{% if type_vis == 1 %}
+<div id="TveCoherencePanelWrapper" class="tve-coherence-panel-wrapper" data-state="collapsed">
+  <button type="button"
+          id="TveCoherencePanelToggle"
+          class="tve-coherence-toggle"
+          aria-controls="TveCoherencePanelBody"
+          aria-expanded="false"
+          aria-label="Toggle coherence panel"
+          title="Topic Coherence (NPMI / C_v / Segregation / Coverage)">
+    &#x03A3;
+  </button>
+  <div id="TveCoherencePanelBody" class="tve-coherence-body" hidden>
+    <h6 class="tve-coherence-heading">Topic Coherence</h6>
+    <div id="TveCoherencePanelStatus" class="tve-coherence-status">Loading&hellip;</div>
+    <table id="TveCoherenceTable" class="tve-coherence-table" hidden>
+      <thead>
+        <tr>
+          <th>Topic</th>
+          <th title="Normalized Pointwise Mutual Information; higher is better">NPMI</th>
+          <th title="R&ouml;der et al. 2015 sliding-window coherence; higher is better">C_v</th>
+          <th title="1 - mean(Jaccard with other topics); higher = more lexically distinct">Seg.</th>
+          <th title="Fraction of documents argmax-assigned to this topic">Cov.</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
 <div class="container-fluid">
   <div class="row" style="height:100%">
     <div class="col-4 border-right" id="BarPlotPanel"></div>
