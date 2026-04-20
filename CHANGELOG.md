@@ -14,6 +14,21 @@ major bumps. The `next` branch is the only branch that receives these
 
 ## [Unreleased]
 
+### Added (Phase 4h, complete)
+
+- **Extending guide stub** at `docs/extending.md`. Frames the three
+  new adapters (BERTopic, ETM, CTM), the two new edit operations
+  (add/remove word, exclude document), and the new coherence panel
+  as direct deliveries of paper Section 6 future work, and
+  documents the contracts custom loaders must satisfy:
+  - `TopicModelAdapter` protocol surface for new model adapters.
+  - `EmbeddingProtocol` for swapping Word2Vec for SBERT/FastText.
+  - `doc_id` as a stable per-row identifier in `relevant_documents`
+    (consumed by `POST /Exclude_Document`).
+  - `Scenario.raw_texts` requirement for `GET /coherence`.
+  Linked from the top-level `README.md`. Full Sphinx site comes in
+  Phase 5.
+
 ### Added (Phase 4g, complete)
 
 - **Cross-adapter equivalence test** in

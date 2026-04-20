@@ -24,6 +24,13 @@ git checkout legacy
 # then follow legacy/README.md
 ```
 
+## Extending
+
+For adding new topic models (BERTopic / ETM / CTM are bundled), swapping
+the embedding backend (Word2Vec default, SBERT optional), or wiring
+your own corpus into the FastAPI server with the new edit-operation
+contracts, see [`docs/extending.md`](docs/extending.md).
+
 ## Citation
 
 If you use this software, please cite the Journal of Visualization paper
