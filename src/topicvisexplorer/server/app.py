@@ -47,7 +47,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from .._version import __version__
 from ..errors import TopicVisExplorerError, ValidationError
 from ..logging import get_logger
-from ..utils import NumPyEncoder
+from ..utils import NumPyEncoder, sanitize_for_json
 from ..web import LEGACY_STATIC, LEGACY_TEMPLATES, MODERN_DIST, has_modern_bundle
 from .scenarios import Scenario, ScenarioLoader, ScenarioRegistry
 from .schemas import (
@@ -390,6 +390,15 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
     async def add_remove_word(
         body: AddRemoveWordRequest, state: SessionState = SessionDep
     ) -> JSONResponse:
+        """Add or remove ``body.word`` from ``body.topic_id``'s display.
+
+        Returns the updated ``PreparedData`` payload so the client can
+        redraw the affected topic's bar chart in place (mirrors the
+        ``/Topic_Splitting_Document_Based`` and
+        ``/get_new_topic_vector`` endpoints' response shape). The
+        ``ok``/``remaining_undo_steps`` keys keep backward compatibility
+        with any caller that just wanted the boolean result.
+        """
         sc = _require_single(state)
         state.history.append({"op": "word_snapshot", "snapshot": _snapshot(sc)})
         try:
@@ -407,12 +416,27 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
         except TopicVisExplorerError:
             state.history.pop()
             raise
-        return JSONResponse(content={"ok": True})
+        prepared_dict = sc.require("prepared").to_dict()
+        # Round-trip through NumPyEncoder to coerce np.* scalars to plain
+        # Python types, then strip NaN / Inf (see ``sanitize_for_json`` in
+        # ``..utils``: starlette's JSONResponse uses ``allow_nan=False``).
+        prepared_payload = sanitize_for_json(
+            _json.loads(_json.dumps(prepared_dict, cls=NumPyEncoder))
+        )
+        return JSONResponse(
+            content={
+                "ok": True,
+                "remaining_undo_steps": len(state.history),
+                "PreparedDataObtained_fromPython": prepared_payload,
+            }
+        )
 
     @app.post("/Exclude_Document")
     async def exclude_document_route(
         body: ExcludeDocumentRequest, state: SessionState = SessionDep
     ) -> JSONResponse:
+        """Drop a single document from a topic and re-prepare. See
+        :func:`add_remove_word` for response-shape rationale."""
         sc = _require_single(state)
         state.history.append({"op": "exclude_snapshot", "snapshot": _snapshot(sc)})
         try:
@@ -427,7 +451,17 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
         except TopicVisExplorerError:
             state.history.pop()
             raise
-        return JSONResponse(content={"ok": True})
+        prepared_dict = sc.require("prepared").to_dict()
+        prepared_payload = sanitize_for_json(
+            _json.loads(_json.dumps(prepared_dict, cls=NumPyEncoder))
+        )
+        return JSONResponse(
+            content={
+                "ok": True,
+                "remaining_undo_steps": len(state.history),
+                "PreparedDataObtained_fromPython": prepared_payload,
+            }
+        )
 
     return app
 
@@ -590,7 +624,9 @@ def _do_split(sc: Scenario, body: TopicSplitRequest) -> dict[str, Any]:
 
     return {
         "relevantDocumentsDict_fromPython": _json.dumps(sc.relevant_documents, cls=NumPyEncoder),
-        "PreparedDataObtained_fromPython": _json.loads(new_prepared.to_json()),
+        "PreparedDataObtained_fromPython": sanitize_for_json(
+            _json.loads(new_prepared.to_json())
+        ),
         "new_circle_positions": _json.dumps(
             {str(k): v for k, v in new_layout.items()}, cls=NumPyEncoder
         ),

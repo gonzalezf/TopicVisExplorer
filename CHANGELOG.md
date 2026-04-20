@@ -14,7 +14,68 @@ major bumps. The `next` branch is the only branch that receives these
 
 ## [Unreleased]
 
-### Added (Phase 4c, in progress)
+### Added (Phase 4d/4e, complete)
+
+- **Add/remove word UI** (`frontend/src/legacy/LDAvis.js`): each term
+  in the keyword bar chart now carries a hover-revealed `+` and `-`
+  control next to its label. The buttons are SVG `<text>` glyphs
+  rendered with `opacity: 0` by default, so the visual baseline
+  (no hover state) is byte-identical to v0.1. Clicking either glyph
+  POSTs to `/Add_Remove_Word` and the bar chart redraws in place
+  using the returned `PreparedData.tinfo`. Delivers paper Section 6
+  future-work line "interact with topics by adding or removing words".
+- **Exclude-document UI** (`frontend/src/legacy/LDAvis.js`): the
+  single-corpus documents panel now has a per-row `×` button that
+  POSTs to `/Exclude_Document` with the row's stable `doc_id`. The
+  in-memory document list is filtered, the keyword panel redraws
+  (because excluding a document shifts `doc_topic_dists` which
+  propagates into the topic-term matrix via `prepare`), and the
+  table re-renders against the filtered data. Delivers paper
+  Section 6 future-work line "exclude individual documents from a
+  topic".
+- `frontend/src/legacy/LDAvis.js`:
+  - Added a late-bound `_tveInternals` bag exposing closure-private
+    helpers `topic_on` and `updateRelevantDocuments` to the LDAvis
+    outer scope so the new edit-operation hooks
+    (`_tveAddRemoveWord`, `_tveExcludeDocument`) can call back into
+    the original render functions.
+  - Added the `_tveDocumentColumnsModel1` helper that builds the
+    bootstrap-table column descriptor (with the new exclude column)
+    plus a delegated click handler on the table container so the
+    button keeps working after sort/page changes (which replace the
+    `<tbody>`).
+- `src/topicvisexplorer/server/app.py`:
+  - `POST /Add_Remove_Word` now returns the full `PreparedData`
+    payload alongside `ok` and `remaining_undo_steps` so the front-
+    end can redraw without reloading.
+  - `POST /Exclude_Document` mirrors the same response shape.
+  - All edit-op responses are routed through a new
+    `sanitize_for_json` helper (`utils.py`) that maps NaN / +Inf /
+    -Inf to `null` so FastAPI's strict (`allow_nan=False`) JSON
+    serializer doesn't blow up when `remove_word` produces
+    `loglift = log(0/x) = -inf`.
+- `src/topicvisexplorer/server/demo_data.py`: every demo
+  `relevant_documents` row now carries a stable `doc_id` matching
+  its index into `doc_topic_dists`. The new exclude-document UI
+  binds to that field; users with custom scenarios should add the
+  same field to their loader output (documented in
+  `docs/extending.md` -- Phase 4h).
+- `tests/api/test_undo_and_word_ops.py`: assertions tightened to
+  cover the new `PreparedDataObtained_fromPython` payload shape on
+  both endpoints.
+- `frontend/tests/word_ops.spec.ts`: new Playwright suite (2 tests)
+  exercising the +/- controls end-to-end against the live FastAPI
+  server.
+- `frontend/tests/exclude_doc.spec.ts`: new Playwright suite (1 test)
+  exercising the per-row × control end-to-end. Asserts the clicked
+  `data-doc-id` is gone from the rebuilt table and the underlying
+  bootstrap-table data length shrunk.
+- `frontend/tests/visual.spec.ts`: re-captured baselines for both
+  scenarios (the documents panel grew an exclude column header). Set
+  `maxDiffPixelRatio: 0.05` to absorb non-deterministic Sankey
+  ribbon path rounding without losing layout-regression coverage.
+
+### Added (Phase 4c, complete)
 
 - `CTMAdapter` (`topicvisexplorer.models.CTMAdapter`) is now a real
   adapter, not the v1.1 stub. Delivers paper Section 6 future-work

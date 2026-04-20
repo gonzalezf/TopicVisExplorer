@@ -58,8 +58,15 @@ def build_tiny_single_demo() -> Scenario:
         metadata={"scenario": "tiny_demo", "synthetic": True},
     )
 
+    # ``doc_id`` is a stable index into ``doc_topic_dists`` and is what
+    # the ``/Exclude_Document`` endpoint expects (see
+    # :class:`~topicvisexplorer.server.schemas.ExcludeDocumentRequest`).
+    # Exposing it on every relevant_documents row lets the front-end
+    # bind the exclude-button to a specific source document without
+    # depending on table sort order or pagination.
     relevant_documents = [
         {
+            "doc_id": i,
             "text": f"synthetic document #{i}",
             **{str(k): float(dt[i, k]) for k in range(dt.shape[1])},
         }
@@ -104,11 +111,19 @@ def build_tiny_multi_demo() -> Scenario:
         metadata={"scenario": "tiny_multi_demo", "corpus": "B"},
     )
     docs_a = [
-        {"text": f"corpus A doc #{i}", **{str(k): float(dt_a[i, k]) for k in range(dt_a.shape[1])}}
+        {
+            "doc_id": i,
+            "text": f"corpus A doc #{i}",
+            **{str(k): float(dt_a[i, k]) for k in range(dt_a.shape[1])},
+        }
         for i in range(dt_a.shape[0])
     ]
     docs_b = [
-        {"text": f"corpus B doc #{i}", **{str(k): float(dt_b[i, k]) for k in range(dt_b.shape[1])}}
+        {
+            "doc_id": i,
+            "text": f"corpus B doc #{i}",
+            **{str(k): float(dt_b[i, k]) for k in range(dt_b.shape[1])},
+        }
         for i in range(dt_b.shape[0])
     ]
     K = tt_a.shape[0]

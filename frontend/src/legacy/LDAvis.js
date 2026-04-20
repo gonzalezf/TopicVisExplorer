@@ -322,6 +322,194 @@ var LDAvis = function(to_select, data_or_file_name) {
         };
     }
 
+    // === Modernization: Phase 4d ===
+    // POST /Add_Remove_Word with the currently-selected topic and the
+    // clicked word. On success, rebuild `lamData` from the returned
+    // `tinfo` (tinfo carries every (Term, Category, logprob, loglift,
+    // ...) combination across all topics, so we can replace the array
+    // wholesale and let the existing `topic_on()` machinery redraw).
+    //
+    // We deliberately do NOT touch mdsData here: add/remove word is a
+    // display-only edit per add_remove_word.py's docstring -- it leaves
+    // doc_topic_dists unchanged, which means the (x, y) topic
+    // coordinates in the central panel are stable. Keeping the central
+    // panel pinned matches the paper's intended UX.
+    // Forward-declared late-bound bag for closure-private helpers
+    // (``topic_on``, ``updateRelevantDocuments``). Populated near the
+    // end of ``visualize(data)`` once those have been defined. See the
+    // Phase 4d/4e wiring notes inside ``visualize``.
+    var _tveInternals = {};
+
+    function _tveAddRemoveWord(word, action){
+        if (typeof vis_state === "undefined" || !vis_state || !vis_state.topic || vis_state.topic <= 0){
+            // Defensive: the +/- buttons should only render when a
+            // topic is selected (the bar chart is empty otherwise), but
+            // belt-and-braces.
+            console.warn("[TopicVisExplorer] add/remove word skipped: no topic selected");
+            return;
+        }
+        save_users_actions_across_time('add_remove_word_'+action, new Date());
+        save_users_actions_across_time('add_remove_word_'+action+'_value', vis_state.topic+'_'+word);
+        $.ajax({
+            type: 'POST',
+            url: '/Add_Remove_Word',
+            async: true,
+            data: JSON.stringify({ topic_id: vis_state.topic, word: word, action: action }),
+            contentType: 'application/json',
+            success: function(resp){
+                if (!resp || !resp.PreparedDataObtained_fromPython){
+                    console.error("[TopicVisExplorer] /Add_Remove_Word returned no PreparedData");
+                    return;
+                }
+                var newTinfo = resp.PreparedDataObtained_fromPython.tinfo;
+                if (!newTinfo || !newTinfo.Term){
+                    console.error("[TopicVisExplorer] /Add_Remove_Word: malformed tinfo");
+                    return;
+                }
+                // Rebuild lamData from the new tinfo wholesale. Same
+                // recipe used by the original `visualize(data)` body
+                // around line ~460.
+                lamData = [];
+                for (var i = 0; i < newTinfo.Term.length; i++){
+                    var obj = {};
+                    for (var key in newTinfo){
+                        obj[key] = newTinfo[key][i];
+                    }
+                    lamData.push(obj);
+                }
+                // Re-trigger the existing topic-selection machinery so
+                // bars get redrawn with the new term mass.
+                var topicEl = document.getElementById(topicID + vis_state.topic);
+                if (topicEl && typeof _tveInternals.topic_on === "function"){
+                    _tveInternals.topic_on(topicEl);
+                }
+            },
+            error: function(xhr, textStatus, errorThrown){
+                console.error("[TopicVisExplorer] /Add_Remove_Word failed:",
+                              textStatus, errorThrown, xhr && xhr.responseText);
+            }
+        });
+    }
+
+    // === Modernization: Phase 4e ===
+    // Build the bootstrap-table column descriptor for the single-corpus
+    // documents panel and inject a third "exclude" column. The column
+    // is rendered as a small button per row whose ``data-doc-id``
+    // attribute carries the source document index. A delegated click
+    // handler (registered once at init time) calls
+    // ``/Exclude_Document``, refreshes ``relevantDocumentsDict`` from
+    // the server response, and re-renders the table.
+    //
+    // Visual-baseline impact: zero. The exclude column only appears
+    // *after* the user selects a topic, which the visual baselines do
+    // not exercise.
+    // Inlined percentage formatter so this helper does not need to
+    // close over ``to_percentage`` (which lives inside ``visualize``).
+    function _tvePercentFormatter(number){
+        return (number * 100).toFixed(1) + '%';
+    }
+
+    function _tveDocumentColumnsModel1(topic_id, column_text_name){
+        var cols = [
+            {
+                field: String(topic_id),
+                formatter: _tvePercentFormatter,
+                title: '%',
+                sortable: 'true'
+            },
+            {
+                field: column_text_name,
+                escape: 'true',
+                title: 'Document',
+                sortable: 'true'
+            },
+            {
+                field: 'doc_id',
+                title: '',
+                sortable: false,
+                searchable: false,
+                width: 30,
+                formatter: function(value, row){
+                    if (value === undefined || value === null) {
+                        // Backwards-compat: legacy fixtures that don't
+                        // carry doc_id simply don't render the button.
+                        return '';
+                    }
+                    return '<button type="button" class="btn btn-sm btn-link tve-doc-exclude-ctrl" '
+                        + 'data-doc-id="' + value + '" '
+                        + 'aria-label="Exclude this document from the selected topic" '
+                        + 'title="Exclude this document from the selected topic">'
+                        + '\u2715</button>';
+                }
+            }
+        ];
+        return cols;
+    }
+
+    function _tveExcludeDocument(docId){
+        if (typeof vis_state === "undefined" || !vis_state || !vis_state.topic || vis_state.topic <= 0){
+            console.warn("[TopicVisExplorer] exclude doc skipped: no topic selected");
+            return;
+        }
+        if (typeof docId !== "number" || isNaN(docId)) {
+            console.warn("[TopicVisExplorer] exclude doc skipped: invalid doc_id", docId);
+            return;
+        }
+        save_users_actions_across_time('exclude_document', new Date());
+        save_users_actions_across_time('exclude_document_value', vis_state.topic + '_' + docId);
+        $.ajax({
+            type: 'POST',
+            url: '/Exclude_Document',
+            async: true,
+            data: JSON.stringify({ topic_id: vis_state.topic, doc_id: docId }),
+            contentType: 'application/json',
+            success: function(resp){
+                if (!resp || !resp.PreparedDataObtained_fromPython){
+                    console.error("[TopicVisExplorer] /Exclude_Document returned no PreparedData");
+                    return;
+                }
+                // Drop the excluded row from the in-memory documents
+                // dict so the table reflects the new state immediately.
+                // Note: ``row.doc_id`` arrives from the server as a
+                // JSON number, but bootstrap-table sometimes coerces
+                // dataset attributes to strings. Compare loosely so a
+                // numeric click target also matches a stringified row.
+                if (typeof relevantDocumentsDict !== "undefined" && relevantDocumentsDict){
+                    relevantDocumentsDict = relevantDocumentsDict.filter(function(row){
+                        return row.doc_id != docId; // eslint-disable-line eqeqeq
+                    });
+                }
+                // Rebuild lamData (term mass shifts when a document
+                // is dropped because the topic-term distribution gets
+                // re-derived from the surviving doc_topic_dists).
+                var newTinfo = resp.PreparedDataObtained_fromPython.tinfo;
+                if (newTinfo && newTinfo.Term){
+                    lamData = [];
+                    for (var i = 0; i < newTinfo.Term.length; i++){
+                        var obj = {};
+                        for (var key in newTinfo){ obj[key] = newTinfo[key][i]; }
+                        lamData.push(obj);
+                    }
+                }
+                // Refresh the documents panel and the keyword bars for
+                // the currently-selected topic. Both helpers live in
+                // the ``visualize`` closure; we reach them via the
+                // late-bound ``_tveInternals`` bag (see ``visualize``).
+                if (typeof _tveInternals.updateRelevantDocuments === "function"){
+                    _tveInternals.updateRelevantDocuments(vis_state.topic - 1, relevantDocumentsDict, 1);
+                }
+                var topicEl = document.getElementById(topicID + vis_state.topic);
+                if (topicEl && typeof _tveInternals.topic_on === "function"){
+                    _tveInternals.topic_on(topicEl);
+                }
+            },
+            error: function(xhr, textStatus, errorThrown){
+                console.error("[TopicVisExplorer] /Exclude_Document failed:",
+                              textStatus, errorThrown, xhr && xhr.responseText);
+            }
+        });
+    }
+
     function updateTopicNamesCircles(data, id_topic_splitted, old_mdsData, old_frequency){
         console.log(' recibi esta frecuencia', old_frequency);
         // set the number of topics to global variable K:
@@ -2016,8 +2204,52 @@ var LDAvis = function(to_select, data_or_file_name) {
                         d3.select('#overlay_2-'+current_term).style("fill",color2_1);
                     }                    
                 });
-            
-            
+
+            // === Modernization: Phase 4d add/remove word controls ===
+            // We render two additional SVG <text> nodes per term row -- a
+            // "+" (add-to-topic) and "−" (remove-from-topic) glyph -- to the
+            // right of each bar. They are *invisible by default*
+            // (opacity 0 + pointer-events: none) so the visual baseline
+            // captured in Phase 3a is byte-identical: Playwright's
+            // `screenshot()` does not simulate hover, so opacity-0
+            // siblings have zero pixel impact. The CSS rule in
+            // styles/main.scss reveals them on `<text>.terms:hover` and
+            // on hover of the buttons themselves, mirroring the existing
+            // bold-on-hover behaviour of the term label.
+            //
+            // Only wired in single-corpus mode (`type_vis == 1`). In the
+            // dual-corpus comparison we'd need to disambiguate which
+            // corpus's topic to mutate, which is part of Phase 4 but
+            // ships as v1.0.x follow-up.
+            if (type_vis == 1) {
+                basebars
+                    .append("text")
+                    .attr("class", "tve-word-ctrl tve-word-add-ctrl")
+                    .attr("data-word", function(d){ return d.Term; })
+                    .attr("data-bar-id", function(d){ return termID + d.Term; })
+                    .attr("x", function(){ return barwidth + 8; })
+                    .attr("y", function(d) { return y(d.Term) + 9; })
+                    .attr("aria-label", function(d){ return "Boost \"" + d.Term + "\" in this topic"; })
+                    .text("+")
+                    .on("click", function() {
+                        var word = d3.select(this).attr("data-word");
+                        _tveAddRemoveWord(word, "add");
+                    });
+                basebars
+                    .append("text")
+                    .attr("class", "tve-word-ctrl tve-word-rem-ctrl")
+                    .attr("data-word", function(d){ return d.Term; })
+                    .attr("data-bar-id", function(d){ return termID + d.Term; })
+                    .attr("x", function(){ return barwidth + 22; })
+                    .attr("y", function(d) { return y(d.Term) + 9; })
+                    .attr("aria-label", function(d){ return "Remove \"" + d.Term + "\" from this topic"; })
+                    .text("\u2212")
+                    .on("click", function() {
+                        var word = d3.select(this).attr("data-word");
+                        _tveAddRemoveWord(word, "remove");
+                    });
+            }
+
 
             // barchart axis adapted from http://bl.ocks.org/mbostock/1166403
             var xAxis = d3.axisTop().scale(x).tickSize(-barheight).ticks(6);
@@ -4314,6 +4546,19 @@ var LDAvis = function(to_select, data_or_file_name) {
         
         $('#tableRelevantDocumentsClass_Model1').highlight($(".search.bs.table").val());
 
+        // === Modernization: Phase 4e ===
+        // Delegated handler for the per-row exclude button. We bind on
+        // the container (rather than each <button>) because bootstrap-
+        // table replaces the entire <tbody> on every redraw / sort /
+        // page change, which would orphan direct handlers.
+        $('#tableRelevantDocumentsClass_Model1').on('click', '.tve-doc-exclude-ctrl', function(ev){
+            ev.preventDefault();
+            ev.stopPropagation();
+            var docIdAttr = $(this).attr('data-doc-id');
+            var docId = parseInt(docIdAttr, 10);
+            _tveExcludeDocument(docId);
+        });
+
         $('#tableRelevantDocumentsClass_Model1').on('search.bs.table', function (e, text){
 
             $('#tableRelevantDocumentsClass_Model1').highlight(text);
@@ -4364,7 +4609,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
         function updateRelevantDocuments(topic_id, relevantDocumentsDict, model){
-            
             var column_text_name = get_name_text_column_on_relevant_documents(relevantDocumentsDict)
             //sorted regarding to its contribution
             relevantDocumentsDict.sort(function(row_1, row_2){
@@ -4372,7 +4616,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             });
 
             
-            if(model == 1){                        
+            if(model == 1){
                 $('#tableRelevantDocumentsClass_Model1').bootstrapTable("destroy");
                 $('#tableRelevantDocumentsClass_Model1').bootstrapTable({
                     toggle:true,
@@ -4382,19 +4626,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     //showRefresh: true, Hacer que esto funcione! ver :  https://examples.bootstrap-table.com/#view-source
                     //showExport:true,
                     //showColumns: true,
-                    columns:[
-                        {
-                            field: String(topic_id),
-                            formatter:to_percentage,
-                            title: '%',
-                            sortable:'true'
-                        },{
-                            field: column_text_name,
-                            escape:"true",
-                            title: 'Document',
-                            sortable:'true'
-                        }
-                    ],
+                    columns: _tveDocumentColumnsModel1(topic_id, column_text_name),
                     data: relevantDocumentsDict
                 });
 
@@ -4504,7 +4736,19 @@ var LDAvis = function(to_select, data_or_file_name) {
                 console.log('estamos o no??')                       
                 d3.select("#TopicSimilarityMetricPanel").remove()       
             }                   
-        }    
+        }
+
+        // === Modernization: expose closure-private helpers to the
+        // outer LDAvis scope so the Phase 4d/4e edit-operation hooks
+        // (`_tveAddRemoveWord`, `_tveExcludeDocument`) can call back
+        // into the original render functions. The original script-tag
+        // deployment used `window.*` accidentally because all the
+        // legacy code lived in the global scope; under bundler scope
+        // we have to thread the references explicitly. We bind them
+        // through a single object on the LDAvis instance scope so the
+        // exposure is opt-in, namespaced, and easy to remove later.
+        _tveInternals.topic_on = topic_on;
+        _tveInternals.updateRelevantDocuments = updateRelevantDocuments;
     }
     
     if (typeof data_or_file_name === 'string'){
