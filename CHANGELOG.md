@@ -14,6 +14,32 @@ major bumps. The `next` branch is the only branch that receives these
 
 ## [Unreleased]
 
+### Added (Phase 4g, complete)
+
+- **Cross-adapter equivalence test** in
+  `tests/unit/test_adapter_equivalence.py`. First test in the suite
+  that drives `GensimLDAAdapter` and `SklearnLDAAdapter` end-to-end
+  on the **same** synthetic 10-doc bimodal corpus and asserts both
+  produce a `TopicModelData` that the rest of the pipeline can
+  treat interchangeably. We deliberately do NOT assert numerical
+  equivalence of topic-term distributions (gensim and sklearn run
+  different variational EM rules, so absolute equivalence is
+  impossible on a tiny corpus); we DO assert the structural
+  contract: same K, same N, same vocab universe, both row-
+  stochastic, both feed cleanly through `prepare()` to a
+  `PreparedData` with identical column schemas.
+- **Golden tests for Phase 4 edit operations** in
+  `tests/golden/test_edit_ops_golden.py`, pinned against
+  `golden_baseline/tiny_edit_ops.json`. Catches any drift in
+  `add_word`'s boost-quantile, `remove_word`'s renormalization, or
+  `exclude_document`'s row-renormalization down to `atol=1e-9`.
+  Complements the existing qualitative unit tests in
+  `tests/unit/test_operations.py`.
+- `scripts/capture_edit_op_golden.py`: regenerator for the new
+  golden baseline. Deterministic at fixture seed 0 -- re-running
+  must produce byte-identical JSON, otherwise an upstream
+  dependency drifted (review before committing).
+
 ### Added (Phase 4f, complete)
 
 - **Collapsible coherence panel** in the modern UI. A 28×28 toggle
