@@ -12,8 +12,12 @@ visualisations. When v1.0 ships it will be promoted to the default branch.
 
 ## Status
 
-Bootstrap in progress. Phase 1 (`pyproject.toml`, src layout, ported algorithm
-core, unit + golden tests) will land here next.
+Phases 0–4 complete on `next`. Phase 5 (docs site, CITATION.cff, PyPI
+release, branch promotion) is the only remaining work before v1.0.
+
+**Single source of truth for the modernization roadmap:**
+[`PLAN.md`](PLAN.md). Any contributor or agent picking up the work
+should read that file first.
 
 For the paper version of the code, install it from the legacy branch:
 
