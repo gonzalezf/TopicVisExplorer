@@ -14,6 +14,91 @@ major bumps. The `next` branch is the only branch that receives these
 
 ## [Unreleased]
 
+### Added (Phase 4c, in progress)
+
+- `CTMAdapter` (`topicvisexplorer.models.CTMAdapter`) is now a real
+  adapter, not the v1.1 stub. Delivers paper Section 6 future-work
+  line "future versions could integrate [...] contextualized topic
+  models such as [...] CTM (Bianchi et al. 2021)" verbatim.
+  - Duck-types the `contextualized-topic-models` PyPI package
+    (`get_topic_word_matrix`, `train_data.idx2token`).
+  - Intentionally does NOT build the `CTMDataset` needed for
+    `get_doc_topic_distribution`: doing so would silently force an
+    SBERT inference pass and a transformers dependency on every call.
+    Instead we ask the caller to compute it once and pass it as
+    `doc_topic_dists=`. The error message points users at the exact
+    one-liner.
+  - All matrices are renormalized defensively against float roundoff
+    and zero-rows.
+- `tests/unit/test_adapters.py`: 7 new CTM tests covering protocol
+  conformance, caller-supplied DTD, vocabulary discovery via
+  `train_data.idx2token`, missing-vocab / missing-method / size-
+  mismatch error paths.
+- `tests/unit/test_protocols.py`: replaced the
+  `test_stub_adapters_raise_actionable_not_implemented` test with a
+  `test_no_stub_adapters_remain_in_v1` regression guard. v1.0 ships
+  every Section 6 model as a real adapter.
+- `contextualized-topic-models>=2.5` added to the `[full]` extra (with
+  matching mypy override).
+
+### Added (Phase 4b, complete)
+
+- `ETMAdapter` (`topicvisexplorer.models.ETMAdapter`) is now a real
+  adapter, not the v1.1 stub. Delivers paper Section 6 future-work
+  line "future versions could integrate [...] embedded topic models
+  such as ETM (Dieng et al. 2020)" verbatim.
+  - Duck-types two flavours: the de-facto `embedded_topic_model` PyPI
+    package (`get_topic_word_matrix`, `get_document_topic_dist`,
+    `vocabulary`) and the original Dieng PyTorch reference repo
+    (`get_beta`, `get_theta`, `rho`, `alphas`).
+  - Auto-detects logits vs probabilities in `get_beta` output and
+    softmaxes when needed.
+  - Handles torch tensors transparently via a private `_to_numpy`
+    helper (no torch import unless the model returns one).
+  - `vocabulary` is auto-discovered from `model.vocabulary` or accepted
+    as an explicit kwarg; term-frequency and doc-length are computed
+    by re-vectorizing the input texts against that exact vocabulary.
+  - Subclass hooks `_topic_word_matrix(model)` and
+    `_doc_topic_matrix(model, X, N)` for non-standard ETM forks.
+- `tests/unit/test_adapters.py`: 7 new ETM tests + 1 `@pytest.mark.slow`
+  real-model smoke that activates only when `embedded_topic_model` is
+  installed.
+- `embedded-topic-model>=1.2` added to the `[full]` extra (with
+  matching mypy override for `embedded_topic_model.*` and `torch.*`).
+
+### Added (Phase 4a, complete)
+
+- `BERTopicAdapter` (`topicvisexplorer.models.BERTopicAdapter`) is now a
+  real adapter, not the v1.1 stub it was in 0.1.0.dev0. Delivers the
+  paper Section 6 future-work line "future versions could integrate
+  contextualized topic models such as BERTopic" verbatim.
+  - Maps BERTopic's c-TF-IDF matrix to the LDAvis row-stochastic
+    `topic_term_dists` contract via row-normalization (the same recipe
+    BERTopic's own pyLDAvis integration uses).
+  - Drops the HDBSCAN outlier topic `-1` by default; pass
+    `include_outliers=True` to keep it.
+  - Prefers `model.approximate_distribution(texts)` for soft
+    doc-topic distributions (BERTopic >= 0.10) and falls back to
+    one-hot from `model.topics_` on older versions.
+  - Fully duck-typed: anything exposing `c_tf_idf_`,
+    `vectorizer_model`, `topics_` and `get_topic_info` works, so the
+    unit tests run without pulling in UMAP/HDBSCAN/sentence-transformers.
+- `tests/unit/test_adapters.py`: 12 unit tests covering protocol
+  conformance, soft-vs-hard doc-topic, outlier handling (drop and
+  keep), zero-row defenses, vocab/c-TF-IDF mismatch detection, and
+  missing-arg error messages. Plus one `@pytest.mark.slow` real-model
+  smoke that activates only when `bertopic` is actually installed.
+- `bertopic>=0.16` added to the `[full]` extra (and the matching mypy
+  override).
+
+### Changed (Phase 4a)
+
+- `tests/unit/test_protocols.py`: removed `BERTopicAdapter` from the
+  "stubs raise NotImplementedError mentioning v1.1" assertion now that
+  it's a real adapter; CTM and ETM remain stubs there.
+- `topicvisexplorer.models.__init__` docstring updated to list
+  BERTopicAdapter in the stable-adapters section.
+
 ### Added (Phase 3, complete)
 
 - `frontend/` Vite + TypeScript project (Node 22, npm-managed). Pinned

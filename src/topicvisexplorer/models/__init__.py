@@ -12,23 +12,26 @@ Stable adapters in v1.0:
   ``gensim_helpers``.
 * :class:`SklearnLDAAdapter`
 * :class:`SklearnNMFAdapter`
+* :class:`BERTopicAdapter` -- contextualized topic model (Grootendorst
+  2022); requires ``pip install 'topicvisexplorer[full]'``. Delivers
+  paper Section 6 future work.
+* :class:`ETMAdapter` -- embedded topic model (Dieng, Ruiz & Blei 2020);
+  duck-typed against the ``embedded_topic_model`` PyPI package and the
+  original Dieng PyTorch reference implementation. Delivers paper
+  Section 6 future work.
+* :class:`CTMAdapter` -- contextualized topic model (Bianchi, Terragni &
+  Hovy 2021); duck-typed against the ``contextualized-topic-models``
+  PyPI package. Delivers paper Section 6 future work.
 
-Stub adapters (Protocol-conformant skeletons that raise
-``NotImplementedError`` on extraction) shipped as scaffolding for v1.1:
-
-* :class:`BERTopicAdapter`
-* :class:`CTMAdapter`
-* :class:`ETMAdapter`
-
-The stubs let users subclass and override one method to ship their own
-adapter without touching the core package.
+No stub adapters remain in v1.0; every model named in the paper's
+Section 6 future-work list ships as a real, tested implementation.
 """
 
 from __future__ import annotations
 
-from .adapters.bertopic_stub import BERTopicAdapter
-from .adapters.ctm_stub import CTMAdapter
-from .adapters.etm_stub import ETMAdapter
+from .adapters.bertopic import BERTopicAdapter
+from .adapters.ctm import CTMAdapter
+from .adapters.etm import ETMAdapter
 from .adapters.gensim_lda import GensimLDAAdapter
 from .adapters.sklearn_lda import SklearnLDAAdapter
 from .adapters.sklearn_nmf import SklearnNMFAdapter

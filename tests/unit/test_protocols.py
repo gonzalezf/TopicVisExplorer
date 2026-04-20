@@ -86,13 +86,26 @@ def test_adapters_satisfy_topic_model_adapter_protocol() -> None:
         assert isinstance(cls(), TopicModelAdapter), cls
 
 
-def test_stub_adapters_raise_actionable_not_implemented() -> None:
+def test_no_stub_adapters_remain_in_v1() -> None:
+    """All Section 6 adapters (BERTopic, ETM, CTM) shipped in Phase 4
+    a/b/c respectively. None should still raise NotImplementedError
+    when called with a duck-typed model. Behaviour-level coverage lives
+    in tests/unit/test_adapters.py; this is a guardrail to make sure no
+    one accidentally re-introduces a stub.
+    """
     from topicvisexplorer.models import BERTopicAdapter, CTMAdapter, ETMAdapter
 
     for cls in [BERTopicAdapter, CTMAdapter, ETMAdapter]:
+        # These adapters all raise ValidationError (not
+        # NotImplementedError) when invoked with `model=None` because
+        # they validate inputs first. Asserting the *type* is enough.
+        from topicvisexplorer.errors import ValidationError
+
         try:
             cls().extract(model=None, corpus=None)
-        except NotImplementedError as e:
-            assert "v1.1" in str(e), f"{cls.__name__} should mention v1.1"
-        else:
-            raise AssertionError(f"{cls.__name__}.extract should raise NotImplementedError")
+        except ValidationError:
+            pass  # expected: every adapter validates its inputs
+        except NotImplementedError as e:  # pragma: no cover - regression guard
+            raise AssertionError(
+                f"{cls.__name__} regressed to a NotImplementedError stub: {e}"
+            ) from e

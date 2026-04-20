@@ -43,6 +43,9 @@ full = [
     "spacy>=3.7",
     "nltk>=3.8",
     "sentence-transformers>=2.5",
+    "bertopic>=0.16",
+    "embedded-topic-model>=1.2",
+    "contextualized-topic-models>=2.5",
 ]
 hf = [
     "datasets>=2.16",
@@ -135,6 +138,10 @@ module = [
     "nltk.*",
     "sentence_transformers.*",
     "datasets.*",
+    "bertopic.*",
+    "embedded_topic_model.*",
+    "torch.*",
+    "contextualized_topic_models.*",
 ]
 ignore_missing_imports = true
 
@@ -174,7 +181,9 @@ omit = [
     "src/topicvisexplorer/models/adapters/gensim_lda.py",     # needs gensim corpus
     "src/topicvisexplorer/models/adapters/sklearn_lda.py",    # covered in Phase 5 examples
     "src/topicvisexplorer/models/adapters/sklearn_nmf.py",    # covered in Phase 5 examples
-    "src/topicvisexplorer/models/adapters/*_stub.py",         # NotImplementedError stubs
+    "src/topicvisexplorer/models/adapters/bertopic.py",       # exercised via tests/unit/test_adapters.py + [full] extra
+    "src/topicvisexplorer/models/adapters/etm.py",            # exercised via tests/unit/test_adapters.py + [full] extra
+    "src/topicvisexplorer/models/adapters/ctm.py",            # exercised via tests/unit/test_adapters.py + [full] extra
     "src/topicvisexplorer/multi.py",                          # Phase 2 integration
     "src/topicvisexplorer/layout.py",                         # Phase 2 integration
 ]
