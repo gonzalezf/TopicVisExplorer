@@ -8,24 +8,29 @@ on:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
+
+env:
+  CI_PYTHON: "3.11"
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v3
+      - uses: astral-sh/setup-uv@v8
         with:
           enable-cache: true
-      - name: Install dev deps
-        run: uv sync --extra dev
+      - name: Install dev deps (pinned Python)
+        run: |
+          uv python install ${{ env.CI_PYTHON }}
+          uv sync --extra dev --python ${{ env.CI_PYTHON }}
       - name: Ruff check
-        run: uv run ruff check src tests
+        run: uv run --python ${{ env.CI_PYTHON }} ruff check src tests
       - name: Ruff format check
-        run: uv run ruff format --check src tests
+        run: uv run --python ${{ env.CI_PYTHON }} ruff format --check src tests
       - name: Mypy
-        run: uv run mypy src/topicvisexplorer
+        run: uv run --python ${{ env.CI_PYTHON }} mypy src/topicvisexplorer
 
   test:
     runs-on: ubuntu-latest
@@ -35,7 +40,7 @@ jobs:
         python-version: ["3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v3
+      - uses: astral-sh/setup-uv@v8
         with:
           enable-cache: true
       - name: Install Python + package (dev matrix)
@@ -44,7 +49,7 @@ jobs:
           uv sync --extra dev --python ${{ matrix.python-version }}
       - name: Run unit + golden + api tests
         run: |
-          uv run pytest tests/unit tests/golden tests/api \
+          uv run --python ${{ matrix.python-version }} pytest tests/unit tests/golden tests/api \
             --cov=topicvisexplorer \
             --cov-report=term-missing \
             --cov-report=xml \
@@ -53,7 +58,7 @@ jobs:
           PYTHONHASHSEED: "0"
       - name: Upload coverage
         if: matrix.python-version == '3.11'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v6
         with:
           files: coverage.xml
           fail_ci_if_error: false
@@ -95,11 +100,13 @@ jobs:
           node-version: "22"
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
-      - uses: astral-sh/setup-uv@v3
+      - uses: astral-sh/setup-uv@v8
         with:
           enable-cache: true
       - name: Install python package
-        run: uv sync --extra dev
+        run: |
+          uv python install ${{ env.CI_PYTHON }}
+          uv sync --extra dev --python ${{ env.CI_PYTHON }}
       - name: Install npm deps
         working-directory: frontend
         run: npm ci --no-audit --no-fund
@@ -130,7 +137,13 @@ jobs:
           node-version: "22"
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
-      - uses: astral-sh/setup-uv@v3
+      - uses: astral-sh/setup-uv@v8
+        with:
+          enable-cache: true
+      - name: Install Python + dev deps
+        run: |
+          uv python install ${{ env.CI_PYTHON }}
+          uv sync --extra dev --python ${{ env.CI_PYTHON }}
       - name: Build frontend bundle (wheel ships it)
         working-directory: frontend
         run: |
@@ -139,10 +152,10 @@ jobs:
       - name: Build wheel + sdist
         run: uv build
       - name: Check distribution metadata
-        run: uv run --with twine twine check dist/*
+        run: uv run --python ${{ env.CI_PYTHON }} --with twine twine check dist/*
       - name: Verify bundle is in the wheel
         run: |
-          uv run python -c "
+          uv run --python ${{ env.CI_PYTHON }} python -c "
           import zipfile, glob, sys
           whl = glob.glob('dist/*.whl')[0]
           names = zipfile.ZipFile(whl).namelist()
