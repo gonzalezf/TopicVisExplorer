@@ -8,6 +8,17 @@ merge gates we enforce.
 * `main` — the only development branch. Open all PRs against `main`.
 * Release tags follow semver (`v1.0.0`, `v1.1.0`, ...).
 
+### Which GitHub repository?
+
+* **Public library** (paper URL, issues, PRs): **`gonzalezf/TopicVisExplorer`**
+  — `https://github.com/gonzalezf/TopicVisExplorer`
+* **Private backup** (full history, not the contribution target):
+  **`gonzalezf/Topicvisexplorer-OLD`**
+  — `https://github.com/gonzalezf/Topicvisexplorer-OLD`
+
+The directory name on your machine does not have to match; use
+`git remote -v` to confirm `origin`.
+
 ## Local setup
 
 ```bash

@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use TopicVisExplorer in academic work, please cite both the software and the paper."
+title: "TopicVisExplorer: Interactive topic-modeling visualization with human-in-the-loop topic refinement"
+type: software
+authors:
+  - family-names: Gonzalez
+    given-names: Felipe
+repository-code: "https://github.com/gonzalezf/TopicVisExplorer"
+url: "https://gonzalezf.github.io/TopicVisExplorer/"
+license: BSD-3-Clause
+version: "1.0.0"
+keywords:
+  - topic-modeling
+  - visualization
+  - lda
+  - ldavis
+  - natural-language-processing
+  - human-in-the-loop
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Gonzalez
+      given-names: Felipe
+  title: "TopicVisExplorer: An interactive tool for exploring and comparing topic models across corpora"
+  journal: "Journal of Visualization"
+  year: 2024

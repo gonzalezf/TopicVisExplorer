@@ -5,14 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Pre-1.0 backward compatibility policy
+## Backward compatibility policy
 
-Until v1.0.0 ships, any 0.x -> 0.(x+1) bump may break the public API. After
-v1.0.0 the project follows strict semver and will batch breaking changes into
-major bumps. The `next` branch is the only branch that receives these
-0.x updates; `master` continues to host the paper-faithful v0.1 code.
+Starting with v1.0.0 the project follows strict [semver](https://semver.org/).
+Breaking changes are batched into major bumps and announced in the changelog
+at least one minor release ahead when practical.
 
 ## [Unreleased]
+
+- Documentation: repository and documentation site URLs updated for the GitHub
+  rename to **`gonzalezf/TopicVisExplorer`** (public library) and
+  **`gonzalezf/Topicvisexplorer-OLD`** (private backup); see `docs/migration.md`.
+
+See [`ROADMAP.md`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/ROADMAP.md) for v1.1 plans.
+
+## [1.0.0] - 2026-04-20
+
+First stable release of the modernized library. Ships the paper Section 6
+future-work roadmap (BERTopic / ETM / CTM adapters, add-word / remove-word /
+exclude-document edit operations, and the collapsible coherence panel with
+NPMI / C_v / segregation / coverage metrics) on top of a FastAPI + Vite +
+TypeScript + D3 v5 stack, while preserving the paper-version visual identity
+under Playwright pixel-regression baselines and the paper-version numerical
+outputs under golden tests (`atol=1e-9`).
+
+This is the first release of the library as the public
+[`TopicVisExplorer`](https://github.com/gonzalezf/TopicVisExplorer)
+repository (initially published as `topicvisexplorer-lib` before rename). The pre-v1.0 history (Phases 0–4) lived in a private-backup
+repository and is deliberately not carried forward; see the README of the
+backup for the full trail.
 
 ### Added (Phase 4h, complete)
 
@@ -389,9 +410,10 @@ repository. See the README on those refs for usage and citation.
 
 ## Repository history note
 
-This `next` branch is an **orphan branch**: it has no shared git history
-with `master`. At v1.0 release, `next` will be promoted to `main` (and
-the previous `master` becomes `legacy-main`, a redundant safety copy of
-the `legacy` branch). Anyone running `git log main` post-promotion will
-see a clean history starting at the v1.0 root commit. Pre-1.0 history
-remains available at the `legacy` and `legacy-main` branches.
+The v1.0.0 release is the **initial commit** of the public
+[`TopicVisExplorer`](https://github.com/gonzalezf/TopicVisExplorer)
+repository (under the name `topicvisexplorer-lib` at publication time). The pre-v1.0 commit history (Phases 0–4 of the modernization)
+was developed in a private-backup repository and intentionally squashed on
+extraction — to eliminate any chance of historical privacy/security data
+resurfacing via `git log`. The paper-faithful v0.1 source remains available
+at the `legacy` branch and the `v0.1-paper` git tag of the private backup.

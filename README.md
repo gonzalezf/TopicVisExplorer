@@ -1,41 +1,72 @@
-# TopicVisExplorer (next branch - v1.0 in development)
+# TopicVisExplorer
 
-This is the **modernization branch** of TopicVisExplorer. The paper-era code
-lives on the `master` and `legacy` branches, and at the immutable
-[`v0.1-paper`](https://github.com/gonzalezf/TopicVisExplorer/releases/tag/v0.1-paper)
-git tag.
+[![Docs](https://img.shields.io/badge/docs-mkdocs--material-blue)](https://gonzalezf.github.io/TopicVisExplorer/)
+[![Cite this software](https://img.shields.io/badge/cite-CITATION.cff-informational)](./CITATION.cff)
+[![License: BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-green.svg)](./LICENSE)
 
-This branch is an **orphan branch** (no shared history with `master`). It
-holds the rewrite as a clean, pip-installable Python library backed by a
-FastAPI server and a Vite-built TypeScript bundle of the existing D3
-visualisations. When v1.0 ships it will be promoted to the default branch.
+**Interactive topic-modeling visualization — split, merge, compare, and curate
+topics across corpora.**
 
-## Status
+TopicVisExplorer is a Python library and web app that renders LDAvis-style
+topic explorations with human-in-the-loop (HITL) refinement. It reproduces the
+visual identity of the tool from the accompanying Journal of Visualization
+paper while modernizing the implementation as an installable library backed by
+FastAPI + Vite + TypeScript + D3 v5.
 
-Phases 0–4 complete on `next`. Phase 5 (docs site, CITATION.cff, PyPI
-release, branch promotion) is the only remaining work before v1.0.
-
-**Single source of truth for the modernization roadmap:**
-[`PLAN.md`](PLAN.md). Any contributor or agent picking up the work
-should read that file first.
-
-For the paper version of the code, install it from the legacy branch:
+## Install
 
 ```bash
-git clone https://github.com/gonzalezf/TopicVisExplorer.git
-cd TopicVisExplorer
-git checkout legacy
-# then follow legacy/README.md
+pip install topicvisexplorer          # core + server + demo
+pip install "topicvisexplorer[full]"  # + BERTopic / ETM / CTM / SBERT
 ```
 
-## Extending
+## Demo
 
-For adding new topic models (BERTopic / ETM / CTM are bundled), swapping
-the embedding backend (Word2Vec default, SBERT optional), or wiring
-your own corpus into the FastAPI server with the new edit-operation
-contracts, see [`docs/extending.md`](docs/extending.md).
+```bash
+tve demo                              # opens a browser tab on 127.0.0.1:8000
+```
+
+## Library API
+
+```python
+import topicvisexplorer as tve
+prepared = tve.prepare(
+    topic_term_dists=topic_term,
+    doc_topic_dists=doc_topic,
+    doc_lengths=doc_lengths,
+    vocab=vocab,
+    term_frequency=term_frequency,
+)
+tve.show(prepared)                    # single-corpus
+tve.show([prepared_a, prepared_b])    # multi-corpus Sankey
+```
+
+## What's in the box
+
+- Adapters for **gensim LDA, sklearn LDA + NMF, BERTopic, ETM, CTM**.
+- Interactive **split / merge / add-word / remove-word / exclude-document**
+  operations; all golden-tested.
+- **NPMI, C_v, segregation, coverage** per-topic metrics in a collapsible UI
+  panel.
+- Paper-faithful visuals (Playwright visual-regression baselines).
+
+## Documentation
+
+Full docs: **<https://gonzalezf.github.io/TopicVisExplorer/>**
+
+- [Quickstart](docs/quickstart.md)
+- [Tutorial](docs/tutorial.md)
+- [Edit operations](docs/edit-ops.md)
+- [Coherence metrics](docs/coherence.md)
+- [Extending](docs/extending.md)
+- [Migration from v0.1](docs/migration.md)
+- [Paper reproduction](PAPER_REPRO.md)
 
 ## Citation
 
-If you use this software, please cite the Journal of Visualization paper
-(see `CITATION.cff`, added in Phase 5).
+If you use TopicVisExplorer in academic work, please cite the paper and the
+software (see [`CITATION.cff`](./CITATION.cff)).
+
+## License
+
+BSD-3-Clause. See [`LICENSE`](./LICENSE).
