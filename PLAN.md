@@ -1,5 +1,6 @@
-# TopicVisExplorer modernization plan
+# Modernize TopicVisExplorer library
 
+> **Same effort as:** “modernize TopicVisExplorer library” / v1.0 modernization.
 > Single source of truth for the v1.0 modernization effort.
 > Any agent or contributor picking up the work should read this
 > file first, then `CHANGELOG.md`, then the per-phase commits.
