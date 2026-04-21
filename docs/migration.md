@@ -32,10 +32,12 @@ If you are starting fresh, skip this page and read the
 - The **math**. Every output of `prepare()`, `split`, `merge`,
   similarity, and the edit operations is pinned by golden tests to the
   paper-version numerical output within `atol=1e-9`.
-- The paper's URL. The paper citation now points at the new library
-  URL (`github.com/gonzalezf/topicvisexplorer-lib`); the private backup
-  of the original Flask tree remains at the old URL as the historical
-  record.
+- The paper's URL. The paper citation now points at the **public**
+  library repository
+  [`github.com/gonzalezf/TopicVisExplorer`](https://github.com/gonzalezf/TopicVisExplorer).
+  A private backup of the original Flask-era tree lives in
+  **`Topicvisexplorer-OLD`**
+  [`github.com/gonzalezf/Topicvisexplorer-OLD`](https://github.com/gonzalezf/Topicvisexplorer-OLD).
 
 ## Mapping legacy scripts to v1.0 API
 
@@ -104,6 +106,6 @@ modification.
 ## Getting help
 
 File an issue at
-[github.com/gonzalezf/topicvisexplorer-lib/issues](https://github.com/gonzalezf/topicvisexplorer-lib/issues)
+[github.com/gonzalezf/TopicVisExplorer/issues](https://github.com/gonzalezf/TopicVisExplorer/issues)
 with the paper-version script you're trying to port and the error
 you're hitting. Minimal reproducers are gold.

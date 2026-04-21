@@ -70,11 +70,11 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/gonzalezf/topicvisexplorer-lib"
-Documentation = "https://gonzalezf.github.io/topicvisexplorer-lib/"
-Repository = "https://github.com/gonzalezf/topicvisexplorer-lib"
-Changelog = "https://github.com/gonzalezf/topicvisexplorer-lib/blob/main/CHANGELOG.md"
-Issues = "https://github.com/gonzalezf/topicvisexplorer-lib/issues"
+Homepage = "https://github.com/gonzalezf/TopicVisExplorer"
+Documentation = "https://gonzalezf.github.io/TopicVisExplorer/"
+Repository = "https://github.com/gonzalezf/TopicVisExplorer"
+Changelog = "https://github.com/gonzalezf/TopicVisExplorer/blob/main/CHANGELOG.md"
+Issues = "https://github.com/gonzalezf/TopicVisExplorer/issues"
 
 [project.scripts]
 tve = "topicvisexplorer.cli:main"

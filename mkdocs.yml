@@ -1,8 +1,8 @@
 site_name: TopicVisExplorer
 site_description: Interactive topic-modeling visualization — split, merge, compare, and curate topics across corpora.
-site_url: https://gonzalezf.github.io/topicvisexplorer-lib/
-repo_url: https://github.com/gonzalezf/topicvisexplorer-lib
-repo_name: gonzalezf/topicvisexplorer-lib
+site_url: https://gonzalezf.github.io/TopicVisExplorer/
+repo_url: https://github.com/gonzalezf/TopicVisExplorer
+repo_name: gonzalezf/TopicVisExplorer
 edit_uri: edit/main/docs/
 copyright: Copyright &copy; Felipe Gonzalez. BSD-3-Clause.
 

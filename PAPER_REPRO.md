@@ -5,7 +5,7 @@ Visualization paper on TopicVisExplorer using the v1.0 library.
 
 ## What ships in the public repo
 
-The public [`topicvisexplorer-lib`](https://github.com/gonzalezf/topicvisexplorer-lib)
+The public [`TopicVisExplorer`](https://github.com/gonzalezf/TopicVisExplorer)
 ships only **synthetic demo fixtures** (`tiny_demo`, `tiny_multi_demo`).
 The paper's full corpora — 20 Newsgroups, NIPS abstracts, and the
 author's research-paper collection — are **not included** in the public
@@ -75,4 +75,4 @@ the mathematical equivalence is established by the golden-test suite.
 ## Questions
 
 File an issue at
-[github.com/gonzalezf/topicvisexplorer-lib/issues](https://github.com/gonzalezf/topicvisexplorer-lib/issues).
+[github.com/gonzalezf/TopicVisExplorer/issues](https://github.com/gonzalezf/TopicVisExplorer/issues).

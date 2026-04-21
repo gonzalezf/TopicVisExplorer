@@ -1,6 +1,6 @@
 # TopicVisExplorer
 
-[![Docs](https://img.shields.io/badge/docs-mkdocs--material-blue)](https://gonzalezf.github.io/topicvisexplorer-lib/)
+[![Docs](https://img.shields.io/badge/docs-mkdocs--material-blue)](https://gonzalezf.github.io/TopicVisExplorer/)
 [![Cite this software](https://img.shields.io/badge/cite-CITATION.cff-informational)](./CITATION.cff)
 [![License: BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-green.svg)](./LICENSE)
 
@@ -52,7 +52,7 @@ tve.show([prepared_a, prepared_b])    # multi-corpus Sankey
 
 ## Documentation
 
-Full docs: **<https://gonzalezf.github.io/topicvisexplorer-lib/>**
+Full docs: **<https://gonzalezf.github.io/TopicVisExplorer/>**
 
 - [Quickstart](docs/quickstart.md)
 - [Tutorial](docs/tutorial.md)

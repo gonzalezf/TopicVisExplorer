@@ -5,8 +5,8 @@ type: software
 authors:
   - family-names: Gonzalez
     given-names: Felipe
-repository-code: "https://github.com/gonzalezf/topicvisexplorer-lib"
-url: "https://gonzalezf.github.io/topicvisexplorer-lib/"
+repository-code: "https://github.com/gonzalezf/TopicVisExplorer"
+url: "https://gonzalezf.github.io/TopicVisExplorer/"
 license: BSD-3-Clause
 version: "1.0.0"
 keywords:

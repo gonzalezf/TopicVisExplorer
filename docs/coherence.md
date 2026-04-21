@@ -60,7 +60,7 @@ topic of any document — often a sign that it should be merged away.
 
 The panel is hidden in the multi-corpus Sankey view (`type_vis == 1`
 Jinja guard). Multi-corpus coherence is on the v1.1 roadmap; see
-[`ROADMAP.md`](https://github.com/gonzalezf/topicvisexplorer-lib/blob/main/ROADMAP.md).
+[`ROADMAP.md`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/ROADMAP.md).
 
 ## Programmatic access
 

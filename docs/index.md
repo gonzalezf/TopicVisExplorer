@@ -40,8 +40,8 @@ library backed by a FastAPI server and a Vite + TypeScript + D3 v5 frontend.
 
 If you use TopicVisExplorer in academic work, please cite the Journal of
 Visualization paper. Machine-readable metadata is in
-[`CITATION.cff`](https://github.com/gonzalezf/topicvisexplorer-lib/blob/main/CITATION.cff).
+[`CITATION.cff`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/CITATION.cff).
 
 ## License
 
-BSD-3-Clause. See [`LICENSE`](https://github.com/gonzalezf/topicvisexplorer-lib/blob/main/LICENSE).
+BSD-3-Clause. See [`LICENSE`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/LICENSE).

@@ -13,7 +13,11 @@ at least one minor release ahead when practical.
 
 ## [Unreleased]
 
-_Nothing yet. See [`ROADMAP.md`](https://github.com/gonzalezf/topicvisexplorer-lib/blob/main/ROADMAP.md) for v1.1 plans._
+- Documentation: repository and documentation site URLs updated for the GitHub
+  rename to **`gonzalezf/TopicVisExplorer`** (public library) and
+  **`gonzalezf/Topicvisexplorer-OLD`** (private backup); see `docs/migration.md`.
+
+See [`ROADMAP.md`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/ROADMAP.md) for v1.1 plans.
 
 ## [1.0.0] - 2026-04-20
 
@@ -26,8 +30,8 @@ under Playwright pixel-regression baselines and the paper-version numerical
 outputs under golden tests (`atol=1e-9`).
 
 This is the first release of the library as the public
-[`topicvisexplorer-lib`](https://github.com/gonzalezf/topicvisexplorer-lib)
-repository. The pre-v1.0 history (Phases 0–4) lived in a private-backup
+[`TopicVisExplorer`](https://github.com/gonzalezf/TopicVisExplorer)
+repository (initially published as `topicvisexplorer-lib` before rename). The pre-v1.0 history (Phases 0–4) lived in a private-backup
 repository and is deliberately not carried forward; see the README of the
 backup for the full trail.
 
@@ -407,8 +411,8 @@ repository. See the README on those refs for usage and citation.
 ## Repository history note
 
 The v1.0.0 release is the **initial commit** of the public
-[`topicvisexplorer-lib`](https://github.com/gonzalezf/topicvisexplorer-lib)
-repository. The pre-v1.0 commit history (Phases 0–4 of the modernization)
+[`TopicVisExplorer`](https://github.com/gonzalezf/TopicVisExplorer)
+repository (under the name `topicvisexplorer-lib` at publication time). The pre-v1.0 commit history (Phases 0–4 of the modernization)
 was developed in a private-backup repository and intentionally squashed on
 extraction — to eliminate any chance of historical privacy/security data
 resurfacing via `git log`. The paper-faithful v0.1 source remains available

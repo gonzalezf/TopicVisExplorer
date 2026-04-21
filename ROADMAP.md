@@ -1,7 +1,7 @@
 # Roadmap
 
 This file tracks work that has been **consciously deferred** past v1.0.0. It is
-complementary to the [CHANGELOG](https://github.com/gonzalezf/topicvisexplorer-lib/blob/main/CHANGELOG.md)
+complementary to the [CHANGELOG](https://github.com/gonzalezf/TopicVisExplorer/blob/main/CHANGELOG.md)
 (what shipped) and to GitHub Issues (open bug reports). Items land on the
 roadmap when they are in scope for the project but require real effort to do
 well and weren't in the v1.0 critical path.
@@ -80,6 +80,6 @@ spot-checked locally.
 ## Want to work on something?
 
 Pick an item, open an issue first to discuss scope/approach, then send a PR.
-Check [`docs/extending.md`](https://github.com/gonzalezf/topicvisexplorer-lib/blob/main/docs/extending.md)
+Check [`docs/extending.md`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/docs/extending.md)
 for the adapter / embedding contracts before implementing a new model or
 backend.
