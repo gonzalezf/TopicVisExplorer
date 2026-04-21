@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "topicvisexplorer"
-version = "0.1.0.dev0"
+version = "1.0.0"
 description = "Interactive topic-modeling visualization tool: split, merge, and compare topics across corpora."
 readme = "README.md"
 license = { text = "BSD-3-Clause" }
@@ -14,7 +14,7 @@ authors = [
 ]
 keywords = ["topic-modeling", "visualization", "lda", "ldavis", "nlp"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: BSD License",
     "Programming Language :: Python :: 3",
@@ -70,10 +70,11 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/gonzalezf/TopicVisExplorer"
-Documentation = "https://gonzalezf.github.io/TopicVisExplorer"
-Repository = "https://github.com/gonzalezf/TopicVisExplorer"
-Changelog = "https://github.com/gonzalezf/TopicVisExplorer/blob/next/CHANGELOG.md"
+Homepage = "https://github.com/gonzalezf/topicvisexplorer-lib"
+Documentation = "https://gonzalezf.github.io/topicvisexplorer-lib/"
+Repository = "https://github.com/gonzalezf/topicvisexplorer-lib"
+Changelog = "https://github.com/gonzalezf/topicvisexplorer-lib/blob/main/CHANGELOG.md"
+Issues = "https://github.com/gonzalezf/topicvisexplorer-lib/issues"
 
 [project.scripts]
 tve = "topicvisexplorer.cli:main"
@@ -128,6 +129,12 @@ warn_unused_configs = true
 warn_unreachable = true
 files = ["src/topicvisexplorer"]
 plugins = []
+# NumPy/pandas-heavy code returns ndarray scalars as Any; keep strict elsewhere.
+disable_error_code = ["no-any-return"]
+
+[[tool.mypy.overrides]]
+module = ["unidecode"]
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = [
@@ -137,11 +144,7 @@ module = [
     "spacy.*",
     "nltk.*",
     "sentence_transformers.*",
-    "datasets.*",
-    "bertopic.*",
-    "embedded_topic_model.*",
     "torch.*",
-    "contextualized_topic_models.*",
 ]
 ignore_missing_imports = true
 

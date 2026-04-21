@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import logging
 import sys
-from typing import Final
+from typing import Final, TextIO
 
 _PACKAGE_LOGGER_NAME: Final[str] = "topicvisexplorer"
 _DEFAULT_FORMAT: Final[str] = "%(asctime)s %(levelname)s %(name)s: %(message)s"
@@ -45,7 +45,7 @@ def get_logger(name: str | None = None) -> logging.Logger:
     return logging.getLogger(f"{_PACKAGE_LOGGER_NAME}.{name}")
 
 
-def configure_logging(level: int = logging.INFO, *, stream: object | None = None) -> None:
+def configure_logging(level: int = logging.INFO, *, stream: TextIO | None = None) -> None:
     """Attach a single stderr handler to the package logger.
 
     This is a convenience for scripts and notebooks; library users are

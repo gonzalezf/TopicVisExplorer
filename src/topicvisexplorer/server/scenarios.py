@@ -50,7 +50,7 @@ class Scenario:
     model_data: TopicModelData | None = None
     relevant_documents: list[dict[str, Any]] = field(default_factory=list)
     similarity_matrix: dict[float, np.ndarray] = field(default_factory=dict)
-    circle_positions: dict[float, list[list[float]]] = field(default_factory=dict)
+    circle_positions: dict[str, list[list[float]]] = field(default_factory=dict)
     raw_texts: list[str] = field(default_factory=list)
     embedding: EmbeddingBackend | None = None
 

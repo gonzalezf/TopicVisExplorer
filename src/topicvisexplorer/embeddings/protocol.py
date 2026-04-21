@@ -8,10 +8,9 @@ without paying any sentence-transformers / spaCy import cost).
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
+from numpy.typing import NDArray
 
 
 @runtime_checkable
@@ -24,7 +23,7 @@ class EmbeddingBackend(Protocol):
         """Return True if the backend has a vector for ``word``."""
         ...
 
-    def __getitem__(self, word: str) -> NDArray:
+    def __getitem__(self, word: str) -> NDArray[Any]:
         """Return the embedding vector for ``word``.
 
         Raises ``KeyError`` for OOV terms; callers must guard with
