@@ -24,12 +24,22 @@ The repo tracks **`uv.lock`** so CI stays reproducible and
 dependency installs. After you change dependencies in `pyproject.toml`, run
 `uv lock` and commit the updated `uv.lock`.
 
-### Documentation site (GitHub Pages)
+### GitHub Actions (CI + docs)
 
-For maintainers: enable **Settings → Pages → Build and deployment → Source:
-GitHub Actions**. The `.github/workflows/docs.yml` workflow publishes on pushes
-to `main`. If Pages is not enabled (or still points at “Deploy from a branch”),
-the **deploy** job fails with HTTP 404 when creating the deployment.
+Workflows use **pinned Python** (`.github/workflows/ci.yml` sets `CI_PYTHON` to
+`3.11` for lint, visual, and the release `build` job; tests run on 3.10–3.12).
+**`uv run`** is always invoked with an explicit **`--python`** so CI matches the
+synced environment.
+
+**Concurrency:** `cancel-in-progress` is **false** for CI and docs, so rapid
+pushes to `main` do not cancel runs that already started (you may see several
+runs in parallel until they finish).
+
+### Documentation site (MkDocs on CI)
+
+The **`docs`** workflow runs **`mkdocs build --strict`** on every push to
+`main`. Optional: enable **Settings → Pages → Source: GitHub Actions** only if
+you want a hosted site; the workflow does not deploy by default.
 
 Smoke tests:
 
