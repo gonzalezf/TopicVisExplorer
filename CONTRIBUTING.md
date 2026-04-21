@@ -1,15 +1,12 @@
 # Contributing to TopicVisExplorer
 
-Thanks for your interest in TopicVisExplorer. This document covers the
-developer setup and the merge gates we enforce.
+Thanks for your interest. This document covers the developer setup and the
+merge gates we enforce.
 
 ## Branch model
 
-* `master` - paper-faithful v0.1 code. Read-only during the v1.0
-  development cycle. Do not open PRs against `master`.
-* `legacy` - permanent, protected mirror of the paper version. Read-only.
-* `next` - active v1.0 development. **Open all PRs against `next`.** Will
-  be promoted to `main` at the v1.0 release.
+* `main` — the only development branch. Open all PRs against `main`.
+* Release tags follow semver (`v1.0.0`, `v1.1.0`, ...).
 
 ## Local setup
 
@@ -21,6 +18,18 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 uv sync --all-extras
 uv run pre-commit install
 ```
+
+The repo tracks **`uv.lock`** so CI stays reproducible and
+[`astral-sh/setup-uv`](https://github.com/astral-sh/setup-uv) can cache
+dependency installs. After you change dependencies in `pyproject.toml`, run
+`uv lock` and commit the updated `uv.lock`.
+
+### Documentation site (GitHub Pages)
+
+For maintainers: enable **Settings → Pages → Build and deployment → Source:
+GitHub Actions**. The `.github/workflows/docs.yml` workflow publishes on pushes
+to `main`. If Pages is not enabled (or still points at “Deploy from a branch”),
+the **deploy** job fails with HTTP 404 when creating the deployment.
 
 Smoke tests:
 
@@ -36,25 +45,24 @@ uv run mypy src/topicvisexplorer
 | -------- | ---------------- | -------------- | ---------------------------------------- |
 | unit     | `tests/unit/`    | required       | pytest                                   |
 | golden   | `tests/golden/`  | required       | pytest, fixtures from `golden_baseline/` |
-| api      | `tests/api/`     | required       | pytest + httpx (Phase 2+)                |
-| visual   | `tests/visual/`  | required       | Playwright screenshot diff (Phase 3a+)   |
-| e2e      | `tests/e2e/`     | nightly + main | Playwright (Phase 3b+)                   |
-| bench    | `tests/bench/`   | nightly + main | pytest-benchmark (Phase 3b+)             |
+| api      | `tests/api/`     | required       | pytest + httpx                           |
+| visual   | `frontend/tests/`| required       | Playwright screenshot diff               |
+| bench    | `tests/bench/`   | nightly + main | pytest-benchmark                         |
 
-Coverage gate: 85% on `src/topicvisexplorer/` (visual / e2e / bench
-excluded from coverage math).
+Coverage gate: 80% on `src/topicvisexplorer/` (visual / bench excluded
+from coverage math — see `[tool.coverage]` in `pyproject.toml`).
 
 ## PR checklist
 
-- [ ] Branched off `next` (not `master`).
+- [ ] Branched off `main`.
 - [ ] `uv run pytest` is green locally.
 - [ ] `uv run ruff check src tests` is clean.
 - [ ] `uv run mypy src/topicvisexplorer` is clean.
 - [ ] If touching algorithms: golden tests still match the
-      `golden_baseline/` outputs to `atol=1e-6`.
-- [ ] If touching the UI: visual regression baselines updated via
-      `scripts/update_visual_baselines.py` in a separate dedicated PR
-      (NOT the same PR that changes the code).
+      `golden_baseline/` outputs to `atol=1e-9`.
+- [ ] If touching the UI: visual regression baselines updated via the
+      Playwright snapshot workflow in a separate dedicated PR (NOT the
+      same PR that changes the code).
 - [ ] CHANGELOG entry under `## [Unreleased]`.
 
 ## Recapturing golden baselines
@@ -63,18 +71,8 @@ Algorithm changes that *intentionally* shift numerical output must
 re-capture the goldens in their own PR:
 
 ```bash
-# In .venv-legacy (Python 3.8) - the baseline-equivalence ref
-PYTHONPATH=. .venv-legacy/bin/python scripts/capture_golden.py
+uv run python scripts/capture_edit_op_golden.py
 git diff golden_baseline/   # review carefully before committing
-```
-
-Re-capture against the real Cambridge Analytica pickle (if you have it
-locally) before claiming paper-figure parity:
-
-```bash
-PYTHONPATH=. .venv-legacy/bin/python scripts/capture_golden.py \
-    --pickle models_output/single_corpus_europe_dataset_topics_new_lda_6_topics_10000_docs.pkl \
-    --output-prefix golden_baseline/europe
 ```
 
 ## Code style
@@ -83,12 +81,10 @@ PYTHONPATH=. .venv-legacy/bin/python scripts/capture_golden.py \
 * Type hints required on all public APIs (`mypy --strict`).
 * No `print()` in library code. Use `logging.getLogger("topicvisexplorer")`.
 * No silent `try/except`. All custom exceptions live in `errors.py` and
-  carry actionable messages (tell the user which `pip install` extra
-  to add, which file to check, etc.).
+  carry actionable messages (tell the user which `pip install` extra to
+  add, which file to check, etc.).
 
 ## Commit messages
 
 * Imperative mood, present tense ("Add adapter", not "Added adapter").
-* First line <=72 characters. Body wraps at 72.
-* Reference the relevant phase in the body if the change is
-  phase-aligned (e.g. "Phase 1: ...").
+* First line ≤72 characters. Body wraps at 72.
