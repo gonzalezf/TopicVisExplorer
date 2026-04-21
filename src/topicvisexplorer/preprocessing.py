@@ -28,7 +28,7 @@ does *not* eagerly load 50 MB of language data.
 from __future__ import annotations
 
 import string
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any
 
@@ -170,9 +170,11 @@ def text_cleaner_batch(
     stop = _get_stopwords()
     tokenize = _get_tokenizer().tokenize
     try:
-        from unidecode import unidecode
+        from unidecode import unidecode as _unidecode_fn
     except ImportError:
-        unidecode = None  # type: ignore[assignment]
+        unidecode_fn: Callable[[str], str] | None = None
+    else:
+        unidecode_fn = _unidecode_fn
 
     for raw in materialized:
         if not raw.strip():
@@ -182,8 +184,8 @@ def text_cleaner_batch(
         text = text.translate(_PUNCT_TABLE)
         text = text.translate(_HASHTAG_TABLE)
         text = text.lower()
-        if unidecode is not None:
-            text = unidecode(text)
+        if unidecode_fn is not None:
+            text = unidecode_fn(text)
         tokens = [t for t in tokenize(text) if t and t not in stop]
         pre.append(" ".join(tokens))
 

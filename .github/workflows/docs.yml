@@ -1,5 +1,8 @@
 name: docs
 
+# Builds the MkDocs site only (strict). Publishing to GitHub Pages is optional;
+# enable Settings → Pages → GitHub Actions if you want https://<user>.github.io/<repo>/.
+
 on:
   push:
     branches: [main]
@@ -9,12 +12,10 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: docs-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -31,18 +32,3 @@ jobs:
           pip install -e ".[docs]"
       - name: Build site (strict)
         run: mkdocs build --strict
-      - uses: actions/upload-pages-artifact@v3
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        with:
-          path: site
-
-  deploy:
-    needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4

@@ -129,6 +129,12 @@ warn_unused_configs = true
 warn_unreachable = true
 files = ["src/topicvisexplorer"]
 plugins = []
+# NumPy/pandas-heavy code returns ndarray scalars as Any; keep strict elsewhere.
+disable_error_code = ["no-any-return"]
+
+[[tool.mypy.overrides]]
+module = ["unidecode"]
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = [
@@ -138,11 +144,7 @@ module = [
     "spacy.*",
     "nltk.*",
     "sentence_transformers.*",
-    "datasets.*",
-    "bertopic.*",
-    "embedded_topic_model.*",
     "torch.*",
-    "contextualized_topic_models.*",
 ]
 ignore_missing_imports = true
 

@@ -29,7 +29,7 @@ import pickle
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import pandas as pd
@@ -180,7 +180,7 @@ def _topic_coordinates(
     mds: MdsCallable, topic_term_dists: pd.DataFrame, topic_proportion: pd.Series
 ) -> pd.DataFrame:
     K = topic_term_dists.shape[0]
-    mds_res = mds(topic_term_dists)
+    mds_res = mds(np.asarray(topic_term_dists, dtype=np.float64))
     if mds_res.shape != (K, 2):
         raise ValidationError(
             f"MDS produced shape {mds_res.shape}, expected ({K}, 2). "
@@ -246,10 +246,13 @@ def _topic_info(
     default_term_info["loglift"] = ranks
 
     with np.errstate(divide="ignore", invalid="ignore"):
-        log_lift = np.log(topic_term_dists / term_proportion)
-        log_ttd = np.log(topic_term_dists)
+        # np.log on DataFrame is ndarray per numpy stubs; runtime matches DataFrame ops.
+        log_lift = cast(pd.DataFrame, np.log(topic_term_dists / term_proportion))
+        log_ttd = cast(pd.DataFrame, np.log(topic_term_dists))
     lambda_seq = np.arange(0, 1 + lambda_step, lambda_step)
-    top_terms = pd.concat(_find_relevance(log_ttd, log_lift, l_) for l_ in lambda_seq)
+    top_terms: pd.DataFrame = pd.concat(
+        [_find_relevance(log_ttd, log_lift, l_) for l_ in lambda_seq]
+    )
 
     def topic_top_term_df(tup: Any) -> pd.DataFrame:
         new_topic_id, (original_topic_id, topic_terms) = tup
@@ -395,7 +398,7 @@ def load(path: str | Path) -> PreparedData:
                 f"topicvisexplorer {__version__} (supports v{PREPARED_DATA_PICKLE_VERSION}). "
                 "Run scripts/migrate_pickle.py to upgrade."
             )
-        return raw["data"]
+        return cast(PreparedData, raw["data"])
     if isinstance(raw, PreparedData):
         return raw
     if isinstance(raw, tuple) and len(raw) >= 7:
@@ -404,7 +407,7 @@ def load(path: str | Path) -> PreparedData:
             "Re-save it via .save() to capture provenance.",
             path,
         )
-        return PreparedData(*raw[:7])  # type: ignore[arg-type]
+        return PreparedData(*raw[:7])
     raise ValidationError(f"File {path} does not contain a recognizable PreparedData object.")
 
 

@@ -9,13 +9,18 @@ For realistic showcases, see ``examples/`` notebooks (Phase 5).
 
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 
+from ..models.protocol import TopicModelData
 from ..prepare import prepare
 from .scenarios import Scenario
 
 
-def _seed_synthetic(seed: int = 42, K: int = 5, V: int = 60, N: int = 80):
+def _seed_synthetic(
+    seed: int = 42, K: int = 5, V: int = 60, N: int = 80
+) -> tuple[np.ndarray, np.ndarray, list[str], np.ndarray, np.ndarray]:
     """Generate a tiny reproducible (topic_term, doc_topic, vocab, lens, freq)."""
     rng = np.random.default_rng(seed)
     topic_term = rng.dirichlet([0.1] * V, size=K)
@@ -76,13 +81,15 @@ def build_tiny_single_demo() -> Scenario:
     K = tt.shape[0]
     rng = np.random.default_rng(0)
     similarity = {round(step / 100.0, 2): _sym_random_matrix(K, rng) for step in range(101)}
-    layout = {round(step / 100.0, 2): rng.normal(size=(K, 2)).tolist() for step in range(101)}
+    layout = {
+        str(round(step / 100.0, 2)): rng.normal(size=(K, 2)).tolist() for step in range(101)
+    }
 
     return Scenario(
         name="tiny_demo",
         is_multi=False,
         prepared=prepared,
-        model_data=_StaticModelData(tt, dt, lens, vocab, freq),
+        model_data=cast(TopicModelData, _StaticModelData(tt, dt, lens, vocab, freq)),
         relevant_documents=relevant_documents,
         similarity_matrix=similarity,
         circle_positions=layout,
@@ -129,7 +136,9 @@ def build_tiny_multi_demo() -> Scenario:
     K = tt_a.shape[0]
     rng = np.random.default_rng(7)
     similarity = {round(step / 100.0, 2): _sym_random_matrix(K, rng) for step in range(101)}
-    layout = {round(step / 100.0, 2): rng.normal(size=(K, 2)).tolist() for step in range(101)}
+    layout = {
+        str(round(step / 100.0, 2)): rng.normal(size=(K, 2)).tolist() for step in range(101)
+    }
     sc = Scenario(
         name="tiny_multi_demo",
         is_multi=True,

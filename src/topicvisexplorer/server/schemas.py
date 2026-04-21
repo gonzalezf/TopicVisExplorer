@@ -13,6 +13,10 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 
+def _default_topic_seeds() -> dict[str, list[dict[str, Any]]]:
+    return {"TopicA": [], "TopicB": []}
+
+
 class TopicSplitRequest(BaseModel):
     """Request body for ``POST /Topic_Splitting_Document_Based``."""
 
@@ -24,7 +28,7 @@ class TopicSplitRequest(BaseModel):
         ..., description="omega -> 2D layout shown to the user right now."
     )
     new_document_seeds: dict[str, list[dict[str, Any]]] = Field(
-        default_factory=lambda: {"TopicA": [], "TopicB": []},
+        default_factory=_default_topic_seeds,
         description="User-supplied document seeds for the two children.",
     )
 
