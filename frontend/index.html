@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TopicVisExplorer — frontend dev fixture</title>
+    <!--
+      Standalone development fixture. `npm run dev` will serve this file via
+      Vite at http://localhost:5173/ and load the bundled visualisation
+      with a small synthetic payload. This lets a frontend developer
+      iterate on styles + JS without spinning up the FastAPI backend or
+      retraining a topic model.
+
+      For the production wheel, the FastAPI server renders
+      `templates/index_v1.html` (a Jinja template) which loads the same
+      `tve.js` and `tve.css` from the bundled `/dist/` directory.
+    -->
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div id="vis-dev-fixture"></div>
+    </div>
+
+    <script>
+      // Minimal scenario stub so the bundle's bootstrap() doesn't error on
+      // load. A full demo payload will be wired in once Phase 3 includes
+      // the Playwright golden images.
+      window.TVE_SCENARIO = {
+        visid: "vis-dev-fixture",
+        visidRaw: "vis_dev_fixture",
+        visJson: { mdsDat: { x: [0, 0.1], y: [0, 0.1], topics: [1, 2], Freq: [0.5, 0.5] } },
+        typeVis: 1,
+        topicOrder: [1, 2],
+        newCirclePositions: { 0.5: [[0, 0], [0.1, 0.1]] },
+        d3Url: "https://d3js.org/d3.v5.min.js",
+        ldavisUrl: "/dist/tve.js",
+        ldavisCssUrl: "/dist/tve.css",
+      };
+    </script>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

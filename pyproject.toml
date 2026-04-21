@@ -1,0 +1,203 @@
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[project]
+name = "topicvisexplorer"
+version = "1.0.0"
+description = "Interactive topic-modeling visualization tool: split, merge, and compare topics across corpora."
+readme = "README.md"
+license = { text = "BSD-3-Clause" }
+requires-python = ">=3.10,<3.13"
+authors = [
+    { name = "Felipe Gonzalez", email = "felipe.gonzalez@example.com" },
+]
+keywords = ["topic-modeling", "visualization", "lda", "ldavis", "nlp"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Topic :: Text Processing :: Linguistic",
+]
+
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "jinja2>=3.1",
+    "numpy>=1.24",
+    "scipy>=1.11",
+    "pandas>=2.0",
+    "scikit-learn>=1.3",
+    "gensim>=4.3",
+    "pydantic>=2.5",
+    "tqdm>=4.66",
+]
+
+[project.optional-dependencies]
+full = [
+    "spacy>=3.7",
+    "nltk>=3.8",
+    "sentence-transformers>=2.5",
+    "bertopic>=0.16",
+    "embedded-topic-model>=1.2",
+    "contextualized-topic-models>=2.5",
+]
+hf = [
+    "datasets>=2.16",
+    "huggingface-hub>=0.20",
+]
+dev = [
+    "ruff>=0.4",
+    "mypy>=1.8",
+    "pytest>=8.0",
+    "pytest-cov>=4.1",
+    "pytest-benchmark>=4.0",
+    "pre-commit>=3.6",
+    "playwright>=1.40",
+    "nbmake>=1.5",
+    "httpx>=0.26",
+    "types-tqdm",
+    "pandas-stubs",
+]
+docs = [
+    "mkdocs-material>=9.5",
+    "mkdocstrings[python]>=0.24",
+]
+
+[project.urls]
+Homepage = "https://github.com/gonzalezf/topicvisexplorer-lib"
+Documentation = "https://gonzalezf.github.io/topicvisexplorer-lib/"
+Repository = "https://github.com/gonzalezf/topicvisexplorer-lib"
+Changelog = "https://github.com/gonzalezf/topicvisexplorer-lib/blob/main/CHANGELOG.md"
+Issues = "https://github.com/gonzalezf/topicvisexplorer-lib/issues"
+
+[project.scripts]
+tve = "topicvisexplorer.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/topicvisexplorer"]
+artifacts = [
+    "src/topicvisexplorer/web/legacy/**/*",
+    # Vite output (frontend/). Built into src/topicvisexplorer/web/dist/
+    # by `cd frontend && npm install && npm run build`. The wheel works
+    # without it (legacy template kicks in), but ships it whenever it's
+    # present so end users get the modern bundle.
+    "src/topicvisexplorer/web/dist/**/*",
+]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/topicvisexplorer",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "pyproject.toml",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "F", "W",     # pycodestyle + pyflakes
+    "I",               # isort
+    "B",               # flake8-bugbear
+    "UP",              # pyupgrade
+    "SIM",             # flake8-simplify
+    "RUF",             # ruff-specific
+    "PT",              # flake8-pytest-style
+]
+ignore = [
+    "E501",            # line length handled by formatter
+    "B008",            # pydantic-style default arg patterns
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["B011", "PT011", "PT017", "PT018", "F401"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_configs = true
+warn_unreachable = true
+files = ["src/topicvisexplorer"]
+plugins = []
+
+[[tool.mypy.overrides]]
+module = [
+    "gensim.*",
+    "sklearn.*",
+    "scipy.*",
+    "spacy.*",
+    "nltk.*",
+    "sentence_transformers.*",
+    "datasets.*",
+    "bertopic.*",
+    "embedded_topic_model.*",
+    "torch.*",
+    "contextualized_topic_models.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--import-mode=importlib",
+]
+markers = [
+    "slow: marks tests as slow (deselect with -m 'not slow')",
+    "golden: legacy-equivalence regression tests",
+    "visual: visual regression tests (Playwright)",
+    "e2e: end-to-end tests (Playwright)",
+    "benchmark: pytest-benchmark performance tests",
+]
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning:gensim.*",
+    "ignore::DeprecationWarning:nltk.*",
+    "ignore::PendingDeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["src/topicvisexplorer"]
+branch = true
+omit = [
+    "src/topicvisexplorer/server/runner.py",                  # uvicorn launcher (manual test)
+    "src/topicvisexplorer/server/demo_data.py",               # exercised via manual demo only
+    "src/topicvisexplorer/cli.py",                            # Phase 2
+    "src/topicvisexplorer/embeddings/word2vec.py",            # needs gensim corpus
+    "src/topicvisexplorer/embeddings/sbert.py",               # needs sentence-transformers
+    "src/topicvisexplorer/preprocessing.py",                  # needs spaCy model
+    "src/topicvisexplorer/models/adapters/gensim_lda.py",     # needs gensim corpus
+    "src/topicvisexplorer/models/adapters/sklearn_lda.py",    # covered in Phase 5 examples
+    "src/topicvisexplorer/models/adapters/sklearn_nmf.py",    # covered in Phase 5 examples
+    "src/topicvisexplorer/models/adapters/bertopic.py",       # exercised via tests/unit/test_adapters.py + [full] extra
+    "src/topicvisexplorer/models/adapters/etm.py",            # exercised via tests/unit/test_adapters.py + [full] extra
+    "src/topicvisexplorer/models/adapters/ctm.py",            # exercised via tests/unit/test_adapters.py + [full] extra
+    "src/topicvisexplorer/multi.py",                          # Phase 2 integration
+    "src/topicvisexplorer/layout.py",                         # Phase 2 integration
+]
+
+[tool.coverage.report]
+# Phase 1 baseline: realistic for unit tests + golden checks. Bumped to
+# 85% in Phase 2 once API + visual tests cover the integration layer.
+fail_under = 80
+show_missing = true
+skip_covered = true
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+]
