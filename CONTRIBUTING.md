@@ -19,6 +19,18 @@ uv sync --all-extras
 uv run pre-commit install
 ```
 
+The repo tracks **`uv.lock`** so CI stays reproducible and
+[`astral-sh/setup-uv`](https://github.com/astral-sh/setup-uv) can cache
+dependency installs. After you change dependencies in `pyproject.toml`, run
+`uv lock` and commit the updated `uv.lock`.
+
+### Documentation site (GitHub Pages)
+
+For maintainers: enable **Settings → Pages → Build and deployment → Source:
+GitHub Actions**. The `.github/workflows/docs.yml` workflow publishes on pushes
+to `main`. If Pages is not enabled (or still points at “Deploy from a branch”),
+the **deploy** job fails with HTTP 404 when creating the deployment.
+
 Smoke tests:
 
 ```bash
