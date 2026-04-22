@@ -1,0 +1,89 @@
+# Working with your own data
+
+TopicVisExplorer is a **general-purpose** interactive tool: explore
+topics, split and merge them, and export a snapshot. You do not need a
+separate "user study" server or a POST endpoint — the in-browser
+**Export** button saves JSON **only to your computer**.
+
+## Demos and scenarios
+
+| Path | `Scenario` | Notes |
+|------|-------------|--------|
+| `tve demo` / `?scenario=20ng_tiny` | **20 Newsgroups** slice (real terms) | Default; [README (datasets + licenses)](https://github.com/gonzalezf/TopicVisExplorer/blob/main/README.md#datasets-and-licenses) |
+| `tve demo --corpus bbc_tiny` | **BBC news** (5 categories) | Second bundled demo |
+| `tve demo --texts my.jsonl --name my_corpus` | **Your** texts, fit on the fly | Cache under `~/.cache/topicvisexplorer` |
+| `?scenario=tiny_demo` | Synthetic `w00` vocabulary | Fast tests and baselines |
+| `scripts/user_study/launch_20ng_study.py` | Live **sklearn** or **Hugging Face** + gensim | Custom `?scenario=` for larger runs; cite script args in papers |
+
+`tiny_demo` is **synthetic**. The paper-era **private** full corpora are
+**not** in this repo; see
+[`PAPER_REPRO.md` on the repository](https://github.com/gonzalezf/TopicVisExplorer/blob/main/PAPER_REPRO.md).
+
+## 20 Newsgroups: license and reproducibility
+
+- **Source:** subset of
+  [20 Newsgroups](https://scikit-learn.org/stable/datasets/twenty_newsgroups.html)
+  via `sklearn.datasets.fetch_20newsgroups` (and the
+  [UCI mirror](https://kdd.ics.uci.edu/databases/20newsgroups/)).
+- **In-repo fixture:** `20ng_tiny` — pinned subsample; see
+  `src/topicvisexplorer/server/fixtures/` and
+  `scripts/build_20ng_tiny_fixtures.py` for exact counts and preprocessing.
+- **Citing in papers:** name the public datasource, script, random seed,
+  document count, and preprocessing (e.g. headers removed).
+
+## BBC news fixture: source and reproducibility
+
+- **Primary source:** D. Greene and P. Cunningham,
+  [BBC news corpus](http://mlg.ucd.ie/datasets/bbc.html) (UCD; 5
+  categories; research use; cite ICML 2006).
+- **Fallback:** [Hugging Face `SetFit/bbc-news`](https://huggingface.co/datasets/SetFit/bbc-news)
+  if the UCD host is down.
+- **Build:** `python scripts/build_bbc_tiny_fixtures.py` (cached zip under
+  `~/.cache/topicvisexplorer/`; outputs in `src/topicvisexplorer/server/fixtures/`).
+
+## Bring your own corpus (CLI)
+
+```bash
+tve demo --texts docs.jsonl --name my_corpus --num-topics 7 --passes 15
+```
+
+Accepted inputs:
+
+- **`.jsonl` / `.ndjson`** — one object per line with a `"text"` field.
+- **`.json`** — list of strings, or an object with `"texts"`.
+- **Other text files** — one document per non-empty line.
+
+The first run fits Gensim LDA with `text_cleaner_batch` + Phraser; results
+are cached in `~/.cache/topicvisexplorer/<name>-<hash>.npz`. The scenario
+wires `refit` so [split / merge in the browser](edit-ops.md) work like
+the bundled demos.
+
+## Optional: AG News (Hugging Face)
+
+`scripts/user_study/launch_20ng_study.py` supports `--source hf_ag_news`
+with `pip install "topicvisexplorer[hf]"` (or `pip install datasets`). A
+dedicated one-liner loader is a [v1.1 roadmap](roadmap.md) item.
+
+## Export your curated topics (JSON)
+
+In the **single- or multi-corpus** UI, use the **download**-style
+**Export** control next to the help button. It writes a `tve_topics_<scenario>.json` file
+**in your browser** (Blob download). Nothing is sent to the server. The
+file includes, for the **current** session state (after any splits, merges, renames):
+
+- Scenario name, timestamp, and relevance / omega controls where applicable.
+- Per-topic **labels** and **top terms** (from the current bar-chart data).
+- **Circle positions** for the 2-D map.
+
+For a full **Python** `PreparedData` round-trip (pickle), use
+:meth:`topicvisexplorer.PreparedData.save` and :func:`topicvisexplorer.load` from
+a notebook; see the [API reference](reference/index.md).
+
+## Split in the browser
+
+Server-side **topic split** needs `Scenario.extras["refit"]`. The bundled
+`20ng_tiny` and `bbc_tiny` scenarios register
+:func:`topicvisexplorer.operations.refit_helpers.refit_gensim_lda`, and
+`tiny_demo` includes a small NumPy `refit_static` so every demo can split/merge. The same
+:func:`topicvisexplorer.operations.split` works without the web server; see
+[Edit operations](edit-ops.md).

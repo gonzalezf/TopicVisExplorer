@@ -5,8 +5,8 @@ multiple instances can coexist in the same process - tests use this to
 get an isolated app with an ephemeral session store and scenario
 registry.
 
-Endpoint inventory (all preserved from the legacy Flask app's
-``TestView``, sans the user-study routes):
+Endpoint inventory (preserved from the legacy Flask app's ``TestView``;
+topic export in the browser is client-side JSON, not an HTTP route):
 
 | Method | Path                                         | Notes                       |
 |--------|----------------------------------------------|-----------------------------|

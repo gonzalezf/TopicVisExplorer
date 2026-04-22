@@ -32,8 +32,8 @@ library backed by a FastAPI server and a Vite + TypeScript + D3 v5 frontend.
   document cookbook.
 - [Coherence metrics](coherence.md) — what NPMI / C_v / segregation / coverage
   mean and when to trust them.
-- [User study (public data)](user_study.md) — full `Scenario` + `refit` for
-  browser split, IRB-reproducible corpus notes, optional Hugging Face script.
+- [Working with your own data](own_data.md) — bundled demos, bring-your-own
+  corpus, corpus licences, in-browser topic export, and `refit` for split.
 - [Extending](extending.md) — add a new topic model or embedding backend;
   `Scenario.extras["refit"]` for server-side topic split.
 - [Migration from v0.1](migration.md) — move from the paper-version Flask app

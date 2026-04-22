@@ -5,7 +5,7 @@ These are intentionally tiny (5 topics, ~50 docs, ~80-word vocab) so
 news data) so the output is reproducible and deterministic.
 
 For a real-corpus default, see :mod:`topicvisexplorer.server.demo_20ng`
-(``20ng_tiny``) and :file:`docs/user_study.md`.
+(``20ng_tiny``) and :file:`docs/own_data.md`.
 """
 
 from __future__ import annotations

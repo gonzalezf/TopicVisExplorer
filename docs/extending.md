@@ -178,7 +178,7 @@ vocabulary. For the **browser** to run split, register it on
 `topicvisexplorer.operations.refit_helpers.refit_gensim_lda` and the
 bundled **`20ng_tiny`** scenario. The synthetic **`tiny_demo`** scenario
 does not register `refit` (use it for other edit ops and tests). See
-[User study](user_study.md) for a full end-to-end study launcher.
+[Working with your own data](own_data.md) for the optional `launch_20ng_study.py` runner.
 
 ---
 

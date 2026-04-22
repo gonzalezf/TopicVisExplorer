@@ -15,7 +15,6 @@ var slider_topic_splitting_values = {};
 var is_human_in_the_loop;
 var scenario_2_is_baseline_metric;
 var is_first_time_sankey_diagram = true;
-var actions_across_time = [];
 var global_sankey_links_filtered;
 var sankey_topics_automatic_match;
 var name_topics_sankey = {};
@@ -53,25 +52,8 @@ function isTutorial(){
 }
 isTutorial()
 
-function save_users_actions_across_time(action, timestamp){
-    actions_across_time.push({
-        "timestamp": timestamp,
-        "action": action
-    });
-}
-
-var userId =  new Date() || null; // Replace your_user_id with your own if available.
-window.hj('identify', userId, {
-    actions_across_time: actions_across_time
-    // Add your own custom attributes here. Some EXAMPLES:
-    // 'Signed up': '2019—06-20Z', // Signup date in ISO-8601 format.
-    // 'Last purchase category': 'Electronics', // Send strings with quotes around them.
-    // 'Total purchases': 15, // Send numbers without quotes.
-    // 'Last purchase date': '2019-06-20Z', // Send dates in ISO-8601 format.
-    // 'Last refund date': null, // Send null when no value exists for a user.
-});
-
-
+// === Modernization: Hotjar / third-party identify removed (open source) ===
+// Use the Export topics button for a local JSON snapshot of the current view.
 
 //this function allow to access some values on the matrix_sankey
 function get_new_omega(old_omega){
@@ -93,7 +75,6 @@ function get_new_omega(old_omega){
     }
     return new_omega;
 }
-save_users_actions_across_time('session_start', new Date());
 
 
 
@@ -269,7 +250,6 @@ var LDAvis = function(to_select, data_or_file_name) {
     
     //Get relevant documents from ajax
     if(type_vis==1){
-        save_users_actions_across_time('omega_start_value', (1.0 - lambda_lambda_topic_similarity.current).toFixed(2));
 
     }
     if(type_vis === 1){
@@ -520,8 +500,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             
         d3.select("#"+lambdaID)
             .on("mouseup", function() {
-                save_users_actions_across_time('change_lambda_left_panel', new Date());
-                save_users_actions_across_time('change_lambda_left_panel_value', document.getElementById(lambdaID).value);
 
                 
                 lambda.old = lambda.current;
@@ -545,8 +523,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         d3.select("#"+lambdaIDRightPanel)
             .on("mouseup", function() {
-                save_users_actions_across_time('change_lambda_right_panel', new Date());
-                save_users_actions_across_time('change_lambda_right_panel_value',  document.getElementById(lambdaIDRightPanel).value);
 
                 //lambda_select = "#"+lambdaID
                 
@@ -673,10 +649,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             inverted_links_filtered = graph;
 
-            save_users_actions_across_time('min_filtering_sankey', threshold_min);
-            save_users_actions_across_time('min_filtering_sankey_time', new Date());
-            save_users_actions_across_time('max_filtering_sankey', threshold_max);
-            save_users_actions_across_time('max_filtering_sankey_time', new Date());
 
 
 
@@ -812,26 +784,21 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
                     
-                    save_users_actions_across_time('click_path_sankey', new Date());
 
                     isSettingInitial = false;
                     if(Number(d.source.node)>=min_target_node_value){
                         real_last_clicked_sankey_model_2 = nodes_filtered[Number(d.source.node)];
-                        save_users_actions_across_time('click_path_sankey_model_2_topic_id', nodes_filtered[Number(d.source.node)].name);
 
                     }
                     else{
                         real_last_clicked_sankey_model_1 = nodes_filtered[Number(d.source.node)];
-                        save_users_actions_across_time('click_path_sankey_model_1_topic_id', nodes_filtered[Number(d.source.node)].name);
                     }
                     if(Number(d.target.node)>=min_target_node_value){
                         real_last_clicked_sankey_model_2 = nodes_filtered[Number(d.target.node)];
-                        save_users_actions_across_time('click_path_sankey_model_2_topic_id', nodes_filtered[Number(d.target.node)].name);
 
                     }
                     else{
                         real_last_clicked_sankey_model_1 = nodes_filtered[Number(d.target.node)];
-                        save_users_actions_across_time('click_path_sankey_model_1_topic_id', nodes_filtered[Number(d.target.node)].name);
                     }                    
                 }) 
                 .sort(function(a, b) { return b.dy - a.dy; }); // el dy de aqui tambien hay que modificarlo
@@ -864,19 +831,16 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("transform", function(d) { 
                     return "translate(" + d.x + "," + d.y + ")"; }) // el d.y de aqui tambien hay que modificarlo
                 .on("click", function(d){
-                    save_users_actions_across_time('click_node_sankey', new Date());
 
                     isSettingInitial = false;
 
                     topic_on_sankey(d, min_target_node_value );
                     if(d.node>=min_target_node_value){
                         real_last_clicked_sankey_model_2 = d
-                        save_users_actions_across_time('click_node_sankey_model_2_topic_id', d.name);
 
                     }
                     else{
                         real_last_clicked_sankey_model_1 = d
-                        save_users_actions_across_time('click_node_sankey_model_1_topic_id', d.name);
 
                     }
                     
@@ -1194,7 +1158,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 }
                 current_index+=1;
             }
-            save_users_actions_across_time('topics_merged_id', index_topic_name_1+'_'+index_topic_name_2);
 
             //1.- Join relevant documents
 
@@ -1303,7 +1266,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     new_circle_positions = data;
                     //5.- get new topic name                    
                     var new_merged_topic_name = 'New merged topic '+name_topics_circles[topicID + (index_topic_name_1+1)].trim()+' & '+ name_topics_circles[topicID + (index_topic_name_2+1)].trim();
-                    save_users_actions_across_time('new_merged_topic_name', new_merged_topic_name);
 
                     name_topics_circles[topicID + (index_topic_name_1+1)] = new_merged_topic_name;
                     name_topics_circles[topicID + (index_topic_name_2+1)] = new_merged_topic_name+"-delete";
@@ -1578,9 +1540,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     return (topicID + d.topics);
                 })
                 .on("click", function(d) {
-                    save_users_actions_across_time('click_circle_points', new Date());
-                    save_users_actions_across_time('click_circle_points_topic_id', d.topics);
-                    save_users_actions_across_time('click_circle_points_topic_name', name_topics_circles[topicID + d.topics]);
 
 
 
@@ -1660,9 +1619,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             return ("text-"+topicID + d.topics);
         })
         .on("click", function(d) {
-            save_users_actions_across_time('click_circle_points', new Date());
-            save_users_actions_across_time('click_circle_points_topic_id', d.topics);
-            save_users_actions_across_time('click_circle_points_topic_name', name_topics_circles[topicID + d.topics]);
 
 
 
@@ -2087,7 +2043,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 topicButtonsRightPanel.appendChild(edit2);
                 d3.select("#"+topicEdit2)
                 .on("click", function() {
-                    save_users_actions_across_time('open_rename_topic_modal_model2', new Date());
 
 
                     $('#renameTopic2').modal(); 
@@ -2225,119 +2180,74 @@ var LDAvis = function(to_select, data_or_file_name) {
             help.setAttribute("class", "btn btn-info btnTopic");
             help.innerHTML = "<i class='fas fa-1x fa-info-circle'></i>";
 
-            var save_data_user_study_button = document.createElement("button");
-            save_data_user_study_button.setAttribute("id", 'save_data_user_study_button');
-
-                    
-            save_data_user_study_button.setAttribute("class", "btn btn-info btnTopic");
-            save_data_user_study_button.innerHTML = "<i class='fas fa-1x fa-file-export'></i>";
+            var export_topics_button = document.createElement("button");
+            export_topics_button.setAttribute("id", "export_topics_button");
+            export_topics_button.setAttribute("class", "btn btn-secondary btnTopic");
+            export_topics_button.setAttribute("title", "Download a JSON snapshot of the current topics (local file, no server upload)");
+            export_topics_button.innerHTML = "<i class='fas fa-1x fa-file-download'></i>";
 
             if(type_vis==1){
                 topicButtonsDivRight.appendChild(help);
-                topicButtonsDivRight.appendChild(save_data_user_study_button);
+                topicButtonsDivRight.appendChild(export_topics_button);
     
             }
             else{
                 topicButtonsDiv.appendChild(help);
-                topicButtonsDiv.appendChild(save_data_user_study_button);
+                topicButtonsDiv.appendChild(export_topics_button);
     
                 topicButtonsDiv.appendChild(reverse);
             }
 
-            
-
-            
-            //quizas guardar un json en vez de un pickle
-            d3.select('#save_data_user_study_button')
-                .on('click', function(){
-                    $('#saving_results').modal({
-                        backdrop: 'static',
-                        keyboard: false
-                    })
-
-                    //the session is over
-                    save_users_actions_across_time('session_end', new Date());
-
-
-
-                    if(type_vis == 1){
-                        var user_study_data = {
-                            type_vis: type_vis, 
-                            is_human_in_the_loop: is_human_in_the_loop, 
-                            topic_id: vis_state.topic,
-                            name_topics_circles: name_topics_circles,
-                            omega_value: vis_state.lambda_lambda_topic_similarity,
-                            circle_positions: new_circle_positions,   
-                            relevance_value: vis_state.lambda,
-                            actions_across_time: actions_across_time,
-                            is_tutorial: is_tutorial,
-                            full_scenario_description: type_vis+'_'+is_human_in_the_loop,
-                            topics_with_error: topics_with_error
-                        };
-                        // we need to recalculate new coherence only in scenario 1, when hil is activated
-                        if(is_human_in_the_loop == true){
-                            user_study_data['mdsData'] = mdsData;
-                            user_study_data['relevantDocumentsDict_new']= relevantDocumentsDict;
-                            user_study_data['lamData_new'] = lamData;
-                            
+            d3.select("#export_topics_button").on("click", function(){
+                var _urlParams = new URLSearchParams(window.location.search);
+                var _scen = _urlParams.get("scenario") || "default";
+                var _topicsOut = [];
+                if (type_vis == 1 && name_topics_circles) {
+                    Object.keys(name_topics_circles).forEach(function(k){
+                        var topicNum = parseInt(String(k).replace(String(topicID), ""), 10);
+                        if (isNaN(topicNum)) { return; }
+                        var terms = [];
+                        if (lamData && lamData.length) {
+                            var cat = "Topic" + topicNum;
+                            terms = lamData.filter(function(d){ return d.Category === cat; })
+                                .slice(0, 20)
+                                .map(function(d){ return d.Term; });
                         }
-
-
-                    }else{ // scenario 2                            //lambda_lambda_topic_similarity.current
-
-                        var user_study_data = {
-                            type_vis: type_vis, 
-                            scenario_2_is_baseline_metric: scenario_2_is_baseline_metric,
-                            topic_id: vis_state.topic,                            
-                            name_topics_sankey: name_topics_sankey,
-                            omega_value: vis_state.lambda_lambda_topic_similarity,
-                            relevance_value: vis_state.lambda,
-                            min_filtering:  vis_state.min_value_filtering, 
-                            max_filtering: vis_state.max_value_filtering,
-                            actions_across_time : actions_across_time,
-                            sankey_topics_automatic_match: sankey_topics_automatic_match,
-                            is_tutorial: is_tutorial,
-                            full_scenario_description: type_vis+'_'+scenario_2_is_baseline_metric
-                            //global_sankey_links_filtered: global_sankey_links_filtered
-                        };
-                    }
-
-                    var result; 
-                    $.ajax({
-                        type: 'POST',
-                        url: '/export_user_study_data',
-                        async: true,
-                        data: JSON.stringify(user_study_data),
-                        success: function(data) {
-                                        
-                            result = data;
-                            $("#saving_results").modal('hide');
-
-                            $('#export_results_user_study_successfully').modal(); 
-
-                                              
-                        },
-                        error: function(XMLHttpRequest, textStatus, errorThrown) { 
-                            $("#saving_results").modal('hide');
-
-                            alert("Status: " + textStatus); alert("Error: " + errorThrown); 
-                        }, 
-                        contentType: "application/json"             
-                    })
-                    .fail(function(data){
-                        $("#saving_results").modal('hide');
-        
-                        alert('Ajax failed'+ data['responseText'] );
-                    });      
-        
-                
-                });
+                        _topicsOut.push({ id: topicNum, label: name_topics_circles[k], top_terms: terms });
+                    });
+                } else if (type_vis == 2 && name_topics_sankey) {
+                    Object.keys(name_topics_sankey).forEach(function(k){
+                        _topicsOut.push({ key: k, label: name_topics_sankey[k] });
+                    });
+                }
+                var exportObj = {
+                    _tve_version: "1.0",
+                    type_vis: type_vis,
+                    scenario: _scen,
+                    exported_at: new Date().toISOString(),
+                    lambda: vis_state ? vis_state.lambda : null,
+                    omega_topic_similarity: vis_state ? vis_state.lambda_lambda_topic_similarity : null,
+                    current_topic_id: vis_state ? vis_state.topic : null,
+                    topics: _topicsOut,
+                    circle_positions: (typeof new_circle_positions !== "undefined") ? new_circle_positions : null
+                };
+                if (type_vis == 1 && is_human_in_the_loop == true) {
+                    exportObj.relevantDocumentsDict = (typeof relevantDocumentsDict !== "undefined") ? relevantDocumentsDict : null;
+                }
+                var blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: "application/json" });
+                var a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = "tve_topics_" + _scen.replace(/[^a-zA-Z0-9_-]+/g, "_") + ".json";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(a.href);
+            });
 
   
 
             d3.select("#help_button")
             .on("click", function() {
-                save_users_actions_across_time('help_button', new Date());
                 show_tutorial()
 
             });
@@ -2345,7 +2255,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             d3.select("#apply_reverse_topic_model") //el usuario desea continuar con el mergin
                 .on("click", function() {
-                    save_users_actions_across_time('apply_reverse_topic_model', new Date());
                     var last_state_dict = old_topic_model_states.pop();
                     
 
@@ -2427,14 +2336,12 @@ var LDAvis = function(to_select, data_or_file_name) {
           
            d3.select("#apply_topic_merging") //el usuario desea continuar con el mergin
                 .on("click", function() {
-                    save_users_actions_across_time('apply_topic_merging', new Date());
 
 
                     //hacer_merge = true
                     
                     var merging_final_topic_1 = document.getElementById("merging_topic_1_name").innerText;
                     var merging_final_topic_2 =  $("#selectTopicMerge" ).val()
-                    save_users_actions_across_time('topics_merged_', merging_final_topic_1+'_'+merging_final_topic_2);
 
 
                     save_state_data()
@@ -2477,7 +2384,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             d3.select("#"+topicReverse)
             .on("click", function() {
-                save_users_actions_across_time('open_reverse_modal', new Date());
 
                 $('#ReverseModel').modal(); 
             });
@@ -2487,7 +2393,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 //name_topics_circles[topicID + current_element_to_merge.topics];
 
                 if(! topics_splitted.includes(topicID +current_element_to_merge.topics)){
-                    save_users_actions_across_time('open_merge_modal', new Date());
                     
 
                     /*
@@ -2545,7 +2450,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             d3.select("#"+topicEdit)
                 .on("click", function() {
-                    save_users_actions_across_time('open_rename_topic_modal_model1', new Date());
 
 
                     $('#renameTopic').modal(); 
@@ -2559,10 +2463,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .on("click", function(){
 
 
-                    save_users_actions_across_time('apply_rename_topic_scenario_1', new Date());
 
-                    save_users_actions_across_time('old_topic_name_topic_scenario_1', name_topics_circles[document.getElementById("idTopic").innerText] );
-                    save_users_actions_across_time('new_topic_name_topic_scenario_1', document.getElementById("renameTopicId").value);
 
                     //rename the topic
                     name_topics_circles[document.getElementById("idTopic").innerText] = document.getElementById("renameTopicId").value
@@ -2580,9 +2481,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             else{
                 d3.select("#rename_topic_button")
                 .on("click", function(){
-                    save_users_actions_across_time('apply_rename_topic_model_1_scenario_2', new Date());
-                    save_users_actions_across_time('old_topic_name_topic_model_1_scenario_2', document.getElementById("idTopic").innerText);
-                    save_users_actions_across_time('new_topic_name_topic_model_1_scenario_2', document.getElementById("renameTopicId").value);
 
                     //rename the topic
 
@@ -2601,9 +2499,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
             d3.select("#rename_topic_button2")
                 .on("click", function(){
-                    save_users_actions_across_time('apply_rename_topic_model_2_scenario_2', new Date());
-                    save_users_actions_across_time('old_topic_name_topic_model_2_scenario_2', document.getElementById("idTopic2").innerText);
-                    save_users_actions_across_time('new_topic_name_topic_model_2_scenario_2', document.getElementById("renameTopicId2").value);
 
 
                     //cambiar el nombre del topico segun lo especifique el usuario
@@ -2620,9 +2515,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             d3.select("#"+topicSplit)
             .on("click",function(){
 
-                    save_users_actions_across_time('open_split_topic_modal', new Date());
-                    save_users_actions_across_time('splitting_topic_id', vis_state.topic);
-                    save_users_actions_across_time('splitting_topic_name', name_topics_circles[topicID + vis_state.topic]);
     
                     $('#topic_to_split_name').html(name_topics_circles[topicID + vis_state.topic]);                    
                     $('#SplitTopicModal').modal();
@@ -2637,15 +2529,12 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                 if(typeof slider_topic_splitting_values[splitting_topic] != "undefined"){
                     if((typeof slider_topic_splitting_values[splitting_topic]['TopicA'] == "undefined") || (typeof slider_topic_splitting_values[splitting_topic]['TopicB'] == "undefined")){
-                        save_users_actions_across_time('error_apply_topic_splitting_error_1', new Date());
 
                         $('#error_splitting').modal()
 
 
                     }
                     else{
-                        save_users_actions_across_time('apply_topic_splitting', new Date());
-                        save_users_actions_across_time('apply_topic_splitting_document_seeds', slider_topic_splitting_values[splitting_topic]);
 
 
 
@@ -2654,7 +2543,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     }                
                 }
                 else{
-                    save_users_actions_across_time('error_apply_topic_splitting_error_2', new Date());
 
 
                     $('#error_splitting').modal()
@@ -2810,10 +2698,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 if(is_first_time_sankey_diagram == true){
                     if(type_vis==2){
                         var initial_filtering_value = randomNumber(min_similarity_score, max_similarity_score);
-                        save_users_actions_across_time('initial_filtering_value_start', initial_filtering_value);
                         if(scenario_2_is_baseline_metric==false){
                             vis_state.lambda_lambda_topic_similarity = Math.random().toFixed(2) // Omega random , chosen randomly for the user study  
-                            save_users_actions_across_time('omega_random_start',  vis_state.lambda_lambda_topic_similarity);
 
                         }   
 
@@ -2885,9 +2771,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     vis_state.min_value_filtering = Number(values[0]);                
                     }
                     //Do not change max_value:
-                    save_users_actions_across_time('changing_filtering', new Date());
-                    save_users_actions_across_time('changing_filtering_min_value', vis_state.min_value_filtering);
-                    save_users_actions_across_time('changing_filtering_max_value', vis_state.max_value_filtering);
 
 
                     if(scenario_2_is_baseline_metric == false){
@@ -2988,15 +2871,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                
 
                 if(type_vis == 2){
-                    save_users_actions_across_time('changing_omega_scenario_2', new Date());
-                    save_users_actions_across_time('changing_omega_scenario_2_value', lambda_lambda_topic_similarity.current);
                     //mostramos 1 - omega, para que cuandos ea 0 signifique que damos mas importancia a las keywords, y 1 cuando le damos mas importancia a los docs
 
                     visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
                 }
                 if(type_vis == 1){
-                    save_users_actions_across_time('changing_omega_scenario_1', new Date());
-                    save_users_actions_across_time('changing_omega_scenario_1_value', lambda_lambda_topic_similarity.current);
 
                     createMdsPlot(1, mdsData, get_new_omega(lambda_lambda_topic_similarity.current))
                     topic_on(document.getElementById(topicID+vis_state.topic))
@@ -3022,8 +2901,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                 document.getElementById("lambdaInputTopicSimilarityFiltering").value = vis_state.lambda_topic_similarity;
                 //creo que este es el omega??
-                save_users_actions_across_time('lambdaInputTopicSimilarityFiltering', new Date());
-                save_users_actions_across_time('lambdaInputTopicSimilarityFiltering_value', vis_state.lambda_topic_similarity);  
                 
                 visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
                 
@@ -3625,7 +3502,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             tutorial_steps['scenario_1_hil_buttons'] = { title: 'Modifying topic modeling results', intro: "After inspecting the topics, you may wish to join two similar topics into one (<b style='color: #1f77b4'> merge</b>) or to split a generic topic into two new subtopics  (<b style='color: #1f77b4'> split</b>). You can access these functionalities here."};
             tutorial_steps['scenario_1_reverse_button'] = { title: 'Modifying topic modeling results', intro: "If the results after applying a (<b style='color: #1f77b4'> topic merging </b>) or (<b style='color: #1f77b4'> topic splitting </b>) operation are not satisfactory, you can reverse the changes by clicking this button."};
 
-            tutorial_steps['export_user_study_data'] = { element: document.querySelector('#save_data_user_study_button'), title: 'Sending your results', intro: "After finishing  the tasks required in the  user study, you must send your results by clicking this button." };
+            tutorial_steps['export_topics_json'] = { element: document.querySelector('#export_topics_button'), title: 'Export topics', intro: "Download a JSON file with the current topic labels, top terms, and layout. Nothing is uploaded to a server; the file is saved only on your computer." };
             tutorial_steps['help_button'] = { element: document.querySelector('#help_button'), title: 'Ask for help!', intro: "Finally, don't forget that you can always start the interactive tutorial here!" };
 
 
@@ -3681,12 +3558,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                                 fix_tutorial_identification_elements("#topic_buttons_div_left_full_row", tutorial_steps['scenario_1_hil_buttons']),                                                                                                                                                      
                                 fix_tutorial_identification_elements("#LDAvisContainer-topic-reverse", tutorial_steps['scenario_1_reverse_button']),                                                            
 
-                                tutorial_steps['export_user_study_data'],
+                                tutorial_steps['export_topics_json'],
                                 tutorial_steps['help_button']        
                         ]
                         })
                         .oncomplete(function() {
-                            save_users_actions_across_time('tutorial_completed', new Date());
 
                         })
                         .onbeforeexit(function () {
@@ -3712,12 +3588,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                                 fix_tutorial_identification_elements("#TopicSimilarityMetricPanel", tutorial_steps['description_omega_slider']),                                                            
                                 fix_tutorial_identification_elements("#topic_buttons_div", tutorial_steps['scenario_1_hil_buttons']),                                                                                            
                                 fix_tutorial_identification_elements("#LDAvisContainer-topic-reverse", tutorial_steps['scenario_1_reverse_button']),                                                            
-                                tutorial_steps['export_user_study_data'],
+                                tutorial_steps['export_topics_json'],
                                 tutorial_steps['help_button']        
                         ]
                         })
                         .oncomplete(function() {
-                            save_users_actions_across_time('tutorial_completed', new Date());
 
                         })
                         .onbeforeexit(function () {
@@ -3749,12 +3624,11 @@ var LDAvis = function(to_select, data_or_file_name) {
     
                                 fix_tutorial_identification_elements("#TopicSimilarityMetricPanel", tutorial_steps['description_omega_slider']),                                                            
                                 //tutorial_steps['scenario_1_hil_buttons'], // this is only for scenario 1 , hil
-                                tutorial_steps['export_user_study_data'],
+                                tutorial_steps['export_topics_json'],
                                 tutorial_steps['help_button']        
                         ]
                         })
                         .oncomplete(function() {
-                            save_users_actions_across_time('tutorial_completed', new Date());
 
                         })
                         .onbeforeexit(function () {
@@ -3779,12 +3653,11 @@ var LDAvis = function(to_select, data_or_file_name) {
     
                                 fix_tutorial_identification_elements("#TopicSimilarityMetricPanel", tutorial_steps['description_omega_slider']),                                                            
                                 //tutorial_steps['scenario_1_hil_buttons'], // this is only for scenario 1 , hil
-                                tutorial_steps['export_user_study_data'],
+                                tutorial_steps['export_topics_json'],
                                 tutorial_steps['help_button']        
                         ]
                         })
                         .oncomplete(function() {
-                            save_users_actions_across_time('tutorial_completed', new Date());
 
                         })
                         .onbeforeexit(function () {
@@ -3829,12 +3702,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                             fix_tutorial_identification_elements("#TopicSimilarityMetricPanel", tutorial_steps['description_omega_slider']),
                             fix_tutorial_identification_elements("#LDAvisContainer-topic-edit", tutorial_steps['rename_button_scenario_2_left']),                                                            
                             fix_tutorial_identification_elements("#LDAvisContainer-topic-edit_2", tutorial_steps['rename_button_scenario_2_right']),                                                                                                                            
-                            tutorial_steps['export_user_study_data'],
+                            tutorial_steps['export_topics_json'],
                             tutorial_steps['help_button']                                                                                                                                                          
                     ]
                     })
                     .oncomplete(function() {
-                        save_users_actions_across_time('tutorial_completed', new Date());
 
                     })
                     .onbeforeexit(function () {
@@ -3856,12 +3728,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                             //fix_tutorial_identification_elements("#TopicSimilarityMetricPanel", tutorial_steps['description_omega_slider']),
                             fix_tutorial_identification_elements("#LDAvisContainer-topic-edit", tutorial_steps['rename_button_scenario_2_left']),                                                            
                             fix_tutorial_identification_elements("#LDAvisContainer-topic-edit_2", tutorial_steps['rename_button_scenario_2_right']),                                                                                                                            
-                            tutorial_steps['export_user_study_data'],
+                            tutorial_steps['export_topics_json'],
                             tutorial_steps['help_button']                                                             
                     ]
                     })
                     .oncomplete(function() {
-                        save_users_actions_across_time('tutorial_completed', new Date());
 
                     })
                     .onbeforeexit(function () {
@@ -4156,7 +4027,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
             $('.radio_button_topic_splitting').click(function () {
-                save_users_actions_across_time('radio_button_topic_splitting', new Date());
 
 
                 if ($(this).is(':checked')) {
@@ -4308,8 +4178,6 @@ var LDAvis = function(to_select, data_or_file_name) {
         var omited_events_table =['pre-body.bs.table','post-header.bs.table', 'reset-view.bs.table', 'pre-body.bs.table', 'post-body.bs.table', 'post-footer.bs.table', 'click-row.bs.table']
         $('#tableRelevantDocumentsClass_Model1').on('all.bs.table', function (e, name, args) {
             if(!omited_events_table.includes(name)){
-                save_users_actions_across_time('tableRelevantDocumentsClass_Model1_'+name, new Date());
-                save_users_actions_across_time('tableRelevantDocumentsClass_Model1_'+name, args);
 
 
             }
@@ -4329,8 +4197,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         $('#tableRelevantDocumentsClass_Model2').on('all.bs.table', function (e, name, args) {
             if(!omited_events_table.includes(name)){
-                save_users_actions_across_time('tableRelevantDocumentsClass_Model2_'+name, new Date());
-                save_users_actions_across_time('tableRelevantDocumentsClass_Model2_'+name, args);
 
             }
         });
@@ -4347,8 +4213,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         $('#tableRelevantDocumentsClass_TopicSplitting').on('all.bs.table', function (e, name, args) {
             if(!omited_events_table.includes(name)){
-                save_users_actions_across_time('tableRelevantDocumentsClass_TopicSplitting_'+name, new Date());
-                save_users_actions_across_time('tableRelevantDocumentsClass_TopicSplitting_'+name, args);
 
             }
         });

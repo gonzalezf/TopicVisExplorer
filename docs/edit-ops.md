@@ -111,6 +111,13 @@ table — see the [`doc_id` contract](extending.md#31-doc_id-is-a-stable-per-row
 The row for `doc_id=47` has its `topic_id=2` mass zeroed and is
 re-normalized to sum to 1 over the remaining topics.
 
+## Export topics (browser)
+
+The **Export** (download) control in the toolbar saves a JSON file to
+your machine with the current topic labels, top terms (at the active
+relevance slider), circle positions, and optional document weights.
+Nothing is uploaded; see [own_data.md](own_data.md#export-your-curated-topics-json).
+
 ## Golden-test discipline
 
 Every one of these operations is pinned by a byte-level numerical

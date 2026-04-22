@@ -57,6 +57,9 @@ browser (default `?scenario=20ng_tiny`). You should see:
   [exclude-document](edit-ops.md#exclude-a-document) workflow.
 - A small **Σ** toggle in the top-right that opens the
   [coherence panel](coherence.md).
+- An **Export** (download) button next to the help control: saves a JSON
+  snapshot of topic labels, top terms, and layout to **your computer only**
+  (no upload). See [own_data.md](own_data.md#export-your-curated-topics-json).
 
 Hover a circle to reload the bar chart and documents table. Click it to
 pin it and unlock the split / merge / add-word / remove-word controls.
@@ -97,6 +100,6 @@ skip `prepare()` and use the matching adapter. See the
 
 - [Tutorial](tutorial.md) — 5-minute bring-your-own-corpus walkthrough.
 - [Edit operations](edit-ops.md) — interactive topic refinement.
-- [User study](user_study.md) — script to fit a public corpus, register
-  `refit`, and open a named scenario for a lab session.
+- [Working with your own data](own_data.md) — demos, BYO corpus, export JSON,
+  and the optional `launch_20ng_study.py` script for larger live fits.
 - [API reference](reference/index.md) — all public functions.

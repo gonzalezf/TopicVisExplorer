@@ -56,7 +56,7 @@ tve demo --texts my.jsonl --name x    # fit your own corpus (LDA, cached under ~
   `~/.cache/topicvisexplorer/`.
 * The **paper's private** full corpora and original pickles are **not**
   in this repository; see [`PAPER_REPRO.md`](PAPER_REPRO.md) and
-  [`docs/user_study.md`](docs/user_study.md) for public alternatives.
+  [`docs/own_data.md`](docs/own_data.md) for public alternatives.
 
 ## Library API
 
@@ -96,7 +96,7 @@ Full docs: **<https://gonzalezf.github.io/TopicVisExplorer/>**
 - [Edit operations](docs/edit-ops.md)
 - [Coherence metrics](docs/coherence.md)
 - [Extending](docs/extending.md)
-- [User study (public data, full HITL)](docs/user_study.md)
+- [Working with your own data](docs/own_data.md)
 - [Migration from v0.1](docs/migration.md)
 - [Paper reproduction](PAPER_REPRO.md)
 - [Contributing / CI](CONTRIBUTING.md)

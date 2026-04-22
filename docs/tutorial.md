@@ -4,7 +4,7 @@ The default `tve demo` shows **`20ng_tiny`** (a small 20 Newsgroups slice
 with real terms).  This walkthrough still uses the bundled **`tiny_demo`**
 synthetic fixture so it runs end-to-end without any downloads. The same
 pattern applies to any public corpus (see
-[`user_study.md`](user_study.md)).
+[`own_data.md`](own_data.md)).
 
 ## 1. Prepare a tokenized corpus
 

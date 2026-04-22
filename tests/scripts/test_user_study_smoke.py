@@ -1,4 +1,4 @@
-"""Lightweight smoke: user-study and CLI entry points show --help correctly."""
+"""Lightweight smoke: launch_20ng_study.py and ``tve demo`` --help exit 0."""
 
 from __future__ import annotations
 

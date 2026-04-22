@@ -11,8 +11,9 @@ Key differences from ``topicvisexplorer.py`` (the old Flask app):
   cookie (`tve_session`); the server holds at most ``max_sessions``
   in-memory entries with LRU eviction (configurable via
   :class:`ServerConfig`).
-* **No user-study endpoints** (``/redirect_with_user_study_code``,
-  ``/export_user_study_data``, ``previous_users.txt`` and friends).
+* **No paper-era user-study server routes** (e.g. ``/redirect_with_user_study_code``,
+  ``previous_users.txt``). The browser **export** of topic snapshots is
+  entirely client-side (JSON file download) — not an HTTP upload.
 * **No global mutable state.** Per-session storage lives in
   :class:`SessionStore` and is dependency-injected.
 * **Pydantic-validated requests.** Every endpoint uses

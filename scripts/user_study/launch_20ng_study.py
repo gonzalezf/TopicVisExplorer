@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Reproducible 20 Newsgroups → full ``Scenario`` → local server for a user study.
+"""Reproducible 20 Newsgroups (or HF AG News) → full ``Scenario`` → local server.
 
-Fits a small sklearn-fetched slice + gensim LDA, builds ``PreparedData``,
+Fits a sklearn-fetched slice + gensim LDA, builds ``PreparedData``,
 ``model_data`` (with :attr:`doc_id` rows in ``relevant_documents``), Jensen-
 Shannon + circle layouts, and registers :func:`refit_gensim_lda` for in-browser
-topic split. **Does not** ship paper-private pickles; IRB text should name this
-public corpus, seed, and row counts.
+topic split. **Does not** ship paper-private pickles; cite this public corpus,
+seed, and row counts in academic work.
 
 HuggingFace (optional)::
 
