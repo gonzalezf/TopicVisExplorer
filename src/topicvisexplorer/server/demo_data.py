@@ -4,7 +4,8 @@ These are intentionally tiny (5 topics, ~50 docs, ~80-word vocab) so
 ``tve.demo()`` boots in <2s on a laptop. They are *synthetic* (not real
 news data) so the output is reproducible and deterministic.
 
-For realistic showcases, see ``examples/`` notebooks (Phase 5).
+For a real-corpus default, see :mod:`topicvisexplorer.server.demo_20ng`
+(``20ng_tiny``) and :file:`docs/user_study.md`.
 """
 
 from __future__ import annotations
@@ -85,15 +86,22 @@ def build_tiny_single_demo() -> Scenario:
         str(round(step / 100.0, 2)): rng.normal(size=(K, 2)).tolist() for step in range(101)
     }
 
+    model_data = cast(TopicModelData, _StaticModelData(tt, dt, lens, vocab, freq))
+
+    from ..operations.refit_helpers import refit_static
+
+    refit = refit_static(model_data)
+
     return Scenario(
         name="tiny_demo",
         is_multi=False,
         prepared=prepared,
-        model_data=cast(TopicModelData, _StaticModelData(tt, dt, lens, vocab, freq)),
+        model_data=model_data,
         relevant_documents=relevant_documents,
         similarity_matrix=similarity,
         circle_positions=layout,
         raw_texts=[f"synthetic document #{i}" for i in range(dt.shape[0])],
+        extras={"refit": refit},
     )
 
 

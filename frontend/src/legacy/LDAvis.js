@@ -340,6 +340,24 @@ var LDAvis = function(to_select, data_or_file_name) {
     // Phase 4d/4e wiring notes inside ``visualize``.
     var _tveInternals = {};
 
+    function _tveShowServerError(xhr, op) {
+        var msg = op + " failed.";
+        try {
+            var body = JSON.parse(xhr.responseText);
+            if (body && body.message) {
+                msg += "\n\n" + body.message;
+            } else if (body && body.detail) {
+                msg += "\n\n" + (typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail));
+            } else {
+                msg += "\n\n(HTTP " + xhr.status + ")";
+            }
+        } catch (e) {
+            msg += "\n\n(HTTP " + xhr.status + ")";
+        }
+        console.error("[TopicVisExplorer]", op, "status=", xhr.status, "body=", xhr.responseText);
+        alert(msg);
+    }
+
     function _tveAddRemoveWord(word, action){
         if (typeof vis_state === "undefined" || !vis_state || !vis_state.topic || vis_state.topic <= 0){
             // Defensive: the +/- buttons should only render when a
@@ -1338,10 +1356,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                     console.log(' SPLIT - NUEVO MDSDATA', mdsData);
                     
                 },
-                error: function(XMLHttpRequest, textStatus, errorThrown) { 
-                    alert("Status: " + textStatus); alert("Error: " + errorThrown); 
+                error: function(xhr, textStatus, errorThrown) {
+                    _tveShowServerError(xhr, "Split topic");
                     $("#loadMe").modal('hide');
-
                 }, 
                 contentType: "application/json"             
             })
@@ -1505,10 +1522,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                     console.log(' MERGE - NUEVO MDSDATA', mdsData);
 
                 },
-                error: function(XMLHttpRequest, textStatus, errorThrown) { 
-                    alert("Status: " + textStatus); alert("Error: " + errorThrown); 
+                error: function(xhr, textStatus, errorThrown) {
+                    _tveShowServerError(xhr, "Merge topics");
                     $("#loadMe").modal('hide');
-
                 }, 
                 contentType: "application/json",
                 dataType: 'json'
@@ -1775,8 +1791,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                     if (vis_state.topic > 0 && old_topic != this.id) {
                         topic_off(document.getElementById(old_topic));
                     }
-                    console.log('este es el ', first_time_clicking_circle);
                     if(first_time_clicking_circle==true){
+                        if (typeof introJs === "function") { try { introJs().exit(true); } catch(e){} }
                         topic_off(document.getElementById(topicID+'5'));
                         first_time_clicking_circle = false;
                     }
@@ -1857,8 +1873,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             if (vis_state.topic > 0 && old_topic != this.id) {
                 topic_off(document.getElementById(old_topic));
             }
-            console.log('este es el2222 ', first_time_clicking_circle);
             if(first_time_clicking_circle==true){
+                if (typeof introJs === "function") { try { introJs().exit(true); } catch(e){} }
                 topic_off(document.getElementById(topicID+'5'));
                 first_time_clicking_circle = false;
             }
@@ -2221,7 +2237,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             // dual-corpus comparison we'd need to disambiguate which
             // corpus's topic to mutate, which is part of Phase 4 but
             // ships as v1.0.x follow-up.
-            if (type_vis == 1) {
+            if (type_vis == 1 && is_human_in_the_loop === true) {
                 basebars
                     .append("text")
                     .attr("class", "tve-word-ctrl tve-word-add-ctrl")
@@ -2231,6 +2247,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("y", function(d) { return y(d.Term) + 9; })
                     .attr("aria-label", function(d){ return "Boost \"" + d.Term + "\" in this topic"; })
                     .text("+")
+                    .each(function(d) {
+                        d3.select(this).append("title").text("Add \"" + d.Term + "\" to this topic");
+                    })
                     .on("click", function() {
                         var word = d3.select(this).attr("data-word");
                         _tveAddRemoveWord(word, "add");
@@ -2244,6 +2263,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("y", function(d) { return y(d.Term) + 9; })
                     .attr("aria-label", function(d){ return "Remove \"" + d.Term + "\" from this topic"; })
                     .text("\u2212")
+                    .each(function(d) {
+                        d3.select(this).append("title").text("Remove \"" + d.Term + "\" from this topic");
+                    })
                     .on("click", function() {
                         var word = d3.select(this).attr("data-word");
                         _tveAddRemoveWord(word, "remove");
@@ -2545,10 +2567,9 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                                               
                         },
-                        error: function(XMLHttpRequest, textStatus, errorThrown) { 
+                        error: function(xhr, textStatus, errorThrown) {
                             $("#saving_results").modal('hide');
-
-                            alert("Status: " + textStatus); alert("Error: " + errorThrown); 
+                            _tveShowServerError(xhr, "Save results");
                         }, 
                         contentType: "application/json"             
                     })

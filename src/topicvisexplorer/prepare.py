@@ -111,6 +111,12 @@ def _pcoa(pair_dists: ArrayLike, n_components: int = 2) -> np.ndarray:
     """
     pair_dists = np.asarray(pair_dists, dtype=np.float64)
     n = pair_dists.shape[0]
+    if n < 2:
+        logger.debug("_pcoa: K=%d < 2, returning origin layout", n)
+        return np.zeros((n, n_components))
+    if pair_dists.var() < 1e-12:
+        logger.debug("_pcoa: zero-variance distance matrix (K=%d), returning origin layout", n)
+        return np.zeros((n, n_components))
     H = np.eye(n) - np.ones((n, n)) / n
     B = -H.dot(pair_dists**2).dot(H) / 2.0
     eigvals, eigvecs = np.linalg.eig(B)

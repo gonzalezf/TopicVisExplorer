@@ -19,6 +19,16 @@ from __future__ import annotations
 from .add_remove_word import add_word, remove_word
 from .exclude_document import exclude_document
 from .merge import merge
+from .refit_helpers import refit_gensim_lda, refit_lda, refit_static
 from .split import split
 
-__all__ = ["add_word", "exclude_document", "merge", "remove_word", "split"]
+__all__ = [
+    "add_word",
+    "exclude_document",
+    "merge",
+    "refit_gensim_lda",
+    "refit_lda",
+    "refit_static",
+    "remove_word",
+    "split",
+]

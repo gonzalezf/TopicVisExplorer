@@ -1,32 +1,156 @@
-"""Command-line entry point.
-
-Currently a placeholder that prints version + a one-line "what's next"
-hint. The full CLI (``tve serve``, ``tve demo``, ``tve fit``...) lands
-in Phase 2 alongside the FastAPI server.
-"""
+"""Command-line entry point for TopicVisExplorer."""
 
 from __future__ import annotations
 
+import argparse
 import sys
+from pathlib import Path
 
 from ._version import __version__
+
+_BUILTIN_CORPORA = ("20ng_tiny", "bbc_tiny", "tiny_demo")
 
 
 def main(argv: list[str] | None = None) -> int:
     argv = argv if argv is not None else sys.argv[1:]
-    if argv in ([], ["-h"], ["--help"]):
-        print(f"TopicVisExplorer {__version__}")
-        print()
-        print("Usage:")
-        print("  tve --version            Show version and exit.")
-        print("  tve serve                (Phase 2) Launch the FastAPI server.")
-        print("  tve demo                 (Phase 2) Open the bundled demo.")
-        return 0
-    if argv == ["--version"]:
+    parser = argparse.ArgumentParser(
+        prog="tve",
+        description="TopicVisExplorer - interactive topic-modeling visualization",
+    )
+    parser.add_argument(
+        "--version", action="store_true", help="Print version and exit"
+    )
+    sub = parser.add_subparsers(
+        dest="command",
+        help="Subcommands",
+        required=False,
+    )
+
+    p_demo = sub.add_parser(
+        "demo",
+        help=(
+            "Start the server and open a bundled or user-supplied real-terms demo "
+            "in a browser"
+        ),
+    )
+    p_demo.add_argument(
+        "--host", default="127.0.0.1", help="Bind address (default: 127.0.0.1)"
+    )
+    p_demo.add_argument("--port", type=int, default=8000, help="Port (default: 8000)")
+    p_demo.add_argument(
+        "--no-browser", action="store_true", help="Do not open a browser tab"
+    )
+    p_demo.add_argument(
+        "--corpus",
+        choices=_BUILTIN_CORPORA,
+        default="20ng_tiny",
+        help="Which bundled corpus to open (default: 20ng_tiny).",
+    )
+    p_demo.add_argument(
+        "--texts",
+        type=Path,
+        default=None,
+        help=(
+            "Path to a text file to run as a one-off 'bring your own' corpus. "
+            "Accepts plain .txt (one doc per line), .jsonl (with a 'text' field), "
+            "or .json (a list of strings). Overrides --corpus."
+        ),
+    )
+    p_demo.add_argument(
+        "--name",
+        default="user_corpus",
+        help="Scenario name for --texts (default: user_corpus).",
+    )
+    p_demo.add_argument(
+        "--num-topics", type=int, default=5, help="Number of topics for --texts fit."
+    )
+    p_demo.add_argument(
+        "--passes", type=int, default=10, help="LDA training passes for --texts fit."
+    )
+    p_demo.add_argument(
+        "--seed", type=int, default=42, help="RNG seed for --texts fit."
+    )
+
+    p_serve = sub.add_parser(
+        "serve",
+        help="Start the FastAPI server only (no browser; visit /singlecorpus yourself)",
+    )
+    p_serve.add_argument(
+        "--host", default="127.0.0.1", help="Bind address (default: 127.0.0.1)"
+    )
+    p_serve.add_argument("--port", type=int, default=8000, help="Port (default: 8000)")
+
+    args = parser.parse_args(argv)
+
+    if args.version:
         print(__version__)
         return 0
-    print(f"Unknown command: {argv!r}. Run `tve --help`.", file=sys.stderr)
+
+    if args.command is None:
+        parser.print_help()
+        return 0
+
+    if args.command == "demo":
+        return _run_demo(args)
+    if args.command == "serve":
+        import topicvisexplorer as tve
+
+        tve.show(
+            None,
+            host=args.host,
+            port=args.port,
+            open_browser=False,
+        )
+        return 0
     return 2
+
+
+def _run_demo(args: argparse.Namespace) -> int:
+    """Dispatch ``tve demo`` including --corpus and --texts handling."""
+    from .server import ServerConfig, build_app, serve
+
+    extras: dict = {}
+    scenario_name: str
+
+    if args.texts is not None:
+        if not args.texts.exists():
+            print(f"error: --texts file does not exist: {args.texts}", file=sys.stderr)
+            return 1
+        from .server.byo_corpus import build_scenario_from_textfile
+
+        cached: dict = {}
+
+        def _lazy():
+            if "sc" not in cached:
+                cached["sc"] = build_scenario_from_textfile(
+                    args.texts,
+                    name=args.name,
+                    num_topics=args.num_topics,
+                    passes=args.passes,
+                    seed=args.seed,
+                )
+            return cached["sc"]
+
+        extras[args.name] = _lazy
+        scenario_name = args.name
+        print(
+            f"Fitting LDA on {args.texts} (K={args.num_topics}, passes={args.passes}) "
+            f"with caching under ~/.cache/topicvisexplorer ..."
+        )
+    else:
+        scenario_name = args.corpus
+
+    cfg = ServerConfig(register_demo=True, extra_scenarios=extras)
+    app = build_app(cfg)
+    browser_path = f"/singlecorpus?scenario={scenario_name}&hitl=true"
+    serve(
+        app,
+        host=args.host,
+        port=args.port,
+        open_browser=not args.no_browser,
+        browser_path=browser_path,
+    )
+    return 0
 
 
 if __name__ == "__main__":

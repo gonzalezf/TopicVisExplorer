@@ -23,6 +23,7 @@ def serve(
     host: str = "127.0.0.1",
     port: int = 8000,
     open_browser: bool = False,
+    browser_path: str = "/singlecorpus",
     log_level: str = "info",
 ) -> None:
     """Run the given FastAPI app under uvicorn (blocking).
@@ -67,7 +68,8 @@ def serve(
         raise OSError(f"Could not find a free port near {port} on {host} after 50 attempts.")
 
     if open_browser:
-        url = f"http://{host}:{chosen_port}/singlecorpus"
+        path = browser_path if browser_path.startswith("/") else f"/{browser_path}"
+        url = f"http://{host}:{chosen_port}{path}"
         logger.info("Opening browser to %s", url)
         webbrowser.open(url)
 

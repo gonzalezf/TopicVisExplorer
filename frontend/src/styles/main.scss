@@ -56,20 +56,23 @@
   font-weight: bold;
   font-size: 13px;
   fill: #aaa;
-  opacity: 0;
-  pointer-events: none;
+  opacity: 0.25;    // visible at rest so users discover the controls
+  pointer-events: auto;
   transition: opacity 120ms linear, fill 120ms linear;
   user-select: none;
 }
 
-// Reveal on hover of the parent SVG group OR on hover of any sibling
-// `.terms` label OR on hover of the button itself. The first two
-// selectors target the standard mouseenter on any node inside the bar
-// chart, which is the same trigger the legacy bold-on-hover style uses.
+// Full opacity on hover of the parent SVG group OR on the control itself.
 svg:hover .tve-word-ctrl,
 .tve-word-ctrl:hover {
   opacity: 1;
   pointer-events: auto;
+}
+
+// Ensure topic circles are always clickable.
+#topicCircles .dot {
+  pointer-events: all;
+  cursor: pointer;
 }
 
 .tve-word-add-ctrl:hover {

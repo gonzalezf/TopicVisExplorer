@@ -22,6 +22,7 @@ import json
 from typing import TYPE_CHECKING
 
 import numpy as np
+from scipy.linalg import orthogonal_procrustes
 from scipy.spatial import procrustes
 
 from .logging import get_logger
@@ -56,6 +57,9 @@ def circle_positions(
     for raw_step in range(101):
         omega = raw_step / 100.0
         sim = np.asarray(topic_similarity_matrix[omega], dtype=np.float64)
+        if sim.shape[0] < 2:
+            new_positions[omega] = np.zeros((sim.shape[0], 2)).tolist()
+            continue
         dist = 1.0 - sim
         np.fill_diagonal(dist, 0.0)
         new_positions[omega] = _pcoa(dist, n_components=2).tolist()
@@ -87,30 +91,123 @@ def get_circle_positions(topic_similarity_matrix: Mapping[float, np.ndarray]) ->
     return json.dumps(circle_positions(topic_similarity_matrix))
 
 
+def _procrustes_align(
+    a_full: np.ndarray,
+    b_full: np.ndarray,
+    correspondence: list[tuple[int, int]] | None,
+) -> np.ndarray:
+    """Return ``b_full`` rotated+translated to match ``a_full`` on the paired rows.
+
+    ``correspondence`` is a list of ``(old_row, new_row)`` index pairs. Rows
+    without a correspondence (a new child topic after a split, or the dropped
+    topic after a merge) are excluded from the fit but still rotated along
+    with the rest of the scene so they stay in a visually consistent frame.
+
+    Falls back to min(Ka, Kb) position-wise pairing with a logger warning if
+    ``correspondence`` is None (legacy path).
+    """
+    ka, kb = a_full.shape[0], b_full.shape[0]
+    if ka == 0 or kb == 0:
+        return b_full.copy()
+    if correspondence is None:
+        logger.warning(
+            "procrustes: no correspondence map (ka=%d kb=%d); "
+            "falling back to position-wise pairing",
+            ka,
+            kb,
+        )
+        n = min(ka, kb)
+        pairs: list[tuple[int, int]] = [(i, i) for i in range(n)]
+    else:
+        pairs = [(i, j) for (i, j) in correspondence if 0 <= i < ka and 0 <= j < kb]
+    if len(pairs) < 2:
+        # Degenerate: nothing to fit on. Translate new centroid onto old centroid.
+        logger.warning("procrustes: |pairs|=%d, centroid-only align", len(pairs))
+        return b_full - b_full.mean(0, keepdims=True) + a_full.mean(0, keepdims=True)
+
+    a_sub = np.asarray([a_full[i] for i, _ in pairs], dtype=np.float64)
+    b_sub = np.asarray([b_full[j] for _, j in pairs], dtype=np.float64)
+
+    a_mean = a_sub.mean(0, keepdims=True)
+    b_mean = b_sub.mean(0, keepdims=True)
+    R, _s = orthogonal_procrustes(a_sub - a_mean, b_sub - b_mean)
+    # Apply to the *full* new layout: centre, rotate, re-centre on A's centroid.
+    result: np.ndarray = (b_full - b_mean) @ R + a_mean
+    logger.debug(
+        "procrustes align: ka=%d kb=%d pairs=%d disparity=%.4f",
+        ka,
+        kb,
+        len(pairs),
+        float(_s),
+    )
+    return result
+
+
+def split_correspondence(k_old: int, parent_idx: int, k_new: int) -> list[tuple[int, int]]:
+    """Old-row -> new-row mapping for a split of ``parent_idx`` into ``k_new`` children.
+
+    The parent row is deliberately dropped from the map — its children are
+    new identities, so they should not constrain the rotation.
+    """
+    before = [(i, i) for i in range(parent_idx)]
+    after = [(j, j + k_new - 1) for j in range(parent_idx + 1, k_old)]
+    return before + after
+
+
+def merge_correspondence(k_old: int, a_idx: int, b_idx: int) -> list[tuple[int, int]]:
+    """Old-row -> new-row mapping for merging (a_idx, b_idx) with a_idx < b_idx.
+
+    Rows strictly between ``a_idx`` and ``b_idx`` stay at their old index
+    (deletion at ``b_idx`` is to their right). Rows after ``b_idx`` shift
+    left by one. Row ``b_idx`` is dropped (absorbed into ``a_idx``).
+    """
+    if a_idx > b_idx:
+        a_idx, b_idx = b_idx, a_idx
+    before = [(i, i) for i in range(a_idx)]
+    keep_a = [(a_idx, a_idx)]
+    middle = [(j, j) for j in range(a_idx + 1, b_idx)]
+    after = [(j, j - 1) for j in range(b_idx + 1, k_old)]
+    return before + keep_a + middle + after
+
+
 def circle_positions_from_old_matrix(
     old_circle_positions: Mapping[str, list[list[float]]],
     topic_similarity_matrix: Mapping[float, np.ndarray],
+    *,
+    correspondence: list[tuple[int, int]] | None = None,
 ) -> dict[str, list[list[float]]]:
-    """Re-align new layouts to a previous omega-keyed layout.
+    """Re-align PCoA layouts for a new (K_new) topic set to a prior (K_old) layout.
 
-    See :func:`get_circle_positions_from_old_matrix` for the legacy
-    JSON-string-returning variant kept for backwards compatibility.
+    ``correspondence`` is an ordered list of ``(old_row, new_row)`` pairs
+    describing which topic identities survived the edit. Callers must build
+    this from the edit's shape:
+
+      - For splits: :func:`split_correspondence(K_old, parent_idx, k_new)`.
+      - For merges: :func:`merge_correspondence(K_old, a_idx, b_idx)`.
+
+    When ``correspondence is None`` the function falls back to position-wise
+    pairing of ``min(K_old, K_new)`` rows with a logger warning. This matches
+    the previous (buggy) behaviour so that existing call sites do not silently
+    regress, but new call sites MUST pass an explicit map.
     """
-    new_positions: dict[str, list[list[float]]] = {}
+    new_positions: dict[str, np.ndarray] = {}
     for raw_step in range(101):
         omega = raw_step / 100.0
         sim = np.asarray(topic_similarity_matrix[omega], dtype=np.float64)
+        if sim.shape[0] < 2:
+            logger.warning("PCoA with K=%d: returning origin layout", sim.shape[0])
+            new_positions[str(omega)] = np.zeros((sim.shape[0], 2))
+            continue
         dist = 1.0 - sim
         np.fill_diagonal(dist, 0.0)
-        new_positions[str(omega)] = _pcoa(dist, n_components=2).tolist()
+        new_positions[str(omega)] = _pcoa(dist, n_components=2)
 
     standardized: dict[str, list[list[float]]] = {}
-    for current_omega in old_circle_positions:
-        original_a = np.asarray(old_circle_positions[current_omega], dtype=np.float64)
-        original_b = np.asarray(new_positions[current_omega], dtype=np.float64)
-        _mtx1, mtx2, _disparity = procrustes(original_a, original_b)
-        standardized[current_omega] = mtx2.tolist()
-
+    for key, a_list in old_circle_positions.items():
+        a_full = np.asarray(a_list, dtype=np.float64)
+        b_full = new_positions[key]
+        b_aligned = _procrustes_align(a_full, b_full, correspondence)
+        standardized[key] = b_aligned.tolist()
     return standardized
 
 

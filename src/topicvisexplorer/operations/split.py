@@ -73,7 +73,7 @@ def split(
         Callable ``(sub_texts: list[str], k_new: int) -> TopicModelData``
         that re-fits a topic model on the sub-corpus. The default
         end-to-end stack uses
-        :func:`topicvisexplorer.operations.refit_helpers.refit_lda` from
+        :func:`topicvisexplorer.operations.refit_helpers.refit_gensim_lda` from
         the (Phase 2) FastAPI server; passing a callable here keeps this
         module free of the server's heavy dependencies.
     min_membership_threshold:

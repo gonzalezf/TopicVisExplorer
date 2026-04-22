@@ -68,16 +68,30 @@ def show(
     serve(app, host=host, port=port, open_browser=open_browser)
 
 
-def demo(*, host: str = "127.0.0.1", port: int = 8000, open_browser: bool = True) -> None:
-    """Launch the server with only the bundled tiny demo scenarios.
+def demo(
+    *,
+    host: str = "127.0.0.1",
+    port: int = 8000,
+    open_browser: bool = True,
+    corpus: str = "20ng_tiny",
+) -> None:
+    """Launch the server with the bundled demo scenarios.
 
-    Equivalent to ``tve.show(None)`` but loads
-    ``/singlecorpus?scenario=tiny_demo`` in the browser.
+    Opens ``/singlecorpus?scenario=<corpus>&hitl=true`` in the browser.
+    Supported values for ``corpus`` are ``"20ng_tiny"`` (default - real
+    20 Newsgroups subset), ``"bbc_tiny"`` (BBC news, real terms), and
+    ``"tiny_demo"`` (synthetic test corpus).
     """
     from .server import ServerConfig, build_app, serve
 
     app = build_app(ServerConfig(register_demo=True))
-    serve(app, host=host, port=port, open_browser=open_browser)
+    serve(
+        app,
+        host=host,
+        port=port,
+        open_browser=open_browser,
+        browser_path=f"/singlecorpus?scenario={corpus}&hitl=true",
+    )
 
 
 def save_html(prepared: PreparedData, fileobj: str) -> None:

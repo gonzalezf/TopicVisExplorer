@@ -94,8 +94,9 @@ class ServerConfig:
         ``[]`` (default) to skip the middleware entirely (browser local
         usage doesn't need it).
     register_demo:
-        If True, register the bundled tiny demo scenarios so
-        ``/singlecorpus?scenario=tiny_demo`` works out of the box.
+        If True, register the bundled demo scenarios (``20ng_tiny``,
+        ``tiny_demo``, ``tiny_multi_demo``) so
+        ``/singlecorpus?scenario=20ng_tiny`` works out of the box.
     extra_scenarios:
         Optional ``{name: loader}`` dict to merge into the registry.
     """
@@ -159,7 +160,9 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
         registry.register(name, loader)
 
     app.state.sessions = sessions
+    app.state.session_store = sessions  # exposed for tests
     app.state.scenarios = registry
+    app.state.registry = registry  # exposed for tests
     app.state.config = config
 
     app.mount("/static", StaticFiles(directory=str(LEGACY_STATIC)), name="static")
@@ -249,7 +252,7 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
         # scenario and stays out of tutorial mode. ``hitl=false`` hides the
         # human-in-the-loop only buttons that have no effect outside the
         # paper user study.
-        return RedirectResponse("/singlecorpus?scenario=tiny_demo&hitl=false")
+        return RedirectResponse("/singlecorpus?scenario=20ng_tiny&hitl=false")
 
     @app.get("/health", response_model=HealthResponse)
     async def health() -> HealthResponse:
@@ -267,7 +270,7 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
     @app.get("/singlecorpus", response_class=HTMLResponse)
     async def single_corpus(
         request: Request,
-        scenario: str = "tiny_demo",
+        scenario: str = "20ng_tiny",
         hitl: str = "true",
         state: SessionState = SessionDep,
     ) -> Any:
@@ -575,6 +578,25 @@ def _register_bundled_demo(registry: ScenarioRegistry) -> None:
     registry.register("tiny_demo", load_tiny_demo)
     registry.register("tiny_multi_demo", load_tiny_multi_demo)
 
+    def load_20ng_tiny() -> Scenario:
+        from .demo_fixtures import build_20ng_tiny
+
+        return build_20ng_tiny()
+
+    registry.register("20ng_tiny", load_20ng_tiny)
+
+    def load_bbc_tiny() -> Scenario:
+        from .demo_fixtures import build_bbc_tiny, fixture_exists
+
+        if not fixture_exists("bbc_tiny"):
+            raise FileNotFoundError(
+                "bbc_tiny fixture not found. Run "
+                "`python scripts/build_bbc_tiny_fixtures.py` to build it."
+            )
+        return build_bbc_tiny()
+
+    registry.register("bbc_tiny", load_bbc_tiny)
+
 
 def _nearest_omega(omegas: Any, target: float) -> float | None:
     keys = list(omegas)
@@ -630,33 +652,62 @@ def _do_split(sc: Scenario, body: TopicSplitRequest) -> dict[str, Any]:
         PreparedDataObtained_fromPython   (the new PreparedData.to_dict())
         new_circle_positions              (JSON-encoded omega -> layout)
     """
-    from ..layout import circle_positions_from_old_matrix
+    from ..layout import circle_positions_from_old_matrix, split_correspondence
     from ..operations import split
 
     prepared = sc.require("prepared")
     model_data = sc.require("model_data")
     raw_texts = sc.require("raw_texts")
+    K = model_data.topic_term_dists.shape[0]
+    k_new = max(len(body.new_document_seeds), 2)
+    parent_idx = body.topic_id - 1  # convert 1-based to 0-based
+
+    logger.debug(
+        "split request: topic_id=%s K=%s seeds=%s docs scenario=%s",
+        body.topic_id,
+        K,
+        sum(len(v) for v in body.new_document_seeds.values()),
+        sc.name,
+    )
+
     refit = sc.extras.get("refit")
     if refit is None:
+        logger.warning(
+            "split blocked: scenario %r has no refit callable in extras (keys=%s)",
+            sc.name,
+            list(sc.extras),
+        )
         raise ValidationError(
             "Scenario does not provide a 'refit' callable in extras; "
             "topic splitting cannot run. See docs/extending.md."
         )
 
-    new_prepared = split(
-        prepared,
-        topic_id=body.topic_id,
-        k_new=2,
-        model_data=model_data,
-        raw_texts=raw_texts,
-        refit=refit,
-    )
-    sc.prepared = new_prepared
+    try:
+        new_prepared = split(
+            prepared,
+            topic_id=body.topic_id,
+            k_new=k_new,
+            model_data=model_data,
+            raw_texts=raw_texts,
+            refit=refit,
+        )
+        sc.prepared = new_prepared
 
-    new_matrix = _recompute_similarity(sc, new_prepared)
-    sc.similarity_matrix = new_matrix
-    new_layout = circle_positions_from_old_matrix(body.old_circle_positions, new_matrix)
-    sc.circle_positions = new_layout
+        corr = split_correspondence(K, parent_idx, k_new)
+        new_matrix = _recompute_similarity(sc, new_prepared)
+        sc.similarity_matrix = new_matrix
+        new_layout = circle_positions_from_old_matrix(
+            body.old_circle_positions, new_matrix, correspondence=corr
+        )
+        sc.circle_positions = new_layout
+    except TopicVisExplorerError:
+        raise
+    except (ValueError, np.linalg.LinAlgError) as exc:
+        logger.exception("layout recompute failed during split")
+        raise ValidationError(f"Layout recomputation failed: {exc}") from exc
+
+    K_new = K + k_new - 1
+    logger.info("split ok: K %d -> %d", K, K_new)
 
     return {
         "relevantDocumentsDict_fromPython": _json.dumps(sc.relevant_documents, cls=NumPyEncoder),
@@ -670,26 +721,59 @@ def _do_split(sc: Scenario, body: TopicSplitRequest) -> dict[str, Any]:
 
 
 def _do_merge(sc: Scenario, body: TopicMergeRequest) -> dict[str, list[list[float]]]:
-    from ..layout import circle_positions_from_old_matrix
+    from ..layout import circle_positions_from_old_matrix, merge_correspondence
     from ..operations import merge
 
     prepared = sc.require("prepared")
     model_data = sc.require("model_data")
-    new_prepared = merge(
-        prepared,
-        topic_id_a=body.index_topic_name_1 + 1,
-        topic_id_b=body.index_topic_name_2 + 1,
-        model_data=model_data,
-    )
-    sc.prepared = new_prepared
-    if body.relevantDocumentsDict_new:
-        sc.relevant_documents = body.relevantDocumentsDict_new
+    K = model_data.topic_term_dists.shape[0]
 
-    new_matrix = _recompute_similarity(sc, new_prepared)
-    sc.similarity_matrix = new_matrix
-    new_layout = circle_positions_from_old_matrix(body.old_circle_positions, new_matrix)
-    sc.circle_positions = new_layout
-    return {str(k): v for k, v in new_layout.items()}
+    # Convert to 0-based for correspondence; the merge operation uses 1-based.
+    a_idx_0 = min(body.index_topic_name_1, body.index_topic_name_2)
+    b_idx_0 = max(body.index_topic_name_1, body.index_topic_name_2)
+
+    logger.debug(
+        "merge request: a=%s b=%s K=%s scenario=%s",
+        body.index_topic_name_1,
+        body.index_topic_name_2,
+        K,
+        sc.name,
+    )
+
+    if a_idx_0 < 0 or b_idx_0 >= K or a_idx_0 == b_idx_0:
+        raise ValidationError(
+            f"Invalid merge indices {body.index_topic_name_1}/{body.index_topic_name_2} "
+            f"for K={K} (0-based, must be distinct and in range)."
+        )
+
+    try:
+        new_prepared = merge(
+            prepared,
+            topic_id_a=body.index_topic_name_1 + 1,
+            topic_id_b=body.index_topic_name_2 + 1,
+            model_data=model_data,
+        )
+        sc.prepared = new_prepared
+        if body.relevantDocumentsDict_new:
+            sc.relevant_documents = body.relevantDocumentsDict_new
+
+        corr = merge_correspondence(K, a_idx_0, b_idx_0)
+        new_matrix = _recompute_similarity(sc, new_prepared)
+        sc.similarity_matrix = new_matrix
+        new_layout = circle_positions_from_old_matrix(
+            body.old_circle_positions, new_matrix, correspondence=corr
+        )
+        sc.circle_positions = new_layout
+    except TopicVisExplorerError:
+        raise
+    except (ValueError, np.linalg.LinAlgError) as exc:
+        logger.exception("layout recompute failed during merge")
+        raise ValidationError(f"Layout recomputation failed: {exc}") from exc
+
+    K_new = K - 1
+    logger.info("merge ok: K %d -> %d", K, K_new)
+
+    return sanitize_for_json({str(k): v for k, v in new_layout.items()})
 
 
 def _recompute_similarity(sc: Scenario, prepared: Any) -> dict[float, np.ndarray]:
