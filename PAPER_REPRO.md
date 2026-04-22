@@ -6,11 +6,28 @@ Visualization paper on TopicVisExplorer using the v1.0 library.
 ## What ships in the public repo
 
 The public [`TopicVisExplorer`](https://github.com/gonzalezf/TopicVisExplorer)
-ships only **synthetic demo fixtures** (`tiny_demo`, `tiny_multi_demo`).
-The paper's full corpora — 20 Newsgroups, NIPS abstracts, and the
-author's research-paper collection — are **not included** in the public
-repository. The synthetic fixtures are sufficient to verify every edit
-operation, coherence metric, and visual baseline.
+includes:
+
+* **Two real-terms demos** — `20ng_tiny` (20 Newsgroups subset) and
+  `bbc_tiny` (UCD BBC news subset); both are committed as
+  ``.npz``/JSON under `src/topicvisexplorer/server/fixtures/` and can
+  be regenerated via ``scripts/build_20ng_tiny_fixtures.py`` and
+  ``scripts/build_bbc_tiny_fixtures.py``. See the README for licences.
+* **Bring-your-own corpus** — `tve demo --texts <file>` fits Gensim
+  LDA with the same preprocessing pipeline and caches results in
+  `~/.cache/topicvisexplorer/`; nothing is committed.
+* **Synthetic fixtures** — `tiny_demo` and `tiny_multi_demo` stay for fast
+  CI, golden baselines, and Playwright/frontend tests (``w00``-style tokens).
+
+The paper’s **private** preprocessed corpora, full-scale dumps, and
+original pickle snapshots — 20ng at the paper’s full scale, NIPS
+abstracts, the author’s research-paper collection — are **not** the same
+as the small public 20ng subset. Those paper-era assets were **not**
+redistributed in the public library; a user study on real text can use
+`20ng_tiny`, a local refit of 20ng (see
+[`docs/user_study.md`](docs/user_study.md)), or your own public corpus, while
+numerical equivalence with the v1.0 code paths remains covered by
+`golden_baseline/` + unit tests.
 
 ## What lives in the private backup
 

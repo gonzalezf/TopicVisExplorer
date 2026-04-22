@@ -20,11 +20,43 @@ pip install topicvisexplorer          # core + server + demo
 pip install "topicvisexplorer[full]"  # + BERTopic / ETM / CTM / SBERT
 ```
 
+**Developing from a git clone** (reproducible venv, tests, and scripts): use
+**`uv sync`** as in [`CONTRIBUTING.md`](CONTRIBUTING.md) (`uv.lock` + Python
+from `.python-version`), or `pip install -e ".[dev]"` in a virtualenv.
+
 ## Demo
 
 ```bash
-tve demo                              # opens a browser tab on 127.0.0.1:8000
+tve demo                              # real-terms 20ng_tiny (default)
+tve demo --corpus bbc_tiny            # second bundled demo (BBC news, 5 categories)
+tve demo --corpus tiny_demo           # synthetic w00 fixture (tests / screenshots)
+tve demo --texts my.jsonl --name x    # fit your own corpus (LDA, cached under ~/.cache/topicvisexplorer)
 ```
+
+## Datasets and licenses
+
+* **`20ng_tiny` (default)** — A small, **pinned** subset of the [20
+  Newsgroups](https://scikit-learn.org/stable/datasets/twenty_newsgroups.html)
+  corpus (UCI / sklearn distribution; standard for research and
+  benchmarking).  Bundled as committed `npz` + JSON under
+  `src/topicvisexplorer/server/fixtures/`; regenerate with
+  `python scripts/build_20ng_tiny_fixtures.py` from a dev checkout.
+* **`bbc_tiny`** — 400-document subsample of the
+  [UCD BBC news corpus](http://mlg.ucd.ie/datasets/bbc.html) (5
+  categories: `business`, `entertainment`, `politics`, `sport`, `tech`),
+  licensed for research use; cite Greene & Cunningham (ICML 2006). If
+  `mlg.ucd.ie` is unreachable the builder falls back to the
+  [`SetFit/bbc-news`](https://huggingface.co/datasets/SetFit/bbc-news)
+  Hugging Face mirror. Build recipe:
+  `python scripts/build_bbc_tiny_fixtures.py`.
+* **`tiny_demo` / `tiny_multi_demo`** — **Synthetic** data only; kept
+  for fast tests and exact visual baselines.
+* **`tve demo --texts ...`** — run the same pipeline on your own
+  documents; nothing is committed, fits are cached under
+  `~/.cache/topicvisexplorer/`.
+* The **paper's private** full corpora and original pickles are **not**
+  in this repository; see [`PAPER_REPRO.md`](PAPER_REPRO.md) and
+  [`docs/user_study.md`](docs/user_study.md) for public alternatives.
 
 ## Library API
 
@@ -49,6 +81,11 @@ tve.show([prepared_a, prepared_b])    # multi-corpus Sankey
 - **NPMI, C_v, segregation, coverage** per-topic metrics in a collapsible UI
   panel.
 - Paper-faithful visuals (Playwright visual-regression baselines).
+- **Two real-terms built-in demos** — `20ng_tiny` (20 Newsgroups slice,
+  default) and `bbc_tiny` (BBC news) — plus a **bring-your-own-corpus**
+  CLI path (`tve demo --texts ...`). All bundled scenarios (including
+  the synthetic `tiny_demo`) wire a `refit` callable, so server-side
+  topic **split** and **merge** work out of the box.
 
 ## Documentation
 
@@ -59,8 +96,10 @@ Full docs: **<https://gonzalezf.github.io/TopicVisExplorer/>**
 - [Edit operations](docs/edit-ops.md)
 - [Coherence metrics](docs/coherence.md)
 - [Extending](docs/extending.md)
+- [User study (public data, full HITL)](docs/user_study.md)
 - [Migration from v0.1](docs/migration.md)
 - [Paper reproduction](PAPER_REPRO.md)
+- [Contributing / CI](CONTRIBUTING.md)
 
 ## Citation
 

@@ -19,6 +19,7 @@ def test_scenarios_list_includes_demo(client: TestClient) -> None:
     res = client.get("/scenarios")
     assert res.status_code == 200
     names = res.json()["scenarios"]
+    assert "20ng_tiny" in names
     assert "tiny_demo" in names
     assert "tiny_multi_demo" in names
 
@@ -32,7 +33,7 @@ def test_index_redirects_to_singlecorpus(client: TestClient) -> None:
     # user opens a bare URL.
     location = res.headers["location"]
     assert location.startswith("/singlecorpus")
-    assert "scenario=tiny_demo" in location
+    assert "scenario=20ng_tiny" in location
 
 
 def test_unknown_scenario_returns_400(client: TestClient) -> None:

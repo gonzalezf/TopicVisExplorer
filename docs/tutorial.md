@@ -1,8 +1,10 @@
 # Tutorial: from a raw corpus to an interactive topic map
 
-This walkthrough uses the bundled `tiny_demo` fixture so it runs
-end-to-end without any downloads. The same pattern applies to a real
-corpus — just swap in your tokenized texts and model.
+The default `tve demo` shows **`20ng_tiny`** (a small 20 Newsgroups slice
+with real terms).  This walkthrough still uses the bundled **`tiny_demo`**
+synthetic fixture so it runs end-to-end without any downloads. The same
+pattern applies to any public corpus (see
+[`user_study.md`](user_study.md)).
 
 ## 1. Prepare a tokenized corpus
 

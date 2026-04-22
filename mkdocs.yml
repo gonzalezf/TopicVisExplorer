@@ -85,6 +85,7 @@ nav:
       - Edit operations: edit-ops.md
       - Coherence metrics: coherence.md
       - Extending: extending.md
+      - User study (public data): user_study.md
       - Migration from v0.1: migration.md
   - API reference:
       - Overview: reference/index.md

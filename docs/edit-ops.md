@@ -17,17 +17,32 @@ All five return a new `PreparedData`; the original is not mutated.
 
 ## Split
 
+`split` also needs a **`refit(sub_texts, k_new) -> TopicModelData`**
+call that re-fits on the member documents (e.g. gensim LDA; see
+`topicvisexplorer.operations.refit_helpers.refit_gensim_lda`).
+
 ```python
 from topicvisexplorer import operations
+from topicvisexplorer.operations import refit_gensim_lda
+
+refit = refit_gensim_lda(md)  # parent TopicModelData; reuses `md.vocab`
 
 new_prepared = operations.split(
     prepared,
     topic_id=1,         # 1-indexed topic number
     k_new=3,            # split into three sub-topics
     model_data=md,
-    raw_texts=raw_texts,      # required for sub-topic refit
+    raw_texts=raw_texts,
+    refit=refit,        # required
 )
 ```
+
+In the **web app**, the same `refit` must appear on
+`Scenario.extras["refit"]`; the bundled `20ng_tiny` and `bbc_tiny`
+scenarios wire a real `refit_gensim_lda`, and `tiny_demo` now also
+ships a lightweight NumPy-only `refit_static` so Split and Merge work
+on every bundled demo out of the box. Scenarios created via
+`tve demo --texts ...` inherit the same Gensim-backed refit.
 
 The hot path is vectorized (~10-20× the legacy Python loops) so
 splitting a 500-document corpus is sub-second.
@@ -37,8 +52,8 @@ splitting a 500-document corpus is sub-second.
 ```python
 new_prepared = operations.merge(
     prepared,
-    topic_a=1,
-    topic_b=4,          # both 1-indexed
+    topic_id_a=1,
+    topic_id_b=4,       # both 1-indexed
     model_data=md,
 )
 ```
@@ -66,6 +81,19 @@ Both operations renormalize the topic-term row and recompute
 `topic_info` (`Freq`, `Total`, `logprob`, `loglift`). The rest of the
 visualization is untouched, so the bar chart redraws instantly with no
 scatter repaint.
+
+### Per-term `+` / `−` controls in the UI
+
+Hovering a term in the "Most relevant terms for topic N" bar chart
+reveals a small `+` (add) and `−` (remove) pair on its right edge.
+These are the UI entry points for `operations.add_word` and
+`operations.remove_word`; they only appear when the page is loaded
+with `?hitl=true` (the default for `tve demo`). The controls edit the
+currently pinned topic's top-term bar chart only — they renormalize
+the topic-term row, but **do not** change the document-topic matrix or
+the scatter positions, so repeated clicks are cheap and undoable from
+the toolbar "Undo" button. Hover any term to try them; the SVG
+`<title>` tooltip names the exact topic being edited.
 
 ## Exclude a document
 

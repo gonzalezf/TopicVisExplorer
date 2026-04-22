@@ -167,15 +167,27 @@ Word edits operate on `model_data.vocab`. As long as your loader
 populated `topicvisexplorer.models.protocol.TopicModelData` correctly
 (see §1 above), the buttons work end-to-end with no per-loader code.
 
+### 3.4 Server-side **topic split** needs `refit` (HTTP path)
+
+`operations.split(prepared, ..., refit=...)` and the `POST` split
+endpoint require a `refit(sub_texts, k_new) -> TopicModelData` callable
+that re-fits a child model on a **sub-corpus** while keeping the parent
+vocabulary. For the **browser** to run split, register it on
+`Scenario.extras["refit"]` when you build
+`build_app(..., extra_scenarios=...)`; see
+`topicvisexplorer.operations.refit_helpers.refit_gensim_lda` and the
+bundled **`20ng_tiny`** scenario. The synthetic **`tiny_demo`** scenario
+does not register `refit` (use it for other edit ops and tests). See
+[User study](user_study.md) for a full end-to-end study launcher.
+
 ---
 
 ## See also
 
 * `golden_baseline/README.md` — golden-test discipline for staying
   numerically equivalent to the paper.
-* `CONTRIBUTING.md` — development workflow, branch strategy
-  (`master`/`legacy`/`next`), and the rule that any change to
-  golden output must regenerate the baselines via the
-  `scripts/capture_*` helpers.
+* `CONTRIBUTING.md` — development workflow on `main`, `uv` + `uv.lock`,
+  and the rule that any change to golden output must regenerate the
+  baselines via the `scripts/capture_*` helpers.
 * The reference adapters in `src/topicvisexplorer/models/adapters/`
   for working examples that satisfy the protocol.
