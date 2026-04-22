@@ -71,6 +71,9 @@ node_modules/
 /package.json
 /package-lock.json
 
+# One-off local debug / repro scripts (do not commit session-specific output)
+scripts/debug/
+
 # Local data
 *.pkl
 *.kv
@@ -78,6 +81,7 @@ node_modules/
 !tests/data/*.pkl
 !tests/data/*.kv
 !tests/data/*.npy
+!src/topicvisexplorer/server/fixtures/*.npy
 !tests/golden/**/*.json
 
 # Docs site build
@@ -85,3 +89,10 @@ site/
 
 # Paper review materials kept locally only
 paper_in_review/
+# Journal of Visualization manuscript (keep local; not in public repo)
+# Matches Journal_of_visualization (1).pdf, .zip, etc. (underscore + lowercase "visualization")
+Journal_of_visualization*
+*Journal*visualization*.pdf
+*Journal*Visualization*.pdf
+*JoV*.pdf
+paper-jov*.pdf
