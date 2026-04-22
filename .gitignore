@@ -89,6 +89,8 @@ site/
 
 # Paper review materials kept locally only
 paper_in_review/
+# Paper reproduction notes (local maintainer copy only; not in the public tree)
+PAPER_REPRO.md
 # Journal of Visualization manuscript (keep local; not in public repo)
 # Matches Journal_of_visualization (1).pdf, .zip, etc. (underscore + lowercase "visualization")
 Journal_of_visualization*

@@ -55,8 +55,9 @@ tve demo --texts my.jsonl --name x    # fit your own corpus (LDA, cached under ~
   documents; nothing is committed, fits are cached under
   `~/.cache/topicvisexplorer/`.
 * The **paper's private** full corpora and original pickles are **not**
-  in this repository; see [`PAPER_REPRO.md`](PAPER_REPRO.md) and
-  [`docs/own_data.md`](docs/own_data.md) for public alternatives.
+  in this repository; see [`docs/own_data.md`](docs/own_data.md) for public
+  alternatives. A local `PAPER_REPRO.md` is gitignored if you keep private
+  reproduction notes beside the tree.
 
 ## Library API
 
@@ -98,7 +99,6 @@ Full docs: **<https://gonzalezf.github.io/TopicVisExplorer/>**
 - [Extending](docs/extending.md)
 - [Working with your own data](docs/own_data.md)
 - [Migration from v0.1](docs/migration.md)
-- [Paper reproduction](PAPER_REPRO.md)
 - [Contributing / CI](CONTRIBUTING.md)
 
 ## Citation

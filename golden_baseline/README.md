@@ -26,7 +26,7 @@ These golden files assert that the modernized implementation produces the same
 numbers as the paper-version code on the **same synthetic input**. They do
 **not** reproduce the paper's published figures — those depend on private
 corpora that are not shipped with the library (see
-[`PAPER_REPRO.md`](../PAPER_REPRO.md)).
+[Working with your own data](../docs/own_data.md)).
 
 ### 2. The synthetic benchmark is dominated by Python overhead
 

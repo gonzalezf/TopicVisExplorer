@@ -16,8 +16,9 @@ separate "user study" server or a POST endpoint — the in-browser
 | `scripts/user_study/launch_20ng_study.py` | Live **sklearn** or **Hugging Face** + gensim | Custom `?scenario=` for larger runs; cite script args in papers |
 
 `tiny_demo` is **synthetic**. The paper-era **private** full corpora are
-**not** in this repo; see
-[`PAPER_REPRO.md` on the repository](https://github.com/gonzalezf/TopicVisExplorer/blob/main/PAPER_REPRO.md).
+**not** in this repo. If you keep private reproduction context, use a
+local `PAPER_REPRO.md` (that filename is gitignored and is not in the
+public tree).
 
 ## 20 Newsgroups: license and reproducibility
 
