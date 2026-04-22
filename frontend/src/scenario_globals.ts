@@ -1,3 +1,5 @@
+import $ from "jquery";
+
 /**
  * Pre-import setup of the legacy globals expected by LDAvis.js / topicflow.js.
  *
@@ -21,7 +23,43 @@
 
 const w = window as any;
 
+// Opt-in legacy debug logs (LDAvis merge/split progress, etc.): /singlecorpus?...&tve_debug=1
+// Or set ``window.TVE_DEBUG = true`` in DevTools.
+try {
+  const qp = new URLSearchParams(window.location.search);
+  if (w.TVE_DEBUG == null) {
+    w.TVE_DEBUG = qp.get("tve_debug") === "1" || qp.get("TVE_DEBUG") === "1";
+  }
+} catch {
+  if (w.TVE_DEBUG == null) w.TVE_DEBUG = false;
+}
+
 const scenario = w.TVE_SCENARIO;
+
+/**
+ * Map embedded prepared JSON to the ``hitl`` query string the server
+ * would use. Must match ``app.py``:
+ * ``prepared_dict["human_in_the_loop"] = hitl.lower() != "false"``.
+ * Default to ``"true"`` (same as FastAPI's default for ``/singlecorpus``)
+ * so a full page reload does not strip Split/Merge/Reverse.
+ */
+function _tveHitlParamFromVisJson(vis: unknown): "true" | "false" {
+  if (vis == null) return "true";
+  if (typeof vis === "string") {
+    try {
+      const p = JSON.parse(vis) as { human_in_the_loop?: boolean };
+      return p.human_in_the_loop === false ? "false" : "true";
+    } catch {
+      return "true";
+    }
+  }
+  if (typeof vis === "object" && vis !== null && "human_in_the_loop" in vis) {
+    return (vis as { human_in_the_loop?: boolean }).human_in_the_loop === false
+      ? "false"
+      : "true";
+  }
+  return "true";
+}
 
 // If the user navigated to e.g. ``/singlecorpus`` without a ``?scenario=``
 // query string, the legacy LDAvis.js code at module load time reads
@@ -29,13 +67,17 @@ const scenario = w.TVE_SCENARIO;
 // "tutorial mode". Backfill the query string from the server-rendered
 // ``TVE_SCENARIO.name`` so the tutorial doesn't auto-fire on bare URLs.
 // ``history.replaceState`` keeps the browser-bar URL coherent without
-// adding a navigation entry.
+// adding a navigation entry. When we add ``hitl``, it must match the
+// embedded ``human_in_the_loop`` field (or default ``true``), never
+// ``false`` on its own, or a refresh would hide HITL controls.
 if (scenario && scenario.name) {
   try {
     const params = new URLSearchParams(window.location.search);
     if (!params.has("scenario")) {
       params.set("scenario", scenario.name);
-      if (!params.has("hitl")) params.set("hitl", "false");
+      if (!params.has("hitl")) {
+        params.set("hitl", _tveHitlParamFromVisJson(scenario.visJson));
+      }
       const newSearch = "?" + params.toString();
       window.history.replaceState({}, "", window.location.pathname + newSearch);
     }
@@ -67,6 +109,46 @@ if (scenario) {
   w.type_vis = w.type_vis ?? 0;
   w.topic_order = w.topic_order ?? [];
   w.jsonData = w.jsonData ?? null;
+}
+
+// After server restart, the session cookie may not match in-memory state.
+// Send the page scenario name on every XHR/fetch so POST endpoints can
+// re-attach a single- or multi-corpus scenario the same way as GET /singlecorpus.
+const TVE_SCENARIO_HEADER = "X-TVE-Scenario";
+function _tveScenarioHeaderValue(): string | null {
+  const s = w.TVE_SCENARIO;
+  if (s && typeof s.name === "string" && s.name) {
+    return s.name;
+  }
+  return null;
+}
+if (typeof $.ajaxSetup === "function") {
+  $.ajaxSetup({
+    beforeSend(jqXHR) {
+      const v = _tveScenarioHeaderValue();
+      if (v) {
+        jqXHR.setRequestHeader(TVE_SCENARIO_HEADER, v);
+      }
+    },
+  });
+}
+if (typeof w.fetch === "function") {
+  const origFetch = w.fetch.bind(w);
+  w.fetch = function tveFetch(
+    input: RequestInfo | URL,
+    init?: RequestInit,
+  ): Promise<Response> {
+    const v = _tveScenarioHeaderValue();
+    if (!v) {
+      return origFetch(input, init);
+    }
+    const next: RequestInit = { ...init, headers: new Headers(init?.headers) };
+    const h = next.headers as Headers;
+    if (!h.has(TVE_SCENARIO_HEADER)) {
+      h.set(TVE_SCENARIO_HEADER, v);
+    }
+    return origFetch(input, next);
+  };
 }
 
 export {};

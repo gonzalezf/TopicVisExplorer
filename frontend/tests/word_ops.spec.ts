@@ -1,6 +1,10 @@
 /**
  * Phase 4d: end-to-end coverage for the add/remove word UI controls.
  *
+ * **Status:** Bar-chart +/− glyphs were removed from the product UI; the
+ * suite is skipped until those D3 controls (and main.scss hovers) are
+ * restored. ``_tveAddRemoveWord`` and ``POST /Add_Remove_Word`` remain.
+ *
  * The visual baseline gates protect *appearance* (no pixel diffs when
  * the buttons are not hovered). This suite gates *behaviour*: clicking
  * the +/- glyphs round-trips through ``POST /Add_Remove_Word`` and the
@@ -22,9 +26,12 @@
 
 import { expect, test } from "@playwright/test";
 
-test.describe("add/remove word controls", () => {
+// +/− bar-chart glyphs were removed; keep file for future API/UI tests.
+test.describe.skip("add/remove word controls (UI removed)", () => {
   test("clicking + boosts the word and redraws the bar chart", async ({ page }) => {
-    await page.goto("/singlecorpus?scenario=tiny_demo&hitl=false", {
+    // +/- controls are only mounted when human-in-the-loop is enabled
+    // (``hitl`` is not the string "false" on ``/singlecorpus``).
+    await page.goto("/singlecorpus?scenario=tiny_demo&hitl=true", {
       waitUntil: "networkidle",
     });
 
@@ -89,7 +96,7 @@ test.describe("add/remove word controls", () => {
   });
 
   test("clicking - removes the word from the topic", async ({ page }) => {
-    await page.goto("/singlecorpus?scenario=tiny_demo&hitl=false", {
+    await page.goto("/singlecorpus?scenario=tiny_demo&hitl=true", {
       waitUntil: "networkidle",
     });
 

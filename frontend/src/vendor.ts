@@ -30,6 +30,14 @@ import Popper from "popper.js";
 // the original d3 v5 global. Property identities are preserved so anything
 // the legacy code holds a reference to keeps working.
 const d3: Record<string, any> = { ...d3Module };
+// D3 v5 sets d3.event on the *module namespace* during dispatch; the copy
+// above would keep a stale null. Proxy reads so legacy d3.event.stopPropagation() works.
+Object.defineProperty(d3, "event", {
+  configurable: true,
+  get() {
+    return (d3Module as any).event;
+  },
+});
 
 window.$ = $;
 window.jQuery = $;

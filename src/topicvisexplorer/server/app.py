@@ -66,6 +66,9 @@ logger = get_logger(__name__)
 
 SESSION_COOKIE_NAME = "tve_session"
 
+#: Client may send the loaded scenario when the in-memory session lost it (e.g. server restart).
+TVE_SCENARIO_HEADER = "X-TVE-Scenario"
+
 #: Default omega used by the legacy front end when none is passed.
 DEFAULT_OMEGA: float = 0.0
 
@@ -224,8 +227,37 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
 
     SessionDep = Depends(_get_session)
 
-    def _require_single(state: SessionState) -> Scenario:
+    def _try_attach_single_from_header(request: Request, state: SessionState) -> None:
+        raw = (request.headers.get(TVE_SCENARIO_HEADER) or "").strip()
+        if not raw:
+            return
+        try:
+            loaded = registry.load(raw)
+        except ValidationError:
+            return
+        if loaded.is_multi:
+            return
+        state.single_corpus["scenario"] = loaded
+        state.single_corpus["history"] = []
+        state.history.clear()
+
+    def _try_attach_multi_from_header(request: Request, state: SessionState) -> None:
+        raw = (request.headers.get(TVE_SCENARIO_HEADER) or "").strip()
+        if not raw:
+            return
+        try:
+            loaded = registry.load(raw)
+        except ValidationError:
+            return
+        if not loaded.is_multi:
+            return
+        state.multi_corpora["scenario"] = loaded
+
+    def _require_single(request: Request, state: SessionState) -> Scenario:
         sc = state.single_corpus.get("scenario")
+        if sc is None:
+            _try_attach_single_from_header(request, state)
+            sc = state.single_corpus.get("scenario")
         if sc is None:
             raise HTTPException(
                 400,
@@ -234,8 +266,11 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
             )
         return sc
 
-    def _require_multi(state: SessionState) -> Scenario:
+    def _require_multi(request: Request, state: SessionState) -> Scenario:
         sc = state.multi_corpora.get("scenario")
+        if sc is None:
+            _try_attach_multi_from_header(request, state)
+            sc = state.multi_corpora.get("scenario")
         if sc is None:
             raise HTTPException(
                 400,
@@ -330,22 +365,30 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
         )
 
     @app.get("/SingleCorpus_documents")
-    async def single_corpus_documents(state: SessionState = SessionDep) -> JSONResponse:
-        sc = _require_single(state)
+    async def single_corpus_documents(
+        request: Request, state: SessionState = SessionDep
+    ) -> JSONResponse:
+        sc = _require_single(request, state)
         return JSONResponse(content=sc.relevant_documents)
 
     @app.get("/MultiCorpora_documents_1")
-    async def multi_corpora_documents_1(state: SessionState = SessionDep) -> JSONResponse:
-        sc = _require_multi(state)
+    async def multi_corpora_documents_1(
+        request: Request, state: SessionState = SessionDep
+    ) -> JSONResponse:
+        sc = _require_multi(request, state)
         return JSONResponse(content=sc.relevant_documents)
 
     @app.get("/MultiCorpora_documents_2")
-    async def multi_corpora_documents_2(state: SessionState = SessionDep) -> JSONResponse:
-        sc = _require_multi(state)
+    async def multi_corpora_documents_2(
+        request: Request, state: SessionState = SessionDep
+    ) -> JSONResponse:
+        sc = _require_multi(request, state)
         return JSONResponse(content=sc.relevant_documents_b)
 
     @app.get("/coherence")
-    async def coherence_endpoint(state: SessionState = SessionDep) -> JSONResponse:
+    async def coherence_endpoint(
+        request: Request, state: SessionState = SessionDep
+    ) -> JSONResponse:
         """Return per-topic NPMI / C_v / segregation / coverage.
 
         The collapsible coherence panel in the modern UI is **off by
@@ -362,7 +405,7 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
         """
         from ..coherence import report
 
-        sc = _require_single(state)
+        sc = _require_single(request, state)
         prepared = sc.require("prepared")
         model_data = sc.require("model_data")
         raw_texts = sc.raw_texts or []
@@ -382,9 +425,11 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
 
     @app.get("/get_topic_similarity_matrix_single_corpus")
     async def topic_similarity_matrix(
-        value: float = DEFAULT_OMEGA, state: SessionState = SessionDep
+        request: Request,
+        value: float = DEFAULT_OMEGA,
+        state: SessionState = SessionDep,
     ) -> JSONResponse:
-        sc = _require_single(state)
+        sc = _require_single(request, state)
         omega = _nearest_omega(sc.similarity_matrix.keys(), value)
         if omega is None:
             raise HTTPException(404, "No similarity matrix is loaded for this scenario.")
@@ -392,9 +437,11 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
 
     @app.post("/Topic_Splitting_Document_Based")
     async def topic_splitting(
-        body: TopicSplitRequest, state: SessionState = SessionDep
+        request: Request,
+        body: TopicSplitRequest,
+        state: SessionState = SessionDep,
     ) -> JSONResponse:
-        sc = _require_single(state)
+        sc = _require_single(request, state)
         state.history.append({"op": "split_snapshot", "snapshot": _snapshot(sc)})
         try:
             payload = _do_split(sc, body)
@@ -405,9 +452,11 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
 
     @app.post("/get_new_topic_vector")
     async def topic_merge(
-        body: TopicMergeRequest, state: SessionState = SessionDep
+        request: Request,
+        body: TopicMergeRequest,
+        state: SessionState = SessionDep,
     ) -> JSONResponse:
-        sc = _require_single(state)
+        sc = _require_single(request, state)
         state.history.append({"op": "merge_snapshot", "snapshot": _snapshot(sc)})
         try:
             new_circle_positions = _do_merge(sc, body)
@@ -417,8 +466,8 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
         return JSONResponse(content=new_circle_positions)
 
     @app.post("/undo_merge_splitting")
-    async def undo(state: SessionState = SessionDep) -> JSONResponse:
-        sc = _require_single(state)
+    async def undo(request: Request, state: SessionState = SessionDep) -> JSONResponse:
+        sc = _require_single(request, state)
         if not state.history:
             raise HTTPException(400, "Nothing to undo.")
         last = state.history.pop()
@@ -427,7 +476,9 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
 
     @app.post("/Add_Remove_Word")
     async def add_remove_word(
-        body: AddRemoveWordRequest, state: SessionState = SessionDep
+        request: Request,
+        body: AddRemoveWordRequest,
+        state: SessionState = SessionDep,
     ) -> JSONResponse:
         """Add or remove ``body.word`` from ``body.topic_id``'s display.
 
@@ -438,7 +489,7 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
         ``ok``/``remaining_undo_steps`` keys keep backward compatibility
         with any caller that just wanted the boolean result.
         """
-        sc = _require_single(state)
+        sc = _require_single(request, state)
         state.history.append({"op": "word_snapshot", "snapshot": _snapshot(sc)})
         try:
             from ..operations import add_word, remove_word
@@ -472,11 +523,13 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
 
     @app.post("/Exclude_Document")
     async def exclude_document_route(
-        body: ExcludeDocumentRequest, state: SessionState = SessionDep
+        request: Request,
+        body: ExcludeDocumentRequest,
+        state: SessionState = SessionDep,
     ) -> JSONResponse:
         """Drop a single document from a topic and re-prepare. See
         :func:`add_remove_word` for response-shape rationale."""
-        sc = _require_single(state)
+        sc = _require_single(request, state)
         state.history.append({"op": "exclude_snapshot", "snapshot": _snapshot(sc)})
         try:
             from ..operations import exclude_document

@@ -32,55 +32,10 @@
   height: 100vh;
 }
 
-// === Phase 4d: add/remove word controls ===
-//
-// Two SVG <text> nodes per term row carry the "+" / "−" glyphs. They
-// MUST be visually inert when the user is not interacting with the
-// chart so the Phase 3a Playwright baselines stay byte-identical. The
-// rules below:
-//
-// 1. Force opacity 0 and disable pointer events by default. Playwright's
-//    `screenshot()` does not simulate hover, so a fully transparent
-//    sibling has zero pixel impact. `pointer-events: none` belt-and-
-//    braces against accidental clicks before the term label is hovered.
-// 2. Reveal the buttons (and accept clicks) when either the matching
-//    term label OR the buttons themselves are hovered. The selector
-//    chain is structured around the existing `.terms` class on the
-//    label and `data-bar-id` lookups on the button -- they share an
-//    SVG parent so an adjacent-sibling visibility flip works through
-//    a hover on the bar's wrapping <g>.
-// 3. The `:hover` of the button itself keeps the buttons visible while
-//    the cursor moves between label -> button without a visible flicker.
-.tve-word-ctrl {
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 13px;
-  fill: #aaa;
-  opacity: 0.25;    // visible at rest so users discover the controls
-  pointer-events: auto;
-  transition: opacity 120ms linear, fill 120ms linear;
-  user-select: none;
-}
-
-// Full opacity on hover of the parent SVG group OR on the control itself.
-svg:hover .tve-word-ctrl,
-.tve-word-ctrl:hover {
-  opacity: 1;
-  pointer-events: auto;
-}
-
 // Ensure topic circles are always clickable.
 #topicCircles .dot {
   pointer-events: all;
   cursor: pointer;
-}
-
-.tve-word-add-ctrl:hover {
-  fill: #2ecc71; // green
-}
-
-.tve-word-rem-ctrl:hover {
-  fill: #e74c3c; // red
 }
 
 // === Phase 4f: collapsible coherence panel ===

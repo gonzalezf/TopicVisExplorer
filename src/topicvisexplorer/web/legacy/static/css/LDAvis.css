@@ -733,3 +733,19 @@ input[type=radio] {
 #sliderDivFiltering{
   margin-top: 7px;
 }
+
+/* Split topic modal: narrow viewports and horizontal table scroll */
+@media (max-width: 768px) {
+  #SplitTopicModal .modal-dialog {
+    max-width: calc(100% - 1rem);
+    margin: 0.5rem auto;
+  }
+  #SplitTopicModal .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+}
+#SplitTopicModal .tve-split-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}

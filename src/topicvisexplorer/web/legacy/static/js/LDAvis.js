@@ -1,6 +1,8 @@
 /* Original code taken from https://github.com/cpsievert/LDAvis */
 /* Copyright 2013, AT&T Intellectual Property */
 /* MIT Licence */
+/* Canonical source: frontend/src/legacy/LDAvis.js (Vite). A mirror may exist at
+   src/topicvisexplorer/web/legacy/static/js/LDAvis.js for legacy template loads; keep in sync. */
 
 'use strict';
 var global_terms_1;
@@ -52,8 +54,13 @@ function isTutorial(){
 }
 isTutorial()
 
-// === Modernization: Hotjar / third-party identify removed (open source) ===
-// Use the Export topics button for a local JSON snapshot of the current view.
+
+// === Modernization: Hotjar / IRB clickstream removed ===
+// The open-source library does not ship third-party analytics. Session
+// telemetry was removed; use the Export topics button for a local JSON
+// snapshot of the current model view.
+
+
 
 //this function allow to access some values on the matrix_sankey
 function get_new_omega(old_omega){
@@ -306,8 +313,220 @@ var LDAvis = function(to_select, data_or_file_name) {
         };
     }
 
+    // === Modernization: Phase 4d ===
+    // POST /Add_Remove_Word with the currently-selected topic and the
+    // clicked word. On success, rebuild `lamData` from the returned
+    // `tinfo` (tinfo carries every (Term, Category, logprob, loglift,
+    // ...) combination across all topics, so we can replace the array
+    // wholesale and let the existing `topic_on()` machinery redraw).
+    //
+    // We deliberately do NOT touch mdsData here: add/remove word is a
+    // display-only edit per add_remove_word.py's docstring -- it leaves
+    // doc_topic_dists unchanged, which means the (x, y) topic
+    // coordinates in the central panel are stable. Keeping the central
+    // panel pinned matches the paper's intended UX.
+    //
+    // Bar-chart +/− controls were removed (no D3 text nodes); this
+    // function is retained for a possible future control surface or
+    // programmatic use. E2E for the old UI is in word_ops.spec.ts (skipped).
+    // Forward-declared late-bound bag for closure-private helpers
+    // (``topic_on``, ``updateRelevantDocuments``). Populated near the
+    // end of ``visualize(data)`` once those have been defined. See the
+    // Phase 4d/4e wiring notes inside ``visualize``.
+    var _tveInternals = {};
+
+    function _tveDebug(phase, message, extra) {
+        if (typeof window !== "undefined" && window.TVE_DEBUG) {
+            if (extra !== undefined) {
+                console.info("[TVE " + phase + "]", message, extra);
+            } else {
+                console.info("[TVE " + phase + "]", message);
+            }
+        }
+    }
+
+    function _tveShowServerError(xhr, op) {
+        var msg = op + " failed.";
+        try {
+            var body = JSON.parse(xhr.responseText);
+            if (body && body.message) {
+                msg += "\n\n" + body.message;
+            } else if (body && body.detail) {
+                msg += "\n\n" + (typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail));
+            } else {
+                msg += "\n\n(HTTP " + xhr.status + ")";
+            }
+        } catch (e) {
+            msg += "\n\n(HTTP " + xhr.status + ")";
+        }
+        console.error("[TopicVisExplorer]", op, "HTTP", xhr.status);
+        alert(msg);
+    }
+
+    function _tveAddRemoveWord(word, action){
+        if (typeof vis_state === "undefined" || !vis_state || !vis_state.topic || vis_state.topic <= 0){
+            // Defensive: only relevant when a topic is selected; bar chart
+            // is empty otherwise.
+            console.warn("[TopicVisExplorer] add/remove word skipped: no topic selected");
+            return;
+        }
+        $.ajax({
+            type: 'POST',
+            url: '/Add_Remove_Word',
+            async: true,
+            data: JSON.stringify({ topic_id: vis_state.topic, word: word, action: action }),
+            contentType: 'application/json',
+            success: function(resp){
+                if (!resp || !resp.PreparedDataObtained_fromPython){
+                    console.error("[TopicVisExplorer] /Add_Remove_Word returned no PreparedData");
+                    return;
+                }
+                var newTinfo = resp.PreparedDataObtained_fromPython.tinfo;
+                if (!newTinfo || !newTinfo.Term){
+                    console.error("[TopicVisExplorer] /Add_Remove_Word: malformed tinfo");
+                    return;
+                }
+                // Rebuild lamData from the new tinfo wholesale. Same
+                // recipe used by the original `visualize(data)` body
+                // around line ~460.
+                lamData = [];
+                for (var i = 0; i < newTinfo.Term.length; i++){
+                    var obj = {};
+                    for (var key in newTinfo){
+                        obj[key] = newTinfo[key][i];
+                    }
+                    lamData.push(obj);
+                }
+                // Re-trigger the existing topic-selection machinery so
+                // bars get redrawn with the new term mass.
+                var topicEl = document.getElementById(topicID + vis_state.topic);
+                if (topicEl && typeof _tveInternals.topic_on === "function"){
+                    _tveInternals.topic_on(topicEl);
+                }
+            },
+            error: function(xhr, textStatus, errorThrown){
+                console.error("[TopicVisExplorer] /Add_Remove_Word failed", textStatus || errorThrown);
+            }
+        });
+    }
+
+    // === Modernization: Phase 4e ===
+    // Build the bootstrap-table column descriptor for the single-corpus
+    // documents panel and inject a third "exclude" column. The column
+    // is rendered as a small button per row whose ``data-doc-id``
+    // attribute carries the source document index. A delegated click
+    // handler (registered once at init time) calls
+    // ``/Exclude_Document``, refreshes ``relevantDocumentsDict`` from
+    // the server response, and re-renders the table.
+    //
+    // Visual-baseline impact: zero. The exclude column only appears
+    // *after* the user selects a topic, which the visual baselines do
+    // not exercise.
+    // Inlined percentage formatter so this helper does not need to
+    // close over ``to_percentage`` (which lives inside ``visualize``).
+    function _tvePercentFormatter(number){
+        return (number * 100).toFixed(1) + '%';
+    }
+
+    function _tveDocumentColumnsModel1(topic_id, column_text_name){
+        var cols = [
+            {
+                field: String(topic_id),
+                formatter: _tvePercentFormatter,
+                title: '%',
+                sortable: 'true'
+            },
+            {
+                field: column_text_name,
+                escape: 'true',
+                title: 'Document',
+                sortable: 'true'
+            },
+            {
+                field: 'doc_id',
+                title: '',
+                sortable: false,
+                searchable: false,
+                width: 30,
+                formatter: function(value, row){
+                    if (value === undefined || value === null) {
+                        // Backwards-compat: legacy fixtures that don't
+                        // carry doc_id simply don't render the button.
+                        return '';
+                    }
+                    return '<button type="button" class="btn btn-sm btn-link tve-doc-exclude-ctrl" '
+                        + 'data-doc-id="' + value + '" '
+                        + 'aria-label="Exclude this document from the selected topic" '
+                        + 'title="Exclude this document from the selected topic">'
+                        + '\u2715</button>';
+                }
+            }
+        ];
+        return cols;
+    }
+
+    function _tveExcludeDocument(docId){
+        if (typeof vis_state === "undefined" || !vis_state || !vis_state.topic || vis_state.topic <= 0){
+            console.warn("[TopicVisExplorer] exclude doc skipped: no topic selected");
+            return;
+        }
+        if (typeof docId !== "number" || isNaN(docId)) {
+            console.warn("[TopicVisExplorer] exclude doc skipped: invalid doc_id", docId);
+            return;
+        }
+        $.ajax({
+            type: 'POST',
+            url: '/Exclude_Document',
+            async: true,
+            data: JSON.stringify({ topic_id: vis_state.topic, doc_id: docId }),
+            contentType: 'application/json',
+            success: function(resp){
+                if (!resp || !resp.PreparedDataObtained_fromPython){
+                    console.error("[TopicVisExplorer] /Exclude_Document returned no PreparedData");
+                    return;
+                }
+                // Drop the excluded row from the in-memory documents
+                // dict so the table reflects the new state immediately.
+                // Note: ``row.doc_id`` arrives from the server as a
+                // JSON number, but bootstrap-table sometimes coerces
+                // dataset attributes to strings. Compare loosely so a
+                // numeric click target also matches a stringified row.
+                if (typeof relevantDocumentsDict !== "undefined" && relevantDocumentsDict){
+                    relevantDocumentsDict = relevantDocumentsDict.filter(function(row){
+                        return row.doc_id != docId; // eslint-disable-line eqeqeq
+                    });
+                }
+                // Rebuild lamData (term mass shifts when a document
+                // is dropped because the topic-term distribution gets
+                // re-derived from the surviving doc_topic_dists).
+                var newTinfo = resp.PreparedDataObtained_fromPython.tinfo;
+                if (newTinfo && newTinfo.Term){
+                    lamData = [];
+                    for (var i = 0; i < newTinfo.Term.length; i++){
+                        var obj = {};
+                        for (var key in newTinfo){ obj[key] = newTinfo[key][i]; }
+                        lamData.push(obj);
+                    }
+                }
+                // Refresh the documents panel and the keyword bars for
+                // the currently-selected topic. Both helpers live in
+                // the ``visualize`` closure; we reach them via the
+                // late-bound ``_tveInternals`` bag (see ``visualize``).
+                if (typeof _tveInternals.updateRelevantDocuments === "function"){
+                    _tveInternals.updateRelevantDocuments(vis_state.topic - 1, relevantDocumentsDict, 1);
+                }
+                var topicEl = document.getElementById(topicID + vis_state.topic);
+                if (topicEl && typeof _tveInternals.topic_on === "function"){
+                    _tveInternals.topic_on(topicEl);
+                }
+            },
+            error: function(xhr, textStatus, errorThrown){
+                console.error("[TopicVisExplorer] /Exclude_Document failed", textStatus || errorThrown);
+            }
+        });
+    }
+
     function updateTopicNamesCircles(data, id_topic_splitted, old_mdsData, old_frequency){
-        console.log(' recibi esta frecuencia', old_frequency);
         // set the number of topics to global variable K:
         K = data['mdsDat'].x.length;
 
@@ -357,7 +576,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .each(
                     function(d) {
                         var dat2 = lamData.filter(function(e) {
-                            return e.Category == "Topic"+d.topics;s
+                            return e.Category == "Topic"+d.topics;
                         });
                         
     
@@ -388,7 +607,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                         if(d.topics == id_topic_splitted || name_topics_circles[topicID + d.topics] == undefined){// como hay varios topicos undefined, esto tira un calculo equivaco a aveces
 
                             name_topics_circles[topicID + d.topics] = 'New subtopic '+name_string;
-                            console.log(' nuevo topico,', name_topics_circles[topicID + d.topics]);
                             new_subtopics_id.push(d.topics)
                             freq_splitted_total  = mdsData.find(element => element.topics == d.topics).Freq;
                             topics_splitted.push( topicID + d.topics);
@@ -402,9 +620,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         }
 
                     });    
-        console.log(' FREQ TOTAL ANTES', freq_splitted_total);
         freq_splitted_total +=  mdsData.find(element => Number(element.topics) == Number(id_topic_splitted)).Freq;
-        console.log(' FREQ TOTAL DESPUES', freq_splitted_total);
         for ( var i = 0; i < new_subtopics_id.length; i++){
            
             var current_id =new_subtopics_id[i];
@@ -459,7 +675,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .each(
                     function(d) {
                         var dat2 = lamData.filter(function(e) {
-                            return e.Category == "Topic"+d.topics;s
+                            return e.Category == "Topic"+d.topics;
                         });
                             
                         // define relevance:
@@ -1063,6 +1279,11 @@ var LDAvis = function(to_select, data_or_file_name) {
         }
         
         function splitting_topics_document_based_scenario_1(){
+            _tveDebug("split", "starting", {
+                topic_id: vis_state.topic,
+                splitting_topic: splitting_topic,
+                currentK: mdsData && mdsData.length
+            });
             $('#loadMe').modal({
                 backdrop: 'static',
                 keyboard: false
@@ -1075,8 +1296,16 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             var old_frequency  = mdsData.find(element => element.topics == vis_state.topic).Freq;
             //console.log(' OJOO!!!!', vis_state.topic, splitting_topic, mdsData, old_frequency)
+            var rawSeeds = slider_topic_splitting_values[splitting_topic];
+            if (rawSeeds) {
+                ['TopicA', 'TopicB'].forEach(function (k) {
+                    if (rawSeeds[k] && Array.isArray(rawSeeds[k])) {
+                        rawSeeds[k] = rawSeeds[k].filter(function (x) { return x && typeof x === "object"; });
+                    }
+                });
+            }
             var postDataTopicSplitting = {
-                new_document_seeds: slider_topic_splitting_values[splitting_topic],
+                new_document_seeds: rawSeeds,
                 old_circle_positions: new_circle_positions,
                 topic_id: vis_state.topic,
                 current_number_of_topics: Object.values(new_circle_positions['0.0']).length,
@@ -1087,6 +1316,10 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             //4.- Create new new_position circle arrray
             var new_dict_topic_splitting; 
+            _tveDebug("split", "POST /Topic_Splitting_Document_Based (waiting for server…)", {
+                topic_id: postDataTopicSplitting.topic_id,
+                current_number_of_topics: postDataTopicSplitting.current_number_of_topics
+            });
             $.ajax({
                 type: 'POST',
                 url: '/Topic_Splitting_Document_Based',
@@ -1113,28 +1346,25 @@ var LDAvis = function(to_select, data_or_file_name) {
                     
                     //reset selection of documents for topic splitting.
                     slider_topic_splitting_values[splitting_topic] = {};
-                    $("#loadMe").modal('hide');
                     story_hil_operations.push('split');
-                    console.log(' SPLIT - NUEVO MDSDATA', mdsData);
+                    _tveDebug("split", "finished — layout and tables updated (K = " + mdsData.length + ")");
                     
                 },
-                error: function(XMLHttpRequest, textStatus, errorThrown) { 
-                    alert("Status: " + textStatus); alert("Error: " + errorThrown); 
-                    $("#loadMe").modal('hide');
-
-                }, 
+                error: function(xhr, textStatus, errorThrown) {
+                    _tveDebug("split", "request failed", { status: xhr && xhr.status, textStatus: textStatus });
+                    _tveShowServerError(xhr, "Split topic");
+                },
+                complete: function () {
+                    $("#loadMe").modal("hide");
+                },
                 contentType: "application/json"             
-            })
-            .fail(function(data){
-                $("#loadMe").modal('hide');
-
-                console.log('Ajax failed'+ data['responseText'] );
             });                                
         }
 
       
 
         function merging_topics_scenario_1(topic_name_1, topic_name_2){
+            _tveDebug("merge", "starting", { with: topic_name_2, base: topic_name_1 });
             $('#loadMe').modal({
                 backdrop: 'static',
                 keyboard: false
@@ -1223,9 +1453,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
            
                 
-                if(row_topic_1.relevance != row_topic_2.relevance){
-                    console.log("ERROR In relevance calculation", row_topic_1, row_topic_2)
-                }
             }      
                 
             terms_topic_1.sort(fancysort("relevance"));
@@ -1255,6 +1482,11 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
             //4.- Create new new_position circle arrray
+            _tveDebug("merge", "POST /get_new_topic_vector (waiting for server…)", {
+                index_topic_name_1: index_topic_name_1,
+                index_topic_name_2: index_topic_name_2,
+                omega: vis_state.lambda_lambda_topic_similarity
+            });
 
             $.ajax({
                 type: 'POST',
@@ -1280,13 +1512,13 @@ var LDAvis = function(to_select, data_or_file_name) {
                     topic_on(document.getElementById(topicID+vis_state.topic));         
                     $("#loadMe").modal('hide');
                     story_hil_operations.push('merge');
-                    console.log(' MERGE - NUEVO MDSDATA', mdsData);
+                    _tveDebug("merge", "finished — new circle positions received (omega keys: " + Object.keys(new_circle_positions).join(", ") + ")");
 
                 },
-                error: function(XMLHttpRequest, textStatus, errorThrown) { 
-                    alert("Status: " + textStatus); alert("Error: " + errorThrown); 
+                error: function(xhr, textStatus, errorThrown) {
+                    _tveDebug("merge", "request failed", { status: xhr && xhr.status, textStatus: textStatus });
+                    _tveShowServerError(xhr, "Merge topics");
                     $("#loadMe").modal('hide');
-
                 }, 
                 contentType: "application/json",
                 dataType: 'json'
@@ -1513,7 +1745,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                     }
                     else{
-                        console.log('ENCONTRAMOS UN UNDEFINED cx', cx_new_positions, mdsData);
                         name_topics_circles[topicID + d.topics] = name_topics_circles[topicID + d.topics]+'_topicwitherror'
                         topics_with_error.push(d.topics+'-'+name_topics_circles[topicID + d.topics]);
                     }
@@ -1528,9 +1759,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     if(new_positions[cy_new_positions] != undefined){
                         return (yScale(+new_positions[cy_new_positions][1]));
 
-                    }
-                    else{
-                        console.log('ENCONTRAMOS UN UNDEFINED cy ', cy_new_positions, mdsData);
                     }
 
                     //return (yScale(+new_positions[d.topics-1][1]));
@@ -1550,8 +1778,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                     if (vis_state.topic > 0 && old_topic != this.id) {
                         topic_off(document.getElementById(old_topic));
                     }
-                    console.log('este es el ', first_time_clicking_circle);
                     if(first_time_clicking_circle==true){
+                        if (typeof introJs === "function") { try { introJs().exit(true); } catch(e){} }
                         topic_off(document.getElementById(topicID+'5'));
                         first_time_clicking_circle = false;
                     }
@@ -1596,9 +1824,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 return (xScale(new_positions[cx_new_positions][0]));
 
             }
-            else{
-                console.log('ENCONTRAMOS UNDEFINED AQUI', cx_new_positions, mdsData);
-            }
 
             //return (xScale(new_positions[d.topics-1][0]));
 
@@ -1607,10 +1832,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             cy_new_positions+=1;
             if(new_positions[cy_new_positions] != undefined){
                 return (yScale(new_positions[cy_new_positions][1]));
-
-            }
-            else{
-                console.log('ENCONTRAMOS UNDEFINED AQUI', cy_new_positions, mdsData);
 
             }
 
@@ -1629,8 +1850,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             if (vis_state.topic > 0 && old_topic != this.id) {
                 topic_off(document.getElementById(old_topic));
             }
-            console.log('este es el2222 ', first_time_clicking_circle);
             if(first_time_clicking_circle==true){
+                if (typeof introJs === "function") { try { introJs().exit(true); } catch(e){} }
                 topic_off(document.getElementById(topicID+'5'));
                 first_time_clicking_circle = false;
             }
@@ -1923,7 +2144,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 })
                 .attr("height", y.bandwidth()/2)
                 .attr("width", function(d) {
-                    return x(d.Total);
+                    return Math.max(0, x(d.Total));
                 })
                 .style("fill", color2_2)
                 .attr("opacity", 0.4);
@@ -1976,8 +2197,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                         d3.select('#overlay_2-'+current_term).style("fill",color2_1);
                     }                    
                 });
-            
-            
+
+            // Add/remove word (+/−) SVG controls were removed from the bar chart;
+            // ``_tveAddRemoveWord`` remains for a possible future UI.
 
             // barchart axis adapted from http://bl.ocks.org/mbostock/1166403
             var xAxis = d3.axisTop().scale(x).tickSize(-barheight).ticks(6);
@@ -2246,6 +2468,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
   
 
+  
+
             d3.select("#help_button")
             .on("click", function() {
                 show_tutorial()
@@ -2298,8 +2522,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         type: 'POST',
                         url: '/undo_merge_splitting',
                         async: false,
-                        success: function(data) {
-                            console.log(' UNDO - NUEVO MDSDATA', mdsData);
+                        success: function() {
                         },
                         
         
@@ -2419,7 +2642,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                                     if(value.trim() == topics_name_sorted_by_distance[i].trim()){
                                     
                                         var index_topic_name_1 = current_index;
-                                        console.log('yaaay', index_topic_name_1)
                                     }                                    
                                     current_index+=1;
                                 }
@@ -2512,41 +2734,106 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             //colocar #apply_merging.  "aqui esta el antiguo codigo para el merge"
 
+            function tveSplitDocumentCount(arr) {
+                if (!arr || !Array.isArray(arr)) { return 0; }
+                var n = 0;
+                for (var i = 0; i < arr.length; i++) {
+                    if (arr[i] && typeof arr[i] === "object") { n++; }
+                }
+                return n;
+            }
+            function tveSplittingSeedsStatus(seeds) {
+                if (seeds == null || typeof seeds !== "object") {
+                    return { ok: false, reason: "no_seed_bucket" };
+                }
+                var a = seeds.TopicA;
+                var b = seeds.TopicB;
+                if (typeof a === "undefined") { return { ok: false, reason: "missing_a" }; }
+                if (typeof b === "undefined") { return { ok: false, reason: "missing_b" }; }
+                if (!Array.isArray(a)) { return { ok: false, reason: "missing_a" }; }
+                if (!Array.isArray(b)) { return { ok: false, reason: "missing_b" }; }
+                if (tveSplitDocumentCount(a) < 1) { return { ok: false, reason: "empty_a" }; }
+                if (tveSplitDocumentCount(b) < 1) { return { ok: false, reason: "empty_b" }; }
+                return { ok: true, reason: "ok" };
+            }
+            function tveSplitModalMessageForReason(reason) {
+                switch (reason) {
+                case "missing_a":
+                case "empty_a":
+                    return "Add at least one document to new subtopic A (choose the A radio in at least one row).";
+                case "missing_b":
+                case "empty_b":
+                    return "Add at least one document to new subtopic B (choose the B radio in at least one row).";
+                case "no_seed_bucket":
+                default:
+                    return "You need at least one document in new subtopic A and at least one in new subtopic B. Use the A, B, or neither radios for each document row.";
+                }
+            }
+            function tveSetSplitModalValidation(message) {
+                var $el = $("#tve_split_validation_alert");
+                if (!$el.length) { return; }
+                if (!message) {
+                    $el.addClass("d-none").empty();
+                    return;
+                }
+                $el.removeClass("d-none");
+                $el.empty();
+                $("<div>", { "class": "alert alert-warning mb-0", role: "alert" }).text(message).appendTo($el);
+            }
+            function tveUpdateSplitModalStatus() {
+                var seeds = slider_topic_splitting_values[splitting_topic];
+                var st = tveSplittingSeedsStatus(seeds);
+                var a = seeds && Array.isArray(seeds.TopicA) ? tveSplitDocumentCount(seeds.TopicA) : 0;
+                var b = seeds && Array.isArray(seeds.TopicB) ? tveSplitDocumentCount(seeds.TopicB) : 0;
+                var $status = $("#tve_split_subtopic_status");
+                if ($status.length) {
+                    $status.text("Subtopic A: " + a + " document(s) — Subtopic B: " + b + " document(s). Both need at least one to split.");
+                }
+                if (st.ok) {
+                    tveSetSplitModalValidation(null);
+                }
+            }
+
             d3.select("#"+topicSplit)
             .on("click",function(){
 
-    
+                    splitting_topic = vis_state.topic;
+                    _tveDebug("split", "open split modal (synced splitting_topic from vis_state.topic)", {
+                        vis_state_topic: vis_state.topic,
+                        splitting_topic: splitting_topic
+                    });
+                    tveSetSplitModalValidation(null);
                     $('#topic_to_split_name').html(name_topics_circles[topicID + vis_state.topic]);                    
                     $('#SplitTopicModal').modal();
     
-                    updateRelevantDocumentsTopicSplitting(splitting_topic-1, relevantDocumentsDict, 1);     
-                
+                    updateRelevantDocumentsTopicSplitting(vis_state.topic - 1, relevantDocumentsDict, 1);
+                    setTimeout(function () { tveUpdateSplitModalStatus(); }, 0);
                            
             });
 
             $("#apply_topic_splitting").click(function() {
-
-
-                if(typeof slider_topic_splitting_values[splitting_topic] != "undefined"){
-                    if((typeof slider_topic_splitting_values[splitting_topic]['TopicA'] == "undefined") || (typeof slider_topic_splitting_values[splitting_topic]['TopicB'] == "undefined")){
-
-                        $('#error_splitting').modal()
-
-
-                    }
-                    else{
-
-
-
-                        save_state_data()
-                        splitting_topics_document_based_scenario_1()
-                    }                
+                if (splitting_topic !== vis_state.topic) {
+                    _tveDebug("split", "apply: splitting_topic out of sync with vis_state.topic (stale split modal?)", {
+                        splitting_topic: splitting_topic,
+                        vis_state_topic: vis_state.topic
+                    });
                 }
-                else{
-
-
-                    $('#error_splitting').modal()
+                var seeds = slider_topic_splitting_values[splitting_topic];
+                var st = tveSplittingSeedsStatus(seeds);
+                _tveDebug("split", "apply_topic_splitting", {
+                    splitting_topic: splitting_topic,
+                    vis_state_topic: vis_state.topic,
+                    status: st
+                });
+                if (!st.ok) {
+                    tveSetSplitModalValidation(tveSplitModalMessageForReason(st.reason));
+                    tveUpdateSplitModalStatus();
+                    return;
                 }
+                tveSetSplitModalValidation(null);
+                $("#SplitTopicModal").modal("hide");
+                save_state_data();
+                splitting_topics_document_based_scenario_1();
             });
 
 
@@ -3061,7 +3348,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             if (increase) {
                 graybarsEnter
                     .attr("width", function(d) {
-                        return x(d.Total);
+                        return Math.max(0, x(d.Total));
                     })
                     .transition().duration(duration)
                     .delay(duration)
@@ -3076,7 +3363,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     });
                 redbarsEnter
                     .attr("width", function(d) {
-                        return x(d.Freq);
+                        return Math.max(0, x(d.Freq));
                     })
                     .transition().duration(duration)
                     .delay(duration)
@@ -3086,7 +3373,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                 graybars.transition().duration(duration)
                     .attr("width", function(d) {
-                        return x(d.Total);
+                        return Math.max(0, x(d.Total));
                     })
                     .transition().duration(duration)
                     .attr("y", function(d) {
@@ -3099,7 +3386,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     });
                 redbars.transition().duration(duration)
                     .attr("width", function(d) {
-                        return x(d.Freq);
+                        return Math.max(0, x(d.Freq));
                     })
                     .transition().duration(duration)
                     .attr("y", function(d) {
@@ -3110,7 +3397,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 graybars.exit()
                     .transition().duration(duration)
                     .attr("width", function(d) {
-                        return x(d.Total);
+                        return Math.max(0, x(d.Total));
                     })
                     .transition().duration(duration)
                     .attr("y", function(d, i) {
@@ -3127,7 +3414,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 redbars.exit()
                     .transition().duration(duration)
                     .attr("width", function(d) {
-                        return x(d.Freq);
+                        return Math.max(0, x(d.Freq));
                     })
                     .transition().duration(duration)
                     .attr("y", function(d, i) {
@@ -3147,7 +3434,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     })
                     .transition().duration(duration)
                     .attr("width", function(d) {
-                        return x(d.Total);
+                        return Math.max(0, x(d.Total));
                     });
                 labelsEnter
                     .transition().duration(duration)
@@ -3162,7 +3449,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     })
                     .transition().duration(duration)
                     .attr("width", function(d) {
-                        return x(d.Freq);
+                        return Math.max(0, x(d.Freq));
                     });
 
                 graybars.transition().duration(duration)
@@ -3171,7 +3458,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     })
                     .transition().duration(duration)
                     .attr("width", function(d) {
-                        return x(d.Total);
+                        return Math.max(0, x(d.Total));
                     });
                 labels.transition().duration(duration)
                     .attr("y", function(d) {
@@ -3183,7 +3470,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     })
                     .transition().duration(duration)
                     .attr("width", function(d) {
-                        return x(d.Freq);
+                        return Math.max(0, x(d.Freq));
                     });
 
                 // Transition exiting rectangles to the bottom of the barchart:
@@ -3333,7 +3620,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
 
             vis_state.topic = box.node
-            
+            splitting_topic = vis_state.topic
 
             Freq = Math.round(Freq * 10) / 10  
 
@@ -3404,7 +3691,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 })
                 .attr("height", y.bandwidth()/2)
                 .attr("width", function(d) {
-                    return x(d.Total);
+                    return Math.max(0, x(d.Total));
                 })
                 .style("fill", color1_1)
                 .attr("opacity", 0.4);
@@ -3439,7 +3726,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 })
                 .attr("height", y.bandwidth()/2)
                 .attr("width", function(d) {
-                    return x(d.Freq);
+                    return Math.max(0, x(d.Freq));
                 })
                 .style("fill", color2_1)
                 .attr("opacity", 0.8);
@@ -3751,6 +4038,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                         
             // grab data bound to this element
             var d = circle.__data__;
+            // Keep in sync with vis_state (topic_on is also called after merge/split, not only on circle click).
+            splitting_topic = d.topics;
             mdswidth+margin.left+termwidth+(barwidth/2)
             // update name in visualization
             $('#topic_name_selected_1').html(name_topics_circles[topicID + d.topics]); 
@@ -3839,7 +4128,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 })
                 .attr("height", y.bandwidth()/2)
                 .attr("width", function(d) {
-                    return x(d.Total);
+                    return Math.max(0, x(d.Total));
                 })
                 .style("fill", color1_1)
                 .attr("opacity", 0.4);
@@ -3874,7 +4163,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 })
                 .attr("height", y.bandwidth()/2)
                 .attr("width", function(d) {
-                    return x(d.Freq);
+                    return Math.max(0, x(d.Freq));
                 })
                 .style("fill", color2_1)
                 .attr("opacity", 0.8);
@@ -3937,7 +4226,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 })
                 .attr("height", y.bandwidth()/2)
                 .attr("width", function(d) {
-                    return x(d.Total);
+                    return Math.max(0, x(d.Total));
                 })
                 .style("fill", color1_1)
                 .attr("opacity", 0.4);
@@ -4026,7 +4315,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         $('#tableRelevantDocumentsClass_TopicSplitting').on('post-body.bs.table', function (e) {
 
 
-            $('.radio_button_topic_splitting').click(function () {
+            $('.radio_button_topic_splitting').off('click.tvesplit').on('click.tvesplit', function () {
 
 
                 if ($(this).is(':checked')) {
@@ -4036,13 +4325,37 @@ var LDAvis = function(to_select, data_or_file_name) {
                             
                             
                         }
-                        //The element is removed from other places
                         var current_id_radio_button = this.id;
-                        var current_topic = current_id_radio_button.split("_")[0];
-                        var current_index = current_id_radio_button.split("_")[1];
-                        var current_class = current_id_radio_button.split("_")[2];
-
-                        var current_row = current_relevant_documents_topic_splitting[current_index];
+                        // tveSp_{topicId}_{dDOCID|iIDX}_{TopicA|TopicB|TopicNone} — avoids indexOf -1
+                        // when bootstrap-table re-wraps row objects.
+                        var m = current_id_radio_button.match(/^tveSp_(\d+)_(d\d+|i\d+)_(TopicA|TopicB|TopicNone)$/);
+                        var current_row;
+                        if (m) {
+                            var rowKey = m[2];
+                            var current_class = m[3];
+                            if (rowKey.charAt(0) === "d") {
+                                var did = parseInt(rowKey.slice(1), 10);
+                                current_row = current_relevant_documents_topic_splitting.find(function (r) {
+                                    return r && r.doc_id == did;
+                                });
+                            } else {
+                                var gi = parseInt(rowKey.slice(1), 10);
+                                current_row = current_relevant_documents_topic_splitting[gi];
+                            }
+                        } else {
+                            // legacy id shape (topic_index_class)
+                            var parts = current_id_radio_button.split("_");
+                            var current_index = parts[1];
+                            var current_class = parts[2];
+                            current_row = current_relevant_documents_topic_splitting[current_index];
+                        }
+                        if (!current_row) {
+                            if (typeof window !== "undefined" && window.TVE_DEBUG) {
+                                console.warn("[TVE split] could not resolve row for id " + current_id_radio_button);
+                            }
+                            tveUpdateSplitModalStatus();
+                            return;
+                        }
 
 
                         if(typeof slider_topic_splitting_values[splitting_topic]['TopicA'] != "undefined"){
@@ -4060,6 +4373,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         slider_topic_splitting_values[splitting_topic][current_class].push(current_row);
 
                     }
+                tveUpdateSplitModalStatus();
 
             });
             
@@ -4067,17 +4381,24 @@ var LDAvis = function(to_select, data_or_file_name) {
                 var array_current_relevant_documents_topic_splitting = Object.values(current_relevant_documents_topic_splitting);
                 for (const [key, value] of Object.entries(slider_topic_splitting_values[splitting_topic] )) {
                     for (var i = 0; i < slider_topic_splitting_values[splitting_topic][key].length; i++) {
-                        var index = array_current_relevant_documents_topic_splitting.findIndex( s => s == slider_topic_splitting_values[splitting_topic][key][i] );
-                        if(document.getElementById(String(splitting_topic+'_'+index+'_'+key))!= undefined){
-                            document.getElementById(String(splitting_topic+'_'+index+'_'+key)).checked =true;
-
-    
-                        } 
+                        var srow = slider_topic_splitting_values[splitting_topic][key][i];
+                        var rowKey2;
+                        if (srow && srow.doc_id != null && srow.doc_id !== undefined) {
+                            rowKey2 = "d" + String(srow.doc_id);
+                        } else {
+                            var gix = array_current_relevant_documents_topic_splitting.findIndex( function (s) { return s == srow; } );
+                            if (gix < 0) { gix = array_current_relevant_documents_topic_splitting.findIndex( function (s) { return s && srow && s.doc_id === srow.doc_id; } ); }
+                            if (gix < 0) { gix = 0; }
+                            rowKey2 = "i" + gix;
+                        }
+                        var elst = document.getElementById("tveSp_" + splitting_topic + "_" + rowKey2 + "_" + key);
+                        if (elst != null) { elst.checked = true; }
 
                     }
                 }               
 
-            }            
+            }
+            tveUpdateSplitModalStatus();
         });
         //Show how the relevant keywords are being used in the most relevant documents. 
         //Maybe, also, we should increase the bold of the keyword in the left panel too. 
@@ -4085,7 +4406,13 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
         function updateRelevantDocumentsTopicSplitting(topic_id, relevantDocumentsDict, model){
-            
+            var _row0 = relevantDocumentsDict && relevantDocumentsDict[0];
+            _tveDebug("split", "updateRelevantDocumentsTopicSplitting", {
+                topic_id: topic_id,
+                splitting_topic: splitting_topic,
+                model: model,
+                hasPercentColumn: _row0 && (String(topic_id) in _row0)
+            });
             var column_text_name = get_name_text_column_on_relevant_documents(relevantDocumentsDict)
             //sorted regarding to its contribution
             relevantDocumentsDict.sort(function(row_1, row_2){
@@ -4093,6 +4420,19 @@ var LDAvis = function(to_select, data_or_file_name) {
             });
             var threshold_max_number_docs_splitting = (0.10*Object.keys(relevantDocumentsDict).length).toFixed(0)
             current_relevant_documents_topic_splitting = relevantDocumentsDict; // the documents are sorted according to the contribution to the specific topic 
+
+            function tveRowKeyForSplitTable(row) {
+                if (!row) { return "i0"; }
+                if (row.doc_id != null && row.doc_id !== undefined) { return "d" + String(row.doc_id); }
+                var gi = relevantDocumentsDict.indexOf(row);
+                if (gi < 0) {
+                    gi = relevantDocumentsDict.findIndex(function (r) {
+                        return r && row && (r === row || (r.text === row.text));
+                    });
+                }
+                if (gi < 0) { gi = 0; }
+                return "i" + gi;
+            }
 
             if(model == 1){
                 $('#tableRelevantDocumentsClass_TopicSplitting').bootstrapTable("destroy");
@@ -4118,48 +4458,50 @@ var LDAvis = function(to_select, data_or_file_name) {
                             field: String(topic_id),
                             formatter:to_percentage,
                             title: '%',
+                            titleTooltip: 'Relevance of this document to the topic you are splitting (percentage of tokens).',
                             sortable:'true'
                         },{
                             field: column_text_name,
                             escape:"true",
                             title: 'Document',
+                            titleTooltip: 'Document text; sort or search in the table toolbar.',
                             sortable:'true'
                         },
                         {
                             field: 'Term',
                             title: 'New subtopic A',
+                            titleTooltip: 'At least one document must be assigned to A. Seed documents for the first new subtopic.',
                             align: 'center',
                             valign: 'middle',
                             clickToSelect: false,
-                            formatter : function(value,row,index) {       
-                                index = relevantDocumentsDict.indexOf(row);   
-  
-                                return '<input type="radio" name="radio_'+splitting_topic+'_'+index+'" id="'+splitting_topic+'_'+index+'_TopicA" class="radio_button_topic_splitting" />';
+                            formatter : function(value,row) {
+                                var rk = tveRowKeyForSplitTable(row);
+                                return '<input type="radio" name="tveSp_grp_'+splitting_topic+'_'+rk+'" id="tveSp_'+splitting_topic+'_'+rk+'_TopicA" class="radio_button_topic_splitting" />';
                              }                      
                           },
                           {
                              field: 'Term',
                              title: 'New subtopic B',
+                             titleTooltip: 'At least one document must be assigned to B. Seed documents for the second new subtopic.',
                              align: 'center',
                              valign: 'middle',
                              clickToSelect: false,
-                             formatter : function(value,row,index) {        
-                                index = relevantDocumentsDict.indexOf(row);   
-                            
-                                return '<input type="radio"  name="radio_'+splitting_topic+'_'+index+'" id="'+splitting_topic+'_'+index+'_TopicB" class="radio_button_topic_splitting" />';
+                             formatter : function(value,row) {
+                                var rk = tveRowKeyForSplitTable(row);
+                                return '<input type="radio"  name="tveSp_grp_'+splitting_topic+'_'+rk+'" id="tveSp_'+splitting_topic+'_'+rk+'_TopicB" class="radio_button_topic_splitting" />';
      
                               }                      
                            },
                            {
                              field: 'Term',
                              title: 'Neither',
+                             titleTooltip: 'Document is not a seed; you still need at least one A and one B elsewhere in the table.',
                              align: 'center',
                              valign: 'middle',
                              clickToSelect: false,
-                             formatter : function(value,row,index) {                            
-                                index = relevantDocumentsDict.indexOf(row);   
-                        
-                                return '<input type="radio" name="radio_'+splitting_topic+'_'+index+'"  id="'+splitting_topic+'_'+index+'_TopicNone" class="radio_button_topic_splitting" checked/>'; 
+                             formatter : function(value,row) {
+                                var rk = tveRowKeyForSplitTable(row);
+                                return '<input type="radio" name="tveSp_grp_'+splitting_topic+'_'+rk+'"  id="tveSp_'+splitting_topic+'_'+rk+'_TopicNone" class="radio_button_topic_splitting" checked/>';
                               }                      
                            }                               
                       
@@ -4172,7 +4514,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             
 
             $(".search-input").attr("placeholder", "Search on documents").val("").focus().blur();
-           
+            setTimeout(function () { tveUpdateSplitModalStatus(); }, 0);
         }
 
         var omited_events_table =['pre-body.bs.table','post-header.bs.table', 'reset-view.bs.table', 'pre-body.bs.table', 'post-body.bs.table', 'post-footer.bs.table', 'click-row.bs.table']
@@ -4185,6 +4527,19 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         
         $('#tableRelevantDocumentsClass_Model1').highlight($(".search.bs.table").val());
+
+        // === Modernization: Phase 4e ===
+        // Delegated handler for the per-row exclude button. We bind on
+        // the container (rather than each <button>) because bootstrap-
+        // table replaces the entire <tbody> on every redraw / sort /
+        // page change, which would orphan direct handlers.
+        $('#tableRelevantDocumentsClass_Model1').on('click', '.tve-doc-exclude-ctrl', function(ev){
+            ev.preventDefault();
+            ev.stopPropagation();
+            var docIdAttr = $(this).attr('data-doc-id');
+            var docId = parseInt(docIdAttr, 10);
+            _tveExcludeDocument(docId);
+        });
 
         $('#tableRelevantDocumentsClass_Model1').on('search.bs.table', function (e, text){
 
@@ -4232,7 +4587,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
         function updateRelevantDocuments(topic_id, relevantDocumentsDict, model){
-            
             var column_text_name = get_name_text_column_on_relevant_documents(relevantDocumentsDict)
             //sorted regarding to its contribution
             relevantDocumentsDict.sort(function(row_1, row_2){
@@ -4240,7 +4594,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             });
 
             
-            if(model == 1){                        
+            if(model == 1){
                 $('#tableRelevantDocumentsClass_Model1').bootstrapTable("destroy");
                 $('#tableRelevantDocumentsClass_Model1').bootstrapTable({
                     toggle:true,
@@ -4250,19 +4604,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     //showRefresh: true, Hacer que esto funcione! ver :  https://examples.bootstrap-table.com/#view-source
                     //showExport:true,
                     //showColumns: true,
-                    columns:[
-                        {
-                            field: String(topic_id),
-                            formatter:to_percentage,
-                            title: '%',
-                            sortable:'true'
-                        },{
-                            field: column_text_name,
-                            escape:"true",
-                            title: 'Document',
-                            sortable:'true'
-                        }
-                    ],
+                    columns: _tveDocumentColumnsModel1(topic_id, column_text_name),
                     data: relevantDocumentsDict
                 });
 
@@ -4337,14 +4679,19 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             }
         }
-        if(old_topic_model_states.length>0){
-            document.getElementById(topicReverse).disabled = false;
-
-            }
-            else{
-                document.getElementById(topicReverse).disabled = true;
-
-        } 
+        // === Modernization: null-guard around getElementById (added during Vite/TS migration) ===
+        // The legacy code unconditionally dereferenced `document.getElementById(topicReverse)`
+        // here, but a few lines above (line ~4446) the same element may have
+        // been removed via `d3.select(...).remove()` when human-in-the-loop is
+        // disabled. In the script-tag deployment that path was never exercised
+        // by the paper user study, so the latent null deref didn't surface.
+        // Under bundler scope the page now hard-fails with "Cannot set
+        // properties of null". Guarding it matches the style used at lines
+        // 4459/4463/4467 just above and is a no-op when the element exists.
+        var topicReverseEl = document.getElementById(topicReverse);
+        if(topicReverseEl){
+            topicReverseEl.disabled = old_topic_model_states.length > 0 ? false : true;
+        }
         if(type_vis==2){
             //delete buttons that users wont use in the user study
             d3.select("#"+topicReverse).remove()
@@ -4360,14 +4707,23 @@ var LDAvis = function(to_select, data_or_file_name) {
             document.getElementById("topic_buttons_div_right_panel").style.width="35%";
             //document.getElementsByClassName('bootstrap-table ').style.height='80%';
             
-            console.log('resultado de metric baseline o no',scenario_2_is_baseline_metric );
-
             if( scenario_2_is_baseline_metric == true ) { // it means we are using the metric baseline
                 //we need to remove the omega slider, in this case  
-                console.log('estamos o no??')                       
                 d3.select("#TopicSimilarityMetricPanel").remove()       
             }                   
-        }    
+        }
+
+        // === Modernization: expose closure-private helpers to the
+        // outer LDAvis scope so the Phase 4d/4e edit-operation hooks
+        // (`_tveAddRemoveWord`, `_tveExcludeDocument`) can call back
+        // into the original render functions. The original script-tag
+        // deployment used `window.*` accidentally because all the
+        // legacy code lived in the global scope; under bundler scope
+        // we have to thread the references explicitly. We bind them
+        // through a single object on the LDAvis instance scope so the
+        // exposure is opt-in, namespaced, and easy to remove later.
+        _tveInternals.topic_on = topic_on;
+        _tveInternals.updateRelevantDocuments = updateRelevantDocuments;
     }
     
     if (typeof data_or_file_name === 'string'){
@@ -4387,3 +4743,13 @@ var LDAvis = function(to_select, data_or_file_name) {
 };
 
 
+
+
+// === Modernization shim (added during Vite/TS migration; do not move into main bundle) ===
+// In <script>-tag world the top-level `var LDAvis = ...` above became a
+// window global automatically. Under bundler scope it does not, so we
+// expose it explicitly here. All visualisation behaviour above this line
+// is the verbatim paper-version code.
+if (typeof window !== 'undefined') {
+    window.LDAvis = LDAvis;
+}

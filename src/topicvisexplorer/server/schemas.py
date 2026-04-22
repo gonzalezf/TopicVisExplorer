@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 def _default_topic_seeds() -> dict[str, list[dict[str, Any]]]:
@@ -32,6 +32,23 @@ class TopicSplitRequest(BaseModel):
         description="User-supplied document seeds for the two children.",
     )
 
+    @field_validator("new_document_seeds", mode="before")
+    @classmethod
+    def _drop_null_seed_dicts(cls, v: Any) -> Any:
+        """Legacy JSON may contain ``null`` array slots; strip before ``list[dict]`` validation."""
+        if v is None:
+            return _default_topic_seeds()
+        if not isinstance(v, dict):
+            return v
+        out: dict[str, list[dict[str, Any]]] = {}
+        for key, items in v.items():
+            if isinstance(items, list):
+                out[key] = [x for x in items if isinstance(x, dict)]
+        for required in ("TopicA", "TopicB"):
+            if required not in out:
+                out[required] = []
+        return out
+
 
 class TopicMergeRequest(BaseModel):
     """Request body for ``POST /get_new_topic_vector`` (merge endpoint)."""
@@ -40,8 +57,8 @@ class TopicMergeRequest(BaseModel):
 
     index_topic_name_1: int = Field(..., description="0-based index of first topic.", ge=0)
     index_topic_name_2: int = Field(..., description="0-based index of second topic.", ge=0)
-    relevantDocumentsDict_new: list[dict[str, Any]] = Field(default_factory=list)
-    lamData_new: dict[str, Any] = Field(default_factory=dict)
+    relevantDocumentsDict_new: Any = Field(default=None)
+    lamData_new: Any = Field(default=None)
     old_circle_positions: dict[str, list[list[float]]] = Field(default_factory=dict)
 
 

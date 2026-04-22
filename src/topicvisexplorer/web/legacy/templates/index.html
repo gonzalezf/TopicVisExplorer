@@ -73,11 +73,19 @@
         <!--<input type='text' name='somename' data-provide='slider' data-slider-ticks='[1, 2, 3]' data-slider-min='1' data-slider-max='3' data-slider-step='1' data-slider-value='3' >-->
         You are going to split the current selected topic: <b> <span id="topic_to_split_name"></span></b>.  <br><br> 
         To split a topic, you must select the most relevant documents to the new subtopics. For each category, you may choose as many documents as you deem necessary. Documents in neither subtopic will be categorized automatically.
+        <ul class="small pl-3 mb-2 mt-2 text-muted">
+          <li>You must place <strong>at least one</strong> document in <strong>new subtopic A</strong> and <strong>at least one</strong> in <strong>new subtopic B</strong> (neither is not enough).</li>
+          <li>Use the table pagination to reach more documents if the ones you need are on another page.</li>
+          <li>The counts in the footer update as you choose A / B / neither for each row.</li>
+        </ul>
+        <p class="mb-1">
+          <a class="btn btn-sm btn-link p-0" data-toggle="collapse" href="#tveSplitHowTo" role="button" aria-expanded="false" aria-controls="tveSplitHowTo">How does splitting work?</a>
+        </p>
+        <div class="collapse mb-2" id="tveSplitHowTo">
+          <div class="card card-body small py-2">Each row is one document. Pick exactly one of A, B, or “neither” per row. The model uses your A and B choices as seed documents for the two new subtopics. Documents you leave on “neither” are still split automatically, but you must still seed both subtopics with at least one document each.</div>
+        </div>
+        <div id="tve_split_validation_alert" class="d-none mb-2" aria-live="polite" aria-atomic="true"></div>
         
-        <!--To split a  topic,  you must select the most relevant documents associated to the new subtopics. You may choose as many documents you wish. Also, you can select 
-        more documents selecting different pages at the bottom of this window. 
-        -->
-
         <!--<div id="input"></div>      -->
         <div class="row" > <!--All the visualization must be placed in this row-->
         <!--
@@ -93,21 +101,25 @@
           -->
 
           <div class="col-12"  id="DocumentsPanel_TopicSplitting" >
+            <div class="table-responsive tve-split-table-wrap">
             <table id="tableRelevantDocumentsClass_TopicSplitting"  > <!-- class= "overflow-hidden table table-hover header-fixed"-->
               <thead>
               <tr>                          
                 <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Document</th>
               </tr>
               </thead>    
-            </table>         
+            </table>
+            </div>         
           </div>    
         </div>
     
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer flex-column align-items-stretch text-left">
+        <div id="tve_split_subtopic_status" class="small text-muted mb-2"></div>
+        <div class="d-flex justify-content-end">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-        <button type="button" id="apply_topic_splitting" class="btn btn-primary"data-dismiss="modal" >Split topic</button>
-
+        <button type="button" id="apply_topic_splitting" class="btn btn-primary ml-2">Split topic</button>
+        </div>
       </div>
     </div>
   </div>
@@ -293,7 +305,7 @@
       <div class="modal-content model-content_full_screen" >
         <div class="modal-body">
           <div class="text-center">
-            <p><b>ERROR: </b>You must provide documents for both new subtopics  </p>
+            <p>Please add at least one document to <strong>new subtopic A</strong> and at least one to <strong>new subtopic B</strong> (use the A / B / neither options in the split table).</p>
 
           </div>
         </div>

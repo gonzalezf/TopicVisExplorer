@@ -53,7 +53,9 @@ export default defineConfig({
     // Boot a dedicated TVE server for the visual tests. The Python
     // launcher script lives under frontend/scripts/ so this config
     // doesn't depend on a globally installed `tve` CLI.
-    command: "python3 frontend/scripts/serve_for_visual_tests.py",
+    // Use `uv run` so FastAPI/uvicorn come from the project environment
+    // (system `python3` may not have them installed).
+    command: "uv run python frontend/scripts/serve_for_visual_tests.py",
     cwd: "..",
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
