@@ -521,6 +521,21 @@ var LDAvis = function(to_select, data_or_file_name) {
         return (number * 100).toFixed(1) + '%';
     }
 
+    function _tveHtmlEscape(s) {
+        if (s == null) {
+            return '';
+        }
+        return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+    function _tveDocumentTextCellFormatter(value) {
+        return '<div class="tve-doc-cell">' + _tveHtmlEscape(value) + '</div>';
+    }
+
     function _tveDocumentColumnsModel1(topic_id, column_text_name){
         var cols = [
             {
@@ -531,9 +546,10 @@ var LDAvis = function(to_select, data_or_file_name) {
             },
             {
                 field: column_text_name,
-                escape: 'true',
+                escape: false,
                 title: 'Document',
-                sortable: 'true'
+                sortable: 'true',
+                formatter: _tveDocumentTextCellFormatter
             },
             {
                 field: 'doc_id',
@@ -4755,10 +4771,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                             sortable:'true'
                         },{
                             field: column_text_name,
-                            escape:"true",
+                            escape: false,
                             title: 'Document',
                             titleTooltip: 'Document text; sort or search in the table toolbar.',
-                            sortable:'true'
+                            sortable: 'true',
+                            formatter: _tveDocumentTextCellFormatter
                         },
                         {
                             field: 'Term',
@@ -4919,9 +4936,10 @@ var LDAvis = function(to_select, data_or_file_name) {
                             sortable:'true'
                         },{
                             field: column_text_name,
-                            escape:"true",
+                            escape: false,
                             title: 'Document',
-                            sortable:'true'
+                            sortable: 'true',
+                            formatter: _tveDocumentTextCellFormatter
                         }
                     ],
                     data: relevantDocumentsDict

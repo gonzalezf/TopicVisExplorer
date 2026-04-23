@@ -401,6 +401,17 @@ margin-right: 10px;
   height: auto;
 }
 
+/* Long document bodies: bound cell height and scroll inside (single- and multi-corpus tables). */
+.tve-doc-cell {
+  max-height: 14rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+  font-size: 0.9rem;
+}
+
 /* Slider css*/
 
 section.range-slider {

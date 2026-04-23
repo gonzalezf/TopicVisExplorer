@@ -37,6 +37,14 @@ test.describe("exclude-document control", () => {
       timeout: 10_000,
     });
 
+    await page.waitForSelector(".tve-doc-cell", { state: "attached", timeout: 5_000 });
+    const maxHeightDoc = await page
+      .locator(".tve-doc-cell")
+      .first()
+      .evaluate((el) => window.getComputedStyle(el).maxHeight);
+    expect(maxHeightDoc).not.toBe("none");
+    expect(maxHeightDoc).not.toBe("0px");
+
     const initialRowCount = await page
       .locator("#tableRelevantDocumentsClass_Model1 tbody tr")
       .count();
