@@ -48,25 +48,35 @@ def cross_corpus(
     raw_texts_b: Sequence[str],
     n_omega_steps: int = 101,
 ) -> CrossCorpusBundle:
-    """Compute similarity grid + aligned layout for one pair of corpora."""
+    """Compute similarity grid + aligned layout for one pair of corpora.
+
+    Returns the rectangular ``(K_a, K_b)`` cross-corpus similarity per
+    omega (for the Sankey view) AND an aligned ``(K_a + K_b, 2)`` layout
+    computed from the combined block similarity
+    ``[[A_A, A_B], [B_A, B_B]]`` so both corpora share a single
+    omega-varying topic map.
+    """
     logger.info(
         "Computing cross-corpus similarity (K_a=%d, K_b=%d).",
         len(prepared_a.topic_order),
         len(prepared_b.topic_order),
     )
-    omega_grid = compute_omega_grid(
-        metric,
-        prepared_a,
-        prepared_b,
-        doc_topic_a=doc_topic_a,
-        doc_topic_b=doc_topic_b,
-        raw_texts_a=raw_texts_a,
-        raw_texts_b=raw_texts_b,
-        n_steps=n_omega_steps,
-    )
-    aligned = get_circle_positions(omega_grid)
+    pa = metric.precompute(prepared_a, doc_topic_a, raw_texts_a)
+    pb = metric.precompute(prepared_b, doc_topic_b, raw_texts_b)
+
+    omega_grid: dict[float, np.ndarray] = {}
+    combined_grid: dict[float, np.ndarray] = {}
+    for step in range(n_omega_steps):
+        omega = round(step / (n_omega_steps - 1), 2) if n_omega_steps > 1 else 0.0
+        ab = metric.matrix_for_omega(pa, pb, omega)
+        aa = metric.matrix_for_omega(pa, pa, omega)
+        bb = metric.matrix_for_omega(pb, pb, omega)
+        omega_grid[omega] = ab
+        combined_grid[omega] = np.block([[aa, ab], [ab.T, bb]])
+
+    aligned = get_circle_positions(combined_grid)
     return CrossCorpusBundle(
-        omega_to_similarity=dict(omega_grid),
+        omega_to_similarity=omega_grid,
         aligned_positions_json=aligned,
         corpus_a=prepared_a,
         corpus_b=prepared_b,

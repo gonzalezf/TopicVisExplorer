@@ -26,7 +26,10 @@ declare global {
 
     // Server-rendered scenario state injected by Jinja in index_v1.html.
     TVE_SCENARIO?: {
+      /** DOM id of the LdaVis mount node (e.g. `vis-sess-...`) */
       visid: string;
+      /** Optional alias for older or forked templates */
+      visidStr?: string;
       visidRaw: string;
       visJson: any;
       typeVis: number;

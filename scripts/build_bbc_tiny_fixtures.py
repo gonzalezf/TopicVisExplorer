@@ -237,7 +237,33 @@ def main() -> int:
 
     print(f"\nWrote {npz_path} and {json_path}")
     print(f"Vocab size: {len(md.vocab)}  K={md.topic_term_dists.shape[0]}  N={n}")
+
+    _prewarm_w2v_cache(STEM, texts)
     return 0
+
+
+def _prewarm_w2v_cache(stem: str, texts: list[str]) -> None:
+    """Train and persist the Word2Vec cache used at runtime.
+
+    Warms ``<TVE_CACHE_DIR>/<stem>_w2v_v1.kv`` so the first
+    ``/singlecorpus?scenario=<stem>`` page load is instant. The .kv file
+    is NOT committed (repo-size hygiene); fresh clones re-train once.
+    """
+    try:
+        from topicvisexplorer.server.demo_fixtures import _train_or_load_embedding
+    except Exception as exc:
+        print(f"[prewarm] skipped: could not import helper ({exc})", flush=True)
+        return
+    prev = os.environ.pop("TVE_EMBEDDING_DISABLE", None)
+    try:
+        emb = _train_or_load_embedding(stem, texts)
+    finally:
+        if prev is not None:
+            os.environ["TVE_EMBEDDING_DISABLE"] = prev
+    if emb is None:
+        print(f"[prewarm] no embedding produced for {stem}", flush=True)
+    else:
+        print(f"[prewarm] embedding ready for {stem} (vocab={len(emb._kv):,})", flush=True)
 
 
 if __name__ == "__main__":

@@ -352,6 +352,11 @@
 <link rel="stylesheet" href="static/css/bootstrap.min.css">
 <link rel="stylesheet" type="text/css" href="{{ ldavis_css_url }}">
 
+<style>
+  /* Multicorpora: scrollable A/B side columns (matches index_v1.html). */
+  .tve-multicorpus-side { min-height: 0; overflow-y: auto; }
+  .tve-documents-nested { margin-top: 0.25rem; }
+</style>
 
 <!--RANGE SLIDER-->
 <link href="static/css/nouislider.css" rel="stylesheet">
@@ -399,6 +404,7 @@
 </script>
 
 <div id={{ visid }}></div>
+<div id="name_topics" style="display:none" aria-hidden="true"></div>
 
 
 
@@ -428,30 +434,26 @@ if(type_vis == 2){
 
 
 <div class="container-fluid">
-  <div class="row" style="height: 100%"> <!--All the visualization must be placed in this row-->
-    <div class="col-4 border-right"  id="BarPlotPanel"   id="CentralPanel">  <!--LDAvisContainer-->
-    </div>
-    <div class="col-4 border-right "  id="CentralPanel"> <!-- "-->
-    </div>
-    <div class="col-4" id="DocumentsPanel"  >
+  {% if type_vis == 2 %}
+  <div class="row" style="height: 100%">
+    <div class="col-4 border-right tve-multicorpus-side" id="BarPlotPanel"></div>
+    <div class="col-4 border-right" id="CentralPanel"></div>
+    <div class="col-4 tve-multicorpus-side" id="BarPlotPanel_2"></div>
+  </div>
+  {% else %}
+  <div class="row" style="height: 100%">
+    <div class="col-4 border-right" id="BarPlotPanel"></div>
+    <div class="col-4 border-right" id="CentralPanel"></div>
+    <div class="col-4" id="DocumentsPanel">
       <script>
-        if(type_vis === 1){
-          
+        if (type_vis === 1) {
           var html = '<div id="DocumentsPanel_first_scenario"> <table  id="tableRelevantDocumentsClass_Model1" </table></div>';
-          
-          document.write(html)
-
+          document.write(html);
         }
-        if(type_vis === 2){
-             var html = '';
-        }
-
-        document.write(html) // ojo, esta linea no deberia estar, x eso q se escribe dos veces el DocumentsPanel_first_scenario, pero si lo saco ahora, comienzan a fallar cosas en el scenario 1
-
       </script>
     </div>
-    </div>  
   </div>
+  {% endif %}
 </div>
 
 <script>

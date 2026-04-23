@@ -67,6 +67,8 @@ def test_singlecorpus_renders_modern_template(modern_client: TestClient) -> None
     assert "/dist/tve.js" in body
     assert "/dist/tve.css" in body
     assert "TVE_SCENARIO" in body
+    assert 'id="BarPlotPanel_2"' not in body
+    assert 'id="DocumentsPanel_2"' not in body
     # Legacy template's hotjar/google-analytics blobs must NOT bleed into
     # the modern track (they're tracking scripts we deliberately dropped).
     assert "hotjar" not in body.lower()
@@ -87,6 +89,16 @@ def test_multicorpora_renders_modern_template(modern_client: TestClient) -> None
     # / topicOrder2 keys must be present.
     assert "matrixSankey:" in body
     assert "topicOrder2:" in body
+    # Three-column multicorpora row: A | Sankey | B (no top-level doc columns).
+    assert 'id="BarPlotPanel"' in body
+    assert 'id="CentralPanel"' in body
+    assert 'id="BarPlotPanel_2"' in body
+    assert "tve-multicorpus-side" in body
+    assert "col-4" in body
+    # Old 5-col grid had narrow BarPlot / doc columns; not used anymore.
+    assert "col-2 border-right" not in body
+    # DocumentsPanel_2 is created in LDAvis and appended under B; not in HTML.
+    assert 'id="DocumentsPanel_2"' not in body
 
 
 @needs_bundle

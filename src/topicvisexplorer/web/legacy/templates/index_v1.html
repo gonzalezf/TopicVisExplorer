@@ -40,7 +40,54 @@
     body { display: flex; flex-direction: column; }
     .container-fluid { flex: 1 1 auto; min-height: 0; }
     .container-fluid > .row { height: 100%; }
-    #BarPlotPanel, #CentralPanel, #DocumentsPanel { height: 100%; overflow: auto; }
+    #BarPlotPanel, #CentralPanel, #DocumentsPanel { height: 100%; min-height: 0; }
+    #BarPlotPanel_2 { height: 100%; min-height: 0; }
+    #CentralPanel { overflow: auto; }
+    /* Multicorpora (type 2): one scrollable side column; nested doc panels do not set inline height. */
+    .tve-multicorpus-side { min-height: 0; overflow-y: auto; }
+    .tve-documents-nested { margin-top: 0.25rem; }
+    /*
+     * Multi-corpus: #BarPlotPanelDiv and nested #DocumentsPanel were both
+     * height:100% (LDAvis.css) — they fight for the same column. Stack as a
+     * flex column so the topic/keyword/relevance area keeps space and
+     * documents get a bounded tail (scrolls inside the column if needed).
+     */
+    #BarPlotPanel.tve-multicorpus-side,
+    #BarPlotPanel_2.tve-multicorpus-side {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    #BarPlotPanel.tve-multicorpus-side > #BarPlotPanelDiv {
+      flex: 1 1 auto;
+      min-height: 0;
+      height: auto !important;
+      max-height: none;
+      overflow: auto;
+    }
+    #BarPlotPanel.tve-multicorpus-side > #DocumentsPanel,
+    #BarPlotPanel_2.tve-multicorpus-side > #DocumentsPanel_2 {
+      flex: 0 1 auto;
+      height: auto !important;
+      max-height: 45%;
+      min-height: 0;
+      overflow: auto;
+    }
+    #BarPlotPanel_2.tve-multicorpus-side > #svgRightPanel,
+    #BarPlotPanel_2.tve-multicorpus-side > #BarPlotDivRightPanel_zero {
+      flex: 0 0 auto;
+    }
+    #BarPlotPanel_2.tve-multicorpus-side > #BarPlotDiv_b_zero {
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+    /* So percentage SVG heights in createBarPlot resolve against a real block size */
+    .tve-multicorpus-side #BarPlotDiv_zero,
+    .tve-multicorpus-side #BarPlotDiv_b_zero {
+      min-height: 280px;
+      width: 100%;
+      box-sizing: border-box;
+    }
   </style>
 </head>
 <body>
@@ -244,6 +291,8 @@
 </script>
 
 <div id="{{ visid_str }}"></div>
+{# LDAvis d3 data join; keep an empty target so d3 v5/legacy paths never bind to a null parent. #}
+<div id="name_topics" class="d-none" aria-hidden="true"></div>
 
 {#
   Phase 4f: Collapsible coherence panel.
@@ -297,16 +346,23 @@
 {% endif %}
 
 <div class="container-fluid">
+  {% if type_vis == 2 %}
+  <div class="row" style="height:100%">
+    <div class="col-4 border-right tve-multicorpus-side" id="BarPlotPanel"></div>
+    <div class="col-4 border-right" id="CentralPanel"></div>
+    <div class="col-4 tve-multicorpus-side" id="BarPlotPanel_2"></div>
+  </div>
+  {% else %}
   <div class="row" style="height:100%">
     <div class="col-4 border-right" id="BarPlotPanel"></div>
     <div class="col-4 border-right" id="CentralPanel"></div>
     <div class="col-4" id="DocumentsPanel">
-      {# Single-corpus scaffolding always present; multi-corpus mode hides it via JS. #}
       <div id="DocumentsPanel_first_scenario">
         <table id="tableRelevantDocumentsClass_Model1"></table>
       </div>
     </div>
   </div>
+  {% endif %}
 </div>
 
 <script src="/dist/tve.js"></script>

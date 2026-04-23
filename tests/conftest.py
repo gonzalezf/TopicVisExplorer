@@ -6,15 +6,29 @@
 * :func:`tiny_corpus` -- the matching tokenized corpus (for coherence /
   similarity tests).
 * :func:`tiny_doc_topic_dists` -- the doc-topic matrix.
+
+Also sets ``TVE_EMBEDDING_DISABLE=1`` at import time (unless the host
+environment already set it) so the parametrized fixture-backed API
+tests fall through to the flat-JSD path instead of paying a ~20s
+Word2Vec training cost per scenario. The
+``test_fixture_quality::test_circle_positions_endpoints_differ`` test
+explicitly unsets this to exercise the real embedding path.
 """
 
 from __future__ import annotations
 
-import numpy as np
-import pandas as pd
-import pytest
+import os
 
-from topicvisexplorer import prepare
+# Default ON for the whole test session; individual tests that want the
+# real Omega-varying path override via monkeypatch. Must be set before
+# :mod:`topicvisexplorer` (or any module that reads the env) is imported.
+os.environ.setdefault("TVE_EMBEDDING_DISABLE", "1")
+
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+import pytest  # noqa: E402
+
+from topicvisexplorer import prepare  # noqa: E402
 
 
 @pytest.fixture(scope="session")

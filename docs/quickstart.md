@@ -48,6 +48,16 @@ reuse the cache (instant). The browser is opened at
 `/singlecorpus?scenario=<name>&hitl=true` so split / merge / add-word /
 remove-word all work out of the box.
 
+!!! tip "One-time topic-similarity embedding"
+    On the first visit to a scenario we also train a small Word2Vec
+    embedding (~20s for the bundled demos) to power the Omega slider in
+    the topic-map. The result is cached in
+    `~/.cache/topicvisexplorer/<name>_w2v_v1.kv`; subsequent loads are
+    instant. Delete the cache dir (or bump the `_v1` suffix when
+    preprocessing changes) to force retraining. Set the env var
+    `TVE_EMBEDDING_DISABLE=1` to skip training entirely and fall back to
+    a flat Jensen-Shannon layout (Omega slider will not move bubbles).
+
 That opens `http://127.0.0.1:8000/singlecorpus` in your
 browser (default `?scenario=20ng_tiny`). You should see:
 

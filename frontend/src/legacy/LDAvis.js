@@ -104,6 +104,7 @@ var LDAvis = function(to_select, data_or_file_name) {
     
     var vis_state = {
             lambda: 0.6,
+            lambda_b: 0.6,
             min_value_filtering:-1.0,
             max_value_filtering: 1.0,
             lambda_lambda_topic_similarity:0.2, //que tanta info tiene vector top keywords y que tanta info tiene vector top relevant documents
@@ -121,6 +122,11 @@ var LDAvis = function(to_select, data_or_file_name) {
         //mdsData3, // topic proportions for all terms in the viz
         lamData, // all terms that are among the top-R most relevant for all topics, lambda values
         lambda = {
+            old: 0.6,
+            current: 0.6
+        },
+        /** Corpus B (right panel) relevance; independent of lambda (left) for /multicorpora. */
+        lambda_b = {
             old: 0.6,
             current: 0.6
         },
@@ -216,7 +222,8 @@ var LDAvis = function(to_select, data_or_file_name) {
     var min_target_node_value = Infinity;
 
     var number_terms_sankey = 20
-    
+    /** Type 2: min(corpusA R, corpusB R, 20) so left/right show the same number of default terms. */
+    var sankeyTermActiveCap = 20
 
     //esto se ocupa en la comparación de un corpus
     var topic_id_model_1 = -1
@@ -254,6 +261,20 @@ var LDAvis = function(to_select, data_or_file_name) {
 
     var sliderDivIDLambdaTopicSimilarity = "sliderDivLambdaTopicSimilarity"
     //to_select = BarPlotPanelDivId
+
+    /** d3.select("#id") with empty parent throws; resolve real element first. */
+    function tveD3SelectById(anchor, context) {
+        var s = (anchor == null) ? "" : String(anchor);
+        s = s.replace(/^#+/, "").trim();
+        if (!s) {
+            throw new Error("TopicVisExplorer: empty id " + (context ? "(" + context + ")" : "in tveD3SelectById"));
+        }
+        var el = document.getElementById(s);
+        if (!el) {
+            throw new Error("TopicVisExplorer: missing DOM #" + s + (context ? " in " + context : ""));
+        }
+        return d3.select(el);
+    }
     
     //Get relevant documents from ajax
     if(type_vis==1){
@@ -710,6 +731,8 @@ var LDAvis = function(to_select, data_or_file_name) {
         // Create the topic input & lambda slider forms. Inspired from:
         // http://bl.ocks.org/d3noob/10632804
         // http://bl.ocks.org/d3noob/10633704
+        // Keep UI omega in sync with the value used for MDS (slider was 0.2 vs 0.8 before).
+        vis_state.lambda_lambda_topic_similarity = String(lambda_lambda_topic_similarity.current);
         init_forms(topicID, lambdaID);
 
         // When the value of lambda changes, update the visualization
@@ -739,28 +762,16 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         d3.select("#"+lambdaIDRightPanel)
             .on("mouseup", function() {
-
-                //lambda_select = "#"+lambdaID
-                
-                // store the previous lambda value
-                
-                lambda.old = lambda.current;
-                
-                lambda.current = document.getElementById(lambdaIDRightPanel).value;
-                vis_state.lambda = +this.value;
-                // adjust the text on the range slider
-                d3.select("#"+lambdaIDRightPanel).property("value", vis_state.lambda);
-                d3.select("#"+lambdaIDRightPanel + "-value").text(vis_state.lambda);
-                // transition the order of the bars
-                var increased = lambda.old < vis_state.lambda;
-                
-                if (vis_state.topic > 0){
-                    
+                lambda_b.old = lambda_b.current;
+                lambda_b.current = document.getElementById(lambdaIDRightPanel).value;
+                vis_state.lambda_b = +this.value;
+                d3.select("#"+lambdaIDRightPanel).property("value", vis_state.lambda_b);
+                d3.select("#"+lambdaIDRightPanel + "-value").text(vis_state.lambda_b);
+                var increased = lambda_b.old < vis_state.lambda_b;
+                if (vis_state.topic > 0) {
                     reorder_bars_new(increased, "right");
-                } 
-                // store the current lambda value
-                //state_save(true);
-                document.getElementById(lambdaIDRightPanel).value = vis_state.lambda;
+                }
+                document.getElementById(lambdaIDRightPanel).value = vis_state.lambda_b;
             });
 
 
@@ -816,24 +827,23 @@ var LDAvis = function(to_select, data_or_file_name) {
         
                     }
 
+                    var expectedTopicCat;
+                    if (d.node < 0) {
+                        expectedTopicCat = "Default";
+                    } else if (d.node >= min_target_node_value) {
+                        expectedTopicCat = "Topic" + (d.node - min_target_node_value + 1);
+                    } else {
+                        expectedTopicCat = "Topic" + (d.node + 1);
+                    }
                     var dat2 = lamData.filter(function(e) {
-                        if(d.node==-1){ 
-                            return e.Category == "Default" //This are the most relevant terms from all the corpus. We are not using it!!!
-                        }
-                        else{
-                            return e.Category == "Topic" + (d.node%min_target_node_value+1); // OJO! AQUI HAY UN +1, quizas hay que sacarlo y mejorar el codigo, esto esta medio mula
-                        }
-                        
+                        return e.Category == expectedTopicCat;
                     });
-
-        
-                    // define relevance:
+                    var lrelName = d.node >= min_target_node_value ? vis_state.lambda_b : vis_state.lambda;
                     for (var i = 0; i < dat2.length; i++) {
-                        dat2[i].relevance = lambda.current * dat2[i].logprob +
-                            (1 - lambda.current) * dat2[i].loglift;
-
-                        if(isNaN(dat2[i].relevance)){
-                            dat2[i].relevance  = -Infinity;
+                        dat2[i].relevance = lrelName * dat2[i].logprob +
+                            (1 - lrelName) * dat2[i].loglift;
+                        if (isNaN(dat2[i].relevance)) {
+                            dat2[i].relevance = -Infinity;
                         }
                     }
         
@@ -860,9 +870,6 @@ var LDAvis = function(to_select, data_or_file_name) {
         
         //Inspired by: https://bl.ocks.org/d3noob/013054e8d7807dff76247b81b0e29030
        function visualize_sankey(graph, threshold_min, threshold_max){
-            
-            
-
             inverted_links_filtered = graph;
 
 
@@ -872,7 +879,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             d3.selectAll('#svgCentralSankeyDiv').remove();
             d3.selectAll('#divider_central_panel_sankey').remove();
             
-            var svgCentralSankeyDiv = d3.select("#CentralPanel").append("div")
+            var svgCentralSankeyDiv = tveD3SelectById("CentralPanel", "visualize_sankey #svgCentralSankeyDiv").append("div");
             svgCentralSankeyDiv.attr("id", "svgCentralSankeyDiv")
 
             var divider_central_panel_sankey = document.createElement("hr");
@@ -957,7 +964,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             
 
 
-            var svg_sankey = d3.select("#svgCentralSankeyDiv").append("svg")// #CentralPanel
+            var svg_sankey = tveD3SelectById("svgCentralSankeyDiv", "visualize_sankey #svg_sankey").append("svg");
+            svg_sankey
                 .attr("width", "100%")
                 .attr("height", "100%")
                 .attr("id", "svg_sankey");
@@ -994,9 +1002,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
                 })
                 .on("click", function(d){
-                    
-                    topic_on_sankey(nodes_filtered[Number(d.source.node)], min_target_node_value );
-                    topic_on_sankey(nodes_filtered[Number(d.target.node)], min_target_node_value );
+                    var _ns = nodes_filtered[Number(d.source.node)];
+                    var _nt = nodes_filtered[Number(d.target.node)];
+                    var _pnL = tvePairedNFromTwoBoxes(_ns, _nt, min_target_node_value);
+                    topic_on_sankey(_ns, min_target_node_value, _pnL, true);
+                    topic_on_sankey(_nt, min_target_node_value, _pnL, true);
 
 
                     
@@ -1015,7 +1025,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                     }
                     else{
                         real_last_clicked_sankey_model_1 = nodes_filtered[Number(d.target.node)];
-                    }                    
+                    }
+                    vis_state.topic = Number(d.target.node);
+                    splitting_topic = vis_state.topic;
                 }) 
                 .sort(function(a, b) { return b.dy - a.dy; }); // el dy de aqui tambien hay que modificarlo
 
@@ -1049,17 +1061,18 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .on("click", function(d){
 
                     isSettingInitial = false;
-
-                    topic_on_sankey(d, min_target_node_value );
-                    if(d.node>=min_target_node_value){
-                        real_last_clicked_sankey_model_2 = d
-
+                    var mtv0 = min_target_node_value;
+                    var other0 = (d.node >= mtv0) ? real_last_clicked_sankey_model_1 : real_last_clicked_sankey_model_2;
+                    var _pnn = tvePairedNFromTwoBoxes(d, other0, mtv0);
+                    if(d.node>=mtv0){
+                        real_last_clicked_sankey_model_2 = d;
+                    } else {
+                        real_last_clicked_sankey_model_1 = d;
                     }
-                    else{
-                        real_last_clicked_sankey_model_1 = d
-
-                    }
-                    
+                    topic_on_sankey(d, mtv0, _pnn, true);
+                    topic_on_sankey(other0, mtv0, _pnn, true);
+                    vis_state.topic = d.node;
+                    splitting_topic = d.node;
                 })                                                
         
             // add the rectangles for the nodes
@@ -1165,9 +1178,15 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
 
             }
-            topic_on_sankey(real_last_clicked_sankey_model_1, min_target_node_value);
-            topic_on_sankey(real_last_clicked_sankey_model_2, min_target_node_value);
-            
+            var _pair0 = tvePairedNFromTwoBoxes(
+                real_last_clicked_sankey_model_1,
+                real_last_clicked_sankey_model_2,
+                min_target_node_value
+            );
+            topic_on_sankey(real_last_clicked_sankey_model_1, min_target_node_value, _pair0, true);
+            topic_on_sankey(real_last_clicked_sankey_model_2, min_target_node_value, _pair0, true);
+            vis_state.topic = real_last_clicked_sankey_model_2.node;
+            splitting_topic = vis_state.topic;
             d3.selectAll('.txt').call(dotme);
 
         }
@@ -1529,6 +1548,10 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
         function createMdsPlot(number, mdsData, lambda_lambda_topic_similarity){
+            var central = document.getElementById("CentralPanel");
+            if (!central) {
+                throw new Error("TopicVisExplorer: #CentralPanel is missing. Serve the app with the FastAPI template and hard-refresh the page.");
+            }
                         
             //if  previous mdsplot exists, remove it
             d3.selectAll('#svgMdsPlot').remove();
@@ -1540,10 +1563,10 @@ var LDAvis = function(to_select, data_or_file_name) {
             var divider_central_panel = document.createElement("hr");
             divider_central_panel.setAttribute("class", "rounded");
             divider_central_panel.setAttribute("id", "divider_central_panel");
-            document.getElementById("CentralPanel").appendChild(divider_central_panel) 
+            central.appendChild(divider_central_panel) 
             
 
-            var svg = d3.select("#CentralPanel").append("svg")
+            var svg = d3.select(central).append("svg")
                         .attr("width", "100%")
                         .attr("height", "85%")
                         .attr("id", "svgMdsPlot")
@@ -1619,7 +1642,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             // circle guide inspired from
             // http://www.nytimes.com/interactive/2012/02/13/us/politics/2013-budget-proposal-graphic.html?_r=0
             var circleGuide = function(rSize, size) {
-                d3.select("#" + leftPanelID).append("circle")
+                tveD3SelectById(leftPanelID, "createMdsPlot circleGuide " + size).append("circle")
                     .attr('class', "circleGuide" + size)
                     .attr('r', rSize)
                     .attr('cx', cx)
@@ -1627,7 +1650,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .style('fill', 'none')
                     .style('stroke-dasharray', '2 2')
                     .style('stroke', '#999');
-                d3.select("#" + leftPanelID).append("line")
+                tveD3SelectById(leftPanelID, "createMdsPlot lineGuide " + size).append("line")
                     .attr('class', "lineGuide" + size)
                     .attr("x1", cx)
                     .attr("x2", cx2)
@@ -1646,26 +1669,26 @@ var LDAvis = function(to_select, data_or_file_name) {
             var defaultLabelLarge = "10%";
 
 
-            d3.select("#" + leftPanelID).append("text")
+            tveD3SelectById(leftPanelID, "createMdsPlot circleGuideTitle").append("text")
                 .attr("x", 10)
                 .attr("y", 0.88*mdsheight-10)
                 .attr('class', "circleGuideTitle")
                 .style("text-anchor", "left")
                 .style("fontWeight", "bold")
                 .text("Topic frequency");
-            d3.select("#" + leftPanelID).append("text")
+            tveD3SelectById(leftPanelID, "createMdsPlot circleGuideLabelSmall").append("text")
                 .attr("x", cx2 + 10)
                 .attr("y", 0.88*mdsheight + 2 * newSmall)
                 .attr('class', "circleGuideLabelSmall")
                 .style("text-anchor", "start")
                 .text(defaultLabelSmall);
-            d3.select("#" + leftPanelID).append("text")
+            tveD3SelectById(leftPanelID, "createMdsPlot circleGuideLabelMedium").append("text")
                 .attr("x", cx2 + 10)
                 .attr("y", 0.88*mdsheight + 2 * newMedium)
                 .attr('class', "circleGuideLabelMedium")
                 .style("text-anchor", "start")
                 .text(defaultLabelMedium);
-            d3.select("#" + leftPanelID).append("text")
+            tveD3SelectById(leftPanelID, "createMdsPlot circleGuideLabelLarge").append("text")
                 .attr("x", cx2 + 10)
                 .attr("y", 0.88*mdsheight + 2 * newLarge)
                 .attr('class', "circleGuideLabelLarge")
@@ -2020,29 +2043,65 @@ var LDAvis = function(to_select, data_or_file_name) {
        }
 
        if(type_vis === 2){
-        
-  
-            get_name_node_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.lambda_topic_similarity)
-           
-            // Add barplot into the left panel 
-            createBarPlot("#BarPlotDiv_zero", dat3, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", number_terms_sankey) //esto crea el bar plot por primera vez.             
-            // Add barplot into the right panel
-            createBarPlot("#DocumentsPanel", dat3, barFreqsID_2,"bar-totals_2", "terms_2", "bubble-tool_2", "xaxis_2", number_terms_sankey) //hay que modificar la altura aqui en funcion del alto de las barras
+            // Three-column template: A | Sankey | B. Document tables live under
+            // the left/right column roots; create id hooks when not in HTML.
+            (function ensureMulticorpusDocumentPanelRoots() {
+                var elLeft = document.getElementById("BarPlotPanel");
+                var elRight = document.getElementById("BarPlotPanel_2");
+                if (!elLeft || !elRight) { return; }
+                if (!document.getElementById("DocumentsPanel")) {
+                    var d1 = document.createElement("div");
+                    d1.id = "DocumentsPanel";
+                    d1.setAttribute("class", "tve-documents-nested");
+                    elLeft.appendChild(d1);
+                }
+                if (!document.getElementById("DocumentsPanel_2")) {
+                    var d2 = document.createElement("div");
+                    d2.id = "DocumentsPanel_2";
+                    d2.setAttribute("class", "tve-documents-nested");
+                    elRight.appendChild(d2);
+                }
+            })();
 
-            // Add documents into the left panel. 
+            get_name_node_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.lambda_topic_similarity)
+            var R_b = Math.min(jsonData_2['R'], 20);
+            var lamDataB0 = [];
+            for (var ib = 0; ib < jsonData_2['tinfo'].Term.length; ib++) {
+                var ob = {};
+                for (var keyb in jsonData_2['tinfo']) {
+                    ob[keyb] = jsonData_2['tinfo'][keyb][ib];
+                }
+                lamDataB0.push(ob);
+            }
+            // Initial bar charts use Category == "Default". Do not use lamData.slice(0, R) —
+            // that is the first R rows across all categories, so each corpus can yield a
+            // different number of "Default" rows. Filter Default from full tinfo, same cap each side.
+            var _sankeyTermCap = Math.min(R, R_b, number_terms_sankey);
+            var defA0 = lamData.filter(function(d) { return d.Category == "Default"; });
+            var defB0 = lamDataB0.filter(function(d) { return d.Category == "Default"; });
+            var n0 = Math.min(_sankeyTermCap, defA0.length, defB0.length);
+            var dat3_sankey_a = defA0.slice(0, n0);
+            var dat3_sankey_b = defB0.slice(0, n0);
+            sankeyTermActiveCap = n0;
+            // Add barplot into the left panel
+            createBarPlot("#BarPlotDiv_zero", dat3_sankey_a, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", n0);
+            // Add barplot into the right panel (corpus B: own tinfo, not corpus A)
+            createBarPlot("#BarPlotDiv_b_zero", dat3_sankey_b, barFreqsID_2,"bar-totals_2", "terms_2", "bubble-tool_2", "xaxis_2", n0);
+
+            // Add documents into the left column
            var RelevantDocumentsTableDiv = document.createElement("div");
            RelevantDocumentsTableDiv.setAttribute("id", "RelevantDocumentsTableDiv");
            RelevantDocumentsTableDiv.setAttribute("class", "RelevantDocumentsSankeyDiagram mt-4");
-           document.getElementById("BarPlotPanelDiv").appendChild(RelevantDocumentsTableDiv) 
+           document.getElementById("DocumentsPanel").appendChild(RelevantDocumentsTableDiv);
            const  div = document.getElementById('RelevantDocumentsTableDiv');
            div.insertAdjacentHTML('afterbegin', '<table  id="tableRelevantDocumentsClass_Model1" class="table table-hover"> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table>');
 
 
-           // Add documents into the right panel. 
+           // Add documents into the right column
            var RelevantDocumentsTableDiv_2 = document.createElement("div");
            RelevantDocumentsTableDiv_2.setAttribute("id", "RelevantDocumentsTableDiv_2");
            RelevantDocumentsTableDiv_2.setAttribute("class", "RelevantDocumentsSankeyDiagram mt-4");
-           document.getElementById("DocumentsPanel").appendChild(RelevantDocumentsTableDiv_2) 
+           document.getElementById("DocumentsPanel_2").appendChild(RelevantDocumentsTableDiv_2);
            const  div_2 = document.getElementById('RelevantDocumentsTableDiv_2');
            div_2.insertAdjacentHTML('afterbegin', '<table  id="tableRelevantDocumentsClass_Model2" class="table table-hover"> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table>');
            visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
@@ -2053,18 +2112,30 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
         function createBarPlot(to_select, dat3, barFreqsID_actual, bar_totals_actual, terms_actual,  splitting, xaxis_class, number_terms){
-            
+            var _termCap = (typeof number_terms === "number" && number_terms > 0) ? Math.min(number_terms, 20) : R;
+            var plotRootId = String(to_select).replace(/^#+/, "").trim();
+            if (!plotRootId) { throw new Error("TopicVisExplorer: createBarPlot: empty to_select"); }
+            var rootD3 = tveD3SelectById(plotRootId, "createBarPlot root");
+            var rootEl = rootD3.node();
+            var rch = rootEl.clientHeight || 0;
+            var rbb = rootEl.getBoundingClientRect();
+            if (rch < 4) { rch = rbb.height || 0; }
+            if (rch < 4) { rch = 260; }
+            var svgH = Math.max(180, Math.floor(0.35 * rch));
 
-            var svg = d3.select(to_select).append("svg") //BarPlotPanelDiv
+            var svg = rootD3.append("svg") // BarPlotPanelDiv or BarPlotDiv_zero / BarPlotDiv_b_zero
             .attr("width", "100%")
-            .attr("height", "35%");
-            
+            .attr("height", svgH);
 
             var bounds_barplot = svg.node().getBoundingClientRect();
-            
-
-            barheight = bounds_barplot.height - 0.5*termwidth
-            barwidth = bounds_barplot.width - 1.5*termwidth
+            if (bounds_barplot.height < 8) {
+                barheight = svgH - 0.5 * termwidth;
+            } else {
+                barheight = bounds_barplot.height - 0.5*termwidth;
+            }
+            var _bw = bounds_barplot.width;
+            if (_bw < 4) { _bw = rbb.width || 0; }
+            barwidth = _bw - 1.5*termwidth
         
             
         
@@ -2072,7 +2143,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 return d.Category == "Default";
             });
             
-            barDefault2 = barDefault2.slice(0, R)
+            barDefault2 = barDefault2.slice(0, _termCap)
             
             var y = d3.scaleBand()
                     .domain(barDefault2.map(function(d) {
@@ -2096,34 +2167,35 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("class", "BarPlotClass");
             
 
-                var legend_svg = d3.select(to_select).append("svg") //BarPlotPanelDiv
+                var legH = Math.max(36, Math.floor(0.03 * rch));
+                var legend_svg = rootD3.append("svg")
                 .attr("width", "100%")
-                .attr("height", "3%")
+                .attr("height", legH)
                 .attr("id", bar_totals_actual+"legend_svg")
                 
                 mdsheight = 0
                 var barguide = {"width": 100, "height": 15};
-                d3.select("#"+bar_totals_actual+"legend_svg").append("rect")
+                tveD3SelectById(bar_totals_actual+"legend_svg", "createBarPlot legend " + bar_totals_actual).append("rect")
                     .attr("x", 0)
                     .attr("y", mdsheight + 10)
                     .attr("height", barguide.height)
                     .attr("width", (barguide.width/2))
                     .style("fill", color1_1)
                     .attr("opacity", 0.4);
-                d3.select("#"+bar_totals_actual+"legend_svg").append("text")
+                tveD3SelectById(bar_totals_actual+"legend_svg", "createBarPlot legendText1 " + bar_totals_actual).append("text")
                     .attr("x", (barguide.width/2)+ 5)
                     .attr("y", mdsheight + 10 + barguide.height/2)
                     .style("dominant-baseline", "middle")
                     .text("Overall term frequency");
                 
-                d3.select("#"+bar_totals_actual+"legend_svg").append("rect")
+                tveD3SelectById(bar_totals_actual+"legend_svg", "createBarPlot legend2 " + bar_totals_actual).append("rect")
                     .attr("x", 1.8*barguide.width+ 5)
                     .attr("y", mdsheight + 10)
                     .attr("height", barguide.height)
                     .attr("width", (barguide.width/4))
                     .style("fill", color2_1)
                     .attr("opacity", 0.8);
-                d3.select("#"+bar_totals_actual+"legend_svg").append("text")
+                tveD3SelectById(bar_totals_actual+"legend_svg", "createBarPlot legendText2 " + bar_totals_actual).append("text")
                     .attr("x", 1.8*barguide.width+(barguide.width/4) + 10 )
                     .attr("y", mdsheight + 10 + barguide.height/2 )
                     .style("dominant-baseline", "middle")
@@ -2216,7 +2288,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             //div que contiene todo el panel izquierdo
             if(type_vis == 2){
-                var svgRightPanel = d3.select("#DocumentsPanel").append("div");
+                var svgRightPanel = tveD3SelectById("BarPlotPanel_2", "init_forms right column").append("div");
                 svgRightPanel.attr("id", "svgRightPanel");
 
                 var topicDivRightPanel = document.createElement("div");
@@ -2275,7 +2347,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 //add relevance slider into the right panel. 
                 var inputDivRightPanel_zero = document.createElement("div");
                 inputDivRightPanel_zero.setAttribute("id", "BarPlotDivRightPanel_zero");
-                document.getElementById("DocumentsPanel").appendChild(inputDivRightPanel_zero)  //document.getElementById(visID).appendChild(inputDiv); //creo que esto debiera estar unido al svg mejor
+                var _bp2a = document.getElementById("BarPlotPanel_2");
+                if (!_bp2a) { throw new Error("TopicVisExplorer: init_forms: missing #BarPlotPanel_2 (append right slider)"); }
+                _bp2a.appendChild(inputDivRightPanel_zero);
 
                 var divider_topic_name_right = document.createElement("hr");
                 divider_topic_name_right.setAttribute("class", "rounded");
@@ -2301,8 +2375,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 lambdaInputRightPanel.type = "range";
                 lambdaInputRightPanel.min = 0;
                 lambdaInputRightPanel.max = 1;
-                lambdaInputRightPanel.step = data['lambda.step'];
-                lambdaInputRightPanel.value = vis_state.lambda;
+                lambdaInputRightPanel.step = jsonData_2['lambda.step'] != null ? jsonData_2['lambda.step'] : data['lambda.step'];
+                lambdaInputRightPanel.value = vis_state.lambda_b;
                 lambdaInputRightPanel.id = lambdaID+"RightPanel";
                 lambdaInputRightPanel.setAttribute("list", "ticks"); 
                 sliderDivRightPanel.appendChild(lambdaInputRightPanel);
@@ -2311,11 +2385,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                 lambdaLabelRightPanel.setAttribute("id", lambdaLabelID+"RightPanel");
                 lambdaLabelRightPanel.setAttribute("class", "ColumnDiv");
                 lambdaLabelRightPanel.setAttribute("for", lambdaID+"RightPanel");
-                lambdaLabelRightPanel.innerHTML = "Relevance score: &#955 = <span id='" + lambdaID+"RightPanel" + "-value'>" + vis_state.lambda + "</span>";
+                lambdaLabelRightPanel.innerHTML = "Relevance score: &#955 = <span id='" + lambdaID+"RightPanel" + "-value'>" + vis_state.lambda_b + "</span>";
                 lambdaDivRightPanel.appendChild(lambdaLabelRightPanel);
 
                 // Create the svg to contain the slider scale:
-                var scaleContainerRightPanel = d3.select("#" + "RelevanceSliderContenedorRightPanel").append("svg")
+                var scaleContainerRightPanel = tveD3SelectById("RelevanceSliderContenedorRightPanel", "init_forms right RelevanceSlider scale").append("svg")
                         .attr("id", "scaleContainerRightPanel");
 
                 var bounds_scaleContainer_right_panel = scaleContainerRightPanel.node().getBoundingClientRect();
@@ -2333,13 +2407,18 @@ var LDAvis = function(to_select, data_or_file_name) {
                 var sliderAxisGroupRightPanel = scaleContainerRightPanel.append("g")
                         .attr("class", "slideraxis")
                         .attr("margin-top", "-10px")
-                        .call(sliderAxisRightPanel);     
+                        .call(sliderAxisRightPanel);
+                var inputDivBZero = document.createElement("div");
+                inputDivBZero.setAttribute("id", "BarPlotDiv_b_zero");
+                var _bp2b = document.getElementById("BarPlotPanel_2");
+                if (!_bp2b) { throw new Error("TopicVisExplorer: init_forms: missing #BarPlotPanel_2 (append BarPlotDiv_b_zero)"); }
+                _bp2b.appendChild(inputDivBZero);
             }
 
             d3.selectAll('#'+BarPlotPanelDivId).remove();
 
-            var svgLeftPanel = d3.select("#BarPlotPanel").append("div")
-            svgLeftPanel.attr("id", BarPlotPanelDivId)
+            var svgLeftPanel = tveD3SelectById("BarPlotPanel", "init_forms left column").append("div");
+            svgLeftPanel.attr("id", BarPlotPanelDivId);
             //svgLeftPanel.attr("class", "border_box my-1")
             
             if(type_vis==1){
@@ -2448,6 +2527,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     scenario: _scen,
                     exported_at: new Date().toISOString(),
                     lambda: vis_state ? vis_state.lambda : null,
+                    lambda_b: vis_state ? vis_state.lambda_b : null,
                     omega_topic_similarity: vis_state ? vis_state.lambda_lambda_topic_similarity : null,
                     current_topic_id: vis_state ? vis_state.topic : null,
                     topics: _topicsOut,
@@ -2840,7 +2920,9 @@ var LDAvis = function(to_select, data_or_file_name) {
     
             var inputDiv_zero = document.createElement("div");
             inputDiv_zero.setAttribute("id", "BarPlotDiv_zero"); //inputDiv_zero.setAttribute("class", "border_box my-1");
-            document.getElementById(BarPlotPanelDivId).appendChild(inputDiv_zero)  //document.getElementById(visID).appendChild(inputDiv); //creo que esto debiera estar unido al svg mejor
+            var _barPlotWrap = document.getElementById(BarPlotPanelDivId);
+            if (!_barPlotWrap) { throw new Error("TopicVisExplorer: init_forms: missing #" + BarPlotPanelDivId + " (BarPlot left stack)"); }
+            _barPlotWrap.appendChild(inputDiv_zero);
             
             var divider_topic_name_left = document.createElement("hr");
             divider_topic_name_left.setAttribute("class", "rounded");
@@ -2880,7 +2962,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             lambdaDiv.appendChild(lambdaLabel);
 
             // Create the svg to contain the slider scale:
-            var scaleContainer = d3.select("#" + sliderDivID).append("svg")
+            var scaleContainer = tveD3SelectById(sliderDivID, "init_forms RelevanceSlider scale").append("svg")
                     .attr("id", "scaleContainer");
 
             var bounds_scaleContainer = scaleContainer.node().getBoundingClientRect();
@@ -2903,9 +2985,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
             //Topic similarity slider (change the lambda of vector keywords and vector documents for topic similarity metric proposed)        
-
-            var svgCentralPanel = d3.select("#CentralPanel").append("div")
-            svgCentralPanel.attr("id", "TopicSimilarityMetricPanel")
+            var svgCentralPanel = tveD3SelectById("CentralPanel", "init_forms TopicSimilarity panel").append("div");
+            svgCentralPanel.attr("id", "TopicSimilarityMetricPanel");
     
             var sliderDivLambdaTopicSimilarity = document.createElement("div");
             sliderDivLambdaTopicSimilarity.setAttribute("id", sliderDivIDLambdaTopicSimilarity);
@@ -2959,8 +3040,8 @@ var LDAvis = function(to_select, data_or_file_name) {
                 max_similarity_score = Math.round(  max_similarity_score* 100) / 100
                
 
-                var svgCentralPanelFiltering = d3.select("#CentralPanel").append("div")
-                svgCentralPanelFiltering.attr("id", "TopicSimilarityMetricPanelFiltering")
+                var svgCentralPanelFiltering = tveD3SelectById("CentralPanel", "init_forms TopicSimilarity filtering").append("div");
+                svgCentralPanelFiltering.attr("id", "TopicSimilarityMetricPanelFiltering");
 
                 var sliderDivFiltering = document.createElement("div");
                 sliderDivFiltering.setAttribute("id", "sliderDivFiltering");
@@ -2993,7 +3074,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     }
 
                 }
-                var origins = slider.getElementsByClassName('noUi-origin');
 
                 if(scenario_2_is_baseline_metric == false){
                     var range_slider = noUiSlider.create(slider, {
@@ -3005,8 +3085,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                             'max': max_similarity_score
                         }
                     });
-                    origins[1].setAttribute('disabled', true);
-                    origins[1].setAttribute('class', 'disabled_slider');
+                    var origins = slider.getElementsByClassName('noUi-origin');
+                    if (origins[1]) { origins[1].setAttribute('disabled', true); }
+                    if (origins[1]) { origins[1].setAttribute('class', 'disabled_slider'); }
 
                 }
                 else{
@@ -3019,9 +3100,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                             'max': max_similarity_score
                         }
                     });
-                    origins[1].setAttribute('disabled', true);
-                    origins[1].setAttribute('class', 'disabled_slider');
-
+                    var origins2 = slider.getElementsByClassName('noUi-origin');
+                    if (origins2[1]) { origins2[1].setAttribute('disabled', true); }
+                    if (origins2[1]) { origins2[1].setAttribute('class', 'disabled_slider'); }
 
                     //origins[1].setAttribute('disabled', true);
 
@@ -3074,7 +3155,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
                 
-                var scaleContainerTopicSimilarityFiltering = d3.select("#" + "sliderDivInputFilteringTopicSimilarity").append("svg")
+                var scaleContainerTopicSimilarityFiltering = tveD3SelectById("sliderDivInputFilteringTopicSimilarity", "init_forms filtering slider scale").append("svg")
                 .attr("id", "scaleContainerTopicSimilarityFiltering");
 
                 var bounds_scaleContainer_filtering = scaleContainerTopicSimilarityFiltering.node().getBoundingClientRect();
@@ -3105,7 +3186,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             lambdaInputLambdaTopicSimilarity.min = 0.0
             lambdaInputLambdaTopicSimilarity.max = 1.0;
             lambdaInputLambdaTopicSimilarity.step = data['lambda.step'];
-            lambdaInputLambdaTopicSimilarity.value = vis_state.lambda_lambda_topic_similarity; //
+            lambdaInputLambdaTopicSimilarity.value = lambda_lambda_topic_similarity.current;
             lambdaInputLambdaTopicSimilarity.id = "lambdaInputLambdaTopicSimilarity";
             lambdaInputLambdaTopicSimilarity.setAttribute("list", "ticks"); // to enable automatic ticks (with no labels, see below)
             sliderDivInputOmegaTopicSimilarity.appendChild(lambdaInputLambdaTopicSimilarity);
@@ -3114,12 +3195,16 @@ var LDAvis = function(to_select, data_or_file_name) {
             lambdaLabelLambdaTopicSimilarity.setAttribute("id", "LambdaLabelLambdaTopicSimilarity");
             lambdaLabelLambdaTopicSimilarity.setAttribute("class", "ColumnDiv");
             lambdaLabelLambdaTopicSimilarity.setAttribute("for", "lambdaInputLambdaTopicSimilarity");
-            lambdaLabelLambdaTopicSimilarity.innerHTML = "Omega score: &#937  = <span id='" + "lambdaInputLambdaTopicSimilarity" + "-value'>" + vis_state.lambda_lambda_topic_similarity + "</span>";
+            lambdaLabelLambdaTopicSimilarity.innerHTML = "Omega score: &#937; = <span id=\"lambdaInputLambdaTopicSimilarity-value\"></span>";
             sliderDivLambdaTopicSimilarity.appendChild(lambdaLabelLambdaTopicSimilarity);
+            var _omegaValEl = document.getElementById("lambdaInputLambdaTopicSimilarity-value");
+            if (_omegaValEl) {
+                _omegaValEl.textContent = String(vis_state.lambda_lambda_topic_similarity);
+            }
 
 
             // Create the svg to contain the slider scale:
-            var scaleContainerOmegaTopicSimilarity = d3.select("#" + sliderDivID+"OmegaTopicSimilarity").append("svg")
+            var scaleContainerOmegaTopicSimilarity = tveD3SelectById(sliderDivID + "OmegaTopicSimilarity", "init_forms OmegaTopicSimilarity scale").append("svg")
             .attr("id", "scaleContainerOmegaTopicSimilarity");
 
             var bounds_scaleContainer_omegatopicsimilarity = scaleContainerOmegaTopicSimilarity.node().getBoundingClientRect();
@@ -3141,35 +3226,46 @@ var LDAvis = function(to_select, data_or_file_name) {
     
 
 
-            d3.select("#"+"lambdaInputLambdaTopicSimilarity")
-            .on("mouseup", function() {
-
-                
-                lambda_lambda_topic_similarity.old = lambda_lambda_topic_similarity.current;
-                lambda_lambda_topic_similarity.current = document.getElementById("lambdaInputLambdaTopicSimilarity").value;
-                
-
-                vis_state.lambda_lambda_topic_similarity =lambda_lambda_topic_similarity.current
-            
-                document.getElementById("lambdaInputLambdaTopicSimilarity" + "-value").innerHTML = " <span id='" + "lambdaInputLambdaTopicSimilarity" + "-value'>" + vis_state.lambda_lambda_topic_similarity + "</span>";
-                document.getElementById("lambdaInputLambdaTopicSimilarity").value = vis_state.lambda_lambda_topic_similarity;
-
-        
-               
-
-                if(type_vis == 2){
-                    //mostramos 1 - omega, para que cuandos ea 0 signifique que damos mas importancia a las keywords, y 1 cuando le damos mas importancia a los docs
-
-                    visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
+            (function tveBindOmegaTopicSimilaritySlider() {
+                var _omegaDebounce = null;
+                function _tveOmegaLabelOnly() {
+                    var inp = document.getElementById("lambdaInputLambdaTopicSimilarity");
+                    var v = inp ? inp.value : "";
+                    var el = document.getElementById("lambdaInputLambdaTopicSimilarity-value");
+                    if (el) { el.textContent = v; }
                 }
-                if(type_vis == 1){
-
-                    createMdsPlot(1, mdsData, get_new_omega(lambda_lambda_topic_similarity.current))
-                    topic_on(document.getElementById(topicID+vis_state.topic))
+                function _tveApplyOmegaReplot() {
+                    lambda_lambda_topic_similarity.old = lambda_lambda_topic_similarity.current;
+                    lambda_lambda_topic_similarity.current = document.getElementById("lambdaInputLambdaTopicSimilarity").value;
+                    vis_state.lambda_lambda_topic_similarity = lambda_lambda_topic_similarity.current;
+                    _tveOmegaLabelOnly();
+                    if (typeof window !== "undefined" && window.__tveDebug) {
+                        var _key = get_new_omega(lambda_lambda_topic_similarity.current);
+                        var _pos0 = (typeof new_circle_positions !== "undefined" && new_circle_positions && new_circle_positions[_key]) ? new_circle_positions[_key][0] : null;
+                        console.log("[tve omega]", { current: lambda_lambda_topic_similarity.current, lookup_key: _key, first_point: _pos0 });
+                    }
+                    if(type_vis == 2){
+                        visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering);
+                    }
+                    if(type_vis == 1){
+                        createMdsPlot(1, mdsData, get_new_omega(lambda_lambda_topic_similarity.current));
+                        topic_on(document.getElementById(topicID+vis_state.topic));
+                    }
                 }
-
-
-            });
+                // Range inputs: "mouseup" alone misses drags. Use "input" (live) + "change" (commit).
+                d3.select("#lambdaInputLambdaTopicSimilarity")
+                    .on("input", function() {
+                        var v = document.getElementById("lambdaInputLambdaTopicSimilarity").value;
+                        vis_state.lambda_lambda_topic_similarity = v;
+                        _tveOmegaLabelOnly();
+                        clearTimeout(_omegaDebounce);
+                        _omegaDebounce = setTimeout(_tveApplyOmegaReplot, 85);
+                    })
+                    .on("change", function() {
+                        clearTimeout(_omegaDebounce);
+                        _tveApplyOmegaReplot();
+                    });
+            })();
 
             d3.select("#lambdaInputTopicSimilarityFiltering") //Filtering paths of sankey diagram
             .on("mouseup", function() {
@@ -3203,29 +3299,51 @@ var LDAvis = function(to_select, data_or_file_name) {
         // function to re-order the bars (gray and red), and terms:
 
         function reorder_bars_helper(to_select, increase, topic_id_in_model, barFreqsID_actual, bar_totals_actual, terms_actual, overlay, xaxis_class){
-            
-            var dat2 = lamData.filter(function(d) {
-                
-                return d.Category == "Topic" + topic_id_in_model;
-            });
-            
-            
-            // define relevance:
-            for (var i = 0; i < dat2.length; i++) {
-                dat2[i].relevance = vis_state.lambda * dat2[i].logprob +
-                    (1 - vis_state.lambda) * dat2[i].loglift;
-            
-                if(isNaN(dat2[i].relevance)){
-                    dat2[i].relevance  = -Infinity;
+            var _lamDataLocal = lamData;
+            var _relLambda = vis_state.lambda;
+            if (type_vis === 2) {
+                if (barFreqsID_actual === "barplot_2") {
+                    _lamDataLocal = [];
+                    for (var j = 0; j < jsonData_2['tinfo'].Term.length; j++) {
+                        var row = {};
+                        for (var _k in jsonData_2['tinfo']) {
+                            row[_k] = jsonData_2['tinfo'][_k][j];
+                        }
+                        _lamDataLocal.push(row);
+                    }
+                    _relLambda = vis_state.lambda_b;
+                } else {
+                    _lamDataLocal = [];
+                    for (var j2 = 0; j2 < jsonData['tinfo'].Term.length; j2++) {
+                        var row2 = {};
+                        for (var k2 in jsonData['tinfo']) {
+                            row2[k2] = jsonData['tinfo'][k2][j2];
+                        }
+                        _lamDataLocal.push(row2);
+                    }
+                    _relLambda = vis_state.lambda;
                 }
             }
-            
-
-            // sort by relevance:
+            var dat2 = _lamDataLocal.filter(function(d) {
+                return d.Category == "Topic" + topic_id_in_model;
+            });
+            for (var i = 0; i < dat2.length; i++) {
+                dat2[i].relevance = _relLambda * dat2[i].logprob +
+                    (1 - _relLambda) * dat2[i].loglift;
+                if (isNaN(dat2[i].relevance)) {
+                    dat2[i].relevance = -Infinity;
+                }
+            }
             dat2.sort(fancysort("relevance"));
-            
-            
-            var dat3 = dat2.slice(0, R);
+            var _capR = (type_vis === 2) ? sankeyTermActiveCap : R;
+            if (type_vis === 2) {
+                var bLre = (typeof topic_id_model_1 === "number" && topic_id_model_1 >= 0) ?
+                    { node: topic_id_model_1 } : real_last_clicked_sankey_model_1;
+                var bRre = (typeof topic_id_model_2 === "number" && topic_id_model_2 >= 0) ?
+                    { node: topic_id_model_2 + min_target_node_value } : real_last_clicked_sankey_model_2;
+                _capR = tvePairedNFromTwoBoxes(bLre, bRre, min_target_node_value);
+            }
+            var dat3 = dat2.slice(0, _capR);
             
             var y = d3.scaleBand()
                     .domain(dat3.map(function(d) {
@@ -3242,22 +3360,24 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .nice();
 
             // Change Total Frequency bars
+            // `select("#" + id).selectAll("#… #…")` can match 0 under the chart <g> (wrong scope).
+            // Select direct descendants by class under the same chart g as topic_on_sankey.
             var graybars = d3.select("#" + barFreqsID_actual)
-                    .selectAll(to_select + " ."+bar_totals_actual) //.bar-totals
+                    .selectAll("rect." + bar_totals_actual)
                     .data(dat3, function(d) {
                         return d.Term;
                     });
 
             // Change word labels
             var labels = d3.select("#" + barFreqsID_actual)
-                    .selectAll(to_select + " ."+terms_actual)
+                    .selectAll("text." + terms_actual)
                     .data(dat3, function(d) {
                         return d.Term;
                     });
 
             // Create red bars (drawn over the gray ones) to signify the frequency under the selected topic
             var redbars = d3.select("#" + barFreqsID_actual)
-                    .selectAll(to_select + " ."+overlay)
+                    .selectAll("rect." + overlay)
                     .data(dat3, function(d) {
                         return d.Term;
                     });
@@ -3525,12 +3645,58 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
 
+        /**
+         * Sorted relevance list for a Sankey node (no global lamData mutation).
+         * Used to pair how many terms we show for corpus A vs B.
+         */
+        function tveGetSankeyNodeTerms(box, mtv) {
+            if (box == null || box.node === undefined) { return []; }
+            var _lam = [];
+            var _j = (box.node >= mtv) ? jsonData_2 : jsonData;
+            for (var i = 0; i < _j['tinfo'].Term.length; i++) {
+                var obj = {};
+                for (var key in _j['tinfo']) {
+                    obj[key] = _j['tinfo'][key][i];
+                }
+                _lam.push(obj);
+            }
+            var _ex;
+            if (box.node < 0) {
+                _ex = "Default";
+            } else if (box.node >= mtv) {
+                _ex = "Topic" + (box.node - mtv + 1);
+            } else {
+                _ex = "Topic" + (box.node + 1);
+            }
+            var d2 = _lam.filter(function(d) {
+                if (box.node < 0) { return d.Category == "Default"; }
+                return d.Category == _ex;
+            });
+            var lSort = (box.node >= mtv) ? lambda_b.current : lambda.current;
+            for (var j = 0; j < d2.length; j++) {
+                d2[j].relevance = lSort * d2[j].logprob + (1 - lSort) * d2[j].loglift;
+                if (isNaN(d2[j].relevance)) { d2[j].relevance = -Infinity; }
+            }
+            d2.sort(fancysort("relevance"));
+            return d2;
+        }
+        function tvePairedNFromTwoBoxes(b1, b2, mtv) {
+            if (type_vis !== 2) { return sankeyTermActiveCap; }
+            if (!b1 || !b2) { return sankeyTermActiveCap; }
+            var a = tveGetSankeyNodeTerms(b1, mtv);
+            var b = tveGetSankeyNodeTerms(b2, mtv);
+            return Math.min(sankeyTermActiveCap, a.length, b.length);
+        }
+
         // function to update bar chart when a topic is selected
         // the circle argument should be the appropriate circle element
-        function topic_on_sankey(box, min_target_node_value ){
+        // optPairN: when set, both sides use min(cap, n1, n2) from paired refresh
+        // skipCrossPlaceholder: true for paired calls so the two "Select a topic" hints do not fight
+        function topic_on_sankey(box, min_target_node_value, optPairN, skipCrossPlaceholder ){
+            if (skipCrossPlaceholder == null) { skipCrossPlaceholder = false; }
             if(box.node>=min_target_node_value){
                 //pertenece al modelo de corpus 2
-                to_select = "#DocumentsPanel"
+                to_select = "#BarPlotPanel_2"
                 var topic_id_in_model = box.node-min_target_node_value
                                 
                 updateRelevantDocuments(topic_id_in_model, relevantDocumentsDict_2,2);
@@ -3566,10 +3732,10 @@ var LDAvis = function(to_select, data_or_file_name) {
                 //d3.select("#"+last_clicked_model_2).style("opacity", 1.0)
                 document.getElementById("renameTopicId2").value = name_topics_sankey[topicID + box.node] 
                 $('#idTopic2').html(topicID + box.node); 
-                $('#topic_name_selected_2').html(name_topics_sankey[topicID + box.node] ); 
-
-                
-                
+                $('#topic_name_selected_2').html(name_topics_sankey[topicID + box.node] );
+                if (!skipCrossPlaceholder) {
+                $('#topic_name_selected_1').html("Select a topic on the left (corpus A) in the Sankey.");
+                }
 
             }
             else{ // el topico seleccionado eprtenece al modelo del corpus 1
@@ -3615,7 +3781,10 @@ var LDAvis = function(to_select, data_or_file_name) {
                 
                 document.getElementById("renameTopicId").value = name_topics_sankey[topicID + box.node] 
                 $('#idTopic').html(topicID + box.node);
-                $('#topic_name_selected_1').html(name_topics_sankey[topicID + box.node]); 
+                $('#topic_name_selected_1').html(name_topics_sankey[topicID + box.node]);
+                if (!skipCrossPlaceholder) {
+                $('#topic_name_selected_2').html("Select a topic on the right (corpus B) in the Sankey.");
+                }
                 
             }
 
@@ -3631,33 +3800,35 @@ var LDAvis = function(to_select, data_or_file_name) {
             
             
             
-            // grab the bar-chart data for this topic only:
-            
+            var _expectedCat2;
+            if (box.node < 0) {
+                _expectedCat2 = "Default";
+            } else if (box.node >= min_target_node_value) {
+                _expectedCat2 = "Topic" + (box.node - min_target_node_value + 1);
+            } else {
+                _expectedCat2 = "Topic" + (box.node + 1);
+            }
             var dat2 = lamData.filter(function(d) {
-                if(box.node==-1){ //haccer que esto ocurra
-                    return d.Category == "Default" //creo que estos son los terminos mas relevantes de todo el corpus
+                if (box.node < 0) {
+                    return d.Category == "Default";
                 }
-                else{
-                    return d.Category == "Topic" + (box.node%min_target_node_value+1); // OJO! AQUI HAY UN +1, quizas hay que sacarlo y mejorar el codigo, esto esta medio mula
-                }
-                
+                return d.Category == _expectedCat2;
             });
-            
-
-            // define relevance:
+            var lSort = (box.node >= min_target_node_value) ? lambda_b.current : lambda.current;
             for (var i = 0; i < dat2.length; i++) {
-                dat2[i].relevance = lambda.current * dat2[i].logprob +
-                    (1 - lambda.current) * dat2[i].loglift;
-
-                if(isNaN(dat2[i].relevance)){
-                    dat2[i].relevance  = -Infinity;
+                dat2[i].relevance = lSort * dat2[i].logprob +
+                    (1 - lSort) * dat2[i].loglift;
+                if (isNaN(dat2[i].relevance)) {
+                    dat2[i].relevance = -Infinity;
                 }
             }
 
 
             dat2.sort(fancysort("relevance"));
-            // truncate to the top R tokens:
-            var dat3 = dat2.slice(0, number_terms_sankey);
+            // truncate: paired multicorpora use optPairN = min(cap, nLeft, nRight)
+            var nTake = (typeof optPairN === "number" && !isNaN(optPairN)) ?
+                Math.min(optPairN, dat2.length) : sankeyTermActiveCap;
+            var dat3 = dat2.slice(0, nTake);
 
             //AddBackgroundColorToText(dat3)
 
@@ -3679,10 +3850,13 @@ var LDAvis = function(to_select, data_or_file_name) {
             // remove the red bars if there are any:
             d3.selectAll(to_select + " ."+overlay).remove();
 
-            // Change Total Frequency bars
-            d3.selectAll(to_select + " ."+bar_totals_actual)
-                .data(dat3)
-                .attr("x", 0)
+            var _tKeySankey = function(d) { return d.Term; };
+            var _br = d3.select("#" + barFreqsID_actual);
+            // Keyed join + exit: when pairN shrinks, stale bar/label DOM must be removed
+            var _gray = _br.selectAll("rect." + bar_totals_actual).data(dat3, _tKeySankey);
+            _gray.exit().remove();
+            _gray = _gray.enter().append("rect").attr("class", bar_totals_actual).merge(_gray);
+            _gray.attr("x", 0)
                 .attr("y", function(d) {
                     return y(d.Term);
                 })
@@ -3696,10 +3870,10 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .style("fill", color1_1)
                 .attr("opacity", 0.4);
 
-            // Change word labels
-            d3.selectAll(to_select + " ."+terms_actual)
-                .data(dat3)
-                .attr("x", -5)
+            var _wlab = _br.selectAll("text." + terms_actual).data(dat3, _tKeySankey);
+            _wlab.exit().remove();
+            _wlab = _wlab.enter().append("text").attr("class", terms_actual).merge(_wlab);
+            _wlab.attr("x", -5)
                 .attr("y", function(d) {
                     return y(d.Term) + 9;
                 })
@@ -3711,13 +3885,10 @@ var LDAvis = function(to_select, data_or_file_name) {
                     return d.Term;
                 });
 
-            // Create red bars (drawn over the gray ones) to signify the frequency under the selected topic
-            d3.select("#" + barFreqsID_actual).selectAll(to_select + " ."+overlay)
-                .data(dat3)
-                .enter()
-                .append("rect")
-                .attr("class", overlay)
-                .attr("x", 0)
+            var _ovl = _br.selectAll("rect." + overlay).data(dat3, _tKeySankey);
+            _ovl.exit().remove();
+            _ovl = _ovl.enter().append("rect").attr("class", overlay).merge(_ovl);
+            _ovl.attr("x", 0)
                 .attr("y", function(d) {
                     return y.bandwidth()/2 + y(d.Term);
                 })
@@ -3965,12 +4136,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                     var tutorial_nodes = tutorial_graph.nodes;
                     var tutorial_topic_chosen = tutorial_nodes[4];
                     var tutorial_topic_chosen_2= tutorial_nodes[6];
-
-                    topic_on_sankey(tutorial_topic_chosen, 6 );
-                    topic_on_sankey(tutorial_topic_chosen_2, 6 );
-
+                    var _ptut = tvePairedNFromTwoBoxes(tutorial_topic_chosen, tutorial_topic_chosen_2, 6);
                     real_last_clicked_sankey_model_1 = tutorial_topic_chosen;
                     real_last_clicked_sankey_model_2 = tutorial_topic_chosen_2;
+                    topic_on_sankey(tutorial_topic_chosen, 6, _ptut, true);
+                    topic_on_sankey(tutorial_topic_chosen_2, 6, _ptut, true);
 
                     isSettingInitial = false;
 
@@ -3982,7 +4152,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                             fix_tutorial_identification_elements(id_node_selected_left,tutorial_steps['scenario_2_box_explanation'] ),                                                          
                             fix_tutorial_identification_elements('#'+BarPlotPanelDivId, tutorial_steps['scenario_2_left_column_explanation']),
                             fix_tutorial_identification_elements("#node_6",tutorial_steps['scenario_2_box_second_dataset_explanation'] ),                                                          
-                            fix_tutorial_identification_elements('#DocumentsPanel', tutorial_steps['scenario_2_right_column_explanation']),                                
+                            fix_tutorial_identification_elements('#BarPlotPanel_2', tutorial_steps['scenario_2_right_column_explanation']),                                
                             fix_tutorial_identification_elements('#svg_sankey', tutorial_steps['explanation_of_sankey_diagram']),
                             fix_tutorial_identification_elements('#TopicSimilarityMetricPanelFiltering', tutorial_steps['explanation_filtering_sankey']),
                             fix_tutorial_identification_elements('#LabelFilteringTopicSimilarity', tutorial_steps['explanation_filtering_sankey_part2']),                                
@@ -4008,7 +4178,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                             fix_tutorial_identification_elements(id_node_selected_left,tutorial_steps['scenario_2_box_explanation'] ),                                                          
                             fix_tutorial_identification_elements('#'+BarPlotPanelDivId, tutorial_steps['scenario_2_left_column_explanation']),
                             fix_tutorial_identification_elements("#node_6",tutorial_steps['scenario_2_box_second_dataset_explanation'] ),                                                          
-                            fix_tutorial_identification_elements('#DocumentsPanel', tutorial_steps['scenario_2_right_column_explanation']),                                
+                            fix_tutorial_identification_elements('#BarPlotPanel_2', tutorial_steps['scenario_2_right_column_explanation']),                                
                             fix_tutorial_identification_elements('#svg_sankey', tutorial_steps['explanation_of_sankey_diagram']),
                             fix_tutorial_identification_elements('#TopicSimilarityMetricPanelFiltering', tutorial_steps['explanation_filtering_sankey']),
                             fix_tutorial_identification_elements('#LabelFilteringTopicSimilarity', tutorial_steps['explanation_filtering_sankey_part2']),                                

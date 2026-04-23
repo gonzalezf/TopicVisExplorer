@@ -9,6 +9,7 @@ from pathlib import Path
 from ._version import __version__
 
 _BUILTIN_CORPORA = ("20ng_tiny", "bbc_tiny", "tiny_demo")
+_BUILTIN_MULTICORPORA = ("bbc_vs_20ng", "tiny_multi_demo")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -32,6 +33,15 @@ def main(argv: list[str] | None = None) -> int:
             "Start the server and open a bundled or user-supplied real-terms demo "
             "in a browser"
         ),
+        description=(
+            "First run of a single-corpus scenario trains and caches a small Word2Vec "
+            "embedding (~20s for the bundled demos, cached under "
+            "~/.cache/topicvisexplorer/). Subsequent runs are instant. "
+            "Set TVE_EMBEDDING_DISABLE=1 to skip the embedding and fall "
+            "back to a flat Jensen-Shannon layout (Omega slider will not "
+            "move bubbles). Use --multicorpora to open the two-corpus Sankey "
+            "view (see --corpus: bbc_vs_20ng or tiny_multi_demo)."
+        ),
     )
     p_demo.add_argument(
         "--host", default="127.0.0.1", help="Bind address (default: 127.0.0.1)"
@@ -42,9 +52,23 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_demo.add_argument(
         "--corpus",
-        choices=_BUILTIN_CORPORA,
-        default="20ng_tiny",
-        help="Which bundled corpus to open (default: 20ng_tiny).",
+        default=None,
+        metavar="NAME",
+        help=(
+            "Bundled scenario: single-corpus=20ng_tiny, bbc_tiny, or tiny_demo; "
+            "with --multicorpora: bbc_vs_20ng (needs bbc_tiny+20ng_tiny fixture "
+            "build scripts) or tiny_multi_demo (synthetic, no build). "
+            "Defaults: 20ng_tiny, or bbc_vs_20ng with --multicorpora."
+        ),
+    )
+    p_demo.add_argument(
+        "--multicorpora",
+        action="store_true",
+        help=(
+            "Open /multicorpora (two-corpus Sankey) instead of /singlecorpus. "
+            "Set --corpus to bbc_vs_20ng or tiny_multi_demo (default: bbc_vs_20ng). "
+            "Incompatible with --texts."
+        ),
     )
     p_demo.add_argument(
         "--texts",
@@ -73,7 +97,10 @@ def main(argv: list[str] | None = None) -> int:
 
     p_serve = sub.add_parser(
         "serve",
-        help="Start the FastAPI server only (no browser; visit /singlecorpus yourself)",
+        help=(
+            "Start the FastAPI server only (no browser; visit e.g. /singlecorpus "
+            "or /multicorpora?scenario=... )"
+        ),
     )
     p_serve.add_argument(
         "--host", default="127.0.0.1", help="Bind address (default: 127.0.0.1)"
@@ -109,6 +136,13 @@ def _run_demo(args: argparse.Namespace) -> int:
     """Dispatch ``tve demo`` including --corpus and --texts handling."""
     from .server import ServerConfig, build_app, serve
 
+    if args.texts is not None and args.multicorpora:
+        print(
+            "error: --multicorpora cannot be used with --texts (BYO is single-corpus).",
+            file=sys.stderr,
+        )
+        return 1
+
     extras: dict = {}
     scenario_name: str
 
@@ -138,11 +172,40 @@ def _run_demo(args: argparse.Namespace) -> int:
             f"with caching under ~/.cache/topicvisexplorer ..."
         )
     else:
-        scenario_name = args.corpus
+        corpus = args.corpus
+        if corpus is None:
+            corpus = "bbc_vs_20ng" if args.multicorpora else "20ng_tiny"
+        if args.multicorpora:
+            if corpus not in _BUILTIN_MULTICORPORA:
+                print(
+                    "error: with --multicorpora, --corpus must be one of: "
+                    f"{', '.join(_BUILTIN_MULTICORPORA)} (got {corpus!r})",
+                    file=sys.stderr,
+                )
+                return 1
+        else:
+            if corpus in _BUILTIN_MULTICORPORA:
+                print(
+                    f"error: {corpus!r} is a multi-corpus scenario; "
+                    "re-run with --multicorpora",
+                    file=sys.stderr,
+                )
+                return 1
+            if corpus not in _BUILTIN_CORPORA:
+                print(
+                    "error: --corpus must be one of: "
+                    f"{', '.join(_BUILTIN_CORPORA)} (got {corpus!r})",
+                    file=sys.stderr,
+                )
+                return 1
+        scenario_name = corpus
 
     cfg = ServerConfig(register_demo=True, extra_scenarios=extras)
     app = build_app(cfg)
-    browser_path = f"/singlecorpus?scenario={scenario_name}&hitl=true"
+    if args.multicorpora:
+        browser_path = f"/multicorpora?scenario={scenario_name}&hitl=true"
+    else:
+        browser_path = f"/singlecorpus?scenario={scenario_name}&hitl=true"
     serve(
         app,
         host=args.host,

@@ -302,11 +302,20 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
     async def list_scenarios() -> dict[str, list[str]]:
         return {"scenarios": registry.names()}
 
+    def _hitl_query_raw(request: Request) -> str:
+        """HITL flag: prefer ``hitl=``; if absent, accept ``hit=`` (common typo)."""
+        qp = request.query_params
+        raw = qp.get("hitl")
+        if raw is None and "hit" in qp:
+            raw = qp.get("hit")
+        if raw is None:
+            raw = "true"
+        return raw
+
     @app.get("/singlecorpus", response_class=HTMLResponse)
     async def single_corpus(
         request: Request,
         scenario: str = "20ng_tiny",
-        hitl: str = "true",
         state: SessionState = SessionDep,
     ) -> Any:
         loaded = registry.load(scenario)
@@ -316,7 +325,7 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
         state.single_corpus["history"] = []
 
         prepared_dict = loaded.require("prepared").to_dict()
-        prepared_dict["human_in_the_loop"] = hitl.lower() != "false"
+        prepared_dict["human_in_the_loop"] = _hitl_query_raw(request).lower() != "false"
         topic_order = prepared_dict["topic.order"]
         return templates.TemplateResponse(
             request,
@@ -347,6 +356,9 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
 
         prep_a = loaded.require("prepared").to_dict()
         prep_b = loaded.require("prepared_b").to_dict()
+        _hitl = _hitl_query_raw(request).lower() != "false"
+        prep_a["human_in_the_loop"] = _hitl
+        prep_b["human_in_the_loop"] = _hitl
         sankey = _build_sankey_dict(loaded.similarity_matrix)
         return templates.TemplateResponse(
             request,
@@ -650,6 +662,19 @@ def _register_bundled_demo(registry: ScenarioRegistry) -> None:
 
     registry.register("bbc_tiny", load_bbc_tiny)
 
+    def load_bbc_vs_20ng() -> Scenario:
+        from .demo_fixtures import build_bbc_vs_20ng, fixture_exists
+
+        missing = [s for s in ("bbc_tiny", "20ng_tiny") if not fixture_exists(s)]
+        if missing:
+            raise FileNotFoundError(
+                f"bbc_vs_20ng requires the following fixtures: {missing}. "
+                "Run the matching scripts/build_*_tiny_fixtures.py to build them."
+            )
+        return build_bbc_vs_20ng()
+
+    registry.register("bbc_vs_20ng", load_bbc_vs_20ng)
+
 
 def _nearest_omega(omegas: Any, target: float) -> float | None:
     keys = list(omegas)
@@ -841,8 +866,9 @@ def _recompute_similarity(sc: Scenario, prepared: Any) -> dict[float, np.ndarray
     """
     if sc.embedding is not None and sc.raw_texts and sc.model_data is not None:
         from ..similarity.embedding import EmbeddingSimilarity, compute_omega_grid
+        from .demo_fixtures import _light_tokenize_one
 
-        metric = EmbeddingSimilarity(embedding=sc.embedding)
+        metric = EmbeddingSimilarity(embedding=sc.embedding, text_cleaner=_light_tokenize_one)
         doc_topic = pd.DataFrame(sc.model_data.doc_topic_dists)
         return dict(
             compute_omega_grid(

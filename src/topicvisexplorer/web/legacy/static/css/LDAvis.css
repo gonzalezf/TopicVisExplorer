@@ -393,6 +393,13 @@ margin-right: 10px;
   height:100%;
   /*max-height:100%;*/
 }
+/* Multi-corpus: nested under a side column (not the third-column layout) */
+#BarPlotPanel > #DocumentsPanel.tve-documents-nested {
+  height: auto;
+}
+#BarPlotPanel_2 > #DocumentsPanel_2.tve-documents-nested {
+  height: auto;
+}
 
 /* Slider css*/
 
