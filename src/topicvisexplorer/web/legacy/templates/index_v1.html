@@ -77,14 +77,14 @@
     #BarPlotPanel_2.tve-multicorpus-side > #BarPlotDivRightPanel_zero {
       flex: 0 0 auto;
     }
+    /* Chart block sizes from capped createBarPlot rch, not from stretching this flex slot. */
     #BarPlotPanel_2.tve-multicorpus-side > #BarPlotDiv_b_zero {
-      flex: 1 1 auto;
+      flex: 0 0 auto;
       min-height: 0;
     }
-    /* So percentage SVG heights in createBarPlot resolve against a real block size */
     .tve-multicorpus-side #BarPlotDiv_zero,
     .tve-multicorpus-side #BarPlotDiv_b_zero {
-      min-height: 280px;
+      min-height: 0;
       width: 100%;
       box-sizing: border-box;
     }

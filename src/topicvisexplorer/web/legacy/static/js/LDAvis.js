@@ -1226,7 +1226,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         
                         var Freq = jsonData_2.mdsDat.Freq[d.node-min_target_node_value];    
                         var freq_current_topic = Math.round(Freq * 10) / 10;
-                        var labeling_user_study = 'N'+String(d.node-min_target_node_value+1);  
+                        var labeling_user_study = 'B'+String(d.node-min_target_node_value+1);  
                         
                         
 
@@ -1235,7 +1235,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     else{
                         var Freq = jsonData.mdsDat.Freq[d.node];                       
                         var freq_current_topic = Math.round(Freq * 10) / 10;
-                        var labeling_user_study = 'E'+String(d.node+1);  
+                        var labeling_user_study = 'A'+String(d.node+1);  
   
                     }
 
@@ -2217,7 +2217,21 @@ var LDAvis = function(to_select, data_or_file_name) {
             var rbb = rootEl.getBoundingClientRect();
             if (rch < 4) { rch = rbb.height || 0; }
             if (rch < 4) { rch = 260; }
-            var svgH = Math.max(180, Math.floor(0.35 * rch));
+            var winH = (typeof window !== "undefined" && window.innerHeight) ? window.innerHeight : 800;
+            /* Use parent size for *proportion* but never a tiny SVG with many terms (illegible labels). */
+            var rchRef = Math.min(rch, Math.floor(0.78 * winH));
+            var nDefaultIn = 0;
+            for (var _di = 0; _di < dat3.length; _di++) {
+                if (dat3[_di].Category == "Default") nDefaultIn++;
+            }
+            var nForMinH = Math.max(1, Math.min(_termCap, nDefaultIn > 0 ? nDefaultIn : _termCap));
+            var perTermPx = 20;
+            var minSvgForTerms = 64 + nForMinH * perTermPx;
+            var svgH = Math.max(minSvgForTerms, Math.floor(0.38 * rchRef));
+            var svgHMax = Math.max(minSvgForTerms, Math.floor(0.78 * winH));
+            if (svgH > svgHMax) {
+                svgH = svgHMax;
+            }
 
             var svg = rootD3.append("svg") // BarPlotPanelDiv or BarPlotDiv_zero / BarPlotDiv_b_zero
             .attr("width", "100%")
@@ -2247,7 +2261,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         return d.Term;
                     }))
                     .rangeRound([0, barheight])
-                    .padding(0.15);
+                    .padding(0.18);
        
             var x = d3.scaleLinear()
                     .domain([1, d3.max(barDefault2, function(d) {
@@ -2264,7 +2278,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("class", "BarPlotClass");
             
 
-                var legH = Math.max(36, Math.floor(0.03 * rch));
+                var legH = Math.max(36, Math.floor(0.03 * Math.min(rch, 720)));
                 var legend_svg = rootD3.append("svg")
                 .attr("width", "100%")
                 .attr("height", legH)
@@ -3463,7 +3477,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         return d.Term;
                     }))
                     .rangeRound([0, _barH])
-                    .padding(0.15);
+                    .padding(0.18);
             
             var x = d3.scaleLinear()
                     .domain([1, d3.max(dat3, function(d) {
@@ -3975,7 +3989,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         return d.Term;
                     }))
                     .rangeRound([0, _barH])
-                    .padding(0.15);
+                    .padding(0.18);
                     //.rangeRoundBands([0, barheight], 0.15);
             var x = d3.scaleLinear()
                     .domain([1, d3.max(dat3, function(d) {
@@ -4160,9 +4174,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                         .oncomplete(function() {
 
                         })
-                        .onbeforeexit(function () {
-                            return confirm("Are you sure do you want to end the tutorial?");
-                        })
                         .start();
                     }
                     else{ // Human in the loop - we are in single corpus and it is not a tutorial
@@ -4189,9 +4200,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                         })
                         .oncomplete(function() {
 
-                        })
-                        .onbeforeexit(function () {
-                            return confirm("Are you sure do you want to end the tutorial?");
                         })
                         .start();
                     }
@@ -4226,9 +4234,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                         .oncomplete(function() {
 
                         })
-                        .onbeforeexit(function () {
-                            return confirm("Are you sure do you want to end the tutorial?");
-                        })
                         .start();
                     }
                     else{ // Human in the loop - we are in single corpus and it is not a tutorial
@@ -4254,9 +4259,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                         })
                         .oncomplete(function() {
 
-                        })
-                        .onbeforeexit(function () {
-                            return confirm("Are you sure do you want to end the tutorial?");
                         })
                         .start();
                     }
@@ -4303,9 +4305,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .oncomplete(function() {
 
                     })
-                    .onbeforeexit(function () {
-                        return confirm("Are you sure do you want to end the tutorial?");
-                    })
                     .start();                                    
                 }
                 else{ // scenario 2, metric baseline. 
@@ -4329,9 +4328,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .oncomplete(function() {
 
                     })
-                    .onbeforeexit(function () {
-                        return confirm("Are you sure do you want to end the tutorial?");
-                    })                    
                     .start();
                 }                
             }
@@ -4413,7 +4409,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         return d.Term;
                     }))
                     .rangeRound([0, _hTopic])
-                    .padding(0.15);                    
+                    .padding(0.18);                    
             var x = d3.scaleLinear()
                     .domain([1, d3.max(dat3, function(d) {
                         return d.Total;
@@ -4517,7 +4513,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         return d.Term;
                     }))
                     .rangeRound([0, _hOff])
-                    .padding(0.15);
+                    .padding(0.18);
                     //.rangeRoundBands([0, barheight], 0.15);
             var x = d3.scaleLinear()
                     .domain([1, d3.max(dat2, function(d) {
