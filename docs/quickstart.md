@@ -39,11 +39,14 @@ tve demo --corpus tiny_demo       # synthetic fixed-vocab corpus (tests, screens
 ```bash
 # JSONL with a "text" field, plain .txt (one doc per line), or JSON array of strings:
 tve demo --texts mydocs.jsonl --name my_corpus --num-topics 8 --passes 15
+
+# Optional: pick a different adapter or SBERT (needs pip install "topicvisexplorer[full]" for bertopic/etm/ctm/sbert):
+tve demo --texts mydocs.txt --model sklearn-nmf --embedding word2vec
 ```
 
-The first run fits a Gensim LDA with the full
+The first run fits a topic model (default: Gensim LDA) with the full
 `text_cleaner_batch` + Phraser bigram pipeline and caches the result in
-`~/.cache/topicvisexplorer/<name>-<content-hash>.npz`; subsequent runs
+`~/.cache/topicvisexplorer/<name>-<model>-<content-hash>.npz`; subsequent runs
 reuse the cache (instant). The browser is opened at
 `/singlecorpus?scenario=<name>&hitl=true` so split / merge / add-word /
 remove-word all work out of the box.

@@ -25,6 +25,13 @@ class ValidationError(TopicVisExplorerError, ValueError):
     """
 
 
+class OptionalDependencyError(TopicVisExplorerError, ImportError):
+    """A topic-model adapter or optional integration requires a missing package.
+
+    The message should include a concrete ``pip install "topicvisexplorer[...]"`` line.
+    """
+
+
 class SBERTNotInstalledError(TopicVisExplorerError, ImportError):
     """The ``sentence-transformers`` extra is required but not installed.
 

@@ -24,10 +24,11 @@ import json
 import os
 from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import numpy as np
 
+from ..embeddings.protocol import EmbeddingBackend
 from ..errors import Word2VecCorpusTooSmallError
 from ..logging import get_logger
 from ..models.protocol import TopicModelData
@@ -35,9 +36,6 @@ from ..operations.refit_helpers import refit_gensim_lda
 from ..prepare import prepare
 from ..similarity.baselines import JensenShannonSimilarity
 from .scenarios import Scenario
-
-if TYPE_CHECKING:
-    from ..embeddings.protocol import EmbeddingBackend
 
 logger = get_logger(__name__)
 
@@ -248,6 +246,7 @@ def build_scenario_from_topic_model(
     prepared_metadata: dict[str, Any] | None = None,
     refit_passes: int = 5,
     refit_random_state: int = 42,
+    embedding: EmbeddingBackend | None = None,
 ) -> Scenario:
     """Build a full single-corpus :class:`Scenario` (JS layouts + refit) from tensors."""
     md = model_data
@@ -276,16 +275,16 @@ def build_scenario_from_topic_model(
 
     from ..layout import circle_positions
 
-    embedding = _train_or_load_embedding(name, raw_texts)
+    emb = embedding if embedding is not None else _train_or_load_embedding(name, raw_texts)
     similarity_matrix: dict[float, np.ndarray]
 
-    if embedding is not None:
+    if emb is not None:
         try:
             import pandas as pd
 
             from ..similarity.embedding import EmbeddingSimilarity, compute_omega_grid
 
-            metric = EmbeddingSimilarity(embedding=embedding, text_cleaner=_light_tokenize_one)
+            metric = EmbeddingSimilarity(embedding=emb, text_cleaner=_light_tokenize_one)
             doc_topic_df = pd.DataFrame(md.doc_topic_dists)
             grid = compute_omega_grid(
                 metric,
@@ -308,9 +307,9 @@ def build_scenario_from_topic_model(
                 name,
                 exc,
             )
-            embedding = None
+            emb = None
 
-    if embedding is None:
+    if emb is None:
         metric_jsd = JensenShannonSimilarity()
         matrix = np.asarray(metric_jsd(prepared, prepared), dtype=np.float64)
         similarity_matrix = {round(s / 100.0, 2): matrix.copy() for s in range(101)}
@@ -327,7 +326,7 @@ def build_scenario_from_topic_model(
         similarity_matrix=similarity_matrix,
         circle_positions=circle_positions_str,
         raw_texts=raw_texts,
-        embedding=embedding,
+        embedding=emb,
         extras={
             "refit": refit_gensim_lda(
                 md, random_state=refit_random_state, passes=refit_passes

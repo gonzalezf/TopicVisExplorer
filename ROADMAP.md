@@ -42,13 +42,14 @@ Scope:
 
 ### SBERT and FastText as first-class embedding backends
 
-Today `SBERTEmbedding` lives in the `[full]` extra and FastText requires
-users to hand-construct a `KeyedVectors`. v1.1 should:
+Today `SBERT` (`topicvisexplorer.embeddings.SBERT`) lives in the `[full]`
+extra; the BYO CLI can select it with
+`tve demo --texts ... --embedding sbert --sbert-model all-MiniLM-L6-v2`.
+FastText still requires users to hand-construct a `KeyedVectors`. v1.1
+could still:
 
 - Ship `FastTextEmbedding` under `topicvisexplorer.embeddings` with lazy
   model download + a `cache_dir` knob.
-- Promote SBERT to a first-class loader registered by name so the CLI
-  can do `tve demo --embedding sbert:all-MiniLM-L6-v2`.
 - Benchmark SBERT vs. Word2Vec topic-similarity quality on the three
   paper corpora and document the findings in a new
   `docs/embeddings-comparison.md`.

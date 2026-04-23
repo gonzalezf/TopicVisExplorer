@@ -30,8 +30,29 @@ from `.python-version`), or `pip install -e ".[dev]"` in a virtualenv.
 tve demo                              # real-terms 20ng_tiny (default)
 tve demo --corpus bbc_tiny            # second bundled demo (BBC news, 5 categories)
 tve demo --corpus tiny_demo           # synthetic w00 fixture (tests / screenshots)
-tve demo --texts my.jsonl --name x    # fit your own corpus (LDA, cached under ~/.cache/topicvisexplorer)
+tve demo --texts my.jsonl --name x    # bring-your-own corpus (default: gensim-lda; use --model / --embedding)
 ```
+
+### Choose a topic model or embedding
+
+TopicVisExplorer ships with **six** topic-model adapters and **two** embedding
+backends for the BYO CLI path (`tve demo --texts ...`):
+
+```bash
+tve demo --texts my.txt --model sklearn-nmf --num-topics 5
+tve demo --texts my.txt --model bertopic --embedding sbert
+```
+
+| `--model` | Default | Notes |
+| --------- | ------- | ----- |
+| `gensim-lda` | yes | Gensim LDA + spaCy cleaning (same as before) |
+| `sklearn-lda`, `sklearn-nmf` | | scikit-learn (no extra beyond core) |
+| `bertopic`, `etm`, `ctm` | | require `pip install "topicvisexplorer[full]"` |
+
+| `--embedding` | Default | Notes |
+| ------------- | ------- | ----- |
+| `word2vec` | yes | Trains a small Word2Vec for the topic map (cached) |
+| `sbert` | | Sentence-Transformers (requires `[full]`) |
 
 ## Datasets and licenses
 
@@ -53,7 +74,8 @@ tve demo --texts my.jsonl --name x    # fit your own corpus (LDA, cached under ~
   for fast tests and exact visual baselines.
 * **`tve demo --texts ...`** — run the same pipeline on your own
   documents; nothing is committed, fits are cached under
-  `~/.cache/topicvisexplorer/`.
+  `~/.cache/topicvisexplorer/` (cache key includes `--model` and
+  `--embedding`).
 * The **paper's private** full corpora and original pickles are **not**
   in this repository; see [`docs/own_data.md`](docs/own_data.md) for public
   alternatives. A local `PAPER_REPRO.md` is gitignored if you keep private

@@ -7,7 +7,10 @@ with :func:`typing.runtime_checkable`.
 
 from __future__ import annotations
 
+import importlib.util
+
 import numpy as np
+import pytest
 
 from topicvisexplorer.embeddings.protocol import EmbeddingBackend
 from topicvisexplorer.models.protocol import TopicModelAdapter
@@ -39,6 +42,21 @@ def test_word2vec_protocol() -> None:
     assert "vector_size" in Word2Vec.__annotations__
     for method in ("__contains__", "__getitem__", "fit", "from_path"):
         assert hasattr(Word2Vec, method), method
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(
+    importlib.util.find_spec("sentence_transformers") is None,
+    reason="sentence_transformers not installed (use topicvisexplorer[full])",
+)
+def test_sbert_real_smoke() -> None:
+    from topicvisexplorer.embeddings import SBERT
+
+    emb = SBERT(model_name="all-MiniLM-L6-v2", device="cpu")
+    assert emb.vector_size == 384
+    for w in ("science", "topic", "model"):
+        v = emb[w]
+        assert v.shape == (384,)
 
 
 def test_stub_embedding_satisfies_protocol() -> None:

@@ -37,8 +37,9 @@ from ..logging import get_logger
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from ..models.protocol import TopicModelData
     from ..prepare import PreparedData
+
+from ..models.protocol import TopicModelData
 
 logger = get_logger(__name__)
 
@@ -52,7 +53,7 @@ def split(
     raw_texts: Sequence[str],
     refit: Any,
     min_membership_threshold: float = 0.05,
-) -> PreparedData:
+) -> tuple[PreparedData, TopicModelData]:
     """Split ``topic_id`` into ``k_new`` sub-topics.
 
     Parameters
@@ -82,8 +83,8 @@ def split(
 
     Returns
     -------
-    PreparedData
-        Spliced visualization with ``K + k_new - 1`` topics.
+    tuple[PreparedData, TopicModelData]
+        Spliced visualization and the matching updated model tensors.
     """
     if k_new < 2:
         raise ValidationError(f"split requires k_new >= 2, got {k_new}")
@@ -114,7 +115,7 @@ def split(
 
     from ..prepare import prepare
 
-    return prepare(
+    new_prepared = prepare(
         topic_term_dists=new_topic_term,
         doc_topic_dists=new_doc_topic,
         doc_lengths=model_data.doc_lengths,
@@ -128,6 +129,14 @@ def split(
             "n_sub_docs": len(sub_doc_ix),
         },
     )
+    new_model = TopicModelData(
+        topic_term_dists=np.asarray(new_topic_term, dtype=np.float64),
+        doc_topic_dists=np.asarray(new_doc_topic, dtype=np.float64),
+        doc_lengths=np.asarray(model_data.doc_lengths, dtype=np.int64),
+        vocab=list(model_data.vocab),
+        term_frequency=np.asarray(model_data.term_frequency, dtype=np.int64),
+    )
+    return new_prepared, new_model
 
 
 def _splice_matrices(

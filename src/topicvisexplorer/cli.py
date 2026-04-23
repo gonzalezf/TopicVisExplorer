@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from ._version import __version__
+from .models.registry import list_adapters
 
 _BUILTIN_CORPORA = ("20ng_tiny", "bbc_tiny", "tiny_demo")
 _BUILTIN_MULTICORPORA = ("bbc_vs_20ng", "tiny_multi_demo")
@@ -94,6 +95,28 @@ def main(argv: list[str] | None = None) -> int:
     p_demo.add_argument(
         "--seed", type=int, default=42, help="RNG seed for --texts fit."
     )
+    _adapter_choices = list_adapters()
+    p_demo.add_argument(
+        "--model",
+        choices=_adapter_choices,
+        default="gensim-lda",
+        help=(
+            "Topic-model adapter for --texts (default: gensim-lda). "
+            "bertopic/etm/ctm need pip install 'topicvisexplorer[full]'."
+        ),
+    )
+    p_demo.add_argument(
+        "--embedding",
+        choices=["word2vec", "sbert"],
+        default="word2vec",
+        help="Embedding backend for layout similarity with --texts (default: word2vec).",
+    )
+    p_demo.add_argument(
+        "--sbert-model",
+        default="all-MiniLM-L6-v2",
+        metavar="NAME",
+        help="Sentence-Transformers model id when --embedding sbert (default: all-MiniLM-L6-v2).",
+    )
 
     p_serve = sub.add_parser(
         "serve",
@@ -143,6 +166,17 @@ def _run_demo(args: argparse.Namespace) -> int:
         )
         return 1
 
+    if args.texts is None:
+        if getattr(args, "model", "gensim-lda") != "gensim-lda":
+            print("error: --model is only valid with --texts.", file=sys.stderr)
+            return 1
+        if getattr(args, "embedding", "word2vec") != "word2vec":
+            print("error: --embedding is only valid with --texts.", file=sys.stderr)
+            return 1
+        if getattr(args, "sbert_model", "all-MiniLM-L6-v2") != "all-MiniLM-L6-v2":
+            print("error: --sbert-model is only valid with --texts.", file=sys.stderr)
+            return 1
+
     extras: dict = {}
     scenario_name: str
 
@@ -162,13 +196,17 @@ def _run_demo(args: argparse.Namespace) -> int:
                     num_topics=args.num_topics,
                     passes=args.passes,
                     seed=args.seed,
+                    model=args.model,
+                    embedding=args.embedding,
+                    sbert_model=args.sbert_model,
                 )
             return cached["sc"]
 
         extras[args.name] = _lazy
         scenario_name = args.name
         print(
-            f"Fitting LDA on {args.texts} (K={args.num_topics}, passes={args.passes}) "
+            f"Fitting topic model {args.model!r} on {args.texts} "
+            f"(K={args.num_topics}, passes={args.passes}, embedding={args.embedding!r}) "
             f"with caching under ~/.cache/topicvisexplorer ..."
         )
     else:

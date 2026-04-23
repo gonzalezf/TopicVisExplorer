@@ -761,7 +761,7 @@ def _do_split(sc: Scenario, body: TopicSplitRequest) -> dict[str, Any]:
         )
 
     try:
-        new_prepared = split(
+        new_prepared, new_model_data = split(
             prepared,
             topic_id=body.topic_id,
             k_new=k_new,
@@ -770,6 +770,7 @@ def _do_split(sc: Scenario, body: TopicSplitRequest) -> dict[str, Any]:
             refit=refit,
         )
         sc.prepared = new_prepared
+        sc.model_data = new_model_data
 
         corr = split_correspondence(K, parent_idx, k_new)
         new_matrix = _recompute_similarity(sc, new_prepared)
@@ -825,13 +826,14 @@ def _do_merge(sc: Scenario, body: TopicMergeRequest) -> dict[str, list[list[floa
         )
 
     try:
-        new_prepared = merge(
+        new_prepared, new_model_data = merge(
             prepared,
             topic_id_a=body.index_topic_name_1 + 1,
             topic_id_b=body.index_topic_name_2 + 1,
             model_data=model_data,
         )
         sc.prepared = new_prepared
+        sc.model_data = new_model_data
         if body.relevantDocumentsDict_new:
             sc.relevant_documents = body.relevantDocumentsDict_new
 

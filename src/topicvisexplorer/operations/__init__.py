@@ -10,8 +10,9 @@ These are the four interactive actions the visualization exposes:
 * :func:`exclude_document` -- remove a document from one topic's
   contribution (paper Section 6, future work; now implemented).
 
-All four return a freshly computed :class:`PreparedData` so the front
-end can swap in the new visualization atomically.
+Split/merge return ``(PreparedData, TopicModelData)``; the server updates
+both ``prepared`` and ``model_data`` on the scenario. Other operations
+return a single :class:`~topicvisexplorer.prepare.PreparedData`.
 """
 
 from __future__ import annotations

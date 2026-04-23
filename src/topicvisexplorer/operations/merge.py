@@ -10,11 +10,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import numpy as np
+
 from ..errors import ValidationError
 from ..logging import get_logger
+from ..models.protocol import TopicModelData
 
 if TYPE_CHECKING:
-    from ..models.protocol import TopicModelData
     from ..prepare import PreparedData
 
 logger = get_logger(__name__)
@@ -26,7 +28,7 @@ def merge(
     topic_id_a: int,
     topic_id_b: int,
     model_data: TopicModelData,
-) -> PreparedData:
+) -> tuple[PreparedData, TopicModelData]:
     """Merge ``topic_id_a`` and ``topic_id_b`` into a single topic.
 
     Parameters are 1-based to match the front end. Returns a fresh
@@ -65,7 +67,7 @@ def merge(
 
     from ..prepare import prepare
 
-    return prepare(
+    new_prepared = prepare(
         topic_term_dists=new_topic_term,
         doc_topic_dists=new_doc_topic,
         doc_lengths=model_data.doc_lengths,
@@ -77,3 +79,11 @@ def merge(
             "merged_topic_ids": [topic_id_a, topic_id_b],
         },
     )
+    new_model = TopicModelData(
+        topic_term_dists=np.asarray(new_topic_term, dtype=np.float64),
+        doc_topic_dists=np.asarray(new_doc_topic, dtype=np.float64),
+        doc_lengths=np.asarray(model_data.doc_lengths, dtype=np.int64),
+        vocab=list(model_data.vocab),
+        term_frequency=np.asarray(model_data.term_frequency, dtype=np.int64),
+    )
+    return new_prepared, new_model

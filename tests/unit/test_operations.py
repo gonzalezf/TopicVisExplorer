@@ -59,7 +59,8 @@ def test_merge_reduces_topic_count(
     tiny_prepared, tiny_topic_term, tiny_doc_topic, tiny_doc_lengths, tiny_vocab, tiny_term_freq
 ) -> None:
     md = _model_data(tiny_topic_term, tiny_doc_topic, tiny_doc_lengths, tiny_vocab, tiny_term_freq)
-    new = operations.merge(tiny_prepared, topic_id_a=1, topic_id_b=2, model_data=md)
+    new, new_md = operations.merge(tiny_prepared, topic_id_a=1, topic_id_b=2, model_data=md)
+    assert new_md.topic_term_dists.shape[0] == 3
     assert len(new.topic_order) == 3
 
 
@@ -89,7 +90,7 @@ def test_split_with_stub_refit(
             term_frequency=tiny_term_freq,
         )
 
-    new = operations.split(
+    new, new_md = operations.split(
         tiny_prepared,
         topic_id=1,
         k_new=2,
@@ -99,3 +100,4 @@ def test_split_with_stub_refit(
         min_membership_threshold=0.001,
     )
     assert len(new.topic_order) == 5
+    assert new_md.topic_term_dists.shape[0] == 5

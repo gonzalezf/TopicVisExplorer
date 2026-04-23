@@ -11,7 +11,7 @@ separate "user study" server or a POST endpoint — the in-browser
 |------|-------------|--------|
 | `tve demo` / `?scenario=20ng_tiny` | **20 Newsgroups** slice (real terms) | Default; [README (datasets + licenses)](https://github.com/gonzalezf/TopicVisExplorer/blob/main/README.md#datasets-and-licenses) |
 | `tve demo --corpus bbc_tiny` | **BBC news** (5 categories) | Second bundled demo |
-| `tve demo --texts my.jsonl --name my_corpus` | **Your** texts, fit on the fly | Cache under `~/.cache/topicvisexplorer` |
+| `tve demo --texts my.jsonl --name my_corpus` | **Your** texts, fit on the fly | Cache under `~/.cache/topicvisexplorer` (name includes `--model` / `--embedding`); add `--model`, `--embedding`, `--sbert-model` to pick a topic model or SBERT (see [reference/models](reference/models.md)) |
 | `?scenario=tiny_demo` | Synthetic `w00` vocabulary | Fast tests and baselines |
 | `scripts/user_study/launch_20ng_study.py` | Live **sklearn** or **Hugging Face** + gensim | Custom `?scenario=` for larger runs; cite script args in papers |
 
@@ -46,6 +46,9 @@ public tree).
 
 ```bash
 tve demo --texts docs.jsonl --name my_corpus --num-topics 7 --passes 15
+# Optional: scikit-learn NMF, BERTopic, etc. (some need pip install "topicvisexplorer[full]"):
+# tve demo --texts docs.txt --model sklearn-nmf --embedding word2vec
+# tve demo --texts docs.txt --model bertopic --embedding sbert
 ```
 
 Accepted inputs:
@@ -54,10 +57,13 @@ Accepted inputs:
 - **`.json`** — list of strings, or an object with `"texts"`.
 - **Other text files** — one document per non-empty line.
 
-The first run fits Gensim LDA with `text_cleaner_batch` + Phraser; results
-are cached in `~/.cache/topicvisexplorer/<name>-<hash>.npz`. The scenario
-wires `refit` so [split / merge in the browser](edit-ops.md) work like
-the bundled demos.
+The first run fits the requested topic model (default: **gensim-lda** with
+`text_cleaner_batch` + Phraser for that path; **sklearn-lda** / **sklearn-nmf**
+use scikit-learn vectorizers on raw lines). Results are cached in
+`~/.cache/topicvisexplorer/<name>-<model>-<content-hash>.npz` (the hash
+includes `model`, `embedding`, and `sbert_model` when relevant). The scenario
+wires a **Gensim LDA**-backed `refit` for split/merge (same as bundled demos
+— the initial fit adapter may differ; see [edit-ops](edit-ops.md)).
 
 ## Optional: AG News (Hugging Face)
 

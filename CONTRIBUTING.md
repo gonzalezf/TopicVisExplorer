@@ -30,6 +30,16 @@ uv sync --all-extras
 uv run pre-commit install
 ```
 
+To run **every** unit test (including BERTopic / ETM / CTM / SBERT smoke
+tests, BYO with spaCy, and NLTK stopword fixture checks), install the
+`[full]` extra and one-time data downloads:
+
+```bash
+uv sync --extra dev --extra full
+uv run python -c "import nltk; nltk.download('stopwords')"
+uv run python -m spacy download en_core_web_sm
+```
+
 The repo tracks **`uv.lock`** so CI stays reproducible and
 [`astral-sh/setup-uv`](https://github.com/astral-sh/setup-uv) can cache
 dependency installs. After you change dependencies in `pyproject.toml`, run

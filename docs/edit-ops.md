@@ -42,7 +42,10 @@ In the **web app**, the same `refit` must appear on
 scenarios wire a real `refit_gensim_lda`, and `tiny_demo` now also
 ships a lightweight NumPy-only `refit_static` so Split and Merge work
 on every bundled demo out of the box. Scenarios created via
-`tve demo --texts ...` inherit the same Gensim-backed refit.
+`tve demo --texts ...` inherit the same Gensim-backed `refit` for
+split/merge, regardless of which `--model` you used for the *initial* fit
+(sklearn, BERTopic, etc.): child topics after a split are still refit with
+gensim `LdaModel` on a fixed parent vocabulary.
 
 The hot path is vectorized (~10-20× the legacy Python loops) so
 splitting a 500-document corpus is sub-second.

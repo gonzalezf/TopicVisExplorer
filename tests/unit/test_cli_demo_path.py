@@ -26,6 +26,9 @@ def _demo_args(
         num_topics=5,
         passes=10,
         seed=42,
+        model="gensim-lda",
+        embedding="word2vec",
+        sbert_model="all-MiniLM-L6-v2",
     )
 
 

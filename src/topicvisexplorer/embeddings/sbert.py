@@ -68,7 +68,12 @@ class SBERT:
 
         logger.info("Loading SBERT model %r on %s.", model_name, device or "auto")
         self._model: SentenceTransformer = SentenceTransformer(model_name, device=device)
-        self.vector_size = int(self._model.get_sentence_embedding_dimension())
+        dim_fn = getattr(self._model, "get_embedding_dimension", None) or getattr(
+            self._model, "get_sentence_embedding_dimension", None
+        )
+        if dim_fn is None:  # pragma: no cover - future SentenceTransformer API
+            raise RuntimeError("SentenceTransformer: no embedding dimension method")
+        self.vector_size = int(dim_fn())
         self._encode = lru_cache(maxsize=cache_size)(self._encode_uncached)
 
     def _encode_uncached(self, word: str) -> tuple[float, ...]:

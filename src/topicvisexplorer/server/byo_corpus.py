@@ -1,9 +1,8 @@
 """Bring-Your-Own corpus support for ``tve demo --texts ...``.
 
-Runs the standard ``text_cleaner_batch`` + Gensim Phraser + LDA pipeline
-on a user-supplied text file, caches the resulting tensors under
-``~/.cache/topicvisexplorer/<content-hash>.npz``, and returns a
-:class:`Scenario` ready to register via
+Fits a topic model on a user-supplied text file, caches the resulting
+tensors under ``~/.cache/topicvisexplorer/<name>-<model>-<hash>.npz``,
+and returns a :class:`Scenario` ready to register via
 :attr:`ServerConfig.extra_scenarios`.
 """
 
@@ -17,11 +16,29 @@ from typing import Any
 
 import numpy as np
 
+from ..embeddings.protocol import EmbeddingBackend
+from ..errors import OptionalDependencyError
 from ..models.protocol import TopicModelData
+from ..models.registry import get_adapter, list_adapters
 from .demo_fixtures import build_scenario_from_topic_model
 from .scenarios import Scenario
 
 DEFAULT_CACHE = Path(os.environ.get("TVE_CACHE_DIR", Path.home() / ".cache" / "topicvisexplorer"))
+
+_EMBEDDING_CHOICES = ("word2vec", "sbert")
+
+
+def _resolve_topic_embedding(embedding: str, sbert_model: str) -> EmbeddingBackend | None:
+    """Return ``None`` to train Word2Vec in :func:`build_scenario_from_topic_model`."""
+    if embedding not in _EMBEDDING_CHOICES:
+        raise ValueError(
+            f"Unknown embedding {embedding!r}. Choose one of: {', '.join(_EMBEDDING_CHOICES)}."
+        )
+    if embedding == "word2vec":
+        return None
+    from ..embeddings.sbert import SBERT
+
+    return SBERT(model_name=sbert_model)
 
 
 def load_texts(path: Path) -> list[str]:
@@ -40,9 +57,7 @@ def load_texts(path: Path) -> list[str]:
             obj = json.loads(line)
             t = obj.get("text") if isinstance(obj, dict) else None
             if not isinstance(t, str):
-                raise ValueError(
-                    f"JSONL input must contain a string 'text' field; got {obj!r}"
-                )
+                raise ValueError(f"JSONL input must contain a string 'text' field; got {obj!r}")
             texts.append(t)
     elif path.suffix.lower() == ".json":
         obj = json.loads(raw)
@@ -64,9 +79,19 @@ def load_texts(path: Path) -> list[str]:
     return texts
 
 
-def _cache_key(texts: list[str], num_topics: int, passes: int, seed: int) -> str:
+def _cache_key(
+    texts: list[str],
+    num_topics: int,
+    passes: int,
+    seed: int,
+    model: str,
+    embedding: str,
+    sbert_model: str,
+) -> str:
     h = hashlib.sha256()
-    h.update(f"K={num_topics}|P={passes}|S={seed}\n".encode())
+    h.update(
+        f"K={num_topics}|P={passes}|S={seed}|M={model}|E={embedding}|SB={sbert_model}\n".encode()
+    )
     for t in texts:
         h.update(t.encode("utf-8", errors="ignore"))
         h.update(b"\n")
@@ -104,11 +129,9 @@ def _load_cache(cache_file: Path) -> tuple[TopicModelData, list[str]] | None:
         return None
 
 
-def _fit_from_texts(
-    texts: list[str], num_topics: int, passes: int, seed: int
-) -> TopicModelData:
-    from gensim import corpora, models  # type: ignore[import-untyped]
-    from gensim.models.phrases import Phraser, Phrases  # type: ignore[import-untyped]
+def _fit_gensim_lda(texts: list[str], num_topics: int, passes: int, seed: int) -> TopicModelData:
+    from gensim import corpora, models
+    from gensim.models.phrases import Phraser, Phrases
 
     from ..models.adapters.gensim_lda import GensimLDAAdapter
     from ..preprocessing import text_cleaner_batch
@@ -136,6 +159,162 @@ def _fit_from_texts(
     return adapter.extract(lda, corpus, dictionary=dictionary)
 
 
+def _fit_sklearn_lda(texts: list[str], num_topics: int, passes: int, seed: int) -> TopicModelData:
+    from sklearn.decomposition import LatentDirichletAllocation
+    from sklearn.feature_extraction.text import CountVectorizer
+
+    from ..models.adapters.sklearn_lda import SklearnLDAAdapter
+
+    vectorizer = CountVectorizer(max_df=0.5, min_df=2, max_features=5000)
+    X = vectorizer.fit_transform(texts)
+    if X.shape[1] < 5:
+        raise ValueError("Vocabulary too small after vectorization; provide more documents.")
+    lda = LatentDirichletAllocation(
+        n_components=num_topics,
+        random_state=seed,
+        max_iter=max(2, passes),
+    )
+    lda.fit(X)
+    return SklearnLDAAdapter().extract(lda, X, vectorizer=vectorizer)
+
+
+def _fit_sklearn_nmf(texts: list[str], num_topics: int, passes: int, seed: int) -> TopicModelData:
+    from sklearn.decomposition import NMF
+    from sklearn.feature_extraction.text import TfidfVectorizer
+
+    from ..models.adapters.sklearn_nmf import SklearnNMFAdapter
+
+    vectorizer = TfidfVectorizer(max_df=0.5, min_df=2, max_features=5000)
+    X = vectorizer.fit_transform(texts)
+    if X.shape[1] < 5:
+        raise ValueError("Vocabulary too small after vectorization; provide more documents.")
+    nmf = NMF(
+        n_components=num_topics,
+        random_state=seed,
+        max_iter=max(20, passes * 20),
+        init="nndsvda",
+    )
+    nmf.fit(X)
+    return SklearnNMFAdapter().extract(nmf, X, vectorizer=vectorizer)
+
+
+def _fit_bertopic(texts: list[str], num_topics: int) -> TopicModelData:
+    from bertopic import BERTopic  # type: ignore[import-untyped]
+
+    from ..models.adapters.bertopic import BERTopicAdapter
+
+    n_topics: int | str = "auto" if num_topics < 1 else num_topics
+    model = BERTopic(
+        nr_topics=n_topics,
+        calculate_probabilities=False,
+        verbose=False,
+    )
+    model.fit(texts)
+    return BERTopicAdapter().extract(model, corpus=None, texts=texts)
+
+
+def _etm_train_data_from_texts(texts: list[str]) -> tuple[dict[str, Any], list[str]]:
+    """Build the ``{"tokens", "counts"}`` dict expected by ``ETM.fit`` (PyPI API)."""
+    from sklearn.feature_extraction.text import CountVectorizer
+
+    vectorizer = CountVectorizer(max_df=0.5, min_df=1, max_features=2000)
+    X = vectorizer.fit_transform(texts)
+    if X.shape[1] < 2:
+        raise ValueError("Corpus too small for ETM after vectorization.")
+    vocab = list(vectorizer.get_feature_names_out())
+    tok_list: list[np.ndarray] = []
+    cnt_list: list[np.ndarray] = []
+    for i in range(X.shape[0]):
+        row = X.getrow(i)
+        tok_list.append(np.asarray(row.indices, dtype=np.int64))
+        cnt_list.append(np.asarray(row.data, dtype=np.float64))
+    train_data = {
+        "tokens": np.asarray(tok_list, dtype=object),
+        "counts": np.asarray(cnt_list, dtype=object),
+    }
+    return train_data, vocab
+
+
+def _fit_etm(texts: list[str], num_topics: int, passes: int, seed: int) -> TopicModelData:
+    from embedded_topic_model.models.etm import ETM  # type: ignore[import-untyped]
+
+    from ..models.adapters.etm import ETMAdapter
+
+    np.random.seed(seed)
+    train_data, vocab = _etm_train_data_from_texts(texts)
+    n_epochs = max(3, min(passes, 20))
+    model = ETM(
+        vocabulary=vocab,
+        embeddings=None,
+        num_topics=num_topics,
+        batch_size=min(32, max(2, len(texts))),
+        epochs=n_epochs,
+    )
+    model.fit(train_data)
+    return ETMAdapter().extract(
+        model, corpus=None, texts=texts, vocabulary=vocab
+    )
+
+
+def _fit_ctm(
+    texts: list[str], num_topics: int, passes: int, seed: int, sbert_name: str
+) -> TopicModelData:
+    from contextualized_topic_models.models.ctm import CombinedTM  # type: ignore[import-untyped]
+    from contextualized_topic_models.utils.data_preparation import (  # type: ignore[import-untyped]
+        TopicModelDataPreparation,
+    )
+
+    from ..models.adapters.ctm import CTMAdapter
+
+    np.random.seed(seed)
+    prep = TopicModelDataPreparation(sbert_name)
+    training = prep.fit(text_for_contextual=texts, text_for_bow=texts)
+    xc = training.X_contextual
+    n_epochs = max(1, min(passes, 20))
+    ctm = CombinedTM(
+        bow_size=len(prep.vocab),
+        contextual_size=int(xc.shape[1]),
+        n_components=num_topics,
+        num_epochs=n_epochs,
+        batch_size=min(64, max(2, len(texts))),
+    )
+    ctm.fit(training)
+    dtd = ctm.get_doc_topic_distribution(training, n_samples=min(10, max(2, passes)))
+    return CTMAdapter().extract(
+        ctm, corpus=None, texts=texts, doc_topic_dists=np.asarray(dtd, dtype=np.float64)
+    )
+
+
+def _fit_from_texts(
+    texts: list[str],
+    num_topics: int,
+    passes: int,
+    seed: int,
+    *,
+    model: str = "gensim-lda",
+    sbert_model: str = "all-MiniLM-L6-v2",
+) -> TopicModelData:
+    """Dispatch to the requested adapter; :func:`get_adapter` validates optional deps."""
+    if model not in list_adapters():
+        raise ValueError(f"Unknown model {model!r}. Choose one of: {', '.join(list_adapters())}.")
+    if model in ("bertopic", "etm", "ctm"):
+        get_adapter(model)
+
+    if model == "gensim-lda":
+        return _fit_gensim_lda(texts, num_topics, passes, seed)
+    if model == "sklearn-lda":
+        return _fit_sklearn_lda(texts, num_topics, passes, seed)
+    if model == "sklearn-nmf":
+        return _fit_sklearn_nmf(texts, num_topics, passes, seed)
+    if model == "bertopic":
+        return _fit_bertopic(texts, num_topics)
+    if model == "etm":
+        return _fit_etm(texts, num_topics, passes, seed)
+    if model == "ctm":
+        return _fit_ctm(texts, num_topics, passes, seed, sbert_name=sbert_model)
+    raise ValueError(f"Unhandled model: {model!r}")
+
+
 def build_scenario_from_textfile(
     path: Path,
     *,
@@ -143,25 +322,51 @@ def build_scenario_from_textfile(
     num_topics: int = 5,
     passes: int = 10,
     seed: int = 42,
+    model: str = "gensim-lda",
+    embedding: str = "word2vec",
+    sbert_model: str = "all-MiniLM-L6-v2",
     cache_dir: Path | None = None,
 ) -> Scenario:
-    """Fit an LDA on user-supplied texts and return a registrable scenario.
+    """Fit a topic model on user-supplied texts and return a registrable scenario.
 
     Fits are cached by content hash under ``cache_dir`` (default
     ``~/.cache/topicvisexplorer``); repeated runs on the same file and
     parameters are instant.
     """
+    if embedding not in _EMBEDDING_CHOICES:
+        raise ValueError(
+            f"Unknown embedding {embedding!r}. Choose one of: {', '.join(_EMBEDDING_CHOICES)}."
+        )
+    if embedding == "sbert":
+        from importlib.util import find_spec
+
+        if find_spec("sentence_transformers") is None:
+            raise OptionalDependencyError(
+                "Embedding 'sbert' requires sentence-transformers. "
+                'Install with: pip install "topicvisexplorer[full]"'
+            )
+
     cache_root = cache_dir or DEFAULT_CACHE
     texts = load_texts(path)
-    key = _cache_key(texts, num_topics, passes, seed)
-    cache_file = cache_root / f"{name}-{key}.npz"
+    key = _cache_key(texts, num_topics, passes, seed, model, embedding, sbert_model)
+    safe_model = model.replace(os.sep, "_").replace("/", "_")
+    cache_file = cache_root / f"{name}-{safe_model}-{key}.npz"
 
     cached = _load_cache(cache_file)
     if cached is not None:
         md, texts = cached
     else:
-        md = _fit_from_texts(texts, num_topics=num_topics, passes=passes, seed=seed)
+        md = _fit_from_texts(
+            texts,
+            num_topics=num_topics,
+            passes=passes,
+            seed=seed,
+            model=model,
+            sbert_model=sbert_model,
+        )
         _save_cache(cache_file, md, texts)
+
+    topic_emb = _resolve_topic_embedding(embedding, sbert_model)
 
     meta: dict[str, Any] = {
         "scenario": name,
@@ -170,6 +375,9 @@ def build_scenario_from_textfile(
         "num_topics": num_topics,
         "passes": passes,
         "seed": seed,
+        "model": model,
+        "embedding": embedding,
+        "sbert_model": sbert_model,
         "cache_file": str(cache_file),
     }
     return build_scenario_from_topic_model(
@@ -179,6 +387,7 @@ def build_scenario_from_textfile(
         prepared_metadata=meta,
         refit_passes=max(3, passes // 2),
         refit_random_state=seed,
+        embedding=topic_emb,
     )
 
 

@@ -567,9 +567,43 @@ class TestCTMAdapter:
             )
 
 
+def test_sklearn_lda_real_smoke() -> None:
+    from sklearn.decomposition import LatentDirichletAllocation
+    from sklearn.feature_extraction.text import CountVectorizer
+
+    from topicvisexplorer.models import SklearnLDAAdapter
+
+    docs = _DOCS * 2
+    vectorizer = CountVectorizer(max_df=0.5, min_df=1, max_features=500)
+    X = vectorizer.fit_transform(docs)
+    lda = LatentDirichletAllocation(n_components=2, random_state=0, max_iter=10)
+    lda.fit(X)
+    data = SklearnLDAAdapter().extract(lda, X, vectorizer=vectorizer)
+    assert isinstance(data, TopicModelData)
+    np.testing.assert_allclose(data.topic_term_dists.sum(axis=1), 1.0, atol=1e-6)
+    np.testing.assert_allclose(data.doc_topic_dists.sum(axis=1), 1.0, atol=1e-5)
+
+
+def test_sklearn_nmf_real_smoke() -> None:
+    from sklearn.decomposition import NMF
+    from sklearn.feature_extraction.text import TfidfVectorizer
+
+    from topicvisexplorer.models import SklearnNMFAdapter
+
+    docs = _DOCS * 2
+    vectorizer = TfidfVectorizer(max_df=0.5, min_df=1, max_features=500)
+    X = vectorizer.fit_transform(docs)
+    nmf = NMF(n_components=2, random_state=0, max_iter=50, init="nndsvda")
+    nmf.fit(X)
+    data = SklearnNMFAdapter().extract(nmf, X, vectorizer=vectorizer)
+    assert isinstance(data, TopicModelData)
+    np.testing.assert_allclose(data.topic_term_dists.sum(axis=1), 1.0, atol=1e-3)
+    np.testing.assert_allclose(data.doc_topic_dists.sum(axis=1), 1.0, atol=1e-2)
+
+
 # ---------------------------------------------------------------------------
-# Optional: real-bertopic / real-ETM smoke tests, only when the deps are
-# installed.
+# Optional: real-bertopic / real-ETM / real-CTM smoke tests, only when
+# the deps are installed.
 # ---------------------------------------------------------------------------
 
 
@@ -611,10 +645,56 @@ def test_etm_real_smoke() -> None:
     confirm the adapter produces valid TopicModelData. Smoke only."""
     from embedded_topic_model.models.etm import ETM
 
+    from topicvisexplorer.server.byo_corpus import _etm_train_data_from_texts
+
     docs = _DOCS * 8
-    model = ETM(num_topics=2, vocabulary=None, epochs=2, batch_size=4)
-    model.fit(docs)
-    data = ETMAdapter().extract(model, corpus=None, texts=docs)
+    train_data, vocab = _etm_train_data_from_texts(docs)
+    model = ETM(
+        vocabulary=vocab,
+        embeddings=None,
+        num_topics=2,
+        batch_size=8,
+        epochs=3,
+    )
+    model.fit(train_data)
+    data = ETMAdapter().extract(
+        model, corpus=None, texts=docs, vocabulary=vocab
+    )
     assert isinstance(data, TopicModelData)
     np.testing.assert_allclose(data.topic_term_dists.sum(axis=1), 1.0, atol=1e-6)
     np.testing.assert_allclose(data.doc_topic_dists.sum(axis=1), 1.0, atol=1e-6)
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(
+    importlib.util.find_spec("contextualized_topic_models") is None,
+    reason="contextualized_topic_models not installed (use topicvisexplorer[full])",
+)
+def test_ctm_real_smoke() -> None:
+    from contextualized_topic_models.models.ctm import CombinedTM
+    from contextualized_topic_models.utils.data_preparation import TopicModelDataPreparation
+
+    from topicvisexplorer.models import CTMAdapter
+
+    docs = list(_DOCS) * 4
+    prep = TopicModelDataPreparation("all-MiniLM-L6-v2")
+    training = prep.fit(text_for_contextual=docs, text_for_bow=docs)
+    ctm = CombinedTM(
+        bow_size=len(prep.vocab),
+        contextual_size=int(training.X_contextual.shape[1]),
+        n_components=2,
+        num_epochs=3,
+        batch_size=8,
+    )
+    ctm.fit(training)
+    dtd = ctm.get_doc_topic_distribution(training, n_samples=5)
+    data = CTMAdapter().extract(
+        ctm,
+        corpus=None,
+        texts=docs,
+        doc_topic_dists=np.asarray(dtd, dtype=np.float64),
+        vocabulary=list(prep.vocab),
+    )
+    assert isinstance(data, TopicModelData)
+    np.testing.assert_allclose(data.topic_term_dists.sum(axis=1), 1.0, atol=1e-2)
+    np.testing.assert_allclose(data.doc_topic_dists.sum(axis=1), 1.0, atol=1e-2)

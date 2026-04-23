@@ -43,13 +43,17 @@ jobs:
       - uses: astral-sh/setup-uv@v8.1.0
         with:
           enable-cache: true
-      - name: Install Python + package (dev matrix)
+      - name: Install Python + package (dev + full matrix)
         run: |
           uv python install ${{ matrix.python-version }}
-          uv sync --extra dev --python ${{ matrix.python-version }}
-      - name: Run unit + golden + api tests
+          uv sync --extra dev --extra full --python ${{ matrix.python-version }}
+      - name: NLTK stopwords + spaCy model (BYO + fixture tests)
         run: |
-          uv run --python ${{ matrix.python-version }} pytest tests/unit tests/golden tests/api \
+          uv run --python ${{ matrix.python-version }} python -c "import nltk; nltk.download('stopwords')"
+          uv run --python ${{ matrix.python-version }} python -m spacy download en_core_web_sm
+      - name: Run unit + golden + api + integration tests
+        run: |
+          uv run --python ${{ matrix.python-version }} pytest tests/unit tests/golden tests/api tests/integration \
             --cov=topicvisexplorer \
             --cov-report=term-missing \
             --cov-report=xml \

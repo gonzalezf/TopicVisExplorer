@@ -166,6 +166,10 @@ markers = [
 ]
 filterwarnings = [
     "error",
+    "ignore:Tensorflow not installed:ImportWarning",
+    "ignore::sklearn.exceptions.ConvergenceWarning",
+    "ignore::FutureWarning:transformers",
+    "ignore:Importing from 'sentence_transformers.models' is deprecated:DeprecationWarning",
     "ignore::DeprecationWarning:gensim.*",
     "ignore::DeprecationWarning:nltk.*",
     "ignore::PendingDeprecationWarning",

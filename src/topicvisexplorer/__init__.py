@@ -17,6 +17,8 @@ See :class:`topicvisexplorer.PreparedData` for the data model.
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from . import embeddings, errors, models, similarity
@@ -36,6 +38,13 @@ def show(
     raw_texts: list[str] | list[list[str]] | None = None,
     model_data: TopicModelData | list[TopicModelData] | None = None,
     embedding: EmbeddingBackend | None = None,
+    texts_file: str | os.PathLike[str] | None = None,
+    byo_model: str = "gensim-lda",
+    byo_embedding: str = "word2vec",
+    sbert_model: str = "all-MiniLM-L6-v2",
+    byo_num_topics: int = 5,
+    byo_passes: int = 10,
+    byo_seed: int = 42,
     host: str = "127.0.0.1",
     port: int = 8000,
     open_browser: bool = True,
@@ -71,6 +80,14 @@ def show(
     scenario_name:
         Internal name registered for the user-supplied data; surfaces in
         the URL as ``?scenario=<scenario_name>``.
+    texts_file:
+        If set, fit a topic model on this file (same formats as ``tve demo
+        --texts``) and register it — same path as the CLI. Do not pass
+        ``prepared`` at the same time.
+    byo_model, byo_embedding, sbert_model, byo_num_topics, byo_passes, byo_seed:
+        BYO options when ``texts_file`` is set (mirror ``--model``,
+        ``--embedding``, ``--sbert-model``, ``--num-topics``, ``--passes``,
+        ``--seed`` on ``tve demo --texts``).
 
     Notes
     -----
@@ -83,6 +100,9 @@ def show(
     """
     from .server import ServerConfig, build_app, serve
 
+    if texts_file is not None and prepared is not None:
+        raise ValueError("Pass either `prepared` or `texts_file`, not both.")
+
     extras: dict[str, Any] = {}
     if prepared is not None:
         sc = _scenario_from_user_data(
@@ -93,9 +113,38 @@ def show(
             embedding=embedding,
         )
         extras[scenario_name] = lambda: sc
+    elif texts_file is not None:
+        path = Path(os.fspath(texts_file))
 
-    app = build_app(ServerConfig(extra_scenarios=extras))
-    serve(app, host=host, port=port, open_browser=open_browser)
+        def _lazy_byo() -> Any:
+            from .server.byo_corpus import build_scenario_from_textfile
+
+            return build_scenario_from_textfile(
+                path,
+                name=scenario_name,
+                num_topics=byo_num_topics,
+                passes=byo_passes,
+                seed=byo_seed,
+                model=byo_model,
+                embedding=byo_embedding,
+                sbert_model=sbert_model,
+            )
+
+        extras[scenario_name] = _lazy_byo
+
+    app = build_app(ServerConfig(register_demo=True, extra_scenarios=extras))
+    browser_path = (
+        f"/singlecorpus?scenario={scenario_name}&hitl=true"
+        if extras
+        else "/singlecorpus"
+    )
+    serve(
+        app,
+        host=host,
+        port=port,
+        open_browser=open_browser,
+        browser_path=browser_path,
+    )
 
 
 def demo(

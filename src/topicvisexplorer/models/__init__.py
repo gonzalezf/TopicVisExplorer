@@ -36,8 +36,10 @@ from .adapters.gensim_lda import GensimLDAAdapter
 from .adapters.sklearn_lda import SklearnLDAAdapter
 from .adapters.sklearn_nmf import SklearnNMFAdapter
 from .protocol import TopicModelAdapter, TopicModelData
+from .registry import ADAPTERS, get_adapter, list_adapters
 
 __all__ = [
+    "ADAPTERS",
     "BERTopicAdapter",
     "CTMAdapter",
     "ETMAdapter",
@@ -46,4 +48,6 @@ __all__ = [
     "SklearnNMFAdapter",
     "TopicModelAdapter",
     "TopicModelData",
+    "get_adapter",
+    "list_adapters",
 ]

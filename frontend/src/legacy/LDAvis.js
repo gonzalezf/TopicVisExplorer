@@ -1306,6 +1306,12 @@ var LDAvis = function(to_select, data_or_file_name) {
     
 
         
+        /**
+         * Neighbors of the selected topic in MDS order (closest first). Used by
+         * the merge modal to list *partner* topics. Returns parallel topicIds (1-based,
+         * matching d.topics / mdsData row order) and display names. The partner list
+         * is still filtered elsewhere (i===0: same topic, merged-delete, topics_splitted).
+         */
         function get_topics_sorted_by_distance(mdsData, lambda_lambda_topic_similarity_current, vis_state_topic){
             //revisar el topic mergin 1 que recibe!!!
             
@@ -1333,12 +1339,15 @@ var LDAvis = function(to_select, data_or_file_name) {
             });
             //this is the final result
 
-            var new_topic_names_sorted = []
+            var topicIds = []
+            var names = []
             for(var i = 0; i<items.length; i++){
-                new_topic_names_sorted.push(name_topics_circles[topicID + items[i][0]])
+                var tid = parseInt(String(items[i][0]), 10)
+                topicIds.push(tid)
+                names.push(name_topics_circles[topicID + items[i][0]])
             }
 
-            return new_topic_names_sorted
+            return { topicIds: topicIds, names: names }
         }
 
         
@@ -1427,74 +1436,167 @@ var LDAvis = function(to_select, data_or_file_name) {
                 topic_id: postDataTopicSplitting.topic_id,
                 current_number_of_topics: postDataTopicSplitting.current_number_of_topics
             });
+            function tveEndSplitLoadUi(reason) {
+                try {
+                    $("#loadMe").modal("hide");
+                } catch (e) {
+                    if (typeof window !== "undefined" && window.TVE_DEBUG) {
+                        console.warn("[TVE split] loadMe.modal('hide') failed", e);
+                    }
+                }
+                _tveDebug("split", "loadMe hidden (" + reason + ")");
+                setTimeout(function () {
+                    if (
+                        !$("#loadMe").hasClass("show") &&
+                        document.body.classList.contains("modal-open") &&
+                        !document.querySelector(".modal.show")
+                    ) {
+                        var backs = document.querySelectorAll(".modal-backdrop");
+                        for (var bi = backs.length - 1; bi >= 0; bi--) {
+                            backs[bi].remove();
+                        }
+                        document.body.classList.remove("modal-open");
+                        if (document.body.style.paddingRight) {
+                            document.body.style.removeProperty("padding-right");
+                        }
+                        _tveDebug("split", "cleared stray modal-backdrop after split");
+                    }
+                }, 150);
+            }
             $.ajax({
                 type: 'POST',
                 url: '/Topic_Splitting_Document_Based',
                 async: true,
                 data: JSON.stringify(postDataTopicSplitting),
-                success: function(data) {
-                                
-                    new_dict_topic_splitting = data;
-                    global_topic_splitting_data = new_dict_topic_splitting;
-                    new_circle_positions = JSON.parse(new_dict_topic_splitting['new_circle_positions']); 
-                   
-                    //1. Update relevantDocumentsDict
-                    relevantDocumentsDict = JSON.parse(new_dict_topic_splitting['relevantDocumentsDict_fromPython'].replace(/\bNaN\b/g, "null"));
-        
-                    //update lambdata with the new informsation
-                    updateTopicNamesCircles(new_dict_topic_splitting['PreparedDataObtained_fromPython'], vis_state.topic, mdsData, old_frequency);
-                    document.getElementById("renameTopicId").value = name_topics_circles[topicID + vis_state.topic];
+                dataType: "json",
+                success: function (data) {
+                    try {
+                        _tveDebug("split", "success: applying response (K was " + (mdsData && mdsData.length) + ")");
+                        new_dict_topic_splitting = data;
+                        global_topic_splitting_data = new_dict_topic_splitting;
+                        var ncp = new_dict_topic_splitting["new_circle_positions"];
+                        new_circle_positions =
+                            typeof ncp === "string" ? JSON.parse(ncp) : ncp;
 
-        
-                    //see_most_relevant_keywords(12)
-                    createMdsPlot(1, mdsData, get_new_omega(lambda_lambda_topic_similarity.current)); //update central panel
-        
-                    topic_on(document.getElementById(topicID+vis_state.topic));
-                    
-                    //reset selection of documents for topic splitting.
-                    slider_topic_splitting_values[splitting_topic] = {};
-                    story_hil_operations.push('split');
-                    _tveDebug("split", "finished — layout and tables updated (K = " + mdsData.length + ")");
-                    
+                        //1. Update relevantDocumentsDict
+                        var relRaw = new_dict_topic_splitting["relevantDocumentsDict_fromPython"];
+                        relevantDocumentsDict = JSON.parse(
+                            (typeof relRaw === "string" ? relRaw : JSON.stringify(relRaw)).replace(
+                                /\bNaN\b/g,
+                                "null"
+                            )
+                        );
+
+                        //update lambdata with the new informsation
+                        updateTopicNamesCircles(
+                            new_dict_topic_splitting["PreparedDataObtained_fromPython"],
+                            vis_state.topic,
+                            mdsData,
+                            old_frequency
+                        );
+                        document.getElementById("renameTopicId").value = name_topics_circles[topicID + vis_state.topic];
+
+                        //see_most_relevant_keywords(12)
+                        createMdsPlot(1, mdsData, get_new_omega(lambda_lambda_topic_similarity.current)); //update central panel
+
+                        topic_on(document.getElementById(topicID + vis_state.topic));
+
+                        //reset selection of documents for topic splitting.
+                        slider_topic_splitting_values[splitting_topic] = {};
+                        story_hil_operations.push("split");
+                        _tveDebug(
+                            "split",
+                            "finished — layout and tables updated (K = " + mdsData.length + ")"
+                        );
+                    } catch (e) {
+                        console.error("[TopicVisExplorer] split success handler (partial UI may have updated):", e);
+                        _tveDebug("split", "success handler threw", { message: e && e.message, stack: e && e.stack });
+                    } finally {
+                        tveEndSplitLoadUi("success-finally");
+                    }
                 },
-                error: function(xhr, textStatus, errorThrown) {
+                error: function (xhr, textStatus, errorThrown) {
                     _tveDebug("split", "request failed", { status: xhr && xhr.status, textStatus: textStatus });
                     _tveShowServerError(xhr, "Split topic");
+                    tveEndSplitLoadUi("error");
                 },
                 complete: function () {
-                    $("#loadMe").modal("hide");
+                    _tveDebug("split", "ajax complete");
                 },
-                contentType: "application/json"             
-            });                                
+                contentType: "application/json"
+            });
         }
 
-      
+        /**
+         * @param {number} index_topic_name_1 — 0-based row index into mdsData (topic id = index+1)
+         * @param {number} index_topic_name_2 — 0-based row index (partner topic)
+         */
+        function merging_topics_scenario_1(index_topic_name_1, index_topic_name_2){
+            _tveDebug("merge", "starting", { index1: index_topic_name_1, index2: index_topic_name_2 });
+            function tveEndMergeLoadUi(reason) {
+                try {
+                    $("#loadMe").modal("hide");
+                } catch (e) {
+                    if (typeof window !== "undefined" && window.TVE_DEBUG) {
+                        console.warn("[TVE merge] loadMe.modal('hide') failed", e);
+                    }
+                }
+                _tveDebug("merge", "loadMe hidden (" + reason + ")");
+                setTimeout(function () {
+                    if (
+                        !$("#loadMe").hasClass("show") &&
+                        document.body.classList.contains("modal-open") &&
+                        !document.querySelector(".modal.show")
+                    ) {
+                        var backs = document.querySelectorAll(".modal-backdrop");
+                        for (var bi = backs.length - 1; bi >= 0; bi--) {
+                            backs[bi].remove();
+                        }
+                        document.body.classList.remove("modal-open");
+                        if (document.body.style.paddingRight) {
+                            document.body.style.removeProperty("padding-right");
+                        }
+                        _tveDebug("merge", "cleared stray modal-backdrop");
+                    }
+                }, 150);
+            }
 
-        function merging_topics_scenario_1(topic_name_1, topic_name_2){
-            _tveDebug("merge", "starting", { with: topic_name_2, base: topic_name_1 });
+            // #loadMe hides when /get_new_topic_vector returns (see tveEndMergeLoadUi) or on client timeout.
+            // If the overlay stays up: DevTools Network → get_new_topic_vector (status, time, payload size);
+            // set window.TVE_DEBUG = true for [TVE merge] logs; hard-refresh after `npm run build` in frontend/.
             $('#loadMe').modal({
                 backdrop: 'static',
                 keyboard: false
             })
 
-            //make sure you have lower case "o"
-            setTimeout(function(){
-                $("#loadMe").modal('hide');
-
-            }, 120000);
-    
-            //get index topic from name    
-            var current_index = 0;
-            for (var [key, value] of Object.entries(name_topics_circles)) {
-                if(value.trim() == topic_name_1.trim()){
-                
-                    var index_topic_name_1 = current_index;
-                }
-                if(value.trim() == topic_name_2.trim()){
-                    var index_topic_name_2 = current_index;
-                }
-                current_index+=1;
+            var i1 = Number(index_topic_name_1);
+            var i2 = Number(index_topic_name_2);
+            if (
+                !isFinite(i1) ||
+                !isFinite(i2) ||
+                i1 < 0 ||
+                i2 < 0 ||
+                i1 === i2 ||
+                i1 >= mdsData.length ||
+                i2 >= mdsData.length ||
+                !mdsData[i1] ||
+                !mdsData[i2] ||
+                Math.floor(i1) !== i1 ||
+                Math.floor(i2) !== i2
+            ) {
+                _tveDebug("merge", "invalid 0-based merge indices", {
+                    index_topic_name_1: index_topic_name_1,
+                    index_topic_name_2: index_topic_name_2,
+                    mdsLength: mdsData && mdsData.length
+                });
+                alert(
+                    "Invalid topic selection for merge. Reselect a topic, choose a partner in the list, and try again."
+                );
+                tveEndMergeLoadUi("bad-topic-index");
+                return;
             }
+            index_topic_name_1 = i1;
+            index_topic_name_2 = i2;
 
             //1.- Join relevant documents
 
@@ -1522,6 +1624,16 @@ var LDAvis = function(to_select, data_or_file_name) {
             for(var i = 0; i < terms_topic_1.length; i += 1) {            //we have a 'matrix'. There is the same information for all the terms.                                                                                 
                 var row_topic_1 = terms_topic_1[i];
                 var row_topic_2 = terms_topic_2.find( row => row.Term ===  terms_topic_1[i].Term);
+
+                if (!row_topic_1) {
+                    continue;
+                }
+                if (!row_topic_2) {
+                    _tveDebug("merge", "term missing in other topic, skipping", {
+                        term: terms_topic_1[i] && terms_topic_1[i].Term
+                    });
+                    continue;
+                }
 
                 if(row_topic_1.Freq>row_topic_1.Total){
                     row_topic_1.Total = row_topic_1.Freq;
@@ -1599,34 +1711,53 @@ var LDAvis = function(to_select, data_or_file_name) {
                 type: 'POST',
                 url: '/get_new_topic_vector',
                 async: true,
+                timeout: 300000,
                 data: JSON.stringify(postData),                
                 success: function(data) {
-                                
-                    new_circle_positions = data;
-                    //5.- get new topic name                    
-                    var new_merged_topic_name = 'New merged topic '+name_topics_circles[topicID + (index_topic_name_1+1)].trim()+' & '+ name_topics_circles[topicID + (index_topic_name_2+1)].trim();
+                    try {
+                        new_circle_positions = data;
+                        //5.- get new topic name
+                        var new_merged_topic_name = 'New merged topic '+name_topics_circles[topicID + (index_topic_name_1+1)].trim()+' & '+ name_topics_circles[topicID + (index_topic_name_2+1)].trim();
 
-                    name_topics_circles[topicID + (index_topic_name_1+1)] = new_merged_topic_name;
-                    name_topics_circles[topicID + (index_topic_name_2+1)] = new_merged_topic_name+"-delete";
-                    merged_topic_to_delete.push(index_topic_name_2+1);
-                    name_merged_topic_to_delete.push(new_merged_topic_name+"-delete");
-                        
-                    d3.selectAll('#svgMdsPlot').remove();
-                    d3.selectAll('#divider_central_panel').remove();
-                    document.getElementById("renameTopicId").value = name_topics_circles[topicID + vis_state.topic];
-                    $('#idTopic').html(topicID + vis_state.topic);
-                    createMdsPlot(1, mdsData, get_new_omega(lambda_lambda_topic_similarity.current)); //update central panel
-                    topic_on(document.getElementById(topicID+vis_state.topic));         
-                    $("#loadMe").modal('hide');
-                    story_hil_operations.push('merge');
-                    _tveDebug("merge", "finished — new circle positions received (omega keys: " + Object.keys(new_circle_positions).join(", ") + ")");
-
+                        name_topics_circles[topicID + (index_topic_name_1+1)] = new_merged_topic_name;
+                        name_topics_circles[topicID + (index_topic_name_2+1)] = new_merged_topic_name+"-delete";
+                        merged_topic_to_delete.push(index_topic_name_2+1);
+                        name_merged_topic_to_delete.push(new_merged_topic_name+"-delete");
+                            
+                        d3.selectAll('#svgMdsPlot').remove();
+                        d3.selectAll('#divider_central_panel').remove();
+                        document.getElementById("renameTopicId").value = name_topics_circles[topicID + vis_state.topic];
+                        $('#idTopic').html(topicID + vis_state.topic);
+                        createMdsPlot(1, mdsData, get_new_omega(lambda_lambda_topic_similarity.current)); //update central panel
+                        topic_on(document.getElementById(topicID+vis_state.topic));
+                        story_hil_operations.push('merge');
+                        _tveDebug("merge", "finished — new circle positions received (omega keys: " + Object.keys(new_circle_positions).join(", ") + ")");
+                    } catch (e) {
+                        console.error("[TopicVisExplorer] merge success handler (partial UI may have updated):", e);
+                        _tveDebug("merge", "success handler threw", { message: e && e.message, stack: e && e.stack });
+                    } finally {
+                        tveEndMergeLoadUi("success-finally");
+                    }
                 },
                 error: function(xhr, textStatus, errorThrown) {
                     _tveDebug("merge", "request failed", { status: xhr && xhr.status, textStatus: textStatus });
-                    _tveShowServerError(xhr, "Merge topics");
-                    $("#loadMe").modal('hide');
-                }, 
+                    if (textStatus === "timeout") {
+                        alert(
+                            "Merge timed out after 5 minutes. The payload may be very large or the server is busy. Check the server log, try a smaller session, then try again."
+                        );
+                        tveEndMergeLoadUi("timeout");
+                        return;
+                    }
+                    if (xhr && typeof xhr.status !== "undefined") {
+                        _tveShowServerError(xhr, "Merge topics");
+                    } else {
+                        alert("Merge topics failed: " + (errorThrown || textStatus || "network error"));
+                    }
+                    tveEndMergeLoadUi("error");
+                },
+                complete: function (_xhr, textStatus) {
+                    _tveDebug("merge", "ajax complete", { textStatus: textStatus });
+                },
                 contentType: "application/json",
                 dataType: 'json'
 
@@ -2753,14 +2884,23 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
                     //hacer_merge = true
-                    
-                    var merging_final_topic_1 = document.getElementById("merging_topic_1_name").innerText;
-                    var merging_final_topic_2 =  $("#selectTopicMerge" ).val()
+                    // 0-based indices: base topic from merging_topic_1 (1-based id), partner from <option value=topicId>
+                    var baseIdx = Number(merging_topic_1) - 1;
+                    var partner1based = Number($("#selectTopicMerge").val());
+                    var partnerIdx = partner1based - 1;
 
+                    if (
+                        merging_topic_1 < 1 ||
+                        isNaN(partner1based) ||
+                        partner1based < 1
+                    ) {
+                        alert("Select a topic to merge and choose a partner from the list.");
+                        return;
+                    }
 
-                    save_state_data()
+                    save_state_data();
 
-                    merging_topics_scenario_1(merging_final_topic_1, merging_final_topic_2);
+                    merging_topics_scenario_1(baseIdx, partnerIdx);
 
                     
                 });
@@ -2804,50 +2944,40 @@ var LDAvis = function(to_select, data_or_file_name) {
             d3.select("#"+topicMerge)
             .on("click", function() {
                 var current_element_to_merge = mdsData.find(element => Number(element.topics) == Number(merging_topic_1));
-                //name_topics_circles[topicID + current_element_to_merge.topics];
-
-                if(! topics_splitted.includes(topicID +current_element_to_merge.topics)){
-                    
-
-                    /*
-                    for (const [key, value] of Object.entries(name_topics_circles )) {
-                        console.log(' key', key, 'value', value);
+                if (!current_element_to_merge) {
+                    if (merging_topic_1 !== -1) {
+                        console.warn("[TopicVisExplorer] merge: no mdsData row for merging_topic_1 =", merging_topic_1);
                     }
-                    */
+                    $('#MergeModal_0').modal();
+                    return;
+                }
 
- 
-        
+                if(! topics_splitted.includes(topicID + current_element_to_merge.topics)){
+
                     if(merging_topic_1!=-1){  
                         $('.merging_topic_1').html(merging_topic_1); //this is one topic wish I would like to merge
-                        //populate el dropdown, topics should be sorted according to the distance to the current topic
+                        // Merge partner list: distance order; not every K topics appear (i===0: self;
+                        // name_merged_topic_to_delete: prior merge target; topics_splitted: split children).
                         $('#selectTopicMerge').empty();
-                        var topics_name_sorted_by_distance = get_topics_sorted_by_distance(mdsData, get_new_omega(lambda_lambda_topic_similarity.current), merging_topic_1)
-                        $.each(topics_name_sorted_by_distance, function(i, p) {
-                            //add the array with the topics sorted according to the distance to the current topic
-                            if(i!=0 && ( !(name_merged_topic_to_delete.includes(topics_name_sorted_by_distance[i])))){ //el primer elemento no se ocupa, ya que es el mismo topico con el q se quiere unir. ESTO NO OCURRE ASI EN EL SCENARIO 2. Ojo, tambien chequeamos que ese elemento no haya que borrarse
-                                
-                                
-
-                                var current_index = 1;
-                                for (var [key, value] of Object.entries(name_topics_circles)) {
-                                    if(value.trim() == topics_name_sorted_by_distance[i].trim()){
-                                    
-                                        var index_topic_name_1 = current_index;
-                                    }                                    
-                                    current_index+=1;
-                                }
-                                if(! topics_splitted.includes(topicID +index_topic_name_1)){
-
-                                    $('#selectTopicMerge').append($('<option></option>').val(topics_name_sorted_by_distance[i]).html(topics_name_sorted_by_distance[i]));
-                                }
-
-
+                        var sortedTopics = get_topics_sorted_by_distance(mdsData, get_new_omega(lambda_lambda_topic_similarity.current), merging_topic_1);
+                        for (var i = 0; i < sortedTopics.names.length; i++) {
+                            if (i === 0) {
+                                continue;
                             }
-                            else{
-                                ////console.log("no agregamos este", topics_name_sorted_by_distance[i])
-                            }                           
-                        });
-                        $('#MergeModal_new_design').modal();                        
+                            if (name_merged_topic_to_delete.includes(sortedTopics.names[i])) {
+                                continue;
+                            }
+                            var topicIdNum = sortedTopics.topicIds[i];
+                            if (topics_splitted.includes(topicID + topicIdNum)) {
+                                continue;
+                            }
+                            $('#selectTopicMerge').append(
+                                $('<option></option>')
+                                    .val(String(topicIdNum))
+                                    .html(sortedTopics.names[i])
+                            );
+                        }
+                        $('#MergeModal_new_design').modal();
                     }
                     else{ //you need to select a topic first
                         $('#MergeModal_0').modal(); 
@@ -2924,66 +3054,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 })
 
             //colocar #apply_merging.  "aqui esta el antiguo codigo para el merge"
-
-            function tveSplitDocumentCount(arr) {
-                if (!arr || !Array.isArray(arr)) { return 0; }
-                var n = 0;
-                for (var i = 0; i < arr.length; i++) {
-                    if (arr[i] && typeof arr[i] === "object") { n++; }
-                }
-                return n;
-            }
-            function tveSplittingSeedsStatus(seeds) {
-                if (seeds == null || typeof seeds !== "object") {
-                    return { ok: false, reason: "no_seed_bucket" };
-                }
-                var a = seeds.TopicA;
-                var b = seeds.TopicB;
-                if (typeof a === "undefined") { return { ok: false, reason: "missing_a" }; }
-                if (typeof b === "undefined") { return { ok: false, reason: "missing_b" }; }
-                if (!Array.isArray(a)) { return { ok: false, reason: "missing_a" }; }
-                if (!Array.isArray(b)) { return { ok: false, reason: "missing_b" }; }
-                if (tveSplitDocumentCount(a) < 1) { return { ok: false, reason: "empty_a" }; }
-                if (tveSplitDocumentCount(b) < 1) { return { ok: false, reason: "empty_b" }; }
-                return { ok: true, reason: "ok" };
-            }
-            function tveSplitModalMessageForReason(reason) {
-                switch (reason) {
-                case "missing_a":
-                case "empty_a":
-                    return "Add at least one document to new subtopic A (choose the A radio in at least one row).";
-                case "missing_b":
-                case "empty_b":
-                    return "Add at least one document to new subtopic B (choose the B radio in at least one row).";
-                case "no_seed_bucket":
-                default:
-                    return "You need at least one document in new subtopic A and at least one in new subtopic B. Use the A, B, or neither radios for each document row.";
-                }
-            }
-            function tveSetSplitModalValidation(message) {
-                var $el = $("#tve_split_validation_alert");
-                if (!$el.length) { return; }
-                if (!message) {
-                    $el.addClass("d-none").empty();
-                    return;
-                }
-                $el.removeClass("d-none");
-                $el.empty();
-                $("<div>", { "class": "alert alert-warning mb-0", role: "alert" }).text(message).appendTo($el);
-            }
-            function tveUpdateSplitModalStatus() {
-                var seeds = slider_topic_splitting_values[splitting_topic];
-                var st = tveSplittingSeedsStatus(seeds);
-                var a = seeds && Array.isArray(seeds.TopicA) ? tveSplitDocumentCount(seeds.TopicA) : 0;
-                var b = seeds && Array.isArray(seeds.TopicB) ? tveSplitDocumentCount(seeds.TopicB) : 0;
-                var $status = $("#tve_split_subtopic_status");
-                if ($status.length) {
-                    $status.text("Subtopic A: " + a + " document(s) — Subtopic B: " + b + " document(s). Both need at least one to split.");
-                }
-                if (st.ok) {
-                    tveSetSplitModalValidation(null);
-                }
-            }
 
             d3.select("#"+topicSplit)
             .on("click",function(){
@@ -3405,6 +3475,68 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
 
+        }
+
+        // Split modal helpers must live in createBarPlot scope: post-body.bs.table (below) runs
+        // outside init_forms and calls tveUpdateSplitModalStatus.
+        function tveSplitDocumentCount(arr) {
+            if (!arr || !Array.isArray(arr)) { return 0; }
+            var n = 0;
+            for (var i = 0; i < arr.length; i++) {
+                if (arr[i] && typeof arr[i] === "object") { n++; }
+            }
+            return n;
+        }
+        function tveSplittingSeedsStatus(seeds) {
+            if (seeds == null || typeof seeds !== "object") {
+                return { ok: false, reason: "no_seed_bucket" };
+            }
+            var a = seeds.TopicA;
+            var b = seeds.TopicB;
+            if (typeof a === "undefined") { return { ok: false, reason: "missing_a" }; }
+            if (typeof b === "undefined") { return { ok: false, reason: "missing_b" }; }
+            if (!Array.isArray(a)) { return { ok: false, reason: "missing_a" }; }
+            if (!Array.isArray(b)) { return { ok: false, reason: "missing_b" }; }
+            if (tveSplitDocumentCount(a) < 1) { return { ok: false, reason: "empty_a" }; }
+            if (tveSplitDocumentCount(b) < 1) { return { ok: false, reason: "empty_b" }; }
+            return { ok: true, reason: "ok" };
+        }
+        function tveSplitModalMessageForReason(reason) {
+            switch (reason) {
+            case "missing_a":
+            case "empty_a":
+                return "Add at least one document to new subtopic A (choose the A radio in at least one row).";
+            case "missing_b":
+            case "empty_b":
+                return "Add at least one document to new subtopic B (choose the B radio in at least one row).";
+            case "no_seed_bucket":
+            default:
+                return "You need at least one document in new subtopic A and at least one in new subtopic B. Use the A, B, or neither radios for each document row.";
+            }
+        }
+        function tveSetSplitModalValidation(message) {
+            var $el = $("#tve_split_validation_alert");
+            if (!$el.length) { return; }
+            if (!message) {
+                $el.addClass("d-none").empty();
+                return;
+            }
+            $el.removeClass("d-none");
+            $el.empty();
+            $("<div>", { "class": "alert alert-warning mb-0", role: "alert" }).text(message).appendTo($el);
+        }
+        function tveUpdateSplitModalStatus() {
+            var seeds = slider_topic_splitting_values[splitting_topic];
+            var st = tveSplittingSeedsStatus(seeds);
+            var a = seeds && Array.isArray(seeds.TopicA) ? tveSplitDocumentCount(seeds.TopicA) : 0;
+            var b = seeds && Array.isArray(seeds.TopicB) ? tveSplitDocumentCount(seeds.TopicB) : 0;
+            var $status = $("#tve_split_subtopic_status");
+            if ($status.length) {
+                $status.text("Subtopic A: " + a + " document(s) — Subtopic B: " + b + " document(s). Both need at least one to split.");
+            }
+            if (st.ok) {
+                tveSetSplitModalValidation(null);
+            }
         }
 
         // function to re-order the bars (gray and red), and terms:

@@ -214,8 +214,13 @@ class ETMAdapter:
         (``get_topic_word_matrix``), then the original Dieng repo's
         ``get_beta`` (which already exponentiates inside the model).
         """
+        if hasattr(model, "get_topic_word_dist"):
+            return _to_numpy(model.get_topic_word_dist())
         if hasattr(model, "get_topic_word_matrix"):
-            return _to_numpy(model.get_topic_word_matrix())
+            raw = model.get_topic_word_matrix()
+            twm = _to_numpy(raw)
+            if twm.ndim == 2:
+                return twm
         if hasattr(model, "get_beta"):
             beta = _to_numpy(model.get_beta())
             # ``get_beta`` already returns probabilities (the softmax is

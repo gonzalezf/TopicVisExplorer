@@ -68,6 +68,18 @@ tests/unit/test_adapters.py                              # add a fake-shaped tes
 tests/unit/test_adapter_equivalence.py                   # opt-in cross-LDA equivalence
 ```
 
+**CLI / BYO registry:** built-in adapters are listed in
+`topicvisexplorer.models.registry.ADAPTERS`. To expose a custom adapter
+under a new string id for `tve demo --texts --model ...`, register it at
+import time (monkey-patch in your app or extend the dict in a fork):
+
+```python
+from topicvisexplorer.models.registry import ADAPTERS
+from my_package import MyLDAAdapter
+
+ADAPTERS["my-lda"] = MyLDAAdapter
+```
+
 ### Why the adapter pattern matters
 
 The legacy code (paper version) hard-coded gensim LDA throughout. To
@@ -99,7 +111,7 @@ class EmbeddingProtocol(Protocol):
 ```
 
 Anything quacking like a gensim `KeyedVectors` (the Word2Vec default,
-SBERT via `topicvisexplorer.embeddings.SBERTEmbedding`, your own
+SBERT via `topicvisexplorer.embeddings.SBERT`, your own
 in-memory `dict[str, np.ndarray]`) plugs in directly. SBERT is in the
 `[full]` extra so it doesn't bloat the default install; install via:
 
@@ -110,8 +122,8 @@ pip install "topicvisexplorer[full]"
 then:
 
 ```python
-from topicvisexplorer.embeddings import SBERTEmbedding
-emb = SBERTEmbedding(model_name="all-MiniLM-L6-v2")
+from topicvisexplorer.embeddings import SBERT
+emb = SBERT(model_name="all-MiniLM-L6-v2")
 ```
 
 ---

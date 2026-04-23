@@ -12,7 +12,6 @@ from pathlib import Path
 import pytest
 
 pytest.importorskip("gensim")
-pytest.importorskip("spacy")
 
 
 def _sample_texts() -> list[str]:
@@ -31,6 +30,7 @@ def _sample_texts() -> list[str]:
 
 
 def test_build_scenario_from_textfile_txt(tmp_path: Path) -> None:
+    pytest.importorskip("spacy")
     from topicvisexplorer.server.byo_corpus import build_scenario_from_textfile
 
     txt = tmp_path / "docs.txt"
@@ -53,6 +53,7 @@ def test_build_scenario_from_textfile_txt(tmp_path: Path) -> None:
 
 
 def test_build_scenario_cache_hits_second_time(tmp_path: Path) -> None:
+    pytest.importorskip("spacy")
     from topicvisexplorer.server.byo_corpus import build_scenario_from_textfile
 
     txt = tmp_path / "docs.txt"
@@ -87,3 +88,24 @@ def test_load_texts_accepts_jsonl(tmp_path: Path) -> None:
     )
     docs = load_texts(jl)
     assert docs == ["first document one", "second document two"]
+
+
+@pytest.mark.parametrize("model", ["sklearn-nmf", "sklearn-lda"])
+def test_build_scenario_sklearn_models(tmp_path: Path, model: str) -> None:
+    """BYO sklearn paths do not require spaCy (no ``text_cleaner_batch``)."""
+    from topicvisexplorer.server.byo_corpus import build_scenario_from_textfile
+
+    txt = tmp_path / "docs.txt"
+    txt.write_text("\n".join(_sample_texts()), encoding="utf-8")
+    cache = tmp_path / "cache"
+    sc = build_scenario_from_textfile(
+        txt,
+        name="sk",
+        num_topics=3,
+        passes=2,
+        seed=7,
+        cache_dir=cache,
+        model=model,
+    )
+    assert sc.model_data is not None
+    assert sc.model_data.topic_term_dists.shape[0] == 3

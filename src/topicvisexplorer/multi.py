@@ -19,7 +19,7 @@ import pandas as pd
 
 from .layout import get_circle_positions
 from .logging import get_logger
-from .similarity.embedding import EmbeddingSimilarity, compute_omega_grid
+from .similarity.embedding import EmbeddingSimilarity
 
 if TYPE_CHECKING:
     from .prepare import PreparedData
