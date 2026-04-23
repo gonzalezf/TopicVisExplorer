@@ -170,6 +170,47 @@ var LDAvis = function(to_select, data_or_file_name) {
         barwidth = 530, //LA IDEA ES ELIMINAR TODO ESTO QUE ES BAR WIDTH, BARHEIGHT, ETC.
         barheight = 530,
         termwidth = 90; // width to add between two panels to display terms
+
+    /** createBarPlot overwrites the shared `barheight` for each chart; /multicorpora has two. If we keep the last
+     *  chart's `barheight` for both, the y-scale is wrong for the other panel and bars are clipped. */
+    var barheightByPlotId = { barplot_1: 530, barplot_2: 530 };
+    function tveBarheightFor(barPlotId) {
+        if (barPlotId && barheightByPlotId[barPlotId] != null) {
+            return barheightByPlotId[barPlotId];
+        }
+        return barheight;
+    }
+
+    /**
+     * Left uses #BarPlotDiv_zero (wraps the λ slider); right uses #BarPlotDiv_b_zero (empty until the chart). The
+     * right slot often stretches in the column and createBarPlot sees a much larger rch, so the left chart SVG
+     * ends up much shorter. Match both to max(left, right) so band scales and padding match.
+     */
+    function tveEqualizeMulticorpusBarChartHeights() {
+        if (type_vis !== 2) {
+            return;
+        }
+        var a = document.querySelector("#BarPlotDiv_zero > svg");
+        var b = document.querySelector("#BarPlotDiv_b_zero > svg");
+        if (!a || !b) {
+            return;
+        }
+        var ha = a.getBoundingClientRect().height;
+        var hb = b.getBoundingClientRect().height;
+        if (ha < 2 || !isFinite(ha)) {
+            ha = parseFloat(a.getAttribute("height")) || 0;
+        }
+        if (hb < 2 || !isFinite(hb)) {
+            hb = parseFloat(b.getAttribute("height")) || 0;
+        }
+        var hT = Math.max(ha, hb, 180);
+        a.setAttribute("height", hT);
+        b.setAttribute("height", hT);
+        var nbh = Math.max(8, hT - 0.5 * termwidth);
+        barheightByPlotId["barplot_1"] = nbh;
+        barheightByPlotId["barplot_2"] = nbh;
+        barheight = nbh;
+    }
         
     // controls how big the maximum circle can be
     // doesn't depend on data, only on mds width and height:
@@ -224,6 +265,37 @@ var LDAvis = function(to_select, data_or_file_name) {
     var number_terms_sankey = 20
     /** Type 2: min(corpusA R, corpusB R, 20) so left/right show the same number of default terms. */
     var sankeyTermActiveCap = 20
+
+    /**
+     * Opt-in bar-count debugging (left vs right keyword list length).
+     * In the browser console: window.TVE_DEBUG_BARS = true
+     * or: localStorage.setItem('TVE_DEBUG_BARS','1') then reload.
+     * Filter console by [TVE bars]
+     */
+    var tveBarsDebugWelcome = false;
+    function tveLogBars(phase, info) {
+        try {
+            var w = (typeof window !== "undefined") ? window : null;
+            var on = w && w.TVE_DEBUG_BARS === true;
+            if (!on && typeof localStorage !== "undefined") {
+                on = localStorage.getItem("TVE_DEBUG_BARS") === "1";
+            }
+            if (on && typeof console !== "undefined" && console.log) {
+                if (!tveBarsDebugWelcome) {
+                    tveBarsDebugWelcome = true;
+                    console.log(
+                        "[TVE bars] debug on (reload after localStorage, or set window.TVE_DEBUG_BARS). " +
+                        "Logs are browser-only (not the terminal). Click topics or move λ to emit lines."
+                    );
+                }
+                if (info !== undefined) {
+                    console.log("[TVE bars]", phase, info);
+                } else {
+                    console.log("[TVE bars]", phase);
+                }
+            }
+        } catch (e) { /* ignore */ }
+    }
 
     //esto se ocupa en la comparación de un corpus
     var topic_id_model_1 = -1
@@ -2087,6 +2159,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             createBarPlot("#BarPlotDiv_zero", dat3_sankey_a, barFreqsID,"bar-totals", "terms", "bubble-tool", "xaxis", n0);
             // Add barplot into the right panel (corpus B: own tinfo, not corpus A)
             createBarPlot("#BarPlotDiv_b_zero", dat3_sankey_b, barFreqsID_2,"bar-totals_2", "terms_2", "bubble-tool_2", "xaxis_2", n0);
+            tveEqualizeMulticorpusBarChartHeights();
 
             // Add documents into the left column
            var RelevantDocumentsTableDiv = document.createElement("div");
@@ -2104,7 +2177,14 @@ var LDAvis = function(to_select, data_or_file_name) {
            document.getElementById("DocumentsPanel_2").appendChild(RelevantDocumentsTableDiv_2);
            const  div_2 = document.getElementById('RelevantDocumentsTableDiv_2');
            div_2.insertAdjacentHTML('afterbegin', '<table  id="tableRelevantDocumentsClass_Model2" class="table table-hover"> <thead> <tr> <th class="text-center" data-field="topic_perc_contrib" scope="col">%</th> <th class="text-center" data-field="text" scope="col">Tweet</th> </tr> </thead> </table>');
-           visualize_sankey(matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)], vis_state.min_value_filtering, vis_state.max_value_filtering)
+
+            var _matrixSankey0 = matrix_sankey[get_new_omega(lambda_lambda_topic_similarity.current)];
+            var _minF0 = vis_state.min_value_filtering;
+            var _maxF0 = vis_state.max_value_filtering;
+            requestAnimationFrame(function () {
+                tveEqualizeMulticorpusBarChartHeights();
+                visualize_sankey(_matrixSankey0, _minF0, _maxF0);
+            });
        }
        
 
@@ -2133,6 +2213,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             } else {
                 barheight = bounds_barplot.height - 0.5*termwidth;
             }
+            barheightByPlotId[barFreqsID_actual] = barheight;
             var _bw = bounds_barplot.width;
             if (_bw < 4) { _bw = rbb.width || 0; }
             barwidth = _bw - 1.5*termwidth
@@ -3336,20 +3417,36 @@ var LDAvis = function(to_select, data_or_file_name) {
             }
             dat2.sort(fancysort("relevance"));
             var _capR = (type_vis === 2) ? sankeyTermActiveCap : R;
+            var bLre;
+            var bRre;
             if (type_vis === 2) {
-                var bLre = (typeof topic_id_model_1 === "number" && topic_id_model_1 >= 0) ?
+                bLre = (typeof topic_id_model_1 === "number" && topic_id_model_1 >= 0) ?
                     { node: topic_id_model_1 } : real_last_clicked_sankey_model_1;
-                var bRre = (typeof topic_id_model_2 === "number" && topic_id_model_2 >= 0) ?
+                bRre = (typeof topic_id_model_2 === "number" && topic_id_model_2 >= 0) ?
                     { node: topic_id_model_2 + min_target_node_value } : real_last_clicked_sankey_model_2;
                 _capR = tvePairedNFromTwoBoxes(bLre, bRre, min_target_node_value);
             }
             var dat3 = dat2.slice(0, _capR);
+            var _barH = tveBarheightFor(barFreqsID_actual);
+            if (type_vis === 2) {
+                tveLogBars("reorder_bars_helper", {
+                    chart: barFreqsID_actual,
+                    topicIdInModel: topic_id_in_model,
+                    _capR: _capR,
+                    dat2AfterSortLen: dat2.length,
+                    dat3SliceLen: dat3.length,
+                    bLeftNode: bLre && bLre.node,
+                    bRightNode: bRre && bRre.node,
+                    barH: _barH,
+                    barheightGlobal: barheight
+                });
+            }
             
             var y = d3.scaleBand()
                     .domain(dat3.map(function(d) {
                         return d.Term;
                     }))
-                    .rangeRound([0, barheight])
+                    .rangeRound([0, _barH])
                     .padding(0.15);
             
             var x = d3.scaleLinear()
@@ -3384,7 +3481,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             // adapted from http://bl.ocks.org/mbostock/1166403
 
-            var xAxis = d3.axisTop(x).tickSize(-barheight).ticks(6);
+            var xAxis = d3.axisTop(x).tickSize(-_barH).ticks(6);
             
             // New axis definition:
             var newaxis = d3.selectAll(to_select + " ."+xaxis_class);
@@ -3394,7 +3491,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("class", bar_totals_actual)
                     .attr("x", 0)
                     .attr("y", function(d) {
-                        return y(d.Term) + barheight + margin.bottom + 2 * rMax;
+                        return y(d.Term) + _barH + margin.bottom + 2 * rMax;
                     })
                     .attr('id', function(d){
                         return bar_totals_actual+'-'+d.Term;
@@ -3408,7 +3505,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("x", -5)
                     .attr("class", terms_actual)
                     .attr("y", function(d) {
-                        return y(d.Term) + 9 + barheight + margin.bottom + 2 * rMax;
+                        return y(d.Term) + 9 + _barH + margin.bottom + 2 * rMax;
                     })
                     .style("text-anchor", "end")
                     .attr("id", function(d) {
@@ -3455,7 +3552,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .attr("class", overlay)
                     .attr("x", 0)
                     .attr("y", function(d) {
-                        return  (y.bandwidth()/2)+ y(d.Term) + barheight + margin.bottom + 2 * rMax;
+                        return  (y.bandwidth()/2)+ y(d.Term) + _barH + margin.bottom + 2 * rMax;
                     }) 
                     .attr('id', function(d){
                         return 'bar-freq-estimated-'+d.Term;
@@ -3521,14 +3618,14 @@ var LDAvis = function(to_select, data_or_file_name) {
                     })
                     .transition().duration(duration)
                     .attr("y", function(d, i) {
-                        return barheight + margin.bottom + 6 + i * 18;
+                        return _barH + margin.bottom + 6 + i * 18;
                     })
                     .remove();
                 labels.exit()
                     .transition().duration(duration)
                     .delay(duration)
                     .attr("y", function(d, i) {
-                        return barheight + margin.bottom + 18 + i * 18;
+                        return _barH + margin.bottom + 18 + i * 18;
                     })
                     .remove();
                 redbars.exit()
@@ -3538,7 +3635,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     })
                     .transition().duration(duration)
                     .attr("y", function(d, i) {
-                        return barheight + margin.bottom + 6 + i * 18;
+                        return _barH + margin.bottom + 6 + i * 18;
                     })
                     .remove();
                 // https://github.com/mbostock/d3/wiki/Transitions#wiki-d3_ease
@@ -3597,19 +3694,19 @@ var LDAvis = function(to_select, data_or_file_name) {
                 graybars.exit()
                     .transition().duration(duration)
                     .attr("y", function(d, i) {
-                        return barheight + margin.bottom + 6 + i * 18 + 2 * rMax;
+                        return _barH + margin.bottom + 6 + i * 18 + 2 * rMax;
                     })
                     .remove();
                 labels.exit()
                     .transition().duration(duration)
                     .attr("y", function(d, i) {
-                        return barheight + margin.bottom + 18 + i * 18 + 2 * rMax;
+                        return _barH + margin.bottom + 18 + i * 18 + 2 * rMax;
                     })
                     .remove();
                 redbars.exit()
                     .transition().duration(duration)
                     .attr("y", function(d, i) {
-                        return barheight + margin.bottom + 6 + i * 18 + 2 * rMax;
+                        return _barH + margin.bottom + 6 + i * 18 + 2 * rMax;
                     })
                     .remove();
 
@@ -3685,7 +3782,16 @@ var LDAvis = function(to_select, data_or_file_name) {
             if (!b1 || !b2) { return sankeyTermActiveCap; }
             var a = tveGetSankeyNodeTerms(b1, mtv);
             var b = tveGetSankeyNodeTerms(b2, mtv);
-            return Math.min(sankeyTermActiveCap, a.length, b.length);
+            var _pairN = Math.min(sankeyTermActiveCap, a.length, b.length);
+            tveLogBars("tvePairedNFromTwoBoxes", {
+                cap: sankeyTermActiveCap,
+                leftTermsLen: a.length,
+                rightTermsLen: b.length,
+                nodeLeft: b1 && b1.node,
+                nodeRight: b2 && b2.node,
+                pairN: _pairN
+            });
+            return _pairN;
         }
 
         // function to update bar chart when a topic is selected
@@ -3829,6 +3935,21 @@ var LDAvis = function(to_select, data_or_file_name) {
             var nTake = (typeof optPairN === "number" && !isNaN(optPairN)) ?
                 Math.min(optPairN, dat2.length) : sankeyTermActiveCap;
             var dat3 = dat2.slice(0, nTake);
+            var _barH = tveBarheightFor(barFreqsID_actual);
+            if (type_vis === 2) {
+                tveLogBars("topic_on_sankey", {
+                    side: (box.node >= min_target_node_value) ? "right" : "left",
+                    sankeyNode: box.node,
+                    barChart: barFreqsID_actual,
+                    optPairN: optPairN,
+                    sankeyTermActiveCap: sankeyTermActiveCap,
+                    dat2FilteredLen: dat2.length,
+                    nTake: nTake,
+                    dat3SliceLen: dat3.length,
+                    barH: _barH,
+                    barheightGlobal: barheight
+                });
+            }
 
             //AddBackgroundColorToText(dat3)
 
@@ -3837,7 +3958,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     .domain(dat3.map(function(d) {
                         return d.Term;
                     }))
-                    .rangeRound([0, barheight])
+                    .rangeRound([0, _barH])
                     .padding(0.15);
                     //.rangeRoundBands([0, barheight], 0.15);
             var x = d3.scaleLinear()
@@ -3904,7 +4025,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             // adapted from http://bl.ocks.org/mbostock/1166403
 
-            var xAxis = d3.axisTop(x).tickSize(-barheight).ticks(6);
+            var xAxis = d3.axisTop(x).tickSize(-_barH).ticks(6);
 
             // redraw x-axis
             d3.selectAll(to_select + " ."+xaxis_class)
@@ -4269,12 +4390,13 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             //Show most relevant documents                    
             updateRelevantDocuments(d.topics-1, relevantDocumentsDict, 1);
+            var _hTopic = tveBarheightFor(barFreqsID);
             
             var y = d3.scaleBand()
                     .domain(dat3.map(function(d) {
                         return d.Term;
                     }))
-                    .rangeRound([0, barheight])
+                    .rangeRound([0, _hTopic])
                     .padding(0.15);                    
             var x = d3.scaleLinear()
                     .domain([1, d3.max(dat3, function(d) {
@@ -4340,7 +4462,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             // adapted from http://bl.ocks.org/mbostock/1166403
 
-            var xAxis = d3.axisTop(x).tickSize(-barheight).ticks(6);
+            var xAxis = d3.axisTop(x).tickSize(-_hTopic).ticks(6);
 
             // redraw x-axis
             d3.selectAll(to_select + " .xaxis")
@@ -4372,12 +4494,13 @@ var LDAvis = function(to_select, data_or_file_name) {
             var dat2 = lamData.filter(function(d) {
                 return d.Category == "Default";
             });
+            var _hOff = tveBarheightFor(barFreqsID);
 
             var y = d3.scaleBand()
                     .domain(dat2.map(function(d) {
                         return d.Term;
                     }))
-                    .rangeRound([0, barheight])
+                    .rangeRound([0, _hOff])
                     .padding(0.15);
                     //.rangeRoundBands([0, barheight], 0.15);
             var x = d3.scaleLinear()
@@ -4415,7 +4538,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             // adapted from http://bl.ocks.org/mbostock/1166403
 
-           var xAxis = d3.axisTop(x).tickSize(-barheight).ticks(6);
+           var xAxis = d3.axisTop(x).tickSize(-_hOff).ticks(6);
 
             // redraw x-axis
             d3.selectAll(to_select + " .xaxis")
