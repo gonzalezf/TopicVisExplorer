@@ -6,7 +6,7 @@ authors:
   - family-names: Gonzalez
     given-names: Felipe
 repository-code: "https://github.com/gonzalezf/TopicVisExplorer"
-url: "https://gonzalezf.github.io/TopicVisExplorer/"
+url: "https://github.com/gonzalezf/TopicVisExplorer"
 license: BSD-3-Clause
 version: "1.0.0"
 keywords:

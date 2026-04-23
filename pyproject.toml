@@ -71,7 +71,7 @@ docs = [
 
 [project.urls]
 Homepage = "https://github.com/gonzalezf/TopicVisExplorer"
-Documentation = "https://gonzalezf.github.io/TopicVisExplorer/"
+Documentation = "https://github.com/gonzalezf/TopicVisExplorer/tree/main/docs"
 Repository = "https://github.com/gonzalezf/TopicVisExplorer"
 Changelog = "https://github.com/gonzalezf/TopicVisExplorer/blob/main/CHANGELOG.md"
 Issues = "https://github.com/gonzalezf/TopicVisExplorer/issues"

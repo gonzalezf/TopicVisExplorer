@@ -1,5 +1,9 @@
 # Quickstart
 
+For install options, **tests from a git clone**, `tve serve`, and a full
+`tve demo` flag list, use [Install, test, BYO](installation-and-testing.md)
+first; this page stays short.
+
 This page gets you from zero to an interactive TopicVisExplorer window in
 under a minute. The default browser session uses a **small 20 Newsgroups**
 slice (`20ng_tiny`, real terms); the synthetic `tiny_demo` scenario is

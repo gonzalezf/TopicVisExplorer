@@ -1,6 +1,7 @@
 site_name: TopicVisExplorer
 site_description: Interactive topic-modeling visualization — split, merge, compare, and curate topics across corpora.
-site_url: https://gonzalezf.github.io/TopicVisExplorer/
+# Public GitHub Pages is optional (see .github/workflows/docs.yml). Empty avoids claiming a live URL in sitemaps.
+site_url: ""
 repo_url: https://github.com/gonzalezf/TopicVisExplorer
 repo_name: gonzalezf/TopicVisExplorer
 edit_uri: edit/main/docs/
@@ -82,6 +83,7 @@ nav:
   - Quickstart: quickstart.md
   - Tutorial: tutorial.md
   - Guides:
+      - Install, test, BYO: installation-and-testing.md
       - Edit operations: edit-ops.md
       - Coherence metrics: coherence.md
       - Extending: extending.md

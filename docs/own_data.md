@@ -5,6 +5,36 @@ topics, split and merge them, and export a snapshot. You do not need a
 separate "user study" server or a POST endpoint — the in-browser
 **Export** button saves JSON **only to your computer**.
 
+## `tve demo`: flags and defaults
+
+Authoritative help: `tve demo --help` (from the same version you installed).
+
+| Flag | When it applies | Default / notes |
+| ---- | --------------- | --------------- |
+| `--host` | Always | `127.0.0.1` |
+| `--port` | Always | `8000` |
+| `--no-browser` | Always | do not open a tab |
+| `--corpus` | Without `--texts` and without `--multicorpora` | `20ng_tiny` (single-corpus) |
+| `--corpus` | With `--multicorpora` | `bbc_vs_20ng` (needs built fixtures) or e.g. `tiny_multi_demo` (synthetic) |
+| `--multicorpora` | Open `/multicorpora` (Sankey) | incompatible with `--texts` |
+| `--texts` | BYO file path | overrides `--corpus` |
+| `--name` | With `--texts` | scenario name in URL, default `user_corpus` |
+| `--num-topics` | With `--texts` | `5` |
+| `--passes` | With `--texts` (LDA-style fits) | `10` |
+| `--seed` | With `--texts` | `42` |
+| `--model` | With `--texts` | `gensim-lda` (also: `sklearn-lda`, `sklearn-nmf`, `bertopic`, `etm`, `ctm` — last three need `pip install "topicvisexplorer[full]"`) |
+| `--embedding` | With `--texts` | `word2vec` or `sbert` (`sbert` needs `[full]`) |
+| `--sbert-model` | With `--texts` and `--embedding sbert` | `all-MiniLM-L6-v2` (Sentence-Transformers id) |
+
+**Multicorpora (no `--texts`):**
+
+```bash
+tve demo --multicorpora
+tve demo --multicorpora --corpus tiny_multi_demo
+```
+
+Adapter ids and class mapping: [reference/models](reference/models.md).
+
 ## Demos and scenarios
 
 | Path | `Scenario` | Notes |
@@ -61,9 +91,14 @@ The first run fits the requested topic model (default: **gensim-lda** with
 `text_cleaner_batch` + Phraser for that path; **sklearn-lda** / **sklearn-nmf**
 use scikit-learn vectorizers on raw lines). Results are cached in
 `~/.cache/topicvisexplorer/<name>-<model>-<content-hash>.npz` (the hash
-includes `model`, `embedding`, and `sbert_model` when relevant). The scenario
-wires a **Gensim LDA**-backed `refit` for split/merge (same as bundled demos
-— the initial fit adapter may differ; see [edit-ops](edit-ops.md)).
+includes `model`, `embedding`, and `sbert_model` when relevant).
+
+!!! warning "Browser split/merge use Gensim LDA refit on BYO"
+    The web scenario still registers a **Gensim LDA**-backed `refit` for
+    server-side split/merge (same pattern as bundled demos). Your *initial* fit
+    may have used a different `--model`. If you rely on a non-gensim adapter,
+    check behavior before trusting interactive merge/split; see
+    [edit-ops](edit-ops.md).
 
 ## Optional: AG News (Hugging Face)
 

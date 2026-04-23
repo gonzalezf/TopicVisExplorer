@@ -1,6 +1,6 @@
 # TopicVisExplorer
 
-[![Docs](https://img.shields.io/badge/docs-mkdocs--material-blue)](https://gonzalezf.github.io/TopicVisExplorer/)
+[![Docs](https://img.shields.io/badge/docs-markdown%20in%20repo-blue)](https://github.com/gonzalezf/TopicVisExplorer/tree/main/docs)
 [![Cite this software](https://img.shields.io/badge/cite-CITATION.cff-informational)](./CITATION.cff)
 [![License: BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-green.svg)](./LICENSE)
 
@@ -23,6 +23,28 @@ pip install "topicvisexplorer[full]"  # + BERTopic / ETM / CTM / SBERT
 **Developing from a git clone** (reproducible venv, tests, and scripts): use
 **`uv sync`** as in [`CONTRIBUTING.md`](CONTRIBUTING.md) (`uv.lock` + Python
 from `.python-version`), or `pip install -e ".[dev]"` in a virtualenv.
+
+**Minimal clone → run → test:**
+
+```bash
+uv sync
+uv run tve demo
+uv run pytest tests/unit/ -q
+# If you change UI files under frontend/:
+cd frontend && npm ci && npm run build && cd ..
+```
+
+The built bundle at `src/topicvisexplorer/web/dist/` is not committed; run the
+`npm` step after UI edits or you may get a stale or missing `tve.js` in the browser.
+
+## Defaults at a glance
+
+| What | Default |
+| ---- | ------- |
+| Bundled demo (no `--texts`) | `tve demo` → scenario `20ng_tiny` |
+| BYO (`--texts`) | `--model gensim-lda`, `--embedding word2vec`, `--name user_corpus` |
+| HTTP bind | `127.0.0.1:8000` (override with `--host` / `--port`) |
+| On-disk cache | `~/.cache/topicvisexplorer/` (fit + layout embedding; path includes content hash) |
 
 ## Demo
 
@@ -112,14 +134,22 @@ tve.show([prepared_a, prepared_b])    # multi-corpus Sankey
 
 ## Documentation
 
-Full docs: **<https://gonzalezf.github.io/TopicVisExplorer/>**
+**Documentation** lives in the [`docs/`](https://github.com/gonzalezf/TopicVisExplorer/tree/main/docs) folder
+(Markdown; browsable on GitHub). To build a static HTML site locally:
+`pip install -e ".[docs]"` then `mkdocs serve` (or `mkdocs build --strict`). A
+separate public GitHub Pages URL is **not** enabled in this repository by
+default; CI only **builds** the site to verify it.
 
-- [Quickstart](docs/quickstart.md)
-- [Tutorial](docs/tutorial.md)
+- [Install, test, BYO, CLI flags](docs/installation-and-testing.md) — from PyPI
+  or a clone, run tests, environment variables, multicorpora. **Start here to
+  share the repo with others.**
+- [Quickstart](docs/quickstart.md) — first interactive session.
+- [Tutorial](docs/tutorial.md) — from raw tokens to `tve.show`.
+- [Working with your own data](docs/own_data.md) — `tve demo` flag table, licenses, export.
+- [Model / adapter reference](docs/reference/models.md) — change `--model` / extras.
 - [Edit operations](docs/edit-ops.md)
 - [Coherence metrics](docs/coherence.md)
 - [Extending](docs/extending.md)
-- [Working with your own data](docs/own_data.md)
 - [Migration from v0.1](docs/migration.md)
 - [Contributing / CI](CONTRIBUTING.md)
 

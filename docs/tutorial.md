@@ -118,6 +118,8 @@ notebook without touching the UI.
 
 ## Next
 
+- [Install, test, BYO](installation-and-testing.md) — tests, `tve serve`, BYO
+  on disk, environment variables.
 - [Edit operations](edit-ops.md)
 - [Coherence metrics](coherence.md)
 - [Extending](extending.md) — wire in a new model or embedding backend.
