@@ -439,6 +439,30 @@ var LDAvis = function(to_select, data_or_file_name) {
     }
 
     /**
+     * K before split for POST (schema: current_number_of topics). Prefer live mdsData
+     * length; do not depend only on new_circle_positions['0.0'] (may be missing or stale).
+     */
+    function tveCurrentNumberOfTopicsForSplitPost() {
+        var n = mdsData && mdsData.length;
+        if (n && n >= 1) {
+            return n;
+        }
+        if (typeof new_circle_positions === "object" && new_circle_positions) {
+            var row = new_circle_positions["0.0"] || new_circle_positions["0.00"];
+            if (row == null) {
+                var keys = Object.keys(new_circle_positions);
+                if (keys.length) {
+                    row = new_circle_positions[keys[0]];
+                }
+            }
+            if (row && row.length) {
+                return row.length;
+            }
+        }
+        return Math.max(2, n || 0);
+    }
+
+    /**
      * Bootstrap sometimes leaves #loadMe with .show or a stray .modal-backdrop after
      * modal("hide") (e.g. transition interrupted). The 150ms cleanup in merge/split
      * only runs when #loadMe already lost .show, so it never fixes the stuck case.
@@ -781,26 +805,61 @@ var LDAvis = function(to_select, data_or_file_name) {
                         if(d.topics == id_topic_splitted || name_topics_circles[topicID + d.topics] == undefined){// como hay varios topicos undefined, esto tira un calculo equivaco a aveces
 
                             name_topics_circles[topicID + d.topics] = 'New subtopic '+name_string;
-                            new_subtopics_id.push(d.topics)
-                            freq_splitted_total  = mdsData.find(element => element.topics == d.topics).Freq;
+                            new_subtopics_id.push(d.topics);
+                            var _mRowA2 = mdsData.find(function (el) { return el.topics == d.topics; });
+                            if (_mRowA2) {
+                                freq_splitted_total = _mRowA2.Freq;
+                            } else if (typeof window !== "undefined" && window.TVE_DEBUG) {
+                                console.error(
+                                    "[TVE updateTopicNamesCircles] missing mdsData row (new subtopic) topics=",
+                                    d.topics
+                                );
+                            }
                             topics_splitted.push( topicID + d.topics);
                             //topicID + d.topics
                         }else{
                             //get antiguas frecuencias
                             var old_element  = old_mdsData.find(element => element.topics == d.topics);
-                            mdsData.find(element => element.topics == d.topics).Freq = old_element.Freq;
+                            var _mRowB2 = mdsData.find(function (el) { return el.topics == d.topics; });
+                            if (old_element && _mRowB2) {
+                                _mRowB2.Freq = old_element.Freq;
+                            } else if (typeof window !== "undefined" && window.TVE_DEBUG) {
+                                console.error(
+                                    "[TVE updateTopicNamesCircles] missing row for Freq copy topics=",
+                                    d.topics
+                                );
+                            }
 
                             
                         }
 
                     });    
-        freq_splitted_total +=  mdsData.find(element => Number(element.topics) == Number(id_topic_splitted)).Freq;
+        var _rowParent = mdsData.find(function (element) {
+            return Number(element.topics) === Number(id_topic_splitted);
+        });
+        if (_rowParent) {
+            freq_splitted_total += _rowParent.Freq;
+        } else if (typeof window !== "undefined" && window.TVE_DEBUG) {
+            console.error(
+                "[TVE updateTopicNamesCircles] no mdsData row for id_topic_splitted=",
+                id_topic_splitted
+            );
+        }
         for ( var i = 0; i < new_subtopics_id.length; i++){
            
-            var current_id =new_subtopics_id[i];
+            var current_id = new_subtopics_id[i];
 
-            var current_freq = mdsData.find(element => Number(element.topics) == Number(current_id)).Freq;
-            mdsData.find(element => element.topics == current_id).Freq = old_frequency*(current_freq/freq_splitted_total);
+            var _curF = mdsData.find(function (element) { return Number(element.topics) === Number(current_id); });
+            var _curRow = mdsData.find(function (element) { return element.topics == current_id; });
+            if (_curF && _curRow && freq_splitted_total > 0) {
+                _curRow.Freq = old_frequency*(_curF.Freq/freq_splitted_total);
+            } else if (typeof window !== "undefined" && window.TVE_DEBUG) {
+                console.error(
+                    "[TVE updateTopicNamesCircles] skip freq for subtopic",
+                    current_id,
+                    { hasCurF: !!_curF, hasRow: !!_curRow, freq_splitted_total: freq_splitted_total }
+                );
+            }
         }
     
     }
@@ -1533,11 +1592,24 @@ var LDAvis = function(to_select, data_or_file_name) {
                     }
                 });
             }
+            var _kSplit = tveCurrentNumberOfTopicsForSplitPost();
+            var _hasOmega0 = !!(new_circle_positions && (new_circle_positions["0.0"] || new_circle_positions["0.00"]));
+            if (typeof window !== "undefined" && window.TVE_DEBUG) {
+                var _om0 = new_circle_positions && new_circle_positions["0.0"];
+                _tveDebug("split", "POST body prep", {
+                    topic_id: vis_state.topic,
+                    splitting_topic: splitting_topic,
+                    current_number_of_topics: _kSplit,
+                    mdsDataLen: mdsData && mdsData.length,
+                    hasNewCirclePositions0: _hasOmega0,
+                    omega0RowLen: _om0 && _om0.length
+                });
+            }
             var postDataTopicSplitting = {
                 new_document_seeds: rawSeeds,
                 old_circle_positions: new_circle_positions,
                 topic_id: vis_state.topic,
-                current_number_of_topics: Object.values(new_circle_positions['0.0']).length,
+                current_number_of_topics: _kSplit,
                 //mdsData: mdsData, 
                 //lamData: lamData                
             };
@@ -1608,6 +1680,22 @@ var LDAvis = function(to_select, data_or_file_name) {
                             mdsData,
                             old_frequency
                         );
+                        (function tvePruneMergedDeleteAfterSplit() {
+                            var nextDel = [];
+                            var nextName = [];
+                            for (var pi = 0; pi < merged_topic_to_delete.length; pi++) {
+                                var tid = merged_topic_to_delete[pi];
+                                var alive = mdsData.some(function (r) {
+                                    return Number(r.topics) === Number(tid);
+                                });
+                                if (!alive) {
+                                    nextDel.push(tid);
+                                    nextName.push(name_merged_topic_to_delete[pi]);
+                                }
+                            }
+                            merged_topic_to_delete = nextDel;
+                            name_merged_topic_to_delete = nextName;
+                        })();
                         document.getElementById("renameTopicId").value = name_topics_circles[topicID + vis_state.topic];
 
                         //see_most_relevant_keywords(12)
@@ -1856,7 +1944,27 @@ var LDAvis = function(to_select, data_or_file_name) {
                         name_topics_circles[topicID + (index_topic_name_2+1)] = new_merged_topic_name+"-delete";
                         merged_topic_to_delete.push(index_topic_name_2+1);
                         name_merged_topic_to_delete.push(new_merged_topic_name+"-delete");
-                            
+                        (function tveShrinkMdsDataAfterMerge() {
+                            var rowTopicsBefore = mdsData.map(function (r) {
+                                return r.topics;
+                            });
+                            mdsData.splice(index_topic_name_2, 1);
+                            K = mdsData.length;
+                            for (var rj = 0; rj < mdsData.length; rj++) {
+                                var oldRowIdx = rj < index_topic_name_2 ? rj : rj + 1;
+                                var oldT = rowTopicsBefore[oldRowIdx];
+                                mdsData[rj].topics = rj + 1;
+                                name_topics_circles[topicID + (rj + 1)] =
+                                    name_topics_circles[topicID + oldT] !== undefined
+                                        ? name_topics_circles[topicID + oldT]
+                                        : name_topics_circles[topicID + (rj + 1)];
+                            }
+                            var _kOld = rowTopicsBefore.length;
+                            for (var _kill = mdsData.length + 1; _kill <= _kOld; _kill++) {
+                                delete name_topics_circles[topicID + _kill];
+                            }
+                        })();
+
                         d3.selectAll('#svgMdsPlot').remove();
                         d3.selectAll('#divider_central_panel').remove();
                         document.getElementById("renameTopicId").value = name_topics_circles[topicID + vis_state.topic];
@@ -1903,6 +2011,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
         function createMdsPlot(number, mdsData, lambda_lambda_topic_similarity){
+            topics_with_error = [];
             var central = document.getElementById("CentralPanel");
             if (!central) {
                 throw new Error("TopicVisExplorer: #CentralPanel is missing. Serve the app with the FastAPI template and hard-refresh the page.");
@@ -2123,8 +2232,10 @@ var LDAvis = function(to_select, data_or_file_name) {
 
                     }
                     else{
-                        name_topics_circles[topicID + d.topics] = name_topics_circles[topicID + d.topics]+'_topicwitherror'
-                        topics_with_error.push(d.topics+'-'+name_topics_circles[topicID + d.topics]);
+                        var _nErr = name_topics_circles[topicID + d.topics] || "";
+                        topics_with_error.push(
+                            d.topics + "-" + _nErr + "_topicwitherror"
+                        );
                     }
 
                     //return (xScale(+new_positions[d.topics-1][0])); 
@@ -2269,9 +2380,16 @@ var LDAvis = function(to_select, data_or_file_name) {
        
         d3.selectAll('.txt').call(dotme);
                         
-        //remove topic merged
+        // remove topic merged (ghost ids only). After split, numeric ids can be recycled
+        // (e.g. old topic 6 merged away, then new topic 6 from split); do not strip live rows.
         for(var i = 0; i<merged_topic_to_delete.length; i++){
             var d_topics_current = merged_topic_to_delete[i];
+            var isLiveTopic = mdsData.some(function (row) {
+                return Number(row.topics) === Number(d_topics_current);
+            });
+            if (isLiveTopic) {
+                continue;
+            }
             d3.selectAll('#text-'+topicID + d_topics_current).remove();
             d3.selectAll("#circles_center-"+topicID + d_topics_current).remove();            
             d3.selectAll('#'+topicID + d_topics_current).remove();
@@ -2280,9 +2398,12 @@ var LDAvis = function(to_select, data_or_file_name) {
         //topicos errados
         for(var i = 0; i<topics_with_error.length; i++){
 
-            var d_topics_current = Number(topics_with_error[i].split('-')[0]);
-            var d_name_current = topics_with_error[i].split('-')[1]
-            if(d_name_current ==name_topics_circles[topicID + d_topics_current] ){
+            var _di = topics_with_error[i].indexOf("-");
+            var d_topics_current =
+                _di >= 0 ? Number(topics_with_error[i].slice(0, _di)) : NaN;
+            var d_name_current =
+                _di >= 0 ? topics_with_error[i].slice(_di + 1) : "";
+            if (d_name_current == name_topics_circles[topicID + d_topics_current] + "_topicwitherror" ){
                 d3.selectAll('#text-'+topicID + d_topics_current).remove();
                 d3.selectAll("#circles_center-"+topicID + d_topics_current).remove();            
                 d3.selectAll('#'+topicID + d_topics_current).remove();
@@ -3282,11 +3403,12 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             $("#apply_topic_splitting").click(function() {
                 if (splitting_topic !== vis_state.topic) {
-                    _tveDebug("split", "apply: splitting_topic out of sync with vis_state.topic (stale split modal?)", {
+                    _tveDebug("split", "apply: splitting_topic out of sync — syncing to vis_state.topic", {
                         splitting_topic: splitting_topic,
                         vis_state_topic: vis_state.topic
                     });
                 }
+                splitting_topic = vis_state.topic;
                 var seeds = slider_topic_splitting_values[splitting_topic];
                 var st = tveSplittingSeedsStatus(seeds);
                 _tveDebug("split", "apply_topic_splitting", {

@@ -786,7 +786,8 @@ def _do_split(sc: Scenario, body: TopicSplitRequest) -> dict[str, Any]:
             body.old_circle_positions, new_matrix, correspondence=corr
         )
         sc.circle_positions = new_layout
-    except TopicVisExplorerError:
+    except TopicVisExplorerError as exc:
+        logger.warning("split not applied: %s", exc)
         raise
     except (ValueError, np.linalg.LinAlgError) as exc:
         logger.exception("layout recompute failed during split")
