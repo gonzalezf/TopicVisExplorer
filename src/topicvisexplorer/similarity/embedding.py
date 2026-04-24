@@ -48,6 +48,7 @@ in the paper's "future work" section.
 
 from __future__ import annotations
 
+import time
 from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -57,6 +58,7 @@ import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 
 from ..logging import get_logger
+from ..utils import tve_merge_timing_enabled
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -167,6 +169,12 @@ class EmbeddingSimilarity:
 
         raw_texts_list = list(raw_texts)
 
+        timing = tve_merge_timing_enabled()
+        t_loop = time.perf_counter()
+        log_every = 0
+        if timing and n_topics > 0:
+            log_every = 1 if n_topics <= 20 else max(1, n_topics // 10)
+
         for topic_id in range(n_topics):
             top_keywords = _topic_top_keywords(
                 prepared, topic_id, self.n_terms, self.relevance_lambda
@@ -185,6 +193,18 @@ class EmbeddingSimilarity:
                     continue
                 doc_matrix[topic_id] += weight * _doc_vector(
                     raw_texts_list[doc_ix], self.embedding, rank_lookup, self._text_cleaner
+                )
+
+            if log_every and (
+                topic_id == 0
+                or topic_id + 1 == n_topics
+                or (topic_id + 1) % log_every == 0
+            ):
+                logger.info(
+                    "EmbeddingSimilarity.precompute: topic %d/%d (elapsed %.3fs)",
+                    topic_id + 1,
+                    n_topics,
+                    time.perf_counter() - t_loop,
                 )
 
         return _PrecomputedTopicVectors(kw=kw_matrix, doc=doc_matrix)
@@ -251,8 +271,18 @@ def compute_omega_grid(
     the FastAPI server. Returns a dict ``{omega: (K1, K2) matrix}``
     suitable for :func:`topicvisexplorer.layout.get_circle_positions`.
     """
-    pa = metric.precompute(prepared_a, doc_topic_a, raw_texts_a)
-    pb = metric.precompute(prepared_b, doc_topic_b, raw_texts_b)
+    if (
+        prepared_a is prepared_b
+        and doc_topic_a is doc_topic_b
+        and raw_texts_a is raw_texts_b
+    ):
+        if tve_merge_timing_enabled():
+            logger.info("compute_omega_grid: reusing one precompute (identical corpus inputs)")
+        pa = metric.precompute(prepared_a, doc_topic_a, raw_texts_a)
+        pb = pa
+    else:
+        pa = metric.precompute(prepared_a, doc_topic_a, raw_texts_a)
+        pb = metric.precompute(prepared_b, doc_topic_b, raw_texts_b)
     out: dict[float, np.ndarray] = {}
     for step in range(n_steps):
         omega = round(step / (n_steps - 1), 2) if n_steps > 1 else 0.0

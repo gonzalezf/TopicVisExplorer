@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 from typing import Any
 
 import numpy as np
@@ -57,3 +58,14 @@ def sanitize_for_json(obj: Any) -> Any:
     if isinstance(obj, (list, tuple)):
         return [sanitize_for_json(v) for v in obj]
     return obj
+
+
+def tve_merge_timing_enabled() -> bool:
+    """True when ``TVE_MERGE_TIMING`` requests merge/split hot-path timing logs.
+
+    Set to ``1`` (or any non-empty value except ``0`` / ``false`` / ``no``) to
+    log phase durations in :func:`topicvisexplorer.server.app._do_merge` and
+    per-topic progress during embedding :meth:`EmbeddingSimilarity.precompute`.
+    """
+    v = (os.environ.get("TVE_MERGE_TIMING") or "").strip().lower()
+    return v not in ("", "0", "false", "no")

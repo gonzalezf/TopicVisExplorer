@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ..logging import get_logger
+from ..logging import configure_logging, get_logger
 
 if TYPE_CHECKING:
     from fastapi import FastAPI
@@ -66,6 +66,10 @@ def serve(
                 chosen_port += 1
     else:
         raise OSError(f"Could not find a free port near {port} on {host} after 50 attempts.")
+
+    # So ``logger.info`` from :mod:`topicvisexplorer` modules is visible in the
+    # terminal (the library does not configure handlers by default).
+    configure_logging()
 
     if open_browser:
         path = browser_path if browser_path.startswith("/") else f"/{browser_path}"

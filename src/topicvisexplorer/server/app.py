@@ -32,6 +32,7 @@ to these endpoints continues to work unchanged.
 from __future__ import annotations
 
 import json as _json
+import time
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
@@ -47,7 +48,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from .._version import __version__
 from ..errors import TopicVisExplorerError, ValidationError
 from ..logging import get_logger
-from ..utils import NumPyEncoder, sanitize_for_json
+from ..utils import NumPyEncoder, sanitize_for_json, tve_merge_timing_enabled
 from ..web import LEGACY_STATIC, LEGACY_TEMPLATES, MODERN_DIST, has_modern_bundle
 from .scenarios import Scenario, ScenarioLoader, ScenarioRegistry
 from .schemas import (
@@ -469,6 +470,12 @@ def build_app(config: ServerConfig | None = None) -> FastAPI:
         state: SessionState = SessionDep,
     ) -> JSONResponse:
         sc = _require_single(request, state)
+        if tve_merge_timing_enabled():
+            logger.info(
+                "POST /get_new_topic_vector payload: %s scenario=%r",
+                _merge_request_debug_sizes(body),
+                sc.name,
+            )
         state.history.append({"op": "merge_snapshot", "snapshot": _snapshot(sc)})
         try:
             new_circle_positions = _do_merge(sc, body)
@@ -799,6 +806,25 @@ def _do_split(sc: Scenario, body: TopicSplitRequest) -> dict[str, Any]:
     }
 
 
+def _merge_request_debug_sizes(body: TopicMergeRequest) -> str:
+    """One-line size hints for large optional POST fields (``TVE_MERGE_TIMING``)."""
+    parts: list[str] = []
+    lam = body.lamData_new
+    if lam is not None:
+        if isinstance(lam, list):
+            parts.append(f"lamData_new_rows={len(lam)}")
+        elif isinstance(lam, dict):
+            parts.append(f"lamData_new_keys={len(lam)}")
+        else:
+            parts.append(f"lamData_new_type={type(lam).__name__}")
+    rd = body.relevantDocumentsDict_new
+    if isinstance(rd, list):
+        parts.append(f"relevantDocuments_len={len(rd)}")
+    elif isinstance(rd, dict):
+        parts.append(f"relevantDocuments_keys={len(rd)}")
+    return ", ".join(parts) if parts else "no_large_optional_fields"
+
+
 def _do_merge(sc: Scenario, body: TopicMergeRequest) -> dict[str, list[list[float]]]:
     from ..layout import circle_positions_from_old_matrix, merge_correspondence
     from ..operations import merge
@@ -825,7 +851,10 @@ def _do_merge(sc: Scenario, body: TopicMergeRequest) -> dict[str, list[list[floa
             f"for K={K} (0-based, must be distinct and in range)."
         )
 
+    timing = tve_merge_timing_enabled()
+    t_all = time.perf_counter()
     try:
+        t0 = time.perf_counter()
         new_prepared, new_model_data = merge(
             prepared,
             topic_id_a=body.index_topic_name_1 + 1,
@@ -836,14 +865,36 @@ def _do_merge(sc: Scenario, body: TopicMergeRequest) -> dict[str, list[list[floa
         sc.model_data = new_model_data
         if body.relevantDocumentsDict_new:
             sc.relevant_documents = body.relevantDocumentsDict_new
+        if timing:
+            logger.info(
+                "merge phase (TopicModelData + prepare): %.3fs scenario=%r",
+                time.perf_counter() - t0,
+                sc.name,
+            )
 
         corr = merge_correspondence(K, a_idx_0, b_idx_0)
+        t1 = time.perf_counter()
         new_matrix = _recompute_similarity(sc, new_prepared)
+        if timing:
+            logger.info(
+                "merge phase (_recompute_similarity): %.3fs scenario=%r",
+                time.perf_counter() - t1,
+                sc.name,
+            )
         sc.similarity_matrix = new_matrix
+        t2 = time.perf_counter()
         new_layout = circle_positions_from_old_matrix(
             body.old_circle_positions, new_matrix, correspondence=corr
         )
+        if timing:
+            logger.info(
+                "merge phase (circle_positions_from_old_matrix): %.3fs scenario=%r",
+                time.perf_counter() - t2,
+                sc.name,
+            )
         sc.circle_positions = new_layout
+        if timing:
+            logger.info("merge total: %.3fs scenario=%r", time.perf_counter() - t_all, sc.name)
     except TopicVisExplorerError:
         raise
     except (ValueError, np.linalg.LinAlgError) as exc:
@@ -870,6 +921,8 @@ def _recompute_similarity(sc: Scenario, prepared: Any) -> dict[float, np.ndarray
         from ..similarity.embedding import EmbeddingSimilarity, compute_omega_grid
         from .demo_fixtures import _light_tokenize_one
 
+        if tve_merge_timing_enabled():
+            logger.info("_recompute_similarity: branch=embedding (omega grid n_steps=101)")
         metric = EmbeddingSimilarity(embedding=sc.embedding, text_cleaner=_light_tokenize_one)
         doc_topic = pd.DataFrame(sc.model_data.doc_topic_dists)
         return dict(
@@ -884,6 +937,9 @@ def _recompute_similarity(sc: Scenario, prepared: Any) -> dict[float, np.ndarray
                 n_steps=101,
             )
         )
+
+    if tve_merge_timing_enabled():
+        logger.info("_recompute_similarity: branch=jensen_shannon (no embedding)")
 
     from ..similarity.baselines import JensenShannonSimilarity
 

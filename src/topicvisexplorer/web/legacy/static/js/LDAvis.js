@@ -438,6 +438,43 @@ var LDAvis = function(to_select, data_or_file_name) {
         }
     }
 
+    /**
+     * Bootstrap sometimes leaves #loadMe with .show or a stray .modal-backdrop after
+     * modal("hide") (e.g. transition interrupted). The 150ms cleanup in merge/split
+     * only runs when #loadMe already lost .show, so it never fixes the stuck case.
+     */
+    function _tveScheduleLoadMeStuckPurge(phase) {
+        setTimeout(function () {
+            var m = document.getElementById("loadMe");
+            if (!m || !m.classList.contains("show")) {
+                return;
+            }
+            try {
+                if (window.jQuery) {
+                    window.jQuery(m).modal("hide");
+                }
+            } catch (e0) {
+                /* ignore */
+            }
+            m.classList.remove("show");
+            m.setAttribute("aria-hidden", "true");
+            m.style.display = "none";
+            var backs = document.querySelectorAll(".modal-backdrop");
+            for (var bi = backs.length - 1; bi >= 0; bi--) {
+                backs[bi].remove();
+            }
+            document.body.classList.remove("modal-open");
+            if (document.body.style.paddingRight) {
+                document.body.style.removeProperty("padding-right");
+            }
+            if (typeof window !== "undefined" && window.TVE_DEBUG) {
+                console.warn(
+                    "[TVE " + phase + "] #loadMe was still .show after hide; forced dismiss + backdrop removal"
+                );
+            }
+        }, 500);
+    }
+
     /** Opt-in: merge partner <select> pipeline (blank-option diagnosis). */
     function _tveMergeDropdownDebug() {
         try {
@@ -1521,6 +1558,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     }
                 }
                 _tveDebug("split", "loadMe hidden (" + reason + ")");
+                _tveScheduleLoadMeStuckPurge("split");
                 setTimeout(function () {
                     if (
                         !$("#loadMe").hasClass("show") &&
@@ -1618,6 +1656,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     }
                 }
                 _tveDebug("merge", "loadMe hidden (" + reason + ")");
+                _tveScheduleLoadMeStuckPurge("merge");
                 setTimeout(function () {
                     if (
                         !$("#loadMe").hasClass("show") &&
@@ -1764,16 +1803,25 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             //4.- Pass to python, the new relevant documents and the new Lambdata
             //Python shoudl recalculate the new topic similarity metric and the new positions!!
-            
+            // Do not send lamData_new: the server ignores it; it was a huge JSON parse for no work.
+
             var postData = {
                 relevantDocumentsDict_new: relevantDocumentsDict,
-                lamData_new: lamData,
                 omega_value: vis_state.lambda_lambda_topic_similarity,
                 old_circle_positions: new_circle_positions,
                 index_topic_name_1: index_topic_name_1,
                 index_topic_name_2: index_topic_name_2,
                 
             };
+            if (typeof window !== "undefined" && window.TVE_DEBUG) {
+                try {
+                    var mergeBytes = new Blob([JSON.stringify(postData)]).size;
+                    _tveDebug("merge", "request payload (UTF-8 bytes, approx)", { bytes: mergeBytes });
+                } catch (eMergeBlob) { /* ignore */ }
+            }
+            var mergeAjaxT0 = typeof performance !== "undefined" && performance.now
+                ? performance.now()
+                : null;
 
 
             //4.- Create new new_position circle arrray
@@ -1788,9 +1836,18 @@ var LDAvis = function(to_select, data_or_file_name) {
                 url: '/get_new_topic_vector',
                 async: true,
                 timeout: 300000,
+                beforeSend: function () {
+                    if (window.TVE_DEBUG) {
+                        _tveDebug("merge", "ajax beforeSend (request in flight)", {
+                            wallMs: typeof Date !== "undefined" && Date.now ? Date.now() : null
+                        });
+                    }
+                },
                 data: JSON.stringify(postData),                
                 success: function(data) {
                     try {
+                        // Dismiss loading overlay as soon as the server returns; then redraw (D3 can take time).
+                        tveEndMergeLoadUi("success");
                         new_circle_positions = data;
                         //5.- get new topic name
                         var new_merged_topic_name = 'New merged topic '+name_topics_circles[topicID + (index_topic_name_1+1)].trim()+' & '+ name_topics_circles[topicID + (index_topic_name_2+1)].trim();
@@ -1811,8 +1868,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                     } catch (e) {
                         console.error("[TopicVisExplorer] merge success handler (partial UI may have updated):", e);
                         _tveDebug("merge", "success handler threw", { message: e && e.message, stack: e && e.stack });
-                    } finally {
-                        tveEndMergeLoadUi("success-finally");
+                        tveEndMergeLoadUi("error");
                     }
                 },
                 error: function(xhr, textStatus, errorThrown) {
@@ -1832,7 +1888,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                     tveEndMergeLoadUi("error");
                 },
                 complete: function (_xhr, textStatus) {
-                    _tveDebug("merge", "ajax complete", { textStatus: textStatus });
+                    var extraComplete = { textStatus: textStatus };
+                    if (window.TVE_DEBUG && mergeAjaxT0 !== null && typeof performance !== "undefined" && performance.now) {
+                        extraComplete.elapsedMs = Math.round(performance.now() - mergeAjaxT0);
+                    }
+                    _tveDebug("merge", "ajax complete", extraComplete);
                 },
                 contentType: "application/json",
                 dataType: 'json'
