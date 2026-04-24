@@ -24,20 +24,11 @@ Read this **first**. You will use a **terminal**, **Python 3.10–3.12**, and a 
 | 3 | **Run the explorer on your file** | From the repo: `uv run tve demo --texts my.jsonl --name my_run` (or the CSV form above). **Smoke tests:** `uv run tve demo --texts examples/byo_minimal.jsonl --name smoke` and/or `… --texts examples/sample_corpus.csv --csv-text-column text --name csv_smoke --model sklearn-lda`. |
 | 4 | **Two corpora, Sankey “compare” view** | The CLI **`--texts` path = one file at a time** (single-corpus UI). The **compare / multi-corpus** view uses **bundled** data, e.g. `tve demo --multicorpora --corpus tiny_multi_demo`. [Scope below](#what-the-library-is-meant-to-do-and-what-is-out-of-scope). |
 
-**`pip install topicvisexplorer`?** That pulls a build from **[PyPI](https://pypi.org/project/topicvisexplorer/)** and may be **older than the git copy** you have—or the wrong path if you only have a **zip of this repo** and have not published it. If someone **sent you this source tree**, use **row 1**; use `pip` when you **deliberately** want a **released** version from the index.
-
 ## Install
 
-**If you are viewing this repository on GitHub,** install from a **[git clone](docs/installation-and-testing.md#git-clone)** first (`uv sync` or `pip install -e .`) so you run the same revision as the tree you see. **PyPI** (below) is for [published wheels](https://pypi.org/project/topicvisexplorer/); that version may **lag `main`**, and `pip install` is not the right path for an unpublished or private copy.
+**Install from a [git clone](docs/installation-and-testing.md#git-clone)** (`uv sync` or `pip install -e .`) so your environment matches the source tree. **There is no `pip install` package on [PyPI](https://pypi.org/) yet;** public install from the index will be documented here after the first release (release checklist: [RELEASING](docs/RELEASING.md)).
 
-**Published package (end users, once the project is on PyPI):**
-
-```bash
-pip install topicvisexplorer          # core + server + demo
-pip install "topicvisexplorer[full]"  # + BERTopic / ETM / CTM / SBERT
-```
-
-**Developing from a git clone** (reproducible venv, tests, and scripts): use
+**From a git clone** (reproducible venv, tests, and scripts): use
 **`uv sync`** as in [`CONTRIBUTING.md`](CONTRIBUTING.md) (`uv.lock` + Python
 from `.python-version`), or `pip install -e ".[dev]"` in a virtualenv.
 
@@ -169,8 +160,8 @@ separate public GitHub Pages URL is **not** enabled in this repository by
 default; CI only **builds** the site to verify it.
 
 - **[If you only received this repository](#if-you-only-received-this-repository)** (above) and **[Custom corpus: CSV, HF, JSONL](docs/custom_corpus_tutorial.md)** — path for a **new person with their own data**.
-- [Install, test, BYO, CLI flags](docs/installation-and-testing.md) — from PyPI
-  or a clone, run tests, environment variables, multicorpora.
+- [Install, test, BYO, CLI flags](docs/installation-and-testing.md) — clone, run
+  tests, environment variables, multicorpora.
 - [Quickstart](docs/quickstart.md) — first interactive session.
 - [Tutorial](docs/tutorial.md) — from raw tokens to `tve.show`.
 - [Working with your own data](docs/own_data.md) — `tve demo` flag table, licenses, export.

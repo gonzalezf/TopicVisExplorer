@@ -2,28 +2,8 @@
 
 Python **3.10–3.12** (see `.python-version` in the repo for the pin used in CI; currently 3.11). If a command or flag here disagrees with your install, run `tve demo --help` and use that as source of truth.
 
-!!! info "Reading this code on GitHub (not only PyPI)?"
-    **Install from a [git clone](#git-clone)** (`uv sync` or `pip install -e .`) so the environment matches the branch you are looking at. **`pip install topicvisexplorer` below is only for a build published to [PyPI](https://pypi.org/project/topicvisexplorer/)**; that release may be **older than `main`**, and it will not exist for a private fork or a repo that has not been published yet. If `pip` fails, use the clone path.
-
-## PyPI (end users)
-
-```bash
-pip install topicvisexplorer
-```
-
-Optional heavy topic models and SBERT layout embedding:
-
-```bash
-pip install "topicvisexplorer[full]"
-```
-
-`[full]` pulls in BERTopic, ETM, CTM, sentence-transformers, spaCy, NLTK (see `pyproject.toml`). You need it for `--model bertopic|etm|ctm` and for `--embedding sbert` on `tve demo --texts ...`.
-
-Optional Hugging Face datasets (for some scripts, not the core demo):
-
-```bash
-pip install "topicvisexplorer[hf]"
-```
+!!! info "Install from a git clone"
+    **There is no `topicvisexplorer` release on [PyPI](https://pypi.org/) yet.** Use a [git clone](#git-clone) with **`uv sync`** or **`pip install -e .`** so your environment matches the source you are building from. [RELEASING](RELEASING.md) will document **post-release** `pip install topicvisexplorer` checks for maintainers.
 
 ## Git clone (contributors, coursework, repro) {: #git-clone}
 
@@ -43,6 +23,22 @@ Manual venv:
 pip install -e ".[dev,docs]"
 ```
 
+### Optional dependency extras (from a checkout)
+
+Heavy topic models, SBERT layout, spaCy, etc. (see `pyproject.toml` optional groups):
+
+```bash
+pip install -e ".[full]"
+```
+
+`[full]` is required for `--model bertopic|etm|ctm` and for `--embedding sbert` on `tve demo --texts …`. Or use `uv sync --all-extras` to pull everything the lockfile includes.
+
+Hugging Face `datasets` (for some scripts, not the core demo):
+
+```bash
+pip install -e ".[hf]"
+```
+
 The web UI bundle under `src/topicvisexplorer/web/dist/` is **gitignored**. After changing TypeScript/legacy JS under `frontend/`, rebuild before serving from a checkout:
 
 ```bash
@@ -60,11 +56,11 @@ uv run python -c "import topicvisexplorer; print(topicvisexplorer.__version__)"
 # After pip/uv install, or venv with topicvisexplorer on PATH, you can use the same with bare: tve …
 ```
 
-**`tve: command not found`** — You skipped install or the active shell is not the venv. From a clone: `uv sync` then `uv run tve --help`, or `source .venv/bin/activate` and `tve --help` after the sync. For **PyPI** users: `pip install topicvisexplorer` and ensure you are in the same environment you installed into.
+**`tve: command not found`** — You skipped install or the active shell is not the venv. From a clone: `uv sync` then `uv run tve --help`, or `source .venv/bin/activate` and `tve --help` after `pip install -e .`. Use the same environment you installed into.
 
 ## Run the app
 
-**Shell:** In this section, examples use plain **`tve`**. From a **git clone** without that binary on your `PATH`, use **`uv run tve …`**, or activate `.venv` first. If you **installed from PyPI**, `tve` in that environment is enough.
+**Shell:** In this section, examples use plain **`tve`**. From a **git clone** without that binary on your `PATH`, use **`uv run tve …`**, or activate `.venv` first after an editable install.
 
 Bundled single-corpus demo (default scenario `20ng_tiny`):
 

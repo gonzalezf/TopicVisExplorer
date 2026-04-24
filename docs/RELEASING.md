@@ -19,8 +19,9 @@ Docs (must pass with no broken internal links):
 uv run --extra docs mkdocs build --strict
 ```
 
-## PyPI / end-user smoke (before or after a tag)
+## PyPI / end-user smoke (after the first successful upload)
 
+Use this block only **after** `topicvisexplorer` is installable from the index.
 In a **fresh** virtual environment (isolated from your dev clone):
 
 ```bash
@@ -61,5 +62,5 @@ User-facing statement of what is supported: [README: What the library is meant t
 
 ## Optional extras
 
-- `pip install "topicvisexplorer[full]"` and one BYO run with e.g. `--model sklearn-nmf` if release notes highlight optional adapters.
+- After release: `pip install "topicvisexplorer[full]"` and one BYO run with e.g. `--model sklearn-nmf` if release notes highlight optional adapters (from a clone before release: `pip install -e ".[full]"`).
 - [installation-and-testing.md](installation-and-testing.md#how-to-test) — full manual scenario table, Playwright, and NLTK/spaCy download steps for maintainers.

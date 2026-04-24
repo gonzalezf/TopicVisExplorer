@@ -12,7 +12,7 @@ If you are starting fresh, skip this page and read the
 
 | Concern | Paper v0.1 | v1.0 |
 |---------|-----------|------|
-| Packaging | Clone + `python app.py` | `pip install topicvisexplorer` |
+| Packaging | Clone + `python app.py` | Git clone + `pip install -e .` (PyPI TBD) |
 | Server | Flask | FastAPI + uvicorn |
 | Frontend | Ad-hoc D3 v3 scripts | Vite + TypeScript + D3 v5 |
 | Topic models | gensim LDA hard-coded | adapter protocol; gensim/sklearn/BERTopic/ETM/CTM bundled |

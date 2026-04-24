@@ -24,7 +24,7 @@ Authoritative help: `tve demo --help` (from the same version you installed).
 | `--num-topics` | With `--texts` | `5` |
 | `--passes` | With `--texts` (LDA-style fits) | `10` |
 | `--seed` | With `--texts` | `42` |
-| `--model` | With `--texts` | `gensim-lda` (also: `sklearn-lda`, `sklearn-nmf`, `bertopic`, `etm`, `ctm` — last three need `pip install "topicvisexplorer[full]"`) |
+| `--model` | With `--texts` | `gensim-lda` (also: `sklearn-lda`, `sklearn-nmf`, `bertopic`, `etm`, `ctm` — last three need `pip install -e ".[full]"` or `uv sync --all-extras` from a clone) |
 | `--embedding` | With `--texts` | `word2vec` or `sbert` (`sbert` needs `[full]`) |
 | `--sbert-model` | With `--texts` and `--embedding sbert` | `all-MiniLM-L6-v2` (Sentence-Transformers id) |
 | `--csv-text-column` | With `--texts` and a **`.csv`** or **`.tsv`** table file (header row) | column name for the document text; without it, `.csv`/`.tsv` are read as **raw lines** (usually wrong for exports). Ignored for `.jsonl` / `.json` / `.txt` |
@@ -79,7 +79,7 @@ public tree).
 
 ```bash
 tve demo --texts docs.jsonl --name my_corpus --num-topics 7 --passes 15
-# Optional: scikit-learn NMF, BERTopic, etc. (some need pip install "topicvisexplorer[full]"):
+# Optional: scikit-learn NMF, BERTopic, etc. (some need pip install -e ".[full]" from a clone):
 # tve demo --texts docs.txt --model sklearn-nmf --embedding word2vec
 # tve demo --texts docs.txt --model bertopic --embedding sbert
 ```
@@ -107,7 +107,7 @@ includes `model`, `embedding`, and `sbert_model` when relevant).
 ## Optional: AG News (Hugging Face)
 
 `scripts/user_study/launch_20ng_study.py` supports `--source hf_ag_news`
-with `pip install "topicvisexplorer[hf]"` (or `pip install datasets`). A
+with `pip install -e ".[hf]"` from a clone (or `pip install datasets`). A
 dedicated one-liner loader is a [v1.1 roadmap](roadmap.md) item.
 
 ## Export your curated topics (JSON)

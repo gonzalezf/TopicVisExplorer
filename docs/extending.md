@@ -113,10 +113,10 @@ class EmbeddingProtocol(Protocol):
 Anything quacking like a gensim `KeyedVectors` (the Word2Vec default,
 SBERT via `topicvisexplorer.embeddings.SBERT`, your own
 in-memory `dict[str, np.ndarray]`) plugs in directly. SBERT is in the
-`[full]` extra so it doesn't bloat the default install; install via:
+`[full]` extra so it doesn't bloat the default install; from a checkout:
 
 ```bash
-pip install "topicvisexplorer[full]"
+pip install -e ".[full]"
 ```
 
 then:

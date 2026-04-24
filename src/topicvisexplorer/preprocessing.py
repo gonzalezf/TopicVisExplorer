@@ -73,7 +73,10 @@ def _get_stopwords() -> frozenset[str]:
     try:
         from nltk.corpus import stopwords
     except ImportError as exc:
-        raise ImportError("nltk is required. Install via: pip install topicvisexplorer") from exc
+        raise ImportError(
+            "nltk is required. From a git clone, run `uv sync` or `pip install -e .` "
+            "(see docs/installation-and-testing.md)."
+        ) from exc
     try:
         return frozenset(stopwords.words("english"))
     except LookupError:

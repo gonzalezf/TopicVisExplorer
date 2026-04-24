@@ -22,13 +22,7 @@ uv run tve demo
 
 Use **`uv run tve …`** from the clone, or activate `.venv` / `pip install -e .` and run `tve` directly. If you see **`tve: command not found`**, see [Install & test: troubleshooting](installation-and-testing.md#check-that-it-worked). For details see [`CONTRIBUTING.md`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/CONTRIBUTING.md). Without `uv`, use a virtualenv: `pip install -e ".[dev,docs]"`.
 
-**If you use a [published](https://pypi.org/project/topicvisexplorer/) release from PyPI** (version may be older than the git `main` you are reading):
-
-```bash
-pip install topicvisexplorer          # core + server + demo
-# or, for BERTopic / ETM / CTM / SBERT:
-pip install "topicvisexplorer[full]"
-```
+**There is no published PyPI install yet;** work from a git clone. After a first release, the README and [install doc](installation-and-testing.md) will add `pip install topicvisexplorer`.
 
 ## 2. Launch the demo
 
@@ -50,7 +44,7 @@ tve demo --texts mydocs.jsonl --name my_corpus --num-topics 8 --passes 15
 # Table CSV/TSV (header row + text column) — set the column name:
 tve demo --texts mytable.csv --csv-text-column text --name my_corpus
 
-# Optional: pick a different adapter or SBERT (needs pip install "topicvisexplorer[full]" for bertopic/etm/ctm/sbert):
+# Optional: different adapter or SBERT (from clone: `pip install -e ".[full]"` or `uv sync --all-extras` for bertopic/etm/ctm/sbert):
 tve demo --texts mydocs.txt --model sklearn-nmf --embedding word2vec
 ```
 

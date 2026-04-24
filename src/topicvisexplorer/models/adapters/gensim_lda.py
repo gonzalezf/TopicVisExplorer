@@ -46,7 +46,8 @@ class GensimLDAAdapter:
             import gensim
         except ImportError as exc:
             raise ImportError(
-                "gensim is required for GensimLDAAdapter. Install via: pip install topicvisexplorer"
+                "gensim is required for GensimLDAAdapter. From a git clone, run "
+                "`uv sync` or `pip install -e .` (see docs/installation-and-testing.md)."
             ) from exc
 
         if type(model).__name__ in {"LdaMallet", "MalletWrapper"}:

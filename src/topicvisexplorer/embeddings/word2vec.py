@@ -100,7 +100,8 @@ class Word2Vec:
             from gensim.models import Word2Vec as GensimWord2Vec
         except ImportError as exc:
             raise ImportError(
-                "gensim is required for Word2Vec.fit. Install via: pip install topicvisexplorer"
+                "gensim is required for Word2Vec.fit. From a git clone, run "
+                "`uv sync` or `pip install -e .` (see docs/installation-and-testing.md)."
             ) from exc
 
         n_docs = len(tokenized_texts)

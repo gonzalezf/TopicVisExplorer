@@ -9,7 +9,7 @@ This guide is for **tabular CSV** or **Hugging Face `datasets`** users who want 
 
 **This library supports:**
 
-- **Install** with **`pip install topicvisexplorer`** (or a git clone; see the prerequisites link).
+- **Install** from a **git clone** ([prerequisites](installation-and-testing.md#git-clone); there is no PyPI package yet).
 - **Your own documents** on disk: **JSONL** (one `{"text": "..."}` per line), a **JSON** list of strings, or a **table CSV/TSV** with **`--csv-text-column`** (no Python conversion needed). You can also **convert** from CSV or Hugging Face to JSONL in a short script.
 - The **default BYO** topic model: **Gensim LDA** (same as passing `--model gensim-lda`, which is the **CLI default** for `tve demo --texts`). This is the closest “paper-style” default stack bundled with the app (plus shared preprocessing; see [Working with your own data](own_data.md)).
 - A **fully interactive** single-corpus view: **split, merge, add/remove words**, coherence, export — **as long** as you use `tve demo --texts` to open **`/singlecorpus`**. Multi-corpus **compare / Sankey** is **not** on this path; see *Multi-corpus* below.
@@ -80,7 +80,7 @@ uv run tve demo --texts examples/sample_corpus.csv --csv-text-column text --name
 There is **no** `tve demo --hf <dataset>` flag. The practical path is: **`datasets.load_dataset` in a small script** → local JSONL (or JSON list) → `tve demo --texts`.
 
 ```bash
-pip install "topicvisexplorer[hf]"  # or: pip install datasets
+pip install -e ".[hf]"   # or: pip install datasets
 ```
 
 ```python
@@ -112,8 +112,8 @@ For a larger scripted workflow used in user studies, see
 uv run tve demo --texts examples/byo_minimal.jsonl --name my_run --model gensim-lda --no-browser
 ```
 
-From **PyPI**, the same file is included in the wheel as **`examples/byo_minimal.jsonl`** under your environment’s `site-packages`. You can also copy it from
-[GitHub (raw `byo_minimal.jsonl`)](https://github.com/gonzalezf/TopicVisExplorer/blob/main/examples/byo_minimal.jsonl).
+The same file is in the repo as **`examples/byo_minimal.jsonl`**. A copy is also
+[on GitHub (raw)](https://github.com/gonzalezf/TopicVisExplorer/blob/main/examples/byo_minimal.jsonl). After a future PyPI release, it will also ship in the installed wheel under `site-packages`.
 
 **Table CSV in the examples folder:**
 
