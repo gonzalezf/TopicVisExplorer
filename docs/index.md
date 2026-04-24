@@ -29,6 +29,8 @@ library backed by a FastAPI server and a Vite + TypeScript + D3 v5 frontend.
   [Custom corpus (CSV, HF) → `tve demo --texts`](custom_corpus_tutorial.md) and
   [Install, test, BYO: Git clone](installation-and-testing.md#git-clone) for setup. After install, you can self-check the BYO path with
   `uv run pytest tests/unit/test_new_user_journey.py -q` (no network).
+- **Runnable Python examples** (single-corpus, BYO CSV, two-corpus API, bundled demo):
+  [`examples/README.md`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/examples/README.md).
 - [Install, test, BYO, CLI](installation-and-testing.md) — **git clone** (no
   public PyPI package yet), verify `tve`, **How to test** (CI-parity `pytest`, linters, frontend, optional
   Playwright, and a per-scenario manual smoke table), `tve serve`, multicorpora,

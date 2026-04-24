@@ -164,6 +164,7 @@ default; CI only **builds** the site to verify it.
   tests, environment variables, multicorpora.
 - [Quickstart](docs/quickstart.md) — first interactive session.
 - [Tutorial](docs/tutorial.md) — from raw tokens to `tve.show`.
+- **Runnable examples** — [`examples/README.md`](examples/README.md) (`01_`…`04_` scripts, `--smoke` checks).
 - [Working with your own data](docs/own_data.md) — `tve demo` flag table, licenses, export.
 - [Model / adapter reference](docs/reference/models.md) — change `--model` / extras.
 - [Edit operations](docs/edit-ops.md)

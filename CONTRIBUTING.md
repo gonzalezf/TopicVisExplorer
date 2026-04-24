@@ -91,6 +91,8 @@ from coverage math — see `[tool.coverage]` in `pyproject.toml`).
 - [ ] Branched off `main`.
 - [ ] `uv run pytest` is green locally.
 - [ ] `uv run ruff check src tests` is clean.
+- [ ] If adding or changing `examples/*.py`: `uv run python examples/0X_*.py --smoke` and
+      `uv run ruff check examples/`.
 - [ ] `uv run mypy src/topicvisexplorer` is clean.
 - [ ] If touching algorithms: golden tests still match the
       `golden_baseline/` outputs to `atol=1e-9`.

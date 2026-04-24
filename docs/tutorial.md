@@ -123,6 +123,8 @@ notebook without touching the UI.
 
 ## Next
 
+- **Runnable copies** of this walkthrough and other flows: [`examples/`](https://github.com/gonzalezf/TopicVisExplorer/tree/main/examples)
+  ([`README`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/examples/README.md)), e.g. `01_prepare_single_corpus.py`.
 - [Install, test, BYO](installation-and-testing.md) — tests, `tve serve`, BYO
   on disk, environment variables.
 - [Edit operations](edit-ops.md)

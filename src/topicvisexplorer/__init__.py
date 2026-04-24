@@ -135,11 +135,18 @@ def show(
         extras[scenario_name] = _lazy_byo
 
     app = build_app(ServerConfig(register_demo=True, extra_scenarios=extras))
-    browser_path = (
-        f"/singlecorpus?scenario={scenario_name}&hitl=true"
-        if extras
-        else "/singlecorpus"
-    )
+    if extras:
+        is_multi = (
+            prepared is not None
+            and isinstance(prepared, list)
+            and len(prepared) == 2
+        )
+        if is_multi:
+            browser_path = f"/multicorpora?scenario={scenario_name}&hitl=true"
+        else:
+            browser_path = f"/singlecorpus?scenario={scenario_name}&hitl=true"
+    else:
+        browser_path = "/singlecorpus"
     serve(
         app,
         host=host,

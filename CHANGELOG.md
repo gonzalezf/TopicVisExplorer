@@ -13,6 +13,8 @@ at least one minor release ahead when practical.
 
 ## [Unreleased]
 
+- **Examples & API:** four runnable **`examples/*.py`** scripts (see [`examples/README.md`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/examples/README.md)) covering single-corpus `prepare`, BYO CSV, two-corpus Sankey from Python, and `tve.demo` bundled. **`tve.show([PreparedData, …], …)`** now opens **`/multicorpora?scenario=…`** when two prepared corpora are passed (previously used `/singlecorpus`, which 400s for multi scenarios). Test: `tests/unit/test_show_browser_path.py`.
+
 - **Feature:** `tve demo --texts` accepts **`--csv-text-column <name>`** for **`.csv` / `.tsv`** table files (stdlib `csv`; no new dependency). `load_texts` / `build_scenario_from_textfile` / `tve.show(..., byo_csv_text_column=…)` forward the flag. Shipped examples: [`examples/sample_corpus.csv`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/examples/sample_corpus.csv), [`examples/sample_corpus.json`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/examples/sample_corpus.json). Tests: [`tests/unit/test_new_user_journey.py`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/tests/unit/test_new_user_journey.py) (CSV + JSONL + JSON list, sklearn, no network).
 
 - **README / install docs:** There is **no** `topicvisexplorer` release on **PyPI** yet, so public install is **git clone** + `uv sync` / `pip install -e .` only. **`pip install topicvisexplorer`** (and the RELEASING smoke block) is documented for **maintainers** to run after a first release. The **“If you only received this repository”** table, **index** “Where to go next,” and the [custom corpus](https://github.com/gonzalezf/TopicVisExplorer/blob/main/docs/custom_corpus_tutorial.md) page match that story.
