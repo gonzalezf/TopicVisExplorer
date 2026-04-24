@@ -25,8 +25,9 @@ library backed by a FastAPI server and a Vite + TypeScript + D3 v5 frontend.
 ## Where to go next
 
 - [Install, test, BYO, CLI](installation-and-testing.md) — PyPI or git clone,
-  verify `tve`, run unit/API tests, `tve serve`, multicorpora, environment
-  variables. Use this when onboarding someone to the repository.
+  verify `tve`, **How to test** (CI-parity `pytest`, linters, frontend, optional
+  Playwright, and a per-scenario manual smoke table), `tve serve`, multicorpora,
+  environment variables. Use this when onboarding someone to the repository.
 - [Quickstart](quickstart.md) — install the library, run `tve demo` (default
   **`20ng_tiny`**, a small 20 Newsgroups slice with real terms), and click
   through a topic. Use `?scenario=tiny_demo` for the synthetic test fixture.

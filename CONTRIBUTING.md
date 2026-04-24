@@ -80,6 +80,9 @@ uv run mypy src/topicvisexplorer
 | visual   | `frontend/tests/`| required       | Playwright screenshot diff               |
 | bench    | `tests/bench/`   | nightly + main | pytest-benchmark                         |
 
+End-to-end **how to test** for contributors (CI-parity `pytest` / ruff / frontend commands, and optional **manual** `tve demo` per scenario) lives in
+[`docs/installation-and-testing.md` — How to test](https://github.com/gonzalezf/TopicVisExplorer/blob/main/docs/installation-and-testing.md#how-to-test).
+
 Coverage gate: 80% on `src/topicvisexplorer/` (visual / bench excluded
 from coverage math — see `[tool.coverage]` in `pyproject.toml`).
 

@@ -438,6 +438,38 @@ var LDAvis = function(to_select, data_or_file_name) {
         }
     }
 
+    /** Opt-in: merge partner <select> pipeline (blank-option diagnosis). */
+    function _tveMergeDropdownDebug() {
+        try {
+            var w = typeof window !== "undefined" ? window : null;
+            if (w && (w.TVE_DEBUG_MERGE_DROPDOWN === true || w.TVE_DEBUG === true)) {
+                return true;
+            }
+            if (typeof localStorage !== "undefined" && localStorage.getItem("TVE_DEBUG_MERGE_DROPDOWN") === "1") {
+                return true;
+            }
+        } catch (e) {
+            /* ignore */
+        }
+        return false;
+    }
+
+    /** For merge-dropdown logs: short preview of odd / invisible characters. */
+    function _tveLabelDebugPreview(s) {
+        if (s == null) {
+            return "(null)";
+        }
+        var t = String(s);
+        if (t.length === 0) {
+            return '(empty string, len=0)';
+        }
+        var codes = [];
+        for (var c = 0; c < Math.min(t.length, 40); c++) {
+            codes.push(t.charCodeAt(c));
+        }
+        return JSON.stringify(t) + " len=" + t.length + " firstCharCodes=" + codes.join(",");
+    }
+
     function _tveShowServerError(xhr, op) {
         var msg = op + " failed.";
         try {
@@ -679,16 +711,12 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         var new_subtopics_id = []
         var freq_splitted_total = 0;
-        d3.select("#name_topics")
-                    .data(mdsData)
-                    .enter()
-                    .each(
-                    function(d) {
+        mdsData.forEach(function (d) {
                         var dat2 = lamData.filter(function(e) {
                             return e.Category == "Topic"+d.topics;
                         });
                         
-    
+
                         // define relevance:
                         for (var i = 0; i < dat2.length; i++) {
                             dat2[i].relevance = lambda.current * dat2[i].logprob +
@@ -702,7 +730,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         // sort by relevance:
                         dat2.sort(fancysort("relevance"));
                         
-    
+
                         // truncate to the top R tokens:
                         var top_terms = dat2.slice(0, number_top_keywords_name);
                         
@@ -777,12 +805,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         var dat3 = lamData.slice(0, R);
 
-        //assign name to array
-        d3.select("#name_topics")
-                    .data(mdsData)
-                    .enter()
-                    .each(
-                    function(d) {
+        //assign name to array (forEach: single #name_topics div — D3 .enter() would skip mdsData[0])
+        mdsData.forEach(function (d) {
                         var dat2 = lamData.filter(function(e) {
                             return e.Category == "Topic"+d.topics;
                         });
@@ -809,10 +833,13 @@ var LDAvis = function(to_select, data_or_file_name) {
                         
                             name_string += top_terms[i].Term+" "
                         }
-                        
-                        name_topics_circles[topicID + d.topics] = name_string 
-    
-                        return (topicID + d.topics);
+                        if (_tveMergeDropdownDebug() && !tveSanitizeMergeOptionLabel(name_string)) {
+                            console.warn(
+                                "[TVE merge-dropdown] visualize init: empty topic label (no terms / only invisible chars?)",
+                                { topics: d.topics, key: topicID + d.topics, dat2Len: dat2.length }
+                            );
+                        }
+                        name_topics_circles[topicID + d.topics] = name_string;
                     });
 
     
@@ -1306,48 +1333,97 @@ var LDAvis = function(to_select, data_or_file_name) {
     
 
         
-        /**
-         * Neighbors of the selected topic in MDS order (closest first). Used by
-         * the merge modal to list *partner* topics. Returns parallel topicIds (1-based,
-         * matching d.topics / mdsData row order) and display names. The partner list
-         * is still filtered elsewhere (i===0: same topic, merged-delete, topics_splitted).
-         */
-        function get_topics_sorted_by_distance(mdsData, lambda_lambda_topic_similarity_current, vis_state_topic){
-            //revisar el topic mergin 1 que recibe!!!
-            
-            var new_positions = new_circle_positions[lambda_lambda_topic_similarity_current]
-            //save the index, it is important to mantaint it after sorting
-            var new_positions_dict = {};
-                for(var i=0; i<new_positions.length; i++){
-                    new_positions_dict[i+1] = new_positions[i]
-                }
-    
-              // Create items array
-            var items = Object.keys(new_positions_dict).map(function(key) {
-                return [key, new_positions_dict[key]];
-            });
-            
-            // Sort the array based on the second element. Using distance
-            const distance = (coor1, coor2) => {
-                const x = coor2[0] - coor1[0];
-                const y = coor2[1] - coor1[1];
-                return Math.sqrt((x*x) + (y*y));
-            };
-            
-            items.sort(function(first, second) {
-                return distance(new_positions_dict[vis_state_topic], first[1]) - distance(new_positions_dict[vis_state_topic], second[1]);            
-            });
-            //this is the final result
-
-            var topicIds = []
-            var names = []
-            for(var i = 0; i<items.length; i++){
-                var tid = parseInt(String(items[i][0]), 10)
-                topicIds.push(tid)
-                names.push(name_topics_circles[topicID + items[i][0]])
+        /** Visible text for merge select options: strip ZWSP etc., NBSP, trim. */
+        function tveSanitizeMergeOptionLabel(raw) {
+            if (raw == null) {
+                return "";
             }
+            return String(raw)
+                .replace(/[\u200B-\u200D\uFEFF]/g, "")
+                .replace(/\u00A0/g, " ")
+                .trim();
+        }
 
-            return { topicIds: topicIds, names: names }
+        /**
+         * Neighbors of the selected topic in layout order (closest first). Uses
+         * mdsData row order zipped with new_positions[j] (same as createMdsPlot).
+         * Returns parallel topicIds (1-based d.topics) and display names. Index 0 is
+         * always the selected topic (distance 0). Partners are filtered in the
+         * merge handler (self, merged-delete, split topics, empty labels).
+         */
+        function get_topics_sorted_by_distance(mdsData, lambda_lambda_topic_similarity_current, vis_state_topic) {
+            var new_positions =
+                new_circle_positions && new_circle_positions[lambda_lambda_topic_similarity_current];
+            if (!new_positions || !Array.isArray(new_positions) || !mdsData || mdsData.length < 1) {
+                return { topicIds: [], names: [] };
+            }
+            var n = Math.min(mdsData.length, new_positions.length);
+            if (n < 1) {
+                return { topicIds: [], names: [] };
+            }
+            var baseIdx = -1;
+            for (var b = 0; b < n; b++) {
+                if (Number(mdsData[b].topics) === Number(vis_state_topic)) {
+                    baseIdx = b;
+                    break;
+                }
+            }
+            if (baseIdx < 0) {
+                return { topicIds: [], names: [] };
+            }
+            var p0 = new_positions[baseIdx];
+            if (!p0 || p0.length < 2) {
+                return { topicIds: [], names: [] };
+            }
+            function distToBase(pos) {
+                if (!pos || pos.length < 2) {
+                    return Infinity;
+                }
+                var dx = Number(pos[0]) - Number(p0[0]);
+                var dy = Number(pos[1]) - Number(p0[1]);
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+            var rows = [];
+            for (var j = 0; j < n; j++) {
+                var tid = Number(mdsData[j].topics);
+                var kRaw = topicID + mdsData[j].topics;
+                var label = name_topics_circles[kRaw];
+                if (label === undefined) {
+                    label = name_topics_circles[topicID + String(tid)];
+                }
+                rows.push({
+                    topicId: tid,
+                    name: label,
+                    d: distToBase(new_positions[j]),
+                });
+            }
+            rows.sort(function (a, b) {
+                return a.d - b.d;
+            });
+            var topicIds = [];
+            var names = [];
+            for (var r = 0; r < rows.length; r++) {
+                topicIds.push(rows[r].topicId);
+                names.push(rows[r].name);
+            }
+            if (_tveMergeDropdownDebug()) {
+                console.info("[TVE merge-dropdown] get_topics_sorted_by_distance", {
+                    omegaKey: lambda_lambda_topic_similarity_current,
+                    vis_state_topic: vis_state_topic,
+                    nRows: n,
+                    baseIdx: baseIdx,
+                    order: rows.map(function (row) {
+                        return {
+                            topicId: row.topicId,
+                            dist: row.d,
+                            rawName: row.name,
+                            sanitized: tveSanitizeMergeOptionLabel(row.name),
+                            namePreview: _tveLabelDebugPreview(row.name),
+                        };
+                    }),
+                });
+            }
+            return { topicIds: topicIds, names: names };
         }
 
         
@@ -2959,23 +3035,95 @@ var LDAvis = function(to_select, data_or_file_name) {
                         // Merge partner list: distance order; not every K topics appear (i===0: self;
                         // name_merged_topic_to_delete: prior merge target; topics_splitted: split children).
                         $('#selectTopicMerge').empty();
-                        var sortedTopics = get_topics_sorted_by_distance(mdsData, get_new_omega(lambda_lambda_topic_similarity.current), merging_topic_1);
+                        var _omegaKey = get_new_omega(lambda_lambda_topic_similarity.current);
+                        var sortedTopics = get_topics_sorted_by_distance(mdsData, _omegaKey, merging_topic_1);
+                        if (_tveMergeDropdownDebug()) {
+                            console.info("[TVE merge-dropdown] building #selectTopicMerge", {
+                                merging_topic_1: merging_topic_1,
+                                omegaKey: _omegaKey,
+                                topicID: topicID,
+                                sortedPairs: sortedTopics.topicIds.map(function (id, idx) {
+                                    return { i: idx, topicId: id, rawName: sortedTopics.names[idx] };
+                                }),
+                            });
+                        }
                         for (var i = 0; i < sortedTopics.names.length; i++) {
                             if (i === 0) {
+                                if (_tveMergeDropdownDebug()) {
+                                    console.info("[TVE merge-dropdown] skip i=0 (self / closest slot)", {
+                                        i: i,
+                                        topicId: sortedTopics.topicIds[i],
+                                        rawName: sortedTopics.names[i],
+                                    });
+                                }
                                 continue;
                             }
-                            if (name_merged_topic_to_delete.includes(sortedTopics.names[i])) {
+                            var partnerName = sortedTopics.names[i];
+                            var label = tveSanitizeMergeOptionLabel(partnerName);
+                            if (!label) {
+                                if (_tveMergeDropdownDebug()) {
+                                    console.warn("[TVE merge-dropdown] skip empty label after sanitize", {
+                                        i: i,
+                                        topicId: sortedTopics.topicIds[i],
+                                        rawPreview: _tveLabelDebugPreview(partnerName),
+                                    });
+                                }
+                                continue;
+                            }
+                            if (name_merged_topic_to_delete.indexOf(label) !== -1) {
+                                if (_tveMergeDropdownDebug()) {
+                                    console.info("[TVE merge-dropdown] skip merged-delete name", {
+                                        i: i,
+                                        topicId: sortedTopics.topicIds[i],
+                                        label: label,
+                                    });
+                                }
                                 continue;
                             }
                             var topicIdNum = sortedTopics.topicIds[i];
-                            if (topics_splitted.includes(topicID + topicIdNum)) {
+                            if (Number(topicIdNum) === Number(merging_topic_1)) {
+                                if (_tveMergeDropdownDebug()) {
+                                    console.info("[TVE merge-dropdown] skip same topic id as base", {
+                                        i: i,
+                                        topicIdNum: topicIdNum,
+                                    });
+                                }
                                 continue;
+                            }
+                            if (topics_splitted.includes(topicID + topicIdNum)) {
+                                if (_tveMergeDropdownDebug()) {
+                                    console.info("[TVE merge-dropdown] skip topics_splitted", {
+                                        i: i,
+                                        topicIdNum: topicIdNum,
+                                        key: topicID + topicIdNum,
+                                    });
+                                }
+                                continue;
+                            }
+                            if (_tveMergeDropdownDebug()) {
+                                console.info("[TVE merge-dropdown] append option", {
+                                    i: i,
+                                    value: topicIdNum,
+                                    label: label,
+                                });
                             }
                             $('#selectTopicMerge').append(
                                 $('<option></option>')
                                     .val(String(topicIdNum))
-                                    .html(sortedTopics.names[i])
+                                    .text(label)
                             );
+                        }
+                        if (_tveMergeDropdownDebug()) {
+                            $("#selectTopicMerge option").each(function (oi, el) {
+                                var $el = $(el);
+                                var txt = $el.text();
+                                console.info("[TVE merge-dropdown] DOM option after build", {
+                                    index: oi,
+                                    value: $el.val(),
+                                    textLen: txt.length,
+                                    textPreview: _tveLabelDebugPreview(txt),
+                                });
+                            });
                         }
                         $('#MergeModal_new_design').modal();
                     }

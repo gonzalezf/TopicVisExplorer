@@ -29,10 +29,13 @@ from `.python-version`), or `pip install -e ".[dev]"` in a virtualenv.
 ```bash
 uv sync
 uv run tve demo
-uv run pytest tests/unit/ -q
+# Match CI: unit + golden + API + integration (see full matrix & manual scenarios in docs)
+uv run pytest tests/unit/ tests/golden/ tests/api/ tests/integration/ -q
 # If you change UI files under frontend/:
 cd frontend && npm ci && npm run build && cd ..
 ```
+
+**Testing in depth** (lint, `full` extras, NLTK/spaCy, frontend/Playwright, and a **one-row-per-scenario** manual table): [docs/installation-and-testing.md#how-to-test](docs/installation-and-testing.md#how-to-test).
 
 The built bundle at `src/topicvisexplorer/web/dist/` is not committed; run the
 `npm` step after UI edits or you may get a stale or missing `tve.js` in the browser.

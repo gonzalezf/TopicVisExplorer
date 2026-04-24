@@ -27,6 +27,11 @@ pip install "topicvisexplorer[full]"
     uv run tve demo
     ```
 
+    The bare command `tve` is only on your `PATH` after an install. From a
+    clone, either use **`uv run tve …`** (recommended) or activate `.venv` /
+    `pip install -e .` and then `tve …` works. If you see **`tve: command not
+    found`**, see [Install & test: troubleshooting](installation-and-testing.md#check-that-it-worked).
+
     Without `uv`, use a virtualenv: `pip install -e ".[dev,docs]"` then the
     same `tve` / `pytest` / `ruff` commands.
 
