@@ -45,6 +45,9 @@ tve demo --corpus tiny_demo       # synthetic fixed-vocab corpus (tests, screens
 
 ### Bring your own corpus
 
+Step-by-step from **CSV** or **Hugging Face** to JSONL and the right flags:
+[Custom corpus (CSV, HF) → JSONL](custom_corpus_tutorial.md) (prerequisites: [Git clone / install only](installation-and-testing.md#git-clone)).
+
 ```bash
 # JSONL with a "text" field, plain .txt (one doc per line), or JSON array of strings:
 tve demo --texts mydocs.jsonl --name my_corpus --num-topics 8 --passes 15

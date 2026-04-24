@@ -84,6 +84,7 @@ nav:
   - Tutorial: tutorial.md
   - Guides:
       - Install, test, BYO: installation-and-testing.md
+      - Custom corpus (CSV, HF) → JSONL: custom_corpus_tutorial.md
       - Edit operations: edit-ops.md
       - Coherence metrics: coherence.md
       - Extending: extending.md
@@ -97,4 +98,5 @@ nav:
       - coherence: reference/coherence.md
       - similarity: reference/similarity.md
   - Changelog: changelog.md
+  - Releasing: RELEASING.md
   - Roadmap: roadmap.md

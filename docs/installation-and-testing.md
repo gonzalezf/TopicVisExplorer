@@ -22,7 +22,7 @@ Optional Hugging Face datasets (for some scripts, not the core demo):
 pip install "topicvisexplorer[hf]"
 ```
 
-## Git clone (contributors, coursework, repro)
+## Git clone (contributors, coursework, repro) {: #git-clone}
 
 Reproducible env (recommended):
 

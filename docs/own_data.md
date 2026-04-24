@@ -1,5 +1,7 @@
 # Working with your own data
 
+**See also:** [Custom corpus: CSV or Hugging Face → JSONL → `tve demo`](custom_corpus_tutorial.md) — a single narrative for tabular and HF conversion plus multi-corpus limits.
+
 TopicVisExplorer is a **general-purpose** interactive tool: explore
 topics, split and merge them, and export a snapshot. You do not need a
 separate "user study" server or a POST endpoint — the in-browser

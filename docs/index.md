@@ -31,7 +31,12 @@ library backed by a FastAPI server and a Vite + TypeScript + D3 v5 frontend.
 - [Quickstart](quickstart.md) — install the library, run `tve demo` (default
   **`20ng_tiny`**, a small 20 Newsgroups slice with real terms), and click
   through a topic. Use `?scenario=tiny_demo` for the synthetic test fixture.
-- [Tutorial](tutorial.md) — bring your own corpus end-to-end.
+- [Custom corpus (CSV, HF) → `tve demo --texts`](custom_corpus_tutorial.md) —
+  convert tabular or Hugging Face data to JSONL, then the default BYO
+  (Gensim LDA) single-corpus UI; prerequisites link to
+  [Install, test, BYO: Git clone](installation-and-testing.md#git-clone) only.
+- [Tutorial (API `prepare()`)](tutorial.md) — tokenize, fit, and
+  `tve.prepare()` from Python (end-to-end without `tve demo --texts`).
 - [Edit operations](edit-ops.md) — split / merge / add-remove word / exclude
   document cookbook.
 - [Coherence metrics](coherence.md) — what NPMI / C_v / segregation / coverage

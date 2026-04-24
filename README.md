@@ -49,6 +49,14 @@ The built bundle at `src/topicvisexplorer/web/dist/` is not committed; run the
 | HTTP bind | `127.0.0.1:8000` (override with `--host` / `--port`) |
 | On-disk cache | `~/.cache/topicvisexplorer/` (fit + layout embedding; path includes content hash) |
 
+## What the library is meant to do (and what is out of scope)
+
+- **In scope for “my data” (single-corpus):** your texts as **JSONL / JSON / line-oriented text** after any conversion, then `tve demo --texts …` (default **Gensim LDA**; see [Custom corpus: CSV, HF, JSONL](docs/custom_corpus_tutorial.md)).
+- **In scope for the multi-corpus Sankey (compare UI):** `tve demo --multicorpora` with a **bundled** scenario (e.g. `tiny_multi_demo`) — not two arbitrary local files in one command.
+- **Not in the shipped CLI today:** `tve demo --texts` **together** with `--multicorpora`, or “two custom CSV/JSONL corpora in the Sankey” without the Python API / custom integration.
+
+Full pre-release and smoke command matrix: [docs/RELEASING.md](docs/RELEASING.md).
+
 ## Demo
 
 ```bash

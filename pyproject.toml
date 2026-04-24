@@ -81,6 +81,8 @@ tve = "topicvisexplorer.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/topicvisexplorer"]
+# BYO example for pip installs (`tve demo --texts`); see docs/custom_corpus_tutorial.md
+force-include = { "examples" = "examples" }
 artifacts = [
     "src/topicvisexplorer/web/legacy/**/*",
     # Vite output (frontend/). Built into src/topicvisexplorer/web/dist/
@@ -97,6 +99,7 @@ include = [
     "LICENSE",
     "CHANGELOG.md",
     "pyproject.toml",
+    "examples",
 ]
 
 [tool.ruff]

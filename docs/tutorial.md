@@ -1,5 +1,10 @@
 # Tutorial: from a raw corpus to an interactive topic map
 
+If you are starting from **files on disk** (CSV, Hugging Face) and want
+**`tve demo --texts`** and the Gensim-LDA default first, use the
+[Custom corpus (CSV, HF) → JSONL](custom_corpus_tutorial.md) guide — this
+page is the **API / `prepare()`** path without going through the CLI.
+
 The default `tve demo` shows **`20ng_tiny`** (a small 20 Newsgroups slice
 with real terms).  This walkthrough still uses the bundled **`tiny_demo`**
 synthetic fixture so it runs end-to-end without any downloads. The same

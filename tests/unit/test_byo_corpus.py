@@ -90,6 +90,18 @@ def test_load_texts_accepts_jsonl(tmp_path: Path) -> None:
     assert docs == ["first document one", "second document two"]
 
 
+def test_load_texts_byo_minimal_example_file() -> None:
+    """Committed ``examples/byo_minimal.jsonl`` must match the custom-corpus tutorial path."""
+    from topicvisexplorer.server.byo_corpus import load_texts
+
+    root = Path(__file__).resolve().parents[2]
+    path = root / "examples" / "byo_minimal.jsonl"
+    assert path.is_file(), f"missing {path} — keep in sync with docs/custom_corpus_tutorial.md"
+    docs = load_texts(path)
+    assert len(docs) == 40
+    assert all(isinstance(s, str) and s for s in docs)
+
+
 @pytest.mark.parametrize("model", ["sklearn-nmf", "sklearn-lda"])
 def test_build_scenario_sklearn_models(tmp_path: Path, model: str) -> None:
     """BYO sklearn paths do not require spaCy (no ``text_cleaner_batch``)."""

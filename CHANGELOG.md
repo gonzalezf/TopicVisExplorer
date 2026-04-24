@@ -13,6 +13,8 @@ at least one minor release ahead when practical.
 
 ## [Unreleased]
 
+- **Documentation:** [Custom corpus tutorial](https://github.com/gonzalezf/TopicVisExplorer/blob/main/docs/custom_corpus_tutorial.md) (CSV and Hugging Face → JSONL → `tve demo --texts`); [Releasing checklist](https://github.com/gonzalezf/TopicVisExplorer/blob/main/docs/RELEASING.md); short “what we guarantee” scope in the README. Committed [`examples/byo_minimal.jsonl`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/examples/byo_minimal.jsonl) is included in the **wheel/sdist** for `tve demo --texts` smoke tests. The **Git clone** section in the install doc has a stable `#git-clone` anchor (see [install doc](https://github.com/gonzalezf/TopicVisExplorer/blob/main/docs/installation-and-testing.md#git-clone)) for prerequisites links.
+
 - **Coherence panel UX:** the top-right control is now a labeled **Coherence**
   button (with a small Σ) instead of Σ alone; clearer `aria-label` and
   `title`. The topic column in the coherence table uses single-line ellipsis
