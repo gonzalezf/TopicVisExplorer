@@ -2,6 +2,9 @@
 
 Python **3.10–3.12** (see `.python-version` in the repo for the pin used in CI; currently 3.11). If a command or flag here disagrees with your install, run `tve demo --help` and use that as source of truth.
 
+!!! info "Reading this code on GitHub (not only PyPI)?"
+    **Install from a [git clone](#git-clone)** (`uv sync` or `pip install -e .`) so the environment matches the branch you are looking at. **`pip install topicvisexplorer` below is only for a build published to [PyPI](https://pypi.org/project/topicvisexplorer/)**; that release may be **older than `main`**, and it will not exist for a private fork or a repo that has not been published yet. If `pip` fails, use the clone path.
+
 ## PyPI (end users)
 
 ```bash

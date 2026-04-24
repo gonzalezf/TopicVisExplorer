@@ -13,7 +13,24 @@ visual identity of the tool from the accompanying Journal of Visualization
 paper while modernizing the implementation as an installable library backed by
 FastAPI + Vite + TypeScript + D3 v5.
 
+## If you only received this repository
+
+Read this **first**. You will use a **terminal**, **Python 3.10–3.12**, and a **one-time** web UI build (**Node.js** + `npm` from [nodejs.org](https://nodejs.org/)). There is **no in-app “Upload my CSV”**—you build a **JSONL** (or use the [tutorial](docs/custom_corpus_tutorial.md) to convert a table or Hugging Face), then a single `tve` command. The **first** time you fit a model, expect **a few minutes**; later runs reuse the on-disk **cache** under `~/.cache/topicvisexplorer/`.
+
+| # | You want to… | What to do |
+| - | -------------- | ---------- |
+| 1 | **Set up the code** in front of you | Open **[Install → Git clone](docs/installation-and-testing.md#git-clone)**: install **`uv`**, clone, `cd` the repo, run **`uv sync`**, then **once** `(cd frontend && npm ci && npm run build && cd ..)` (the Vite build is not committed; without it the browser can miss the modern UI). Check **`uv run tve --help`**. Stuck? Same page, *Check that it worked*. |
+| 2 | **Prepare your own texts** (CSV, HF, or already JSON/JSONL) | Not JSONL with one `{"text": "..."}` per line yet? Follow **[Custom corpus: CSV, HF → JSONL](docs/custom_corpus_tutorial.md)**. Already a supported file? See **[Working with your own data](docs/own_data.md)** for formats and all flags. |
+| 3 | **Run the explorer on your file** | From the repo: `uv run tve demo --texts my.jsonl --name my_run` (put your real path; browser should open on success). **Smoke test the pipeline:** `uv run tve demo --texts examples/byo_minimal.jsonl --name smoke` (tiny file in this repo / wheel). |
+| 4 | **Two corpora, Sankey “compare” view** | The CLI **`--texts` path = one file at a time** (single-corpus UI). The **compare / multi-corpus** view uses **bundled** data, e.g. `tve demo --multicorpora --corpus tiny_multi_demo`. [Scope below](#what-the-library-is-meant-to-do-and-what-is-out-of-scope). |
+
+**`pip install topicvisexplorer`?** That pulls a build from **[PyPI](https://pypi.org/project/topicvisexplorer/)** and may be **older than the git copy** you have—or the wrong path if you only have a **zip of this repo** and have not published it. If someone **sent you this source tree**, use **row 1**; use `pip` when you **deliberately** want a **released** version from the index.
+
 ## Install
+
+**If you are viewing this repository on GitHub,** install from a **[git clone](docs/installation-and-testing.md#git-clone)** first (`uv sync` or `pip install -e .`) so you run the same revision as the tree you see. **PyPI** (below) is for [published wheels](https://pypi.org/project/topicvisexplorer/); that version may **lag `main`**, and `pip install` is not the right path for an unpublished or private copy.
+
+**Published package (end users, once the project is on PyPI):**
 
 ```bash
 pip install topicvisexplorer          # core + server + demo
@@ -151,9 +168,9 @@ tve.show([prepared_a, prepared_b])    # multi-corpus Sankey
 separate public GitHub Pages URL is **not** enabled in this repository by
 default; CI only **builds** the site to verify it.
 
+- **[If you only received this repository](#if-you-only-received-this-repository)** (above) and **[Custom corpus: CSV, HF, JSONL](docs/custom_corpus_tutorial.md)** — path for a **new person with their own data**.
 - [Install, test, BYO, CLI flags](docs/installation-and-testing.md) — from PyPI
-  or a clone, run tests, environment variables, multicorpora. **Start here to
-  share the repo with others.**
+  or a clone, run tests, environment variables, multicorpora.
 - [Quickstart](docs/quickstart.md) — first interactive session.
 - [Tutorial](docs/tutorial.md) — from raw tokens to `tve.show`.
 - [Working with your own data](docs/own_data.md) — `tve demo` flag table, licenses, export.

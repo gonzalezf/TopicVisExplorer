@@ -13,6 +13,10 @@ at least one minor release ahead when practical.
 
 ## [Unreleased]
 
+- **README:** **“If you only received this repository”** (top-level table: setup, your data, run command, multi-corpus limits) plus a clearer **PyPI vs git-tree** line for people who were **sent the source** instead of installing from the index. **Documentation** list now points to that section and the [custom corpus](https://github.com/gonzalezf/TopicVisExplorer/blob/main/docs/custom_corpus_tutorial.md) page first. **index.md** “Where to go next” links the same entry path.
+
+- **Documentation:** Install docs and README now tell people **viewing the GitHub tree** to prefer a **git clone** + `uv sync` / `pip install -e .`; `pip install topicvisexplorer` is described as a **PyPI published** build that may trail `main` or be missing if not published for their copy.
+
 - **Documentation:** [Custom corpus tutorial](https://github.com/gonzalezf/TopicVisExplorer/blob/main/docs/custom_corpus_tutorial.md) (CSV and Hugging Face → JSONL → `tve demo --texts`); [Releasing checklist](https://github.com/gonzalezf/TopicVisExplorer/blob/main/docs/RELEASING.md); short “what we guarantee” scope in the README. Committed [`examples/byo_minimal.jsonl`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/examples/byo_minimal.jsonl) is included in the **wheel/sdist** for `tve demo --texts` smoke tests. The **Git clone** section in the install doc has a stable `#git-clone` anchor (see [install doc](https://github.com/gonzalezf/TopicVisExplorer/blob/main/docs/installation-and-testing.md#git-clone)) for prerequisites links.
 
 - **Coherence panel UX:** the top-right control is now a labeled **Coherence**
