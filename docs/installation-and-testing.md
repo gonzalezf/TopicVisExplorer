@@ -189,6 +189,7 @@ Run these when you only need to “see the app work” (after UI changes, rebuil
 
 ## Where to go next
 
+- [Custom corpus: CSV, HF, JSON, JSONL](custom_corpus_tutorial.md) — **tabular CSV, Hugging Face, or your own file** to `tve demo --texts`.
 - [Quickstart](quickstart.md) — first interactive session.
 - [Working with your own data](own_data.md) — BYO files, full `tve demo` flag table, licenses.
 - [Model reference](reference/models.md) — adapter ids and `pip` extras.

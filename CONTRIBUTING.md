@@ -97,6 +97,7 @@ from coverage math — see `[tool.coverage]` in `pyproject.toml`).
 - [ ] If touching the UI: visual regression baselines updated via the
       Playwright snapshot workflow in a separate dedicated PR (NOT the
       same PR that changes the code).
+- [ ] If touching `docs/` or `mkdocs.yml`: `uv run --extra docs mkdocs build --strict` is green.
 - [ ] CHANGELOG entry under `## [Unreleased]`.
 
 ## Recapturing golden baselines

@@ -121,3 +121,57 @@ def test_build_scenario_sklearn_models(tmp_path: Path, model: str) -> None:
     )
     assert sc.model_data is not None
     assert sc.model_data.topic_term_dists.shape[0] == 3
+
+
+def test_load_texts_csv_with_column() -> None:
+    from topicvisexplorer.server.byo_corpus import load_texts
+
+    path = Path(__file__).resolve().parents[2] / "examples" / "sample_corpus.csv"
+    assert path.is_file()
+    docs = load_texts(path, csv_text_column="text")
+    assert len(docs) == 25
+    assert all(s.strip() for s in docs)
+
+
+def test_load_texts_csv_without_column_is_linewise() -> None:
+    from topicvisexplorer.server.byo_corpus import load_texts
+
+    path = Path(__file__).resolve().parents[2] / "examples" / "sample_corpus.csv"
+    docs = load_texts(path)
+    # Line-oriented mode: header line + 25 data lines => 26 "documents" (wrong for a table)
+    assert len(docs) == 26
+    assert docs[0] == "id,text"
+
+
+def test_load_texts_csv_missing_column_raises() -> None:
+    from topicvisexplorer.server.byo_corpus import load_texts
+
+    path = Path(__file__).resolve().parents[2] / "examples" / "sample_corpus.csv"
+    with pytest.raises(ValueError, match=r"not in .* header"):
+        load_texts(path, csv_text_column="nonexistent_column")
+
+
+def test_load_texts_tsv_with_column(tmp_path: Path) -> None:
+    from topicvisexplorer.server.byo_corpus import load_texts
+
+    tsv = tmp_path / "a.tsv"
+    tsv.write_text("label\tcontent\n1\tone doc here\n2\tsecond doc here\n", encoding="utf-8")
+    assert load_texts(tsv, csv_text_column="content") == ["one doc here", "second doc here"]
+
+
+def test_load_texts_json_list() -> None:
+    from topicvisexplorer.server.byo_corpus import load_texts
+
+    path = Path(__file__).resolve().parents[2] / "examples" / "sample_corpus.json"
+    assert path.is_file()
+    docs = load_texts(path)
+    assert len(docs) == 25
+    assert "machine learning" in docs[0].lower()
+
+
+def test_load_texts_json_texts_key(tmp_path: Path) -> None:
+    from topicvisexplorer.server.byo_corpus import load_texts
+
+    p = tmp_path / "x.json"
+    p.write_text('{"texts": ["aa", "bb", "cc"]}', encoding="utf-8")
+    assert load_texts(p) == ["aa", "bb", "cc"]

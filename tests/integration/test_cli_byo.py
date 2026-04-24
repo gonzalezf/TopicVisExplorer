@@ -12,6 +12,24 @@ from topicvisexplorer.server import ServerConfig, build_app
 from topicvisexplorer.server.byo_corpus import build_scenario_from_textfile
 
 
+def _csv_docs_file(tmp: Path) -> Path:
+    """Table CSV with id + text columns (like a typical export)."""
+    lines = [
+        "id,text",
+        "1,machine learning models train from data",
+        "2,neural networks learn from large datasets",
+        "3,topic models find themes in text",
+        "4,sports teams play games in stadiums",
+        "5,markets move on news and earnings",
+        "6,cooking recipes use herbs spices and vegetables",
+        "7,elections bring voters to polling places nationwide",
+        "8,ocean waves crash on sandy beaches at sunset",
+    ] * 12
+    p = tmp / "c.csv"
+    p.write_text("\n".join(lines), encoding="utf-8")
+    return p
+
+
 def _docs_file(tmp: Path) -> Path:
     lines = [
         "machine learning models train from data",
@@ -26,6 +44,27 @@ def _docs_file(tmp: Path) -> Path:
     p = tmp / "c.txt"
     p.write_text("\n".join(lines), encoding="utf-8")
     return p
+
+
+def test_byo_csv_column_sklearn_200(tmp_path: Path) -> None:
+    """BYO with --csv-text-column: table CSV, sklearn, no spaCy."""
+    p = _csv_docs_file(tmp_path)
+    sc = build_scenario_from_textfile(
+        p,
+        name="byo_csv",
+        num_topics=3,
+        passes=2,
+        seed=1,
+        cache_dir=tmp_path / "cache",
+        model="sklearn-lda",
+        embedding="word2vec",
+        csv_text_column="text",
+    )
+    app = build_app(
+        ServerConfig(register_demo=False, extra_scenarios={"byo_csv": lambda: sc})
+    )
+    r = TestClient(app).get("/singlecorpus", params={"scenario": "byo_csv"})
+    assert r.status_code == 200
 
 
 @pytest.mark.parametrize(

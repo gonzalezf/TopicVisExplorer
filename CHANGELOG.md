@@ -13,6 +13,8 @@ at least one minor release ahead when practical.
 
 ## [Unreleased]
 
+- **Feature:** `tve demo --texts` accepts **`--csv-text-column <name>`** for **`.csv` / `.tsv`** table files (stdlib `csv`; no new dependency). `load_texts` / `build_scenario_from_textfile` / `tve.show(..., byo_csv_text_column=…)` forward the flag. Shipped examples: [`examples/sample_corpus.csv`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/examples/sample_corpus.csv), [`examples/sample_corpus.json`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/examples/sample_corpus.json). Tests: [`tests/unit/test_new_user_journey.py`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/tests/unit/test_new_user_journey.py) (CSV + JSONL + JSON list, sklearn, no network).
+
 - **README:** **“If you only received this repository”** (top-level table: setup, your data, run command, multi-corpus limits) plus a clearer **PyPI vs git-tree** line for people who were **sent the source** instead of installing from the index. **Documentation** list now points to that section and the [custom corpus](https://github.com/gonzalezf/TopicVisExplorer/blob/main/docs/custom_corpus_tutorial.md) page first. **index.md** “Where to go next” links the same entry path.
 
 - **Documentation:** Install docs and README now tell people **viewing the GitHub tree** to prefer a **git clone** + `uv sync` / `pip install -e .`; `pip install topicvisexplorer` is described as a **PyPI published** build that may trail `main` or be missing if not published for their copy.

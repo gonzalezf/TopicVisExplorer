@@ -45,6 +45,7 @@ def show(
     byo_num_topics: int = 5,
     byo_passes: int = 10,
     byo_seed: int = 42,
+    byo_csv_text_column: str | None = None,
     host: str = "127.0.0.1",
     port: int = 8000,
     open_browser: bool = True,
@@ -84,10 +85,10 @@ def show(
         If set, fit a topic model on this file (same formats as ``tve demo
         --texts``) and register it — same path as the CLI. Do not pass
         ``prepared`` at the same time.
-    byo_model, byo_embedding, sbert_model, byo_num_topics, byo_passes, byo_seed:
+    byo_model, byo_embedding, sbert_model, byo_num_topics, byo_passes, byo_seed, byo_csv_text_column:
         BYO options when ``texts_file`` is set (mirror ``--model``,
         ``--embedding``, ``--sbert-model``, ``--num-topics``, ``--passes``,
-        ``--seed`` on ``tve demo --texts``).
+        ``--seed``, ``--csv-text-column`` on ``tve demo --texts``).
 
     Notes
     -----
@@ -128,6 +129,7 @@ def show(
                 model=byo_model,
                 embedding=byo_embedding,
                 sbert_model=sbert_model,
+                csv_text_column=byo_csv_text_column,
             )
 
         extras[scenario_name] = _lazy_byo

@@ -10,7 +10,7 @@ This guide is for **tabular CSV** or **Hugging Face `datasets`** users who want 
 **This library supports:**
 
 - **Install** with **`pip install topicvisexplorer`** (or a git clone; see the prerequisites link).
-- **Your own documents** on disk, after you **convert** them to a supported file shape, usually **JSONL** with one `{"text": "..."}` per line.
+- **Your own documents** on disk: **JSONL** (one `{"text": "..."}` per line), a **JSON** list of strings, or a **table CSV/TSV** with **`--csv-text-column`** (no Python conversion needed). You can also **convert** from CSV or Hugging Face to JSONL in a short script.
 - The **default BYO** topic model: **Gensim LDA** (same as passing `--model gensim-lda`, which is the **CLI default** for `tve demo --texts`). This is the closest “paper-style” default stack bundled with the app (plus shared preprocessing; see [Working with your own data](own_data.md)).
 - A **fully interactive** single-corpus view: **split, merge, add/remove words**, coherence, export — **as long** as you use `tve demo --texts` to open **`/singlecorpus`**. Multi-corpus **compare / Sankey** is **not** on this path; see *Multi-corpus* below.
 
@@ -18,11 +18,27 @@ This guide is for **tabular CSV** or **Hugging Face `datasets`** users who want 
 
 - **`tve demo --multicorpora` and `--texts` together** — the CLI rejects that combination. Multi-corpus UIs are **bundled scenario names** (e.g. `tiny_multi_demo`) only, not two arbitrary local corpora. Comparing two custom corpora like the full paper “compare” story needs the **Python API** or future work; see [Extending](extending.md) and [Roadmap](roadmap.md).
 
-## Track A: Tabular CSV → `corpus.jsonl`
+## Track A: Tabular CSV (and optional JSONL export)
 
-**Problem:** a real table CSV (header + rows, text in one column) is **not** auto-parsed. If you point `tve demo --texts` at a `*.csv` file, the loader treats the file as **plain text, one line = one document** (see [own_data](own_data.md)) — with **no** header or column pick. That is wrong for a multi-column table.
+This repo includes **[`examples/sample_corpus.csv`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/examples/sample_corpus.csv)** with columns `id` and `text` (25 short synthetic documents) so you can run the flow **without** your own file first.
 
-**Recipe:** read the file in Python, pick a **text column** (e.g. `text` or `body`), drop nulls, write **one JSON object per line**, UTF-8.
+### Option 1: Point the CLI at the CSV column (no conversion)
+
+If your file has a **header row** and a column with the full document text, use **`--csv-text-column`** (same as the [own_data](own_data.md) flag table). Example from the **repository root**:
+
+```bash
+uv run tve demo --texts examples/sample_corpus.csv --csv-text-column text --name csv_demo --model sklearn-lda
+```
+
+(`sklearn-lda` avoids the spaCy + gensim default stack if you have not installed optional NLP models; default `--model` is `gensim-lda`.)
+
+**Without** `--csv-text-column`, a `*.csv` is still read as **plain lines** (see [own_data](own_data.md)) — one long “document” per physical line, which is **wrong** for a normal table export. Always set the column name for table data.
+
+### Option 2: Convert to `corpus.jsonl` in Python (full control over cleaning)
+
+**Why:** you need custom filters, a different text column name per file, or a pipeline that is easier to log for a study.
+
+**Recipe:** read the file, pick a **text column** (e.g. `text` or `body`), drop nulls, write **one JSON object per line**, UTF-8.
 
 === "pandas"
 
@@ -99,7 +115,13 @@ uv run tve demo --texts examples/byo_minimal.jsonl --name my_run --model gensim-
 From **PyPI**, the same file is included in the wheel as **`examples/byo_minimal.jsonl`** under your environment’s `site-packages`. You can also copy it from
 [GitHub (raw `byo_minimal.jsonl`)](https://github.com/gonzalezf/TopicVisExplorer/blob/main/examples/byo_minimal.jsonl).
 
-**Your converted file:**
+**Table CSV in the examples folder:**
+
+```bash
+uv run tve demo --texts examples/sample_corpus.csv --csv-text-column text --name my_csv --model sklearn-lda --no-browser
+```
+
+**Your converted JSONL (or your own path):**
 
 ```bash
 tve demo --texts corpus.jsonl --name my_run --model gensim-lda
@@ -108,12 +130,24 @@ tve demo --texts corpus.jsonl --name my_run --model gensim-lda
 - Omit `--no-browser` to open a tab; use `--port 8765` (or any free port) if `8000` is busy.
 - **Split/merge in the browser** (after a non–gensim-lda initial fit) can behave differently: the server still wires **Gensim LDA**-style refit for some operations. Read the warning in [own_data: split/merge and refit](own_data.md#bring-your-own-corpus-cli) before relying on it with other `--model` values.
 
-**Expected output (success criteria):**
+**Expected output (you should see something like this):**
 
-- The process logs that Uvicorn is **listening** (e.g. `http://127.0.0.1:8000` by default) and, unless `--no-browser` is set, a line about **opening** the app in a browser.
-- Hitting the single-corpus page works: open `http://127.0.0.1:8000/singlecorpus?scenario=<your --name>&hitl=true` (or follow the link the CLI printed).
+```text
+Fitting topic model 'gensim-lda' on .../byo_minimal.jsonl (K=5, passes=10, embedding='word2vec') with caching under ~/.cache/topicvisexplorer ...
+INFO:     Started server process […]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+```
 
-**Sanity check from tests (optional):** `uv run pytest tests/unit/test_byo_corpus.py -q` should report all tests passed (exercises the same JSONL path used by the loader).
+Then open (or the CLI may open for you) **`http://127.0.0.1:8000/singlecorpus?scenario=<your --name>&hitl=true`**. A **200** from that URL in a browser (topic map and bar chart load) means the **visualization** path is working.
+
+**Sanity checks with pytest (optional, no network):**
+
+```bash
+uv run pytest tests/unit/test_new_user_journey.py -q    # 3 passed — CSV column, JSONL, JSON list
+uv run pytest tests/unit/test_byo_corpus.py -q          # loader + build scenarios
+```
 
 ## Export, cache, and privacy
 

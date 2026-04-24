@@ -37,6 +37,8 @@ tve demo --help
 # Path: site-packages/examples/byo_minimal.jsonl inside the venv, or
 # use examples/byo_minimal.jsonl at the root of a git clone.
 tve demo --texts /path/to/byo_minimal.jsonl --name pypi_smoke --no-browser
+# Table CSV (column flag required for header+rows exports):
+tve demo --texts /path/to/sample_corpus.csv --csv-text-column text --name csv_smoke --model sklearn-lda --no-browser
 ```
 
 **Multi-corpus UI** (bundled scenario, no `--texts`):

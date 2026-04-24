@@ -78,7 +78,18 @@ def main(argv: list[str] | None = None) -> int:
         help=(
             "Path to a text file to run as a one-off 'bring your own' corpus. "
             "Accepts plain .txt (one doc per line), .jsonl (with a 'text' field), "
-            "or .json (a list of strings). Overrides --corpus."
+            ".json (a list of strings or object with 'texts'), or .csv/.tsv with "
+            "--csv-text-column. Overrides --corpus."
+        ),
+    )
+    p_demo.add_argument(
+        "--csv-text-column",
+        metavar="COLUMN",
+        default=None,
+        help=(
+            "Column name to read from a .csv or .tsv passed to --texts (header row "
+            "required). Ignored for .jsonl, .json, and plain-text files. Without this "
+            "flag, .csv is read as raw lines (wrong for table exports)."
         ),
     )
     p_demo.add_argument(
@@ -199,6 +210,7 @@ def _run_demo(args: argparse.Namespace) -> int:
                     model=args.model,
                     embedding=args.embedding,
                     sbert_model=args.sbert_model,
+                    csv_text_column=getattr(args, "csv_text_column", None),
                 )
             return cached["sc"]
 

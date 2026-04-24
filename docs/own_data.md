@@ -27,6 +27,7 @@ Authoritative help: `tve demo --help` (from the same version you installed).
 | `--model` | With `--texts` | `gensim-lda` (also: `sklearn-lda`, `sklearn-nmf`, `bertopic`, `etm`, `ctm` — last three need `pip install "topicvisexplorer[full]"`) |
 | `--embedding` | With `--texts` | `word2vec` or `sbert` (`sbert` needs `[full]`) |
 | `--sbert-model` | With `--texts` and `--embedding sbert` | `all-MiniLM-L6-v2` (Sentence-Transformers id) |
+| `--csv-text-column` | With `--texts` and a **`.csv`** or **`.tsv`** table file (header row) | column name for the document text; without it, `.csv`/`.tsv` are read as **raw lines** (usually wrong for exports). Ignored for `.jsonl` / `.json` / `.txt` |
 
 **Multicorpora (no `--texts`):**
 
@@ -87,7 +88,8 @@ Accepted inputs:
 
 - **`.jsonl` / `.ndjson`** — one object per line with a `"text"` field.
 - **`.json`** — list of strings, or an object with `"texts"`.
-- **Other text files** — one document per non-empty line.
+- **`.csv` / `.tsv`** (tabular export) — pass **`--csv-text-column <name>`** so the correct column is read (one document per data row; UTF-8; header required). **Example:** `tve demo --texts data.csv --csv-text-column text --name my_corpus`. Without `--csv-text-column`, these extensions are read like plain text (one line = one document), which is wrong for typical table CSVs.
+- **`.txt` and other extensions** — one document per non-empty line.
 
 The first run fits the requested topic model (default: **gensim-lda** with
 `text_cleaner_batch` + Phraser for that path; **sklearn-lda** / **sklearn-nmf**

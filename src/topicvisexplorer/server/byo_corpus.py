@@ -8,6 +8,7 @@ and returns a :class:`Scenario` ready to register via
 
 from __future__ import annotations
 
+import csv
 import hashlib
 import json
 import os
@@ -41,15 +42,36 @@ def _resolve_topic_embedding(embedding: str, sbert_model: str) -> EmbeddingBacke
     return SBERT(model_name=sbert_model)
 
 
-def load_texts(path: Path) -> list[str]:
-    """Load one document per line, or JSONL with a ``"text"`` field.
+def load_texts(path: Path, csv_text_column: str | None = None) -> list[str]:
+    """Load one document per line, JSONL with a ``"text"`` field, or a CSV/TSV column.
 
-    ``.jsonl`` / ``.json`` files are parsed line-by-line; other files are
-    treated as plain text (one doc per non-empty line).
+    When ``path`` ends in ``.csv`` or ``.tsv`` and ``csv_text_column`` is a
+    non-empty string, rows are read with the stdlib :mod:`csv` module and the
+    given header column is taken as the document string (one document per data
+    row). If ``csv_text_column`` is ``None`` for ``.csv``/``.tsv``, the file
+    is treated as plain text (one non-empty line = one document), the same as
+    ``.txt`` — for a table with a header row, pass ``csv_text_column``.
+
+    ``.jsonl`` / ``.ndjson`` / ``.json`` are unchanged; ``csv_text_column`` is
+    ignored for those extensions.
     """
-    raw = path.read_text(encoding="utf-8")
+    suffix = path.suffix.lower()
     texts: list[str] = []
-    if path.suffix.lower() in {".jsonl", ".ndjson"}:
+    if suffix in {".csv", ".tsv"} and csv_text_column:
+        delimiter = "\t" if suffix == ".tsv" else ","
+        with path.open(newline="", encoding="utf-8") as fh:
+            reader = csv.DictReader(fh, delimiter=delimiter)
+            if reader.fieldnames and csv_text_column not in reader.fieldnames:
+                cols = ", ".join(reader.fieldnames)
+                raise ValueError(
+                    f"Column {csv_text_column!r} not in {path} header. Found: {cols}."
+                )
+            for row in reader:
+                v = (row.get(csv_text_column) or "").strip()
+                if v:
+                    texts.append(v)
+    elif path.suffix.lower() in {".jsonl", ".ndjson"}:
+        raw = path.read_text(encoding="utf-8")
         for line in raw.splitlines():
             line = line.strip()
             if not line:
@@ -60,6 +82,7 @@ def load_texts(path: Path) -> list[str]:
                 raise ValueError(f"JSONL input must contain a string 'text' field; got {obj!r}")
             texts.append(t)
     elif path.suffix.lower() == ".json":
+        raw = path.read_text(encoding="utf-8")
         obj = json.loads(raw)
         if isinstance(obj, dict) and isinstance(obj.get("texts"), list):
             texts = [str(x) for x in obj["texts"]]
@@ -70,6 +93,7 @@ def load_texts(path: Path) -> list[str]:
                 "JSON input must be a list of strings or an object with a 'texts' array."
             )
     else:
+        raw = path.read_text(encoding="utf-8")
         for line in raw.splitlines():
             s = line.strip()
             if s:
@@ -326,6 +350,7 @@ def build_scenario_from_textfile(
     embedding: str = "word2vec",
     sbert_model: str = "all-MiniLM-L6-v2",
     cache_dir: Path | None = None,
+    csv_text_column: str | None = None,
 ) -> Scenario:
     """Fit a topic model on user-supplied texts and return a registrable scenario.
 
@@ -347,7 +372,7 @@ def build_scenario_from_textfile(
             )
 
     cache_root = cache_dir or DEFAULT_CACHE
-    texts = load_texts(path)
+    texts = load_texts(path, csv_text_column=csv_text_column)
     key = _cache_key(texts, num_topics, passes, seed, model, embedding, sbert_model)
     safe_model = model.replace(os.sep, "_").replace("/", "_")
     cache_file = cache_root / f"{name}-{safe_model}-{key}.npz"
@@ -380,6 +405,8 @@ def build_scenario_from_textfile(
         "sbert_model": sbert_model,
         "cache_file": str(cache_file),
     }
+    if csv_text_column:
+        meta["csv_text_column"] = csv_text_column
     return build_scenario_from_topic_model(
         name,
         model_data=md,

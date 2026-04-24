@@ -11,29 +11,24 @@ still available for exact reproducible tests and screenshots.
 
 ## 1. Install
 
+**If you are working from a git clone** (latest `main`, reproducible dev env — recommended for the tree on GitHub):
+
+```bash
+uv sync --all-extras
+# optional: build the Vite UI bundle (not committed; needed for a modern tve.js)
+(cd frontend && npm ci && npm run build && cd ..)
+uv run tve demo
+```
+
+Use **`uv run tve …`** from the clone, or activate `.venv` / `pip install -e .` and run `tve` directly. If you see **`tve: command not found`**, see [Install & test: troubleshooting](installation-and-testing.md#check-that-it-worked). For details see [`CONTRIBUTING.md`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/CONTRIBUTING.md). Without `uv`, use a virtualenv: `pip install -e ".[dev,docs]"`.
+
+**If you use a [published](https://pypi.org/project/topicvisexplorer/) release from PyPI** (version may be older than the git `main` you are reading):
+
 ```bash
 pip install topicvisexplorer          # core + server + demo
 # or, for BERTopic / ETM / CTM / SBERT:
 pip install "topicvisexplorer[full]"
 ```
-
-??? note "Working from a clone"
-    The repo is designed around **`uv`** and a committed **`uv.lock`**
-    (see [`CONTRIBUTING.md`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/CONTRIBUTING.md) in the same tree):
-
-    ```bash
-    uv sync --all-extras
-    (cd frontend && npm ci && npm run build)   # optional: modern Vite UI
-    uv run tve demo
-    ```
-
-    The bare command `tve` is only on your `PATH` after an install. From a
-    clone, either use **`uv run tve …`** (recommended) or activate `.venv` /
-    `pip install -e .` and then `tve …` works. If you see **`tve: command not
-    found`**, see [Install & test: troubleshooting](installation-and-testing.md#check-that-it-worked).
-
-    Without `uv`, use a virtualenv: `pip install -e ".[dev,docs]"` then the
-    same `tve` / `pytest` / `ruff` commands.
 
 ## 2. Launch the demo
 
@@ -51,6 +46,9 @@ Step-by-step from **CSV** or **Hugging Face** to JSONL and the right flags:
 ```bash
 # JSONL with a "text" field, plain .txt (one doc per line), or JSON array of strings:
 tve demo --texts mydocs.jsonl --name my_corpus --num-topics 8 --passes 15
+
+# Table CSV/TSV (header row + text column) — set the column name:
+tve demo --texts mytable.csv --csv-text-column text --name my_corpus
 
 # Optional: pick a different adapter or SBERT (needs pip install "topicvisexplorer[full]" for bertopic/etm/ctm/sbert):
 tve demo --texts mydocs.txt --model sklearn-nmf --embedding word2vec
