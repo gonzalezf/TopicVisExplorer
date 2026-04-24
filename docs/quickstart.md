@@ -77,7 +77,7 @@ browser (default `?scenario=20ng_tiny`). You should see:
 - A **bar chart** on the right of the top terms for the hovered topic.
 - A **documents table** below, with a `×` button per row for the
   [exclude-document](edit-ops.md#exclude-a-document) workflow.
-- A small **Σ** toggle in the top-right that opens the
+- A **Coherence** control (label + small Σ) in the top-right that opens the
   [coherence panel](coherence.md).
 - An **Export** (download) button next to the help control: saves a JSON
   snapshot of topic labels, top terms, and layout to **your computer only**

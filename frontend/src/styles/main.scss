@@ -55,17 +55,27 @@
 }
 
 .tve-coherence-toggle {
-  width: 28px;
-  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 0 8px;
   border-radius: 4px;
   border: 1px solid #d0d0d0;
   background: #fafafa;
   color: #444;
-  font-size: 16px;
-  line-height: 1;
-  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.1;
+  white-space: nowrap;
   cursor: pointer;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  .tve-coherence-toggle-sigma {
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.75;
+  }
   &:hover {
     background: #efefef;
     color: #000;
@@ -74,6 +84,9 @@
     background: #2c3e50;
     color: #fff;
     border-color: #2c3e50;
+    .tve-coherence-toggle-sigma {
+      opacity: 0.9;
+    }
   }
 }
 
@@ -103,6 +116,7 @@
 }
 
 .tve-coherence-table {
+  table-layout: fixed;
   width: 100%;
   border-collapse: collapse;
   th,
@@ -111,9 +125,16 @@
     border-bottom: 1px solid #eee;
     text-align: right;
   }
-  th:first-child,
-  td:first-child {
+  th:nth-child(1),
+  td:nth-child(1) {
     text-align: left;
+    width: 42%;
+    min-width: 0;
+    max-width: 11rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: normal;
   }
   thead th {
     background: #f6f6f6;

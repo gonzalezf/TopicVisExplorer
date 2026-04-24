@@ -28,9 +28,20 @@ Scope:
 
 ### Multi-corpus coherence panel
 
-Today the `Σ` panel is single-corpus only (`type_vis == 1` Jinja guard); the
-Sankey view hides it. A v1.1 version should show per-corpus coherence and
-highlight topics that diverge sharply in NPMI/C_v between corpora.
+Today the **Coherence** top-right control is single-corpus only
+(`type_vis == 1` Jinja guard); the Sankey view hides it. A v1.1 version
+should show per-corpus coherence and highlight topics that diverge sharply
+in NPMI/C_v between corpora.
+
+### Active topic coherence (optional UX)
+
+A possible follow-up: a **one-line summary** of NPMI / C_v (or a chosen
+pair) for the **currently selected topic** near the right-hand “top
+terms” / λ area, reusing the same `/coherence` data and
+`TVE` topic order, with a link or anchor to the full **Coherence** table
+for cross-topic comparison. Deferred until we confirm it does not
+clutter the main reading path; see the coherence UX discussion in the
+project.
 
 Scope:
 

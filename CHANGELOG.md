@@ -13,6 +13,11 @@ at least one minor release ahead when practical.
 
 ## [Unreleased]
 
+- **Coherence panel UX:** the top-right control is now a labeled **Coherence**
+  button (with a small Σ) instead of Σ alone; clearer `aria-label` and
+  `title`. The topic column in the coherence table uses single-line ellipsis
+  for long merged/renamed labels, with the full string on hover.
+
 - Documentation: repository and documentation site URLs updated for the GitHub
   rename to **`gonzalezf/TopicVisExplorer`** (public library) and
   **`gonzalezf/Topicvisexplorer-OLD`** (private backup); see `docs/migration.md`.
@@ -78,9 +83,10 @@ backup for the full trail.
 
 ### Added (Phase 4f, complete)
 
-- **Collapsible coherence panel** in the modern UI. A 28×28 toggle
-  button (Σ glyph) in the top-right corner expands a floating panel
-  showing per-topic NPMI, C_v, segregation, and coverage. Delivers
+- **Collapsible coherence panel** in the modern UI. A labeled
+  **Coherence** control in the top-right (with a small Σ) expands a
+  floating panel showing per-topic NPMI, C_v, segregation, and coverage.
+  Delivers
   paper Section 6 future-work line "extend with topic-quality
   metrics (NPMI, C_v) and topic-distinctness/coverage indicators".
   - **Closed by default**: the body is hidden via `hidden` and the

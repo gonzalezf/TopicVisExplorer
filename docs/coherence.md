@@ -1,8 +1,8 @@
 # Coherence metrics
 
-The collapsible **Σ** panel in the top-right of the single-corpus view
-reports four per-topic quality scores. This page explains what they
-mean and when each one is and isn't trustworthy.
+The collapsible **Coherence** panel in the top-right of the single-corpus view
+(label plus optional Σ) reports four per-topic quality scores. This page
+explains what they mean and when each one is and isn't trustworthy.
 
 All four are computed by `topicvisexplorer.coherence.report()` and
 exposed via `GET /coherence`. The panel caches the response on first

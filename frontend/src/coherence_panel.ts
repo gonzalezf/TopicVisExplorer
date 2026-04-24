@@ -37,8 +37,6 @@ w.TVE.invalidateCoherenceCache = () => {
   cached = null;
 };
 
-const LABEL_MAX = 50;
-
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
@@ -46,12 +44,6 @@ function escapeHtml(s: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
-}
-
-function truncateLabel(s: string, max: number): string {
-  const t = s.trim();
-  if (t.length <= max) return t;
-  return t.slice(0, Math.max(0, max - 1)) + "…";
 }
 
 function coherenceResponseStale(rep: CoherenceResponse | null): boolean {
@@ -62,12 +54,11 @@ function coherenceResponseStale(rep: CoherenceResponse | null): boolean {
   return n !== k;
 }
 
-function topicLabelForRow(i: number, rep: CoherenceResponse): { full: string; display: string } {
+function topicLabelForRow(i: number, rep: CoherenceResponse): string {
   const tveFn = w.TVE?.coherenceTopicLabel0Based;
   const fromTve = typeof tveFn === "function" ? String(tveFn(i) ?? "").trim() : "";
   const fromApi = rep.labels?.[i] != null ? String(rep.labels[i] ?? "").trim() : "";
-  const full = (fromTve || fromApi || `Topic ${i + 1}`).trim();
-  return { full, display: truncateLabel(full, LABEL_MAX) };
+  return (fromTve || fromApi || `Topic ${i + 1}`).trim();
 }
 
 function fmt(v: number | null | undefined): string {
@@ -113,9 +104,9 @@ function renderTable(rep: CoherenceResponse, root: HTMLElement, status: HTMLElem
 
   const rows: string[] = [];
   for (let i = 0; i < n; i++) {
-    const { full, display } = topicLabelForRow(i, rep);
-    const titleAttr = ` title="${escapeHtml(full)}"`;
-    const labelCell = `<td${titleAttr}>${escapeHtml(display)}</td>`;
+    const label = topicLabelForRow(i, rep);
+    const titleAttr = ` title="${escapeHtml(label)}"`;
+    const labelCell = `<td class="tve-coherence-topic-col"${titleAttr}>${escapeHtml(label)}</td>`;
     rows.push(
       `<tr>${labelCell}` +
         `<td>${fmt(rep.npmi?.[i])}</td>` +
