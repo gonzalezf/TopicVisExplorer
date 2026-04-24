@@ -347,6 +347,46 @@ var LDAvis = function(to_select, data_or_file_name) {
         }
         return d3.select(el);
     }
+
+    /**
+     * Topic Coherence table: expose live MDS name strings (name_topics_circles) on window.TVE
+     * in the same order as mdsData rows. Invalidates the coherence fetch cache when K changes
+     * (merge/split).
+     */
+    function tvePublishCoherenceTopicLabels() {
+        if (typeof window === "undefined") {
+            return;
+        }
+        var win = window;
+        win.TVE = win.TVE || {};
+        var nextK = 0;
+        if (type_vis === 1 && mdsData && mdsData.length) {
+            nextK = mdsData.length;
+        }
+        if (
+            win.TVE.coherenceK != null &&
+            win.TVE.coherenceK !== nextK &&
+            typeof win.TVE.invalidateCoherenceCache === "function"
+        ) {
+            win.TVE.invalidateCoherenceCache();
+        }
+        win.TVE.coherenceK = nextK;
+        if (type_vis !== 1 || !mdsData || !mdsData.length) {
+            win.TVE.coherenceTopicLabel0Based = function () {
+                return "";
+            };
+            return;
+        }
+        win.TVE.coherenceTopicLabel0Based = function (i) {
+            if (i == null || i < 0 || i >= mdsData.length) {
+                return "";
+            }
+            var d = mdsData[i];
+            var key = topicID + d.topics;
+            var s = name_topics_circles[key];
+            return s == null ? "" : String(s);
+        };
+    }
     
     //Get relevant documents from ajax
     if(type_vis==1){
@@ -938,6 +978,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                         name_topics_circles[topicID + d.topics] = name_string;
                     });
 
+        tvePublishCoherenceTopicLabels();
     
         // Create the topic input & lambda slider forms. Inspired from:
         // http://bl.ocks.org/d3noob/10632804
@@ -2411,8 +2452,9 @@ var LDAvis = function(to_select, data_or_file_name) {
         }
 
 
-        arrangeCircles();        
+        arrangeCircles();
 
+        tvePublishCoherenceTopicLabels();
         }
                
         

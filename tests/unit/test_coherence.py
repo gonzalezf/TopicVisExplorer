@@ -44,5 +44,16 @@ def test_c_v_in_range(tiny_corpus: list[list[str]]) -> None:
 def test_report_to_dict(tiny_prepared, tiny_corpus, tiny_doc_topic):
     rep = coherence.report(tiny_prepared, tiny_corpus, tiny_doc_topic, n_terms=4)
     d = rep.to_dict()
-    assert set(d.keys()) >= {"npmi", "c_v", "segregation", "coverage", "mean_npmi", "mean_c_v"}
+    assert set(d.keys()) >= {
+        "npmi",
+        "c_v",
+        "segregation",
+        "coverage",
+        "labels",
+        "mean_npmi",
+        "mean_c_v",
+    }
     assert len(d["npmi"]) == 4
+    assert len(d["labels"]) == 4
+    for lab in d["labels"]:
+        assert isinstance(lab, str)

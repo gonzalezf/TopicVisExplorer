@@ -52,10 +52,11 @@ test.describe("coherence panel", () => {
     const firstRowCells = await tableRows.first().locator("td").count();
     expect(firstRowCells).toBe(5);
 
-    // Topic labels follow ``Topic <n>`` -- regression guard against
-    // accidental indexing changes.
+    // First column uses API ``labels`` (or live TVE names when set), not only ``Topic 1``.
     const firstLabel = await tableRows.first().locator("td").first().textContent();
-    expect(firstLabel?.trim()).toMatch(/^Topic 1$/);
+    const t = firstLabel?.trim() ?? "";
+    expect(t.length).toBeGreaterThan(0);
+    expect(t).not.toMatch(/^Topic 1$/);
   });
 
   test("second click collapses the panel again", async ({ page }) => {

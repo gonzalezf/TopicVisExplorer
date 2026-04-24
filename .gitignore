@@ -45,6 +45,7 @@ coverage.xml
 
 # Editor / OS
 .vscode/
+.cursor/
 .idea/
 .DS_Store
 desktop.ini

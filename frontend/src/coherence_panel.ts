@@ -10,17 +10,65 @@
  * Kept dependency-free (vanilla DOM) so it doesn't bloat the bundle.
  */
 
+interface TveWindow extends Window {
+  TVE?: {
+    coherenceK?: number;
+    coherenceTopicLabel0Based?: (i: number) => string;
+    invalidateCoherenceCache?: () => void;
+  };
+}
+
 interface CoherenceResponse {
   npmi: (number | null)[];
   c_v: (number | null)[];
   segregation: (number | null)[];
   coverage: (number | null)[];
+  labels?: string[];
   mean_npmi?: number | null;
   mean_c_v?: number | null;
 }
 
 let cached: CoherenceResponse | null = null;
 let inflight = false;
+
+const w = window as TveWindow;
+w.TVE = w.TVE || {};
+w.TVE.invalidateCoherenceCache = () => {
+  cached = null;
+};
+
+const LABEL_MAX = 50;
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function truncateLabel(s: string, max: number): string {
+  const t = s.trim();
+  if (t.length <= max) return t;
+  return t.slice(0, Math.max(0, max - 1)) + "…";
+}
+
+function coherenceResponseStale(rep: CoherenceResponse | null): boolean {
+  if (!rep) return true;
+  const k = w.TVE?.coherenceK;
+  if (typeof k !== "number" || k < 0) return false;
+  const n = rep.npmi?.length ?? 0;
+  return n !== k;
+}
+
+function topicLabelForRow(i: number, rep: CoherenceResponse): { full: string; display: string } {
+  const tveFn = w.TVE?.coherenceTopicLabel0Based;
+  const fromTve = typeof tveFn === "function" ? String(tveFn(i) ?? "").trim() : "";
+  const fromApi = rep.labels?.[i] != null ? String(rep.labels[i] ?? "").trim() : "";
+  const full = (fromTve || fromApi || `Topic ${i + 1}`).trim();
+  return { full, display: truncateLabel(full, LABEL_MAX) };
+}
 
 function fmt(v: number | null | undefined): string {
   if (v === null || v === undefined || Number.isNaN(v)) return "—";
@@ -65,8 +113,11 @@ function renderTable(rep: CoherenceResponse, root: HTMLElement, status: HTMLElem
 
   const rows: string[] = [];
   for (let i = 0; i < n; i++) {
+    const { full, display } = topicLabelForRow(i, rep);
+    const titleAttr = ` title="${escapeHtml(full)}"`;
+    const labelCell = `<td${titleAttr}>${escapeHtml(display)}</td>`;
     rows.push(
-      `<tr><td>Topic ${i + 1}</td>` +
+      `<tr>${labelCell}` +
         `<td>${fmt(rep.npmi?.[i])}</td>` +
         `<td>${fmt(rep.c_v?.[i])}</td>` +
         `<td>${fmt(rep.segregation?.[i])}</td>` +
@@ -80,6 +131,9 @@ function renderTable(rep: CoherenceResponse, root: HTMLElement, status: HTMLElem
 }
 
 async function ensureLoaded(root: HTMLElement, status: HTMLElement): Promise<void> {
+  if (cached && coherenceResponseStale(cached)) {
+    cached = null;
+  }
   if (cached) {
     renderTable(cached, root, status);
     return;

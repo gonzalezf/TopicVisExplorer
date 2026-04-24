@@ -29,16 +29,18 @@ def test_coherence_single_corpus_contract(client: TestClient) -> None:
     assert res.status_code == 200, res.text
 
     body = res.json()
-    for key in ("npmi", "c_v", "segregation", "coverage"):
+    for key in ("npmi", "c_v", "segregation", "coverage", "labels"):
         assert key in body, f"missing column {key!r}"
         assert isinstance(body[key], list), f"{key} must be a list"
 
     n = len(body["npmi"])
     assert n > 0, "tiny_demo should have at least one topic"
-    for key in ("c_v", "segregation", "coverage"):
+    for key in ("c_v", "segregation", "coverage", "labels"):
         assert len(body[key]) == n, (
             f"length mismatch: npmi has {n} entries but {key} has {len(body[key])}"
         )
+    for lab in body["labels"]:
+        assert isinstance(lab, str)
 
 
 def test_coherence_response_is_strict_json(client: TestClient) -> None:

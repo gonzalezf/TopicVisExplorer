@@ -23,6 +23,8 @@ import $ from "jquery";
 
 const w = window as any;
 
+w.TVE = w.TVE || {};
+
 // Opt-in legacy debug logs (LDAvis merge/split progress, etc.): /singlecorpus?...&tve_debug=1
 // Or set ``window.TVE_DEBUG = true`` in DevTools.
 try {

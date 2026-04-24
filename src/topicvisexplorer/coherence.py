@@ -41,6 +41,14 @@ if TYPE_CHECKING:
 logger = get_logger(__name__)
 
 
+def _short_label_from_top_terms(terms: Sequence[str], *, n_words: int = 3) -> str:
+    """One-line label from top terms (coherence table); independent of client renames."""
+    t = [x for x in terms if x]
+    if not t:
+        return ""
+    return " ".join(t[:n_words])
+
+
 @dataclass
 class CoherenceReport:
     """Per-topic and corpus-level quality scores."""
@@ -49,6 +57,7 @@ class CoherenceReport:
     c_v: list[float] = field(default_factory=list)
     segregation: list[float] = field(default_factory=list)
     coverage: list[float] = field(default_factory=list)
+    labels: list[str] = field(default_factory=list)
 
     @property
     def mean_npmi(self) -> float:
@@ -58,12 +67,13 @@ class CoherenceReport:
     def mean_c_v(self) -> float:
         return float(np.mean(self.c_v)) if self.c_v else float("nan")
 
-    def to_dict(self) -> dict[str, list[float] | float]:
+    def to_dict(self) -> dict[str, list[float] | list[str] | float]:
         return {
             "npmi": self.npmi,
             "c_v": self.c_v,
             "segregation": self.segregation,
             "coverage": self.coverage,
+            "labels": self.labels,
             "mean_npmi": self.mean_npmi,
             "mean_c_v": self.mean_c_v,
         }
@@ -221,9 +231,11 @@ def report(
     """Compute all four metrics and return a :class:`CoherenceReport`."""
     K = len(prepared.topic_order)
     top_terms = [prepared.topic_top_terms(k + 1, n=n_terms, lambda_=lambda_) for k in range(K)]
+    labels = [_short_label_from_top_terms(terms) for terms in top_terms]
     return CoherenceReport(
         npmi=npmi_per_topic(top_terms, tokenized_texts),
         c_v=c_v_per_topic(top_terms, tokenized_texts),
         segregation=segregation_per_topic(top_terms),
         coverage=coverage_per_topic(np.asarray(doc_topic_dists)),
+        labels=labels,
     )
