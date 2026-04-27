@@ -598,8 +598,11 @@ def _build_template_context(
     single context we provide:
 
       * ``visid`` -- legacy: pre-quoted JSON string used inside JS source
+        (combined with ``|safe`` / ``window[visDataKey]``, not as a bare
+        identifier — session ids contain hyphens)
       * ``visid_str`` -- modern: bare string used as the DOM id attribute
-      * ``visid_raw`` -- shared: raw session id used in JS variable names
+      * ``visid_raw`` -- shared: bare ``vis-<session>`` id string (modern
+        bundle / ``tojson``); legacy embeds JSON via ``|safe`` on ``visid``
     """
     sid = state.session_id
     return {

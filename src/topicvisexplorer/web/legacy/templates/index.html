@@ -352,9 +352,50 @@
 <link rel="stylesheet" type="text/css" href="{{ ldavis_css_url }}">
 
 <style>
-  /* Multicorpora: scrollable A/B side columns (matches index_v1.html). */
+  /*
+   * Full-viewport layout so percentage heights inside LDAvis resolve (parity
+   * with index_v1.html). Without this, multicorpora rows/columns get ~0
+   * height and the side "top relevant terms" bar charts are missing/clipped.
+   */
+  html, body { height: 100%; margin: 0; }
+  body { display: flex; flex-direction: column; }
+  .container-fluid { flex: 1 1 auto; min-height: 0; }
+  .container-fluid > .row { height: 100%; }
+  #BarPlotPanel, #CentralPanel, #DocumentsPanel { height: 100%; min-height: 0; }
+  #BarPlotPanel_2 { height: 100%; min-height: 0; }
+  #CentralPanel { overflow: auto; }
+  /* Multicorpora (type 2): scrollable A/B side columns */
   .tve-multicorpus-side { min-height: 0; overflow-y: auto; }
   .tve-documents-nested { margin-top: 0.25rem; }
+  /*
+   * #BarPlotPanelDiv vs nested #DocumentsPanel both wanted height:100% —
+   * stack flex column so relevance bars keep space and doc tables scroll.
+   */
+  #BarPlotPanel.tve-multicorpus-side,
+  #BarPlotPanel_2.tve-multicorpus-side {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  #BarPlotPanel.tve-multicorpus-side > #BarPlotPanelDiv {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto !important;
+    max-height: none;
+    overflow: auto;
+  }
+  #BarPlotPanel.tve-multicorpus-side > #DocumentsPanel,
+  #BarPlotPanel_2.tve-multicorpus-side > #DocumentsPanel_2 {
+    flex: 0 1 auto;
+    height: auto !important;
+    max-height: 45%;
+    min-height: 0;
+    overflow: auto;
+  }
+  #BarPlotPanel_2.tve-multicorpus-side > #svgRightPanel,
+  #BarPlotPanel_2.tve-multicorpus-side > #BarPlotDivRightPanel_zero {
+    flex: 0 0 auto;
+  }
   #BarPlotPanel_2.tve-multicorpus-side > #BarPlotDiv_b_zero {
     flex: 0 0 auto;
     min-height: 0;
@@ -412,7 +453,7 @@
   })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
 </script>
 
-<div id={{ visid }}></div>
+<div id={{ visid|safe }}></div>
 <div id="name_topics" style="display:none" aria-hidden="true"></div>
 
 
@@ -420,21 +461,22 @@
 
 <script type="text/javascript">
 
-var {{ visid_raw }}_data = {{ vis_json }};
-var type_vis = {{type_vis}};
-var topic_order = {{topic_order}};
-var jsonData = {{vis_json}};
+var visDataKey = {{ visid|safe }} + "_data";
+window[visDataKey] = {{ vis_json|safe }};
+var type_vis = {{ type_vis|tojson }};
+var topic_order = {{ topic_order|tojson }};
+var jsonData = {{ vis_json|safe }};
 
 
 if(type_vis == 1){
-  var new_circle_positions = {{new_circle_positions}} 
+  var new_circle_positions = {{ new_circle_positions|tojson }}
 }
 
 
 if(type_vis == 2){  
-  var matrix_sankey = {{matrix_sankey}};  
-  var jsonData_2 = {{vis_json_2|safe}};
-  var topic_order_2 = {{topic_order_2}};
+  var matrix_sankey = {{ matrix_sankey|safe }};  
+  var jsonData_2 = {{ vis_json_2|safe }};
+  var topic_order_2 = {{ topic_order_2|tojson }};
   
 }
 
@@ -480,25 +522,25 @@ if(type_vis == 2){
      // already loaded: just create the visualization
      
      !function(LDAvis){
-         new LDAvis("#" + {{ visid }}, {{ visid_raw }}_data);
+         new LDAvis("#" + {{ visid|safe }}, window[visDataKey]);
 
      }(LDAvis);
   }else if(typeof define === "function" && define.amd){
      
      // require.js is available: use it to load d3/LDAvis
-     require.config({paths: {d3: "{{ d3_url[:-3] }}"}});
+     require.config({paths: {d3: {{ (d3_url[:-3])|tojson }}}});
      require(["d3"], function(d3){
         window.d3 = d3;
-        LDAvis_load_lib("{{ ldavis_url }}", function(){
-          new LDAvis("#" + {{ visid }}, {{ visid_raw }}_data);
+        LDAvis_load_lib({{ ldavis_url|tojson }}, function(){
+          new LDAvis("#" + {{ visid|safe }}, window[visDataKey]);
         });
       });
   }else{
       // require.js not available: dynamically load d3 & LDAvis
      
-      LDAvis_load_lib("{{ d3_url }}", function(){
-           LDAvis_load_lib("{{ ldavis_url }}", function(){
-                   new LDAvis("#LDAvisContainer", {{ visid_raw }}_data); //"#" + {{ visid }} 
+      LDAvis_load_lib({{ d3_url|tojson }}, function(){
+           LDAvis_load_lib({{ ldavis_url|tojson }}, function(){
+                   new LDAvis("#LDAvisContainer", window[visDataKey]); //"#" + {{ visid|safe }}
               })
            });
   }

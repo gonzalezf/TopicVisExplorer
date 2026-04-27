@@ -190,12 +190,35 @@ def save_html(prepared: PreparedData, fileobj: str) -> None:
     requires the server (because it issues backend calls); for a fully
     self-contained interactive export wait for v1.1's web-only build.
     """
+    import json as _json
     from pathlib import Path
+
+    from jinja2 import Environment, FileSystemLoader
 
     from .web import LEGACY_STATIC
 
-    template = (LEGACY_STATIC.parent / "templates" / "index.html").read_text()
-    html = template.replace("{{ vis_json }}", prepared.to_json())
+    template_dir = LEGACY_STATIC.parent / "templates"
+    env = Environment(
+        loader=FileSystemLoader(str(template_dir)),
+        autoescape=True,
+    )
+    tmpl = env.get_template("index.html")
+    html = tmpl.render(
+        vis_json=prepared.to_json(),
+        vis_json_2="null",
+        type_vis=0,
+        topic_order=[],
+        topic_order_2=[],
+        new_circle_positions={},
+        matrix_sankey="null",
+        visid=_json.dumps("vis-snapshot"),
+        visid_str="vis-snapshot",
+        visid_raw="vis-snapshot",
+        d3_url="/static/js/d3.v5.min.js",
+        ldavis_url="/static/js/LDAvis.js",
+        ldavis_css_url="/static/css/LDAvis.css",
+        scenario_name="",
+    )
     Path(fileobj).write_text(html, encoding="utf-8")
 
 
