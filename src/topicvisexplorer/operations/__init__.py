@@ -5,8 +5,8 @@ These are the four interactive actions the visualization exposes:
 * :func:`split` -- split a topic into ``k_new`` sub-topics (paper Section
   4.2). The hot path; vectorized version is ~10-20x the legacy speed.
 * :func:`merge` -- merge two topics into one (paper Section 4.2).
-* :func:`add_remove_word` -- add or remove a single word from a topic's
-  representation (paper Section 6, future work; now implemented).
+* :func:`add_word` / :func:`remove_word` -- add or remove a single word from a
+  topic's representation (paper Section 6, future work; now implemented).
 * :func:`exclude_document` -- remove a document from one topic's
   contribution (paper Section 6, future work; now implemented).
 

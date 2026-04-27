@@ -19,8 +19,9 @@ Data files (`sample_corpus.csv`, `byo_minimal.jsonl`, …) are resolved **next t
 | Multicorpora, **bundled** two-corpus (Sankey) | **CLI only** (no public `tve.demo(multicorpora=…)` yet) — see [Bundled multicorpora (CLI)](#bundled-multicorpora-cli) below |
 | **Hugging Face dataset** → JSONL → `tve.show()` | `uv run python examples/05_huggingface_demo.py` (requires `[hf]` extra) |
 | **BERTopic / ETM / CTM** Python adapter → `tve.show()` | `uv run python examples/06_bertopic_show.py` (requires `[full]` extra) |
+| **Paper-faithful pipeline** (`text_cleaner_batch` + LDA + Word2Vec), single-corpus then multi-corpus Sankey | Open `examples/07_single_and_multicorpus.ipynb` in Jupyter — outputs pre-committed (requires `[full]` extra) |
 
-**Dependencies:** notebook `00_` and scripts `01_`/`02_`/`03_` use **gensim** / **scikit-learn** (core install). `05_` needs `pip install -e ".[hf]"`. `06_` needs `pip install -e ".[full]"`.
+**Dependencies:** notebook `00_` and scripts `01_`/`02_`/`03_` use **gensim** / **scikit-learn** (core install). `05_` needs `pip install -e ".[hf]"`. `06_` and notebook `07_` need `pip install -e ".[full]"`.
 
 **Headless / SSH:** add `--no-browser` to any script. Stop the server with **Ctrl+C**.
 
@@ -56,22 +57,22 @@ See [Installation and testing](../docs/installation-and-testing.md) for bundled 
 
 ## Notebook: re-executing and committing outputs
 
-The notebook `00_end_to_end.ipynb` is committed **with cell outputs** so readers
-on GitHub can see the expected results without running anything. After any API
-change that affects notebook output, re-execute and commit:
+Both notebooks (`00_end_to_end.ipynb` and `07_single_and_multicorpus.ipynb`) are committed **with cell outputs** so readers on GitHub can see the expected results without running anything. After any API change that affects notebook output, re-execute and commit:
 
 ```bash
-# From the repo root (after uv sync --all-extras):
+# From the repo root (after uv sync --all-extras + spaCy model for 07_):
 source .venv/bin/activate
 python -c "
 import nbformat, nbclient, uuid
-nb = nbformat.read('examples/00_end_to_end.ipynb', as_version=4)
-for cell in nb.cells:
-    if 'id' not in cell:
-        cell['id'] = str(uuid.uuid4())[:8]
-nbclient.NotebookClient(nb, timeout=120).execute()
-nbformat.write(nb, 'examples/00_end_to_end.ipynb')
+for nb_path in ['examples/00_end_to_end.ipynb', 'examples/07_single_and_multicorpus.ipynb']:
+    nb = nbformat.read(nb_path, as_version=4)
+    for cell in nb.cells:
+        if 'id' not in cell:
+            cell['id'] = str(uuid.uuid4())[:8]
+    nbclient.NotebookClient(nb, timeout=300, resources={'metadata': {'path': 'examples/'}}).execute()
+    nbformat.write(nb, nb_path)
+    print(f're-executed {nb_path}')
 "
-git add examples/00_end_to_end.ipynb
-git commit -m "chore: re-execute notebook with updated outputs"
+git add examples/00_end_to_end.ipynb examples/07_single_and_multicorpus.ipynb
+git commit -m "chore: re-execute notebooks with updated outputs"
 ```

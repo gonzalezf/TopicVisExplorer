@@ -69,7 +69,7 @@ def _check_full_extras() -> None:
             "Install the [full] extra:  pip install -e \".[full]\"",
             file=sys.stderr,
         )
-        raise SystemExit(1)
+        raise SystemExit(1) from None
 
 
 # ---------------------------------------------------------------------------
@@ -125,11 +125,18 @@ def _smoke_etm() -> None:
         print("  ETM: skipped (embedded_topic_model not installed)")
         return
 
+    import numpy as np
+    from sklearn.feature_extraction.text import CountVectorizer
+
     from topicvisexplorer.models import ETMAdapter
-    from topicvisexplorer.server.byo_corpus import _etm_train_data_from_texts
 
     print("  Fitting ETM (CPU, 3 epochs) …")
-    train_data, vocab = _etm_train_data_from_texts(ALL_DOCS)
+    _vec = CountVectorizer(max_df=0.5, min_df=1, max_features=2000)
+    _X = _vec.fit_transform(ALL_DOCS)
+    vocab = list(_vec.get_feature_names_out())
+    tok_list = [np.asarray(_X.getrow(i).indices, dtype=np.int64) for i in range(_X.shape[0])]
+    cnt_list = [np.asarray(_X.getrow(i).data, dtype=np.float64) for i in range(_X.shape[0])]
+    train_data = {"tokens": np.asarray(tok_list, dtype=object), "counts": np.asarray(cnt_list, dtype=object)}
     etm = ETM(vocabulary=vocab, embeddings=None, num_topics=2, batch_size=16, epochs=3)
     etm.fit(train_data)
     md = ETMAdapter().extract(etm, corpus=None, texts=ALL_DOCS, vocabulary=vocab)
@@ -153,9 +160,11 @@ def _smoke_ctm() -> None:
     an actionable message pointing you here.
     """
     try:
-        from contextualized_topic_models.models.ctm import CombinedTM  # type: ignore[import-untyped]
-        from contextualized_topic_models.utils.data_preparation import (  # type: ignore[import-untyped]
-            TopicModelDataPreparation,
+        from contextualized_topic_models.models.ctm import (
+            CombinedTM,  # type: ignore[import-untyped]
+        )
+        from contextualized_topic_models.utils.data_preparation import (
+            TopicModelDataPreparation,  # type: ignore[import-untyped]
         )
     except ImportError:
         print("  CTM: skipped (contextualized_topic_models not installed)")

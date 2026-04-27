@@ -24,11 +24,11 @@ import os
 # :mod:`topicvisexplorer` (or any module that reads the env) is imported.
 os.environ.setdefault("TVE_EMBEDDING_DISABLE", "1")
 
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
-import pytest  # noqa: E402
+import numpy as np
+import pandas as pd
+import pytest
 
-from topicvisexplorer import prepare  # noqa: E402
+from topicvisexplorer import prepare
 
 
 @pytest.fixture(scope="session")

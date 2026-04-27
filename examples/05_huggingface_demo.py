@@ -44,7 +44,7 @@ def _check_datasets() -> None:
             "Install it with:  pip install -e \".[hf]\"  or  pip install datasets",
             file=sys.stderr,
         )
-        raise SystemExit(1)
+        raise SystemExit(1) from None
 
 
 def _write_jsonl(hf_dataset: str, text_col: str, num_docs: int, out: Path) -> int:

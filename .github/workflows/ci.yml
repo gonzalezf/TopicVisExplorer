@@ -26,9 +26,9 @@ jobs:
           uv python install ${{ env.CI_PYTHON }}
           uv sync --extra dev --python ${{ env.CI_PYTHON }}
       - name: Ruff check
-        run: uv run --python ${{ env.CI_PYTHON }} ruff check src tests
+        run: uv run --python ${{ env.CI_PYTHON }} ruff check src tests examples
       - name: Ruff format check
-        run: uv run --python ${{ env.CI_PYTHON }} ruff format --check src tests
+        run: uv run --python ${{ env.CI_PYTHON }} ruff format --check src tests examples
       - name: Mypy
         run: uv run --python ${{ env.CI_PYTHON }} mypy src/topicvisexplorer
 
@@ -138,13 +138,20 @@ jobs:
       - uses: astral-sh/setup-uv@v8.1.0
         with:
           enable-cache: true
-      - name: Install Python + dev deps
+      - name: Install Python + dev + full deps
         run: |
           uv python install ${{ env.CI_PYTHON }}
-          uv sync --extra dev --python ${{ env.CI_PYTHON }}
-      - name: Run notebook with nbmake
+          uv sync --extra dev --extra full --python ${{ env.CI_PYTHON }}
+      - name: NLTK stopwords + spaCy model (required by 07_ notebook)
         run: |
-          uv run --python ${{ env.CI_PYTHON }} pytest --nbmake examples/00_end_to_end.ipynb -v
+          uv run --python ${{ env.CI_PYTHON }} python -c "import nltk; nltk.download('stopwords')"
+          uv run --python ${{ env.CI_PYTHON }} python -m spacy download en_core_web_sm
+      - name: Run notebooks with nbmake
+        run: |
+          uv run --python ${{ env.CI_PYTHON }} pytest --nbmake \
+            examples/00_end_to_end.ipynb \
+            examples/07_single_and_multicorpus.ipynb \
+            -v
         env:
           PYTHONHASHSEED: "0"
 
