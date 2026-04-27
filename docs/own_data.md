@@ -77,6 +77,14 @@ public tree).
 
 ## Bring your own corpus (CLI)
 
+!!! warning "Minimum corpus size"
+    LDA (Gensim and sklearn) needs at least **50–100 documents** to produce
+    coherent, interpretable topics. With fewer documents, topics will be noisy
+    and NPMI / C_v scores will be unreliable. BERTopic needs at least **~50
+    documents** for HDBSCAN to find meaningful clusters. The 25-row
+    `sample_corpus.csv` shipped in `examples/` is intentionally tiny for
+    fast smoke tests — use a larger corpus for real analysis.
+
 ```bash
 tve demo --texts docs.jsonl --name my_corpus --num-topics 7 --passes 15
 # Optional: scikit-learn NMF, BERTopic, etc. (some need pip install -e ".[full]" from a clone):

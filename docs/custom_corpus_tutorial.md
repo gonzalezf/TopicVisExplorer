@@ -18,6 +18,14 @@ This guide is for **tabular CSV** or **Hugging Face `datasets`** users who want 
 
 - **`tve demo --multicorpora` and `--texts` together** — the CLI rejects that combination. Multi-corpus UIs are **bundled scenario names** (e.g. `tiny_multi_demo`) only, not two arbitrary local corpora. Comparing two custom corpora like the full paper “compare” story needs the **Python API** or future work; see [Extending](extending.md) and [Roadmap](roadmap.md).
 
+!!! warning "Minimum corpus size"
+    LDA (Gensim and sklearn) needs at least **50–100 documents** to produce
+    coherent, interpretable topics. With fewer, topics will be noisy and NPMI
+    scores will be unreliable. BERTopic needs at least **~50 documents** for
+    HDBSCAN to find meaningful clusters. The 25-row `sample_corpus.csv` in
+    `examples/` is intentionally tiny for fast verification — use a larger
+    corpus for real analysis.
+
 ## Track A: Tabular CSV (and optional JSONL export)
 
 This repo includes **[`examples/sample_corpus.csv`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/examples/sample_corpus.csv)** with columns `id` and `text` (25 short synthetic documents) so you can run the flow **without** your own file first.

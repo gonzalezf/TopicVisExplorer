@@ -122,7 +122,7 @@ Deeper table (optional deps, recapturing goldens, PR checklist): [CONTRIBUTING.m
 From the **repository root**, with dev + full stack (same as CI’s test matrix — see `ci.yml`):
 
 ```bash
-uv sync --extra dev --extra full
+uv sync --all-extras
 uv run python -c "import nltk; nltk.download('stopwords')"
 uv run python -m spacy download en_core_web_sm
 
@@ -159,6 +159,17 @@ cd frontend && npm ci && npm run lint && npx tsc --noEmit && npm run build && cd
 ```bash
 cd frontend && npx playwright install --with-deps chromium && npx playwright test && cd ..
 ```
+
+**Notebook smoke test (match the `notebooks` CI job):**
+
+```bash
+uv run pytest --nbmake examples/00_end_to_end.ipynb -v
+```
+
+This re-executes the notebook and checks that every cell runs without error.
+The notebook is committed with pre-run outputs so you can also just read it
+on GitHub to see expected results. To regenerate committed outputs after an
+API change, see `examples/README.md` (the "Notebook: re-executing" section).
 
 ### Manual smoke: try each bundled scenario
 

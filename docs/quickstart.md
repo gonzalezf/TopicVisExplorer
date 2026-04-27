@@ -55,6 +55,12 @@ reuse the cache (instant). The browser is opened at
 `/singlecorpus?scenario=<name>&hitl=true` so split / merge / add-word /
 remove-word all work out of the box.
 
+!!! warning "Split/merge uses Gensim LDA refit on BYO"
+    When you click split or merge in the browser after a BYO fit, the server
+    re-fits with **Gensim LDA** internally, even if you used `--model bertopic`
+    or `--model sklearn-nmf` for the initial fit. See
+    [Working with your own data](own_data.md#bring-your-own-corpus-cli) for details.
+
 !!! tip "One-time topic-similarity embedding"
     On the first visit to a scenario we also train a small Word2Vec
     embedding (~20s for the bundled demos) to power the Omega slider in
@@ -105,6 +111,49 @@ For multi-corpus comparison (Sankey diagram of topic flow):
 ```python
 tve.show([prepared_a, prepared_b])
 ```
+
+### `tve.show()` parameter reference
+
+| Parameter | Type | Default | Notes |
+| --------- | ---- | ------- | ----- |
+| `prepared` | `PreparedData` or `list[PreparedData]` | — | Single corpus or list of two for Sankey. Mutually exclusive with `texts_file`. |
+| `texts_file` | `str` or `Path` | `None` | Fit a topic model on this file (JSONL / JSON / CSV / TXT). Mutually exclusive with `prepared`. |
+| `byo_model` | `str` | `"gensim-lda"` | Model adapter id when `texts_file` is set. Options: `gensim-lda`, `sklearn-lda`, `sklearn-nmf`, `bertopic`, `etm`, `ctm`. Last three require `[full]`. |
+| `byo_embedding` | `str` | `"word2vec"` | Embedding for the topic-map layout. `"sbert"` requires `[full]`. |
+| `sbert_model` | `str` | `"all-MiniLM-L6-v2"` | Sentence-Transformers model id (only used when `byo_embedding="sbert"`). |
+| `byo_num_topics` | `int` | `5` | Number of topics for BYO fits. |
+| `byo_passes` | `int` | `10` | LDA training passes for BYO fits. |
+| `byo_seed` | `int` | `42` | Random seed for BYO fits (pin for reproducibility). |
+| `byo_csv_text_column` | `str` | `None` | Column name when `texts_file` is a `.csv`/`.tsv`. Required for tabular files; without it, every line is one document. |
+| `raw_texts` | `list[str]` or `list[list[str]]` | `None` | Raw document strings aligned with `prepared`. Enables the embedding-based Omega layout and split/merge. |
+| `model_data` | `TopicModelData` or list | `None` | Underlying adapter output, required alongside `raw_texts`. |
+| `scenario_name` | `str` | `"user_data"` | Internal name registered for user data; appears in the URL as `?scenario=<name>`. |
+| `open_browser` | `bool` | `True` | Open the OS default browser automatically. Pass `False` over SSH. |
+| `host` | `str` | `"127.0.0.1"` | Server bind address. |
+| `port` | `int` | `8000` | Server port. |
+
+!!! warning "Split/merge refit uses Gensim LDA regardless of `--model`"
+    When you use the browser split/merge controls after a BYO fit, the server
+    re-fits with **Gensim LDA** internally, even if you chose `--model sklearn-nmf`
+    or `--model bertopic` for the initial fit. The initial visualization is faithful
+    to your model; only the *re-fit on the sub-corpus* uses Gensim LDA. See
+    [Working with your own data](own_data.md#bring-your-own-corpus-cli) for details.
+
+!!! tip "Using TopicVisExplorer inside a Jupyter notebook"
+    `tve.show()` starts a **blocking** FastAPI server — the cell will never finish.
+    Two workarounds until `tve.show_inline()` ships in v1.1:
+
+    1. **Static snapshot (no server):** call `tve.save_html(prepared, "topics.html")`,
+       then open the file in a browser tab, or display it inline:
+       ```python
+       from IPython.display import HTML
+       HTML(open("topics.html").read())
+       ```
+    2. **Server in a terminal:** run `tve.show(prepared, open_browser=False)` from a
+       separate terminal, then open the printed URL in a browser alongside your notebook.
+
+    See [`examples/00_end_to_end.ipynb`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/examples/00_end_to_end.ipynb)
+    for a fully executable notebook using the `save_html` path.
 
 ## 4. Adapters for common pipelines
 

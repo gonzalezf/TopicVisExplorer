@@ -131,6 +131,23 @@ jobs:
           path: frontend/playwright-report/
           if-no-files-found: ignore
 
+  notebooks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v8.1.0
+        with:
+          enable-cache: true
+      - name: Install Python + dev deps
+        run: |
+          uv python install ${{ env.CI_PYTHON }}
+          uv sync --extra dev --python ${{ env.CI_PYTHON }}
+      - name: Run notebook with nbmake
+        run: |
+          uv run --python ${{ env.CI_PYTHON }} pytest --nbmake examples/00_end_to_end.ipynb -v
+        env:
+          PYTHONHASHSEED: "0"
+
   build:
     needs: [lint, test, frontend]
     runs-on: ubuntu-latest

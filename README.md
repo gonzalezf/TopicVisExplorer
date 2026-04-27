@@ -17,9 +17,21 @@ FastAPI + Vite + TypeScript + D3 v5.
 
 Read this **first**. You will use a **terminal**, **Python 3.10–3.12**, and a **one-time** web UI build (**Node.js** + `npm` from [nodejs.org](https://nodejs.org/)). For **tabular CSV/TSV** with a header row, pass **`--csv-text-column <name>`** to `tve demo --texts` (see [own_data](docs/own_data.md)); otherwise use **JSONL** or the [Custom corpus](docs/custom_corpus_tutorial.md) guide (HF → JSONL, or convert in Python). The **first** time you fit a model, expect **a few minutes**; later runs reuse the on-disk **cache** under `~/.cache/topicvisexplorer/`.
 
+**Not sure where to start? Pick your situation:**
+
+| I want to… | Start here |
+| ---------- | ---------- |
+| **Run on my CSV or HF dataset**, default LDA — end-to-end tutorial | **[`examples/00_end_to_end.ipynb`](examples/00_end_to_end.ipynb)** (notebook with pre-run outputs) → [Custom corpus guide](docs/custom_corpus_tutorial.md) |
+| **Already have a JSONL file**, just want the browser UI | `tve demo --texts corpus.jsonl` → [Quickstart](docs/quickstart.md) |
+| **Try BERTopic, ETM, or CTM** from Python | [`examples/06_bertopic_show.py`](examples/06_bertopic_show.py) + `pip install -e ".[full]"` → [Extending](docs/extending.md) |
+| **Compare two corpora** side-by-side (Sankey) | [`examples/03_two_corpora_sankey.py`](examples/03_two_corpora_sankey.py) |
+| **Write a custom topic-model adapter** | [Extending §1](docs/extending.md) |
+
+**Step-by-step setup:**
+
 | # | You want to… | What to do |
 | - | -------------- | ---------- |
-| 1 | **Set up the code** in front of you | Open **[Install → Git clone](docs/installation-and-testing.md#git-clone)**: install **`uv`**, clone, `cd` the repo, run **`uv sync`**, then **once** `(cd frontend && npm ci && npm run build && cd ..)` (the Vite build is not committed; without it the browser can miss the modern UI). Check **`uv run tve --help`**. Stuck? Same page, *Check that it worked*. |
+| 1 | **Set up the code** in front of you | Open **[Install → Git clone](docs/installation-and-testing.md#git-clone)**: install **`uv`**, clone, `cd` the repo, run **`uv sync --all-extras`**, then **once** `(cd frontend && npm ci && npm run build && cd ..)` (the Vite build is not committed; without it the browser can miss the modern UI). Check **`uv run tve --help`**. Stuck? Same page, *Check that it worked*. |
 | 2 | **Prepare your own texts** (CSV, HF, or already JSON/JSONL) | **Table CSV/TSV:** `tve demo --texts your.csv --csv-text-column <header>` (see [own_data](docs/own_data.md)). **Try the shipped example:** `examples/sample_corpus.csv` with `--csv-text-column text`. For Hugging Face or a custom JSONL conversion, follow **[Custom corpus: CSV, HF → JSONL](docs/custom_corpus_tutorial.md)**. |
 | 3 | **Run the explorer on your file** | From the repo: `uv run tve demo --texts my.jsonl --name my_run` (or the CSV form above). **Smoke tests:** `uv run tve demo --texts examples/byo_minimal.jsonl --name smoke` and/or `… --texts examples/sample_corpus.csv --csv-text-column text --name csv_smoke --model sklearn-lda`. |
 | 4 | **Two corpora, Sankey “compare” view** | The CLI **`--texts` path = one file at a time** (single-corpus UI). The **compare / multi-corpus** view uses **bundled** data, e.g. `tve demo --multicorpora --corpus tiny_multi_demo`. [Scope below](#what-the-library-is-meant-to-do-and-what-is-out-of-scope). |

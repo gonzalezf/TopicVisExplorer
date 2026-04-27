@@ -22,6 +22,17 @@ library backed by a FastAPI server and a Vite + TypeScript + D3 v5 frontend.
 - **Inspect topic quality** via a collapsible coherence panel (NPMI, C_v,
   segregation, coverage).
 
+## Which path is right for me?
+
+| I want to… | Start here |
+| ---------- | ---------- |
+| **Run the library on my CSV or Hugging Face dataset** (default LDA) | [`examples/00_end_to_end.ipynb`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/examples/00_end_to_end.ipynb) → [Custom corpus guide](custom_corpus_tutorial.md) |
+| **Already have a JSONL file**, just want the UI | `tve demo --texts corpus.jsonl` → [Quickstart](quickstart.md) |
+| **Try BERTopic, ETM, or CTM** from Python | [`examples/06_bertopic_show.py`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/examples/06_bertopic_show.py) → [Extending](extending.md) |
+| **Compare two corpora** side-by-side (Sankey) | [`examples/03_two_corpora_sankey.py`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/examples/03_two_corpora_sankey.py) |
+| **Write a custom topic-model adapter** | [Extending](extending.md) §1 |
+| **Explore all runnable examples** | [`examples/README.md`](https://github.com/gonzalezf/TopicVisExplorer/blob/main/examples/README.md) |
+
 ## Where to go next
 
 - **New to the repo and using your own data?** On GitHub, open the top of the
